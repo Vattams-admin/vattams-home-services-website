@@ -185,8 +185,9 @@ export default function TechnicianRegister() {
               </div>
 
               {errorMsg && (
-                <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
-                  {errorMsg}
+                <div className="bg-red-50 border border-red-300 text-red-700 text-sm font-medium rounded-xl px-4 py-3 flex items-start gap-2">
+                  <span className="mt-0.5 shrink-0">&#9888;</span>
+                  <span>{errorMsg}</span>
                 </div>
               )}
 
