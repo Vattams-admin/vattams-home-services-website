@@ -50,6 +50,7 @@ export default function TechnicianRegister() {
     });
     setSubmitting(false);
     if (error) {
+      console.error('Technician registration error:', error.message, error.code);
       alert('Registration failed. Please try again.');
       return;
     }
