@@ -4,12 +4,25 @@ import {
   CheckCircle, Clock, X, ChevronDown, LogOut, LayoutDashboard, Users, Briefcase,
   Trash2, Eye, XCircle, Star, Award, Wallet, Lock, Unlock, History, ShieldCheck,
   CreditCard, LucideIcon, Globe, Facebook, Instagram, Twitter, Youtube, MessageCircle, Save,
+<<<<<<< HEAD
+=======
+  Bell, BellOff,
+>>>>>>> afb9512 (Implement complete notification system with real-time delivery)
 } from 'lucide-react';
 import { supabase, Booking, Technician, BookingStatus, WalletTransaction, WalletRecharge } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { fetchAllPayments, fetchPendingPayments, updatePaymentStatus, PaymentRecord } from '@/lib/payments';
 import { fetchSiteSettings, saveSiteSettings, validateSettings, SiteSettings, SiteSettingsInput } from '@/lib/siteSettings';
 import { refreshSocialLinksCache } from '@/components/SocialLinks';
+<<<<<<< HEAD
+=======
+import NotificationCenter from '@/components/NotificationCenter';
+import {
+  notifyCustomer, notifyTechnician, notifyAdmin,
+  sendAnnouncementToTechnicians, sendAnnouncementToCustomers,
+  fetchNotifications, NotificationRow,
+} from '@/lib/notifications';
+>>>>>>> afb9512 (Implement complete notification system with real-time delivery)
 
 const statusColors: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -33,7 +46,11 @@ const techStatusLabel: Record<string, string> = {
 
 const statusOptions: BookingStatus[] = ['pending', 'confirmed', 'in_progress', 'completed', 'cancelled'];
 
+<<<<<<< HEAD
 type Tab = 'bookings' | 'technicians' | 'wallet' | 'payments' | 'social';
+=======
+type Tab = 'bookings' | 'technicians' | 'wallet' | 'payments' | 'social' | 'notifications';
+>>>>>>> afb9512 (Implement complete notification system with real-time delivery)
 
 export default function AdminDashboard() {
   const { navigate } = useRouter();
@@ -63,6 +80,18 @@ export default function AdminDashboard() {
   const [socialErrors, setSocialErrors] = useState<Record<string, string>>({});
   const [socialSaving, setSocialSaving] = useState(false);
   const [socialMsg, setSocialMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+<<<<<<< HEAD
+=======
+  const [notifLogs, setNotifLogs] = useState<NotificationRow[]>([]);
+  const [notifFilter, setNotifFilter] = useState<'all' | 'unread' | 'read'>('all');
+  const [announcementModal, setAnnouncementModal] = useState(false);
+  const [announcementTarget, setAnnouncementTarget] = useState<'technicians' | 'customers' | 'individual'>('technicians');
+  const [announcementTitle, setAnnouncementTitle] = useState('');
+  const [announcementMsg, setAnnouncementMsg] = useState('');
+  const [announcementTechId, setAnnouncementTechId] = useState('');
+  const [announcementSending, setAnnouncementSending] = useState(false);
+  const [announcementResult, setAnnouncementResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+>>>>>>> afb9512 (Implement complete notification system with real-time delivery)
 
   useEffect(() => {
     if (!sessionStorage.getItem('vattams_admin')) {
@@ -104,9 +133,21 @@ export default function AdminDashboard() {
     ]);
     setPayments(allPay);
     await loadSiteSettings();
+<<<<<<< HEAD
     setLoading(false);
   };
 
+=======
+    await loadNotifLogs();
+    setLoading(false);
+  };
+
+  const loadNotifLogs = async () => {
+    const logs = await fetchNotifications('admin', 'admin', 100);
+    setNotifLogs(logs);
+  };
+
+>>>>>>> afb9512 (Implement complete notification system with real-time delivery)
   const loadSiteSettings = async () => {
     const s = await fetchSiteSettings();
     setSiteSettings(s);
@@ -172,6 +213,27 @@ export default function AdminDashboard() {
     await supabase.from('bookings').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
     setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status } : b)));
     if (selectedBooking?.id === id) setSelectedBooking((prev) => (prev ? { ...prev, status } : prev));
+<<<<<<< HEAD
+=======
+
+    // Send customer notification based on status
+    const booking = bookings.find((b) => b.id === id);
+    if (booking) {
+      if (status === 'in_progress') {
+        await notifyCustomer.serviceStarted(booking.mobile_number, booking.booking_number, booking.id);
+      } else if (status === 'completed') {
+        await notifyCustomer.serviceCompleted(booking.mobile_number, booking.booking_number, booking.id);
+      } else if (status === 'cancelled') {
+        await Promise.all([
+          notifyCustomer.bookingCancelled(booking.mobile_number, booking.booking_number, booking.id),
+          booking.assigned_technician_id
+            ? notifyTechnician.jobCancelled(booking.assigned_technician_id, booking.booking_number)
+            : null,
+        ]);
+      }
+    }
+
+>>>>>>> afb9512 (Implement complete notification system with real-time delivery)
     setUpdating(false);
   };
 
@@ -184,6 +246,7 @@ export default function AdminDashboard() {
       .eq('id', selectedBooking.id);
     if (bookErr) console.error('[AdminDashboard] assign booking update error:', bookErr);
 
+<<<<<<< HEAD
     const { error: jobErr } = await supabase.from('technician_jobs').insert({
       booking_id: selectedBooking.id,
       technician_id: assignTechId,
@@ -191,6 +254,28 @@ export default function AdminDashboard() {
     });
     if (jobErr) console.error('[AdminDashboard] technician_jobs insert error:', jobErr);
 
+=======
+    const { data: jobData, error: jobErr } = await supabase.from('technician_jobs').insert({
+      booking_id: selectedBooking.id,
+      technician_id: assignTechId,
+      status: 'assigned',
+    }).select().single();
+    if (jobErr) console.error('[AdminDashboard] technician_jobs insert error:', jobErr);
+
+    const assignedTech = technicians.find((t) => t.id === assignTechId);
+
+    // Send notifications
+    await Promise.all([
+      notifyCustomer.technicianAssigned(
+        selectedBooking.mobile_number, selectedBooking.booking_number,
+        assignedTech?.full_name ?? 'A technician', selectedBooking.id,
+      ),
+      jobData
+        ? notifyTechnician.jobAssigned(assignTechId, selectedBooking.booking_number, jobData.id)
+        : null,
+    ]);
+
+>>>>>>> afb9512 (Implement complete notification system with real-time delivery)
     setBookings((prev) =>
       prev.map((b) =>
         b.id === selectedBooking.id ? { ...b, assigned_technician_id: assignTechId, status: 'confirmed' } : b
@@ -205,8 +290,23 @@ export default function AdminDashboard() {
     setTechUpdating(true);
     const { error } = await supabase.from('technicians').update({ status }).eq('id', id);
     if (!error) {
+<<<<<<< HEAD
       setTechnicians((prev) => prev.map((t) => (t.id === id ? { ...t, status } : t)));
       if (selectedTech?.id === id) setSelectedTech((prev) => (prev ? { ...prev, status } : prev));
+=======
+      const tech = technicians.find((t) => t.id === id);
+      setTechnicians((prev) => prev.map((t) => (t.id === id ? { ...t, status } : t)));
+      if (selectedTech?.id === id) setSelectedTech((prev) => (prev ? { ...prev, status } : prev));
+
+      // Send technician notification
+      if (tech) {
+        if (status === 'active') {
+          await notifyTechnician.registrationApproved(id, tech.full_name);
+        } else {
+          await notifyTechnician.registrationRejected(id, tech.full_name);
+        }
+      }
+>>>>>>> afb9512 (Implement complete notification system with real-time delivery)
     }
     setTechUpdating(false);
   };
@@ -222,6 +322,10 @@ export default function AdminDashboard() {
       setRecharges((prev) => prev.map((r) => (r.id === rechargeId ? { ...r, status: 'approved', approved_at: new Date().toISOString() } : r)));
       const r = recharges.find((x) => x.id === rechargeId);
       if (r) {
+<<<<<<< HEAD
+=======
+        await notifyTechnician.walletRechargeApproved(r.technician_id, Number(r.amount));
+>>>>>>> afb9512 (Implement complete notification system with real-time delivery)
         const { data: updatedTech } = await supabase.from('technicians').select('*').eq('id', r.technician_id).maybeSingle();
         if (updatedTech) setTechnicians((prev) => prev.map((t) => (t.id === updatedTech.id ? updatedTech : t)));
         const { data: newTxns } = await supabase.from('wallet_transactions').select('*').order('created_at', { ascending: false }).limit(100);
@@ -240,6 +344,13 @@ export default function AdminDashboard() {
       console.error('[AdminDashboard] recharge reject error:', error);
     } else {
       setRecharges((prev) => prev.map((r) => (r.id === rechargeId ? { ...r, status: 'rejected' } : r)));
+<<<<<<< HEAD
+=======
+      const r = recharges.find((x) => x.id === rechargeId);
+      if (r) {
+        await notifyTechnician.walletRechargeRejected(r.technician_id, Number(r.amount));
+      }
+>>>>>>> afb9512 (Implement complete notification system with real-time delivery)
     }
     setWalletUpdating(false);
   };
@@ -252,6 +363,16 @@ export default function AdminDashboard() {
     } else {
       setTechnicians((prev) => prev.map((t) => (t.id === techId ? { ...t, wallet_locked: lock } : t)));
       if (selectedWalletTech?.id === techId) setSelectedWalletTech((prev) => (prev ? { ...prev, wallet_locked: lock } : prev));
+<<<<<<< HEAD
+=======
+
+      // Send technician notification
+      if (lock) {
+        await notifyTechnician.accountLocked(techId);
+      } else {
+        await notifyTechnician.accountUnlocked(techId);
+      }
+>>>>>>> afb9512 (Implement complete notification system with real-time delivery)
     }
     setWalletUpdating(false);
   };
@@ -272,6 +393,17 @@ export default function AdminDashboard() {
     const updated = await updatePaymentStatus(paymentId, status, undefined, 'admin');
     if (updated) {
       setPayments((prev) => prev.map((p) => (p.payment_id === paymentId ? updated : p)));
+<<<<<<< HEAD
+=======
+
+      // Send admin notification
+      if (status === 'success') {
+        await notifyAdmin.paymentReceived(updated.payee_name || 'Unknown', Number(updated.amount), paymentId);
+      } else {
+        await notifyAdmin.failedPayment(updated.payee_name || 'Unknown', Number(updated.amount), paymentId);
+      }
+
+>>>>>>> afb9512 (Implement complete notification system with real-time delivery)
       // If it's a wallet_recharge success, also approve the recharge request
       if (status === 'success' && updated.purpose === 'wallet_recharge' && updated.reference_id) {
         const { data: recharge } = await supabase.from('wallet_recharges')
@@ -281,6 +413,10 @@ export default function AdminDashboard() {
           await supabase.from('wallet_recharges').update({
             status: 'approved', approved_at: new Date().toISOString(), approved_by: 'admin',
           }).eq('id', recharge.id);
+<<<<<<< HEAD
+=======
+          await notifyTechnician.walletRechargeApproved(recharge.technician_id, Number(recharge.amount));
+>>>>>>> afb9512 (Implement complete notification system with real-time delivery)
         }
       }
     }
@@ -314,10 +450,20 @@ export default function AdminDashboard() {
               <p className="text-gray-500 text-sm mt-0.5">Manage bookings, technicians, and revenue.</p>
             </div>
           </div>
+<<<<<<< HEAD
           <button onClick={logout}
             className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold rounded-xl transition-colors">
             <LogOut size={16} /> Logout
           </button>
+=======
+          <div className="flex items-center gap-3">
+            <NotificationCenter recipientType="admin" recipientId="admin" />
+            <button onClick={logout}
+              className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold rounded-xl transition-colors">
+              <LogOut size={16} /> Logout
+            </button>
+          </div>
+>>>>>>> afb9512 (Implement complete notification system with real-time delivery)
         </div>
 
         {/* Stats Cards */}
@@ -386,6 +532,15 @@ export default function AdminDashboard() {
             }`}>
             <Globe size={16} /> Social Media
           </button>
+<<<<<<< HEAD
+=======
+          <button onClick={() => setTab('notifications')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
+              tab === 'notifications' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
+            }`}>
+            <Bell size={16} /> Notifications
+          </button>
+>>>>>>> afb9512 (Implement complete notification system with real-time delivery)
         </div>
 
         {/* ===================== BOOKINGS TAB ===================== */}
@@ -1165,6 +1320,196 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+<<<<<<< HEAD
+=======
+
+      {/* Notifications Tab */}
+      {tab === 'notifications' && (
+        <div className="max-w-5xl">
+          <div className="mb-6 flex items-start justify-between">
+            <div>
+              <h2 className="text-lg font-extrabold text-gray-900 mb-1">Notification Center</h2>
+              <p className="text-sm text-gray-500">Send announcements and view notification logs.</p>
+            </div>
+            <button onClick={() => { setAnnouncementModal(true); setAnnouncementResult(null); }}
+              className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition-colors shadow-md shadow-blue-200">
+              <Bell size={16} /> New Announcement
+            </button>
+          </div>
+
+          {/* Admin's own notification bell */}
+          <div className="mb-6 bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-gray-900 text-sm">Your Notifications</h3>
+              <NotificationCenter recipientType="admin" recipientId="admin" />
+            </div>
+          </div>
+
+          {/* Notification Logs */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-gray-900 text-sm">Notification Logs</h3>
+              <div className="flex gap-1.5">
+                {(['all', 'unread', 'read'] as const).map((f) => (
+                  <button key={f} onClick={() => setNotifFilter(f)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-colors ${notifFilter === f ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                    {f}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {notifLogs.length === 0 ? (
+              <div className="text-center py-10 text-gray-400">
+                <BellOff size={32} className="mx-auto mb-2 text-gray-300" />
+                <p className="text-sm">No notifications logged yet.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100 text-xs text-gray-400 uppercase tracking-wider">
+                      <th className="text-left py-2 px-3 font-semibold">Title</th>
+                      <th className="text-left py-2 px-3 font-semibold">Message</th>
+                      <th className="text-left py-2 px-3 font-semibold">Type</th>
+                      <th className="text-left py-2 px-3 font-semibold">Status</th>
+                      <th className="text-left py-2 px-3 font-semibold">Created</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {notifLogs
+                      .filter((n) => notifFilter === 'all' || (notifFilter === 'unread' ? !n.is_read : n.is_read))
+                      .map((n) => (
+                      <tr key={n.id} className={`border-b border-gray-50 ${!n.is_read ? 'bg-blue-50/30' : ''}`}>
+                        <td className="py-2.5 px-3 font-semibold text-gray-800">{n.title}</td>
+                        <td className="py-2.5 px-3 text-gray-500 max-w-xs truncate">{n.message}</td>
+                        <td className="py-2.5 px-3 text-gray-600 capitalize">{n.type.replace(/_/g, ' ')}</td>
+                        <td className="py-2.5 px-3">
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                            n.status === 'read' ? 'bg-green-100 text-green-700' :
+                            n.status === 'sent' ? 'bg-blue-100 text-blue-700' :
+                            n.status === 'failed' ? 'bg-red-100 text-red-700' :
+                            'bg-gray-100 text-gray-600'
+                          }`}>{n.status}</span>
+                        </td>
+                        <td className="py-2.5 px-3 text-gray-400 text-xs whitespace-nowrap">{new Date(n.created_at).toLocaleString('en-IN')}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Announcement Modal */}
+      {announcementModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setAnnouncementModal(false)}>
+          <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h2 className="text-lg font-extrabold text-gray-900">Send Announcement</h2>
+              <button onClick={() => setAnnouncementModal(false)} className="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* Target selector */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Send To</label>
+                <div className="flex gap-2">
+                  {(['technicians', 'customers', 'individual'] as const).map((t) => (
+                    <button key={t} onClick={() => setAnnouncementTarget(t)}
+                      className={`px-4 py-2 rounded-xl text-sm font-semibold capitalize transition-colors ${announcementTarget === t ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                      {t === 'individual' ? 'Individual Technician' : t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Individual technician selector */}
+              {announcementTarget === 'individual' && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Select Technician</label>
+                  <select value={announcementTechId} onChange={(e) => setAnnouncementTechId(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm bg-white">
+                    <option value="">Choose a technician...</option>
+                    {technicians.map((t) => (
+                      <option key={t.id} value={t.id}>{t.full_name} ({t.city})</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Title */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Title</label>
+                <input type="text" value={announcementTitle} onChange={(e) => setAnnouncementTitle(e.target.value)}
+                  placeholder="Announcement title"
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm" />
+              </div>
+
+              {/* Message */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Message</label>
+                <textarea value={announcementMsg} onChange={(e) => setAnnouncementMsg(e.target.value)}
+                  placeholder="Type your announcement message..."
+                  rows={4}
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm resize-none" />
+              </div>
+
+              {announcementResult && (
+                <div className={'rounded-xl p-3 text-sm ' + (announcementResult.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200')}>
+                  {announcementResult.text}
+                </div>
+              )}
+
+              <button
+                onClick={async () => {
+                  if (!announcementTitle.trim() || !announcementMsg.trim()) {
+                    setAnnouncementResult({ type: 'error', text: 'Please enter both title and message.' });
+                    return;
+                  }
+                  setAnnouncementSending(true);
+                  setAnnouncementResult(null);
+                  try {
+                    let count = 0;
+                    if (announcementTarget === 'technicians') {
+                      count = await sendAnnouncementToTechnicians(technicians, announcementTitle, announcementMsg);
+                    } else if (announcementTarget === 'individual') {
+                      if (!announcementTechId) {
+                        setAnnouncementResult({ type: 'error', text: 'Please select a technician.' });
+                        setAnnouncementSending(false);
+                        return;
+                      }
+                      count = await sendAnnouncementToTechnicians(
+                        technicians.filter((t) => t.id === announcementTechId),
+                        announcementTitle, announcementMsg,
+                      );
+                    } else {
+                      // customers — get all unique mobile numbers from bookings
+                      const mobiles = [...new Set(bookings.map((b) => b.mobile_number))];
+                      count = await sendAnnouncementToCustomers(mobiles, announcementTitle, announcementMsg);
+                    }
+                    setAnnouncementResult({ type: 'success', text: `Announcement sent to ${count} recipient${count !== 1 ? 's' : ''}.` });
+                    setAnnouncementTitle('');
+                    setAnnouncementMsg('');
+                    await loadNotifLogs();
+                  } catch {
+                    setAnnouncementResult({ type: 'error', text: 'Failed to send announcement. Please try again.' });
+                  }
+                  setAnnouncementSending(false);
+                }}
+                disabled={announcementSending}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-xl transition-colors">
+                {announcementSending ? <Loader size={16} className="animate-spin" /> : <Bell size={16} />}
+                Send Announcement
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+>>>>>>> afb9512 (Implement complete notification system with real-time delivery)
     </div>
   );
 }

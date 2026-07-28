@@ -1,7 +1,15 @@
+<<<<<<< HEAD
 import { useState } from 'react';
 import { Menu, X, Phone, MessageCircle, ChevronDown } from 'lucide-react';
 import { useRouter, Page } from '@/lib/router';
 import SocialLinks from '@/components/SocialLinks';
+=======
+import { useState, useEffect } from 'react';
+import { Menu, X, Phone, MessageCircle, ChevronDown } from 'lucide-react';
+import { useRouter, Page } from '@/lib/router';
+import SocialLinks from '@/components/SocialLinks';
+import NotificationCenter from '@/components/NotificationCenter';
+>>>>>>> afb9512 (Implement complete notification system with real-time delivery)
 
 const navLinks: { label: string; page: Page }[] = [
   { label: 'Home', page: 'home' },
@@ -14,6 +22,20 @@ export default function Header() {
   const { navigate, page } = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+<<<<<<< HEAD
+=======
+  const [customerMobile, setCustomerMobile] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('vattams_customer');
+      if (raw) {
+        const c = JSON.parse(raw);
+        if (c?.mobile) setCustomerMobile(c.mobile);
+      }
+    } catch { /* ignore */ }
+  }, [page]);
+>>>>>>> afb9512 (Implement complete notification system with real-time delivery)
 
   const close = () => { setMobileOpen(false); setAccountOpen(false); };
 
@@ -75,6 +97,14 @@ export default function Header() {
               <MessageCircle size={15} /> WhatsApp
             </a>
 
+<<<<<<< HEAD
+=======
+            {/* Customer notification bell (only when logged in) */}
+            {customerMobile && (
+              <NotificationCenter recipientType="customer" recipientId={customerMobile} />
+            )}
+
+>>>>>>> afb9512 (Implement complete notification system with real-time delivery)
             {/* Account Dropdown */}
             <div className="relative">
               <button
@@ -138,6 +168,15 @@ export default function Header() {
               </button>
             ))}
             <div className="border-t border-gray-100 pt-2 space-y-1">
+<<<<<<< HEAD
+=======
+              {customerMobile && (
+                <div className="flex items-center justify-between px-4 py-2">
+                  <span className="text-sm text-gray-500">Notifications</span>
+                  <NotificationCenter recipientType="customer" recipientId={customerMobile} />
+                </div>
+              )}
+>>>>>>> afb9512 (Implement complete notification system with real-time delivery)
               <button onClick={() => { navigate('booking'); close(); }}
                 className="w-full text-left px-4 py-3 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700">
                 Book a Service
