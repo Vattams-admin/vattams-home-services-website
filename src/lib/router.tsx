@@ -10,6 +10,7 @@ export type Page =
   | 'admin-login'
   | 'admin-dashboard'
   | 'technician-register'
+  | 'technician-login'
   | 'technician-dashboard';
 
 interface RouterContextType {

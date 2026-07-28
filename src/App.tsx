@@ -10,6 +10,7 @@ import CustomerLogin from '@/pages/CustomerLogin';
 import AdminLogin from '@/pages/AdminLogin';
 import AdminDashboard from '@/pages/AdminDashboard';
 import TechnicianRegister from '@/pages/TechnicianRegister';
+import TechnicianLogin from '@/pages/TechnicianLogin';
 import TechnicianDashboard from '@/pages/TechnicianDashboard';
 
 function Pages() {
@@ -26,12 +27,13 @@ function Pages() {
       case 'admin-login': return <AdminLogin />;
       case 'admin-dashboard': return <AdminDashboard />;
       case 'technician-register': return <TechnicianRegister />;
+      case 'technician-login': return <TechnicianLogin />;
       case 'technician-dashboard': return <TechnicianDashboard />;
       default: return <Home />;
     }
   };
 
-  const hideFooter = page === 'admin-login' || page === 'customer-login' || page === 'technician-dashboard';
+  const hideFooter = page === 'admin-login' || page === 'customer-login' || page === 'technician-login' || page === 'technician-dashboard';
 
   return (
     <div className="min-h-screen flex flex-col bg-white">

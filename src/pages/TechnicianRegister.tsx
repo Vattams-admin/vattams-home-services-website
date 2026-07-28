@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Loader, Wrench, CheckCircle } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { Loader, Wrench, CheckCircle, Lock, Eye, EyeOff } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 
 const tamilNaduCities = [
@@ -20,10 +19,12 @@ export default function TechnicianRegister() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({
     full_name: '', mobile: '', email: '', city: 'Chennai',
     experience_years: '0', id_proof_type: 'Aadhaar', id_proof_number: '',
     specializations: [] as string[],
+    password: '', confirmPassword: '',
   });
 
   const toggleSpec = (spec: string) => {
@@ -39,29 +40,54 @@ export default function TechnicianRegister() {
     e.preventDefault();
     setErrorMsg('');
 
-    setSubmitting(true);
-    const { error } = await supabase.from('technicians').insert({
-      full_name: form.full_name,
-      mobile: form.mobile,
-      email: form.email || null,
-      city: form.city,
-      specializations: form.specializations,
-      experience_years: parseInt(form.experience_years) || 0,
-      id_proof_type: form.id_proof_type,
-      id_proof_number: form.id_proof_number,
-      status: 'pending',
-    });
-    setSubmitting(false);
-    if (error) {
-      console.error('Technician registration error:', error.message, error.code);
-      let msg = error.message || 'Registration failed. Please try again.';
-      if (error.code === '23505') {
-        msg = 'This mobile number is already registered. Please use a different number.';
-      }
-      setErrorMsg(msg);
+    if (form.password.length < 6) {
+      setErrorMsg('Password must be at least 6 characters.');
       return;
     }
-    setSuccess(true);
+    if (form.password !== form.confirmPassword) {
+      setErrorMsg('Passwords do not match.');
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? 'https://nitlpxztktgjcjxdgiqm.supabase.co';
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY ?? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pdGxweHp0a3RnamNqeGRnaXFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxODM5ODcsImV4cCI6MjEwMDc1OTk4N30.mKbYeKEf7u2DjDpPtiVmNasfEx7sH0nwuuNrN_30GiM';
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/technician-auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${anonKey}`,
+        },
+        body: JSON.stringify({
+          full_name: form.full_name,
+          mobile: form.mobile,
+          email: form.email || undefined,
+          city: form.city,
+          specializations: form.specializations,
+          experience_years: parseInt(form.experience_years) || 0,
+          id_proof_type: form.id_proof_type,
+          id_proof_number: form.id_proof_number,
+          password: form.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErrorMsg(data.error || 'Registration failed. Please try again.');
+        setSubmitting(false);
+        return;
+      }
+
+      setSuccess(true);
+    } catch (err) {
+      setErrorMsg('Network error. Please try again.');
+      console.error('Registration error:', err);
+    }
+    setSubmitting(false);
   };
 
   if (success) {
@@ -183,6 +209,30 @@ export default function TechnicianRegister() {
                     onChange={(e) => setForm({ ...form, id_proof_number: e.target.value })}
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
                     placeholder="ID number" />
+                </div>
+              </div>
+
+              {/* Password fields */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Password * <span className="text-gray-400 font-normal">(min 6 characters)</span></label>
+                  <div className="relative">
+                    <input type={showPassword ? 'text' : 'password'} required minLength={6} value={form.password}
+                      onChange={(e) => setForm({ ...form, password: e.target.value })}
+                      className="w-full pl-4 pr-10 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                      placeholder="Create a password" />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600">
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Confirm Password *</label>
+                  <input type={showPassword ? 'text' : 'password'} required minLength={6} value={form.confirmPassword}
+                    onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                    placeholder="Re-enter password" />
                 </div>
               </div>
 

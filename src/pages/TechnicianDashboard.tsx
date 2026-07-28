@@ -40,8 +40,6 @@ export default function TechnicianDashboard() {
   const [recharges, setRecharges] = useState<WalletRecharge[]>([]);
   const [notifications, setNotifications] = useState<TechnicianNotification[]>([]);
   const [loading, setLoading] = useState(true);
-  const [mobileInput, setMobileInput] = useState('');
-  const [showLogin, setShowLogin] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [walletView, setWalletView] = useState<'overview' | 'history' | 'recharge'>('overview');
   const [rechargeAmount, setRechargeAmount] = useState('');
@@ -50,25 +48,29 @@ export default function TechnicianDashboard() {
 
   useEffect(() => {
     const stored = sessionStorage.getItem('vattams_tech_id');
-    if (stored) {
-      setMobileInput(stored);
-      loadTechnician(stored);
-    } else {
-      setLoading(false);
+    if (!stored) {
+      navigate('technician-login');
+      return;
     }
+    loadTechnician(stored);
   }, []);
 
-  const loadTechnician = useCallback(async (idOrMobile: string) => {
-    const { data: byId } = await supabase.from('technicians').select('*').eq('id', idOrMobile).maybeSingle();
-    const tech = byId ?? (await supabase.from('technicians').select('*').eq('mobile', idOrMobile).maybeSingle()).data;
-    if (tech) {
-      setTechnician(tech);
-      sessionStorage.setItem('vattams_tech_id', tech.id);
-      setShowLogin(false);
-      await Promise.all([loadJobs(tech.id), loadWalletData(tech.id)]);
+  const loadTechnician = useCallback(async (techId: string) => {
+    const { data: tech, error } = await supabase.from('technicians').select('*').eq('id', techId).maybeSingle();
+    if (error || !tech) {
+      sessionStorage.removeItem('vattams_tech_id');
+      navigate('technician-login');
       setLoading(false);
       return;
     }
+    if (tech.status !== 'active') {
+      sessionStorage.removeItem('vattams_tech_id');
+      navigate('technician-login');
+      setLoading(false);
+      return;
+    }
+    setTechnician(tech);
+    await Promise.all([loadJobs(tech.id), loadWalletData(tech.id)]);
     setLoading(false);
   }, []);
 
@@ -99,13 +101,6 @@ export default function TechnicianDashboard() {
     setRecharges(rechargeRes.data ?? []);
     setNotifications(notifRes.data ?? []);
   }, []);
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (mobileInput.length < 10) return;
-    setLoading(true);
-    loadTechnician(mobileInput);
-  };
 
   const updateJobStatus = async (jobId: string, status: JobStatus) => {
     setUpdatingId(jobId);
@@ -165,9 +160,8 @@ export default function TechnicianDashboard() {
   const logout = () => {
     sessionStorage.removeItem('vattams_tech_id');
     setTechnician(null);
-    setShowLogin(true);
     setJobs([]);
-    navigate('home');
+    navigate('technician-login');
   };
 
   if (loading) {
@@ -178,39 +172,8 @@ export default function TechnicianDashboard() {
     );
   }
 
-  if (showLogin || !technician) {
-    return (
-      <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-950 via-blue-900 to-indigo-900 px-4">
-        <div className="max-w-md w-full bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl p-8 shadow-2xl">
-          <div className="text-center mb-6">
-            <img src="/logo.svg" alt="VATTAMS HOME SERVICES" className="h-20 w-auto mx-auto mb-4 rounded-xl" />
-            <h1 className="text-2xl font-extrabold text-white mb-1">Technician Portal</h1>
-            <p className="text-blue-200 text-sm">Enter your registered mobile number to access your dashboard.</p>
-          </div>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="relative">
-              <Phone size={16} className="absolute left-3 top-3.5 text-blue-200/50" />
-              <input
-                type="tel" required pattern="[0-9]{10}" value={mobileInput}
-                onChange={(e) => setMobileInput(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-blue-200/50 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all"
-                placeholder="10-digit mobile number"
-              />
-            </div>
-            <button type="submit"
-              className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-colors">
-              Sign In
-            </button>
-          </form>
-          <p className="text-center text-blue-200/50 text-xs mt-4">
-            Don't have an account?{' '}
-            <button onClick={() => navigate('technician-register')} className="text-blue-300 underline">
-              Register here
-            </button>
-          </p>
-        </div>
-      </div>
-    );
+  if (!technician) {
+    return null;
   }
 
   return (

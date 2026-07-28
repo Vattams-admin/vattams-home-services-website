@@ -96,6 +96,10 @@ export default function Header() {
                     className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700">
                     Technician Registration
                   </button>
+                  <button onClick={() => { navigate('technician-login'); close(); }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700">
+                    Technician Login
+                  </button>
                   <div className="border-t border-gray-100 mt-1 pt-1">
                     <button onClick={() => { navigate('booking'); close(); }}
                       className="w-full text-left px-4 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-50">
@@ -148,6 +152,10 @@ export default function Header() {
               <button onClick={() => { navigate('technician-register'); close(); }}
                 className="w-full text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50">
                 Technician Registration
+              </button>
+              <button onClick={() => { navigate('technician-login'); close(); }}
+                className="w-full text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50">
+                Technician Login
               </button>
             </div>
             <div className="flex gap-2 pt-2">
