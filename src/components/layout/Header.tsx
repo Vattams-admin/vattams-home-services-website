@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Menu, X, Phone, MessageCircle, ChevronDown, User, Briefcase, LogOut, LogIn, ShieldCheck } from 'lucide-react';
+import { Menu, X, Phone, MessageCircle, ChevronDown, User, Briefcase, LogOut, LogIn, ShieldCheck, LayoutDashboard, CreditCard, Star } from 'lucide-react';
 import { useRouter, Page } from '@/lib/router';
 import SocialLinks from '@/components/SocialLinks';
 import NotificationCenter from '@/components/NotificationCenter';
@@ -93,11 +93,23 @@ export default function Header() {
                         <div className="font-bold text-gray-900 text-sm">{customer.full_name}</div>
                         <div className="text-xs text-gray-400">{customer.mobile}</div>
                       </div>
-                      <button onClick={() => { navigate('customer-profile'); close(); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700">
-                        <User size={15} /> My Profile
+                      <button onClick={() => { navigate('customer-dashboard'); close(); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700">
+                        <LayoutDashboard size={15} /> Dashboard
                       </button>
                       <button onClick={() => { navigate('customer-bookings'); close(); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700">
                         <Briefcase size={15} /> My Bookings
+                      </button>
+                      <button onClick={() => { navigate('customer-payments'); close(); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700">
+                        <CreditCard size={15} /> Payments
+                      </button>
+                      <button onClick={() => { navigate('customer-reviews'); close(); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700">
+                        <Star size={15} /> Reviews
+                      </button>
+                      <button onClick={() => { navigate('customer-support'); close(); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700">
+                        <Phone size={15} /> Support
+                      </button>
+                      <button onClick={() => { navigate('customer-profile'); close(); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700">
+                        <User size={15} /> My Profile
                       </button>
                       <div className="border-t border-gray-100 mt-1 pt-1">
                         <button onClick={() => { navigate('booking'); close(); }} className="w-full text-left px-4 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-50">
@@ -175,11 +187,23 @@ export default function Header() {
               </button>
               {customer ? (
                 <>
-                  <button onClick={() => { navigate('customer-profile'); close(); }} className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50">
-                    <User size={15} /> My Profile
+                  <button onClick={() => { navigate('customer-dashboard'); close(); }} className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50">
+                    <LayoutDashboard size={15} /> Dashboard
                   </button>
                   <button onClick={() => { navigate('customer-bookings'); close(); }} className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50">
                     <Briefcase size={15} /> My Bookings
+                  </button>
+                  <button onClick={() => { navigate('customer-payments'); close(); }} className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50">
+                    <CreditCard size={15} /> Payments
+                  </button>
+                  <button onClick={() => { navigate('customer-reviews'); close(); }} className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50">
+                    <Star size={15} /> Reviews
+                  </button>
+                  <button onClick={() => { navigate('customer-support'); close(); }} className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50">
+                    <Phone size={15} /> Support
+                  </button>
+                  <button onClick={() => { navigate('customer-profile'); close(); }} className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50">
+                    <User size={15} /> My Profile
                   </button>
                   <button onClick={handleLogout} className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm text-red-600 hover:bg-red-50">
                     <LogOut size={15} /> Logout

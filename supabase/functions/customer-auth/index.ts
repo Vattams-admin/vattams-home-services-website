@@ -276,6 +276,102 @@ Deno.serve(async (req: Request) => {
         return jsonResponse({ success: true, message: "Password reset successfully" });
       }
 
+      case "change-password": {
+        const { mobile, current_password, new_password } = body;
+
+        if (!mobile?.trim()) return errorResponse("Mobile number is required");
+        if (!current_password?.trim()) return errorResponse("Current password is required");
+        if (!new_password?.trim()) return errorResponse("New password is required");
+
+        const passErr = validatePassword(new_password);
+        if (passErr) return errorResponse(passErr);
+
+        const { data: customer } = await supabase
+          .from("customers")
+          .select("id, password_hash")
+          .eq("mobile", mobile)
+          .maybeSingle();
+
+        if (!customer) return errorResponse("Account not found");
+
+        const passwordMatch = bcrypt.compareSync(current_password, customer.password_hash);
+        if (!passwordMatch) return errorResponse("Current password is incorrect");
+
+        const salt = bcrypt.genSaltSync(10);
+        const passwordHash = bcrypt.hashSync(new_password, salt);
+
+        const { error: updateError } = await supabase
+          .from("customers")
+          .update({ password_hash: passwordHash, updated_at: new Date().toISOString() })
+          .eq("mobile", mobile);
+
+        if (updateError) return errorResponse("Failed to change password. Please try again.");
+
+        return jsonResponse({ success: true, message: "Password changed successfully" });
+      }
+
+      case "submit-review": {
+        const { booking_id, customer_id, customer_name, technician_id, rating, review_text } = body;
+
+        if (!booking_id) return errorResponse("Booking ID is required");
+        if (!customer_id) return errorResponse("Customer ID is required");
+        if (!rating || rating < 1 || rating > 5) return errorResponse("Rating must be between 1 and 5");
+
+        // Check if review already exists
+        const { data: existing } = await supabase
+          .from("reviews")
+          .select("id")
+          .eq("booking_id", booking_id)
+          .maybeSingle();
+
+        if (existing) return errorResponse("You have already reviewed this booking");
+
+        // Verify the booking belongs to this customer and is completed
+        const { data: booking } = await supabase
+          .from("bookings")
+          .select("id, status, customer_id, assigned_technician_id")
+          .eq("id", booking_id)
+          .maybeSingle();
+
+        if (!booking) return errorResponse("Booking not found");
+        if (booking.status !== "completed") return errorResponse("You can only review completed bookings");
+
+        const finalTechId = technician_id || booking.assigned_technician_id;
+
+        const { data: review, error: reviewError } = await supabase
+          .from("reviews")
+          .insert({
+            booking_id,
+            customer_id,
+            customer_name,
+            technician_id: finalTechId || null,
+            rating,
+            review_text: review_text || null,
+          })
+          .select("*")
+          .single();
+
+        if (reviewError) return errorResponse("Failed to submit review. Please try again.");
+
+        // Update technician rating
+        if (finalTechId) {
+          const { data: avgData } = await supabase
+            .from("reviews")
+            .select("rating")
+            .eq("technician_id", finalTechId);
+
+          if (avgData && avgData.length > 0) {
+            const avgRating = avgData.reduce((sum, r) => sum + r.rating, 0) / avgData.length;
+            await supabase
+              .from("technicians")
+              .update({ rating: Math.round(avgRating * 100) / 100 })
+              .eq("id", finalTechId);
+          }
+        }
+
+        return jsonResponse({ success: true, message: "Review submitted successfully", review });
+      }
+
       case "resend-otp": {
         const { mobile, purpose } = body;
 

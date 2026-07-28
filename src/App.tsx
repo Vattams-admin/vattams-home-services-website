@@ -11,6 +11,10 @@ import CustomerRegister from '@/pages/CustomerRegister';
 import CustomerForgot from '@/pages/CustomerForgot';
 import CustomerProfile from '@/pages/CustomerProfile';
 import CustomerBookings from '@/pages/CustomerBookings';
+import CustomerDashboard from '@/pages/CustomerDashboard';
+import CustomerPayments from '@/pages/CustomerPayments';
+import CustomerReviews from '@/pages/CustomerReviews';
+import CustomerSupport from '@/pages/CustomerSupport';
 import AdminLogin from '@/pages/AdminLogin';
 import AdminDashboard from '@/pages/AdminDashboard';
 import TechnicianRegister from '@/pages/TechnicianRegister';
@@ -32,6 +36,10 @@ function Pages() {
       case 'customer-forgot': return <CustomerForgot />;
       case 'customer-profile': return <CustomerProfile />;
       case 'customer-bookings': return <CustomerBookings />;
+      case 'customer-dashboard': return <CustomerDashboard />;
+      case 'customer-payments': return <CustomerPayments />;
+      case 'customer-reviews': return <CustomerReviews />;
+      case 'customer-support': return <CustomerSupport />;
       case 'admin-login': return <AdminLogin />;
       case 'admin-dashboard': return <AdminDashboard />;
       case 'technician-register': return <TechnicianRegister />;
@@ -43,6 +51,8 @@ function Pages() {
 
   const hideFooter = page === 'admin-login' || page === 'admin-dashboard' ||
     page === 'customer-login' || page === 'customer-register' || page === 'customer-forgot' ||
+    page === 'customer-dashboard' || page === 'customer-payments' ||
+    page === 'customer-reviews' || page === 'customer-support' ||
     page === 'technician-login' || page === 'technician-dashboard';
 
   return (

@@ -141,3 +141,14 @@ export interface WalletSettings {
   low_balance_threshold: number;
   updated_at: string;
 }
+
+export interface Review {
+  id: string;
+  booking_id: string;
+  customer_id: string | null;
+  customer_name: string;
+  technician_id: string | null;
+  rating: number;
+  review_text: string | null;
+  created_at: string;
+}

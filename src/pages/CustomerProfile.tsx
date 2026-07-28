@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Loader, User, Phone, Mail, MapPin, Home, Save, LogOut, Calendar, Briefcase, CheckCircle } from 'lucide-react';
+import { Loader, User, Phone, Mail, MapPin, Home, Save, LogOut, Calendar, Briefcase, CheckCircle, Lock, Key } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import { supabase, Customer } from '@/lib/supabase';
+
+const SUPABASE_URL = 'https://nitlpxztktgjcjxdgiqm.supabase.co';
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pdGxweHp0a3RnamNqeGRnaXFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxODM5ODcsImV4cCI6MjEwMDc1OTk4N30.mKbYeKEf7u2DjDpPtiVmNasfEx7sH0nwuuNrN_30GiM';
 
 export default function CustomerProfile() {
   const { navigate } = useRouter();
@@ -11,6 +14,10 @@ export default function CustomerProfile() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [bookingCount, setBookingCount] = useState(0);
+  const [showPwdForm, setShowPwdForm] = useState(false);
+  const [pwdForm, setPwdForm] = useState({ current: '', new: '', confirm: '' });
+  const [pwdLoading, setPwdLoading] = useState(false);
+  const [pwdMsg, setPwdMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('vattams_customer');
@@ -55,6 +62,31 @@ export default function CustomerProfile() {
   const handleLogout = () => {
     sessionStorage.removeItem('vattams_customer');
     navigate('home');
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customer) return;
+    setPwdMsg(null);
+    if (pwdForm.new !== pwdForm.confirm) { setPwdMsg({ type: 'error', text: 'New passwords do not match.' }); return; }
+    if (pwdForm.new.length < 6) { setPwdMsg({ type: 'error', text: 'Password must be at least 6 characters.' }); return; }
+
+    setPwdLoading(true);
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-auth/change-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ANON_KEY}` },
+        body: JSON.stringify({ mobile: customer.mobile, current_password: pwdForm.current, new_password: pwdForm.new }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || 'Failed to change password');
+      setPwdMsg({ type: 'success', text: 'Password changed successfully!' });
+      setPwdForm({ current: '', new: '', confirm: '' });
+      setShowPwdForm(false);
+    } catch (err) {
+      setPwdMsg({ type: 'error', text: err instanceof Error ? err.message : 'Failed to change password.' });
+    }
+    setPwdLoading(false);
   };
 
   if (loading || !customer) {
@@ -146,8 +178,51 @@ export default function CustomerProfile() {
           </button>
         </form>
 
-        <button onClick={() => navigate('customer-bookings')} className="w-full mt-4 flex items-center justify-center gap-2 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors">
-          <Briefcase size={18} /> View My Bookings
+        {/* Change Password */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mt-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2"><Lock size={16} className="text-gray-400" /> Change Password</h3>
+            <button onClick={() => setShowPwdForm(!showPwdForm)} className="text-sm text-blue-600 font-semibold hover:underline">
+              {showPwdForm ? 'Cancel' : 'Change'}
+            </button>
+          </div>
+          {pwdMsg && <div className={'rounded-xl p-3 text-sm mb-4 ' + (pwdMsg.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200')}>{pwdMsg.text}</div>}
+          {showPwdForm && (
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Current Password</label>
+                <div className="relative">
+                  <Key size={16} className="absolute left-3 top-3.5 text-gray-400" />
+                  <input type="password" value={pwdForm.current} onChange={(e) => setPwdForm({ ...pwdForm, current: e.target.value })} required
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">New Password</label>
+                <div className="relative">
+                  <Lock size={16} className="absolute left-3 top-3.5 text-gray-400" />
+                  <input type="password" value={pwdForm.new} onChange={(e) => setPwdForm({ ...pwdForm, new: e.target.value })} required minLength={6}
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Confirm New Password</label>
+                <div className="relative">
+                  <Lock size={16} className="absolute left-3 top-3.5 text-gray-400" />
+                  <input type="password" value={pwdForm.confirm} onChange={(e) => setPwdForm({ ...pwdForm, confirm: e.target.value })} required minLength={6}
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm" />
+                </div>
+              </div>
+              <button type="submit" disabled={pwdLoading}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold rounded-xl transition-colors">
+                {pwdLoading ? <Loader size={18} className="animate-spin" /> : <Key size={18} />} Update Password
+              </button>
+            </form>
+          )}
+        </div>
+
+        <button onClick={() => navigate('customer-dashboard')} className="w-full mt-4 flex items-center justify-center gap-2 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors">
+          <Briefcase size={18} /> Go to Dashboard
         </button>
       </div>
     </div>
