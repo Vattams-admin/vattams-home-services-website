@@ -29,13 +29,13 @@ export default function CTASection() {
                 <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
               </button>
               <a
-                href="tel:+919876543210"
+                href="tel:+918189800757"
                 className="flex items-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/30 text-white font-bold rounded-xl hover:bg-white/20 transition-all duration-300 hover:scale-105"
               >
                 <Phone size={18} /> Call Now
               </a>
               <a
-                href="https://wa.me/919876543210"
+                href="https://wa.me/918189800757"
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-2 px-8 py-4 bg-green-500 hover:bg-green-400 text-white font-bold rounded-xl transition-all duration-300 hover:scale-105"

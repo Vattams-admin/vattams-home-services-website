@@ -38,8 +38,8 @@ export default function Contact() {
               <h2 className="text-2xl font-extrabold text-gray-900 mb-6">Contact Information</h2>
               <div className="space-y-4">
                 {[
-                  { icon: Phone, label: 'Call Us', value: '+91 98765 43210', href: 'tel:+919876543210', color: 'bg-blue-600' },
-                  { icon: MessageCircle, label: 'WhatsApp', value: 'Chat with us', href: 'https://wa.me/919876543210', color: 'bg-green-500' },
+                  { icon: Phone, label: 'Call Us', value: '+91 81898 00757', href: 'tel:+918189800757', color: 'bg-blue-600' },
+                  { icon: MessageCircle, label: 'WhatsApp', value: 'Chat with us', href: 'https://wa.me/918189800757', color: 'bg-green-500' },
                   { icon: Mail, label: 'Email', value: 'support@vattams.in', href: 'mailto:support@vattams.in', color: 'bg-amber-500' },
                   { icon: MapPin, label: 'Service Area', value: 'Across Tamil Nadu', href: '#', color: 'bg-rose-500' },
                 ].map((c) => {
@@ -102,7 +102,7 @@ export default function Contact() {
                       type="tel" required value={form.phone}
                       onChange={(e) => setForm({ ...form, phone: e.target.value })}
                       className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-                      placeholder="+91 98765 43210"
+                      placeholder="+91 81898 00757"
                     />
                   </div>
                 </div>

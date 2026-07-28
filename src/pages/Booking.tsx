@@ -77,7 +77,7 @@ export default function Booking() {
           </div>
           <p className="text-sm text-gray-500 mb-6">Save this number to track your booking status.</p>
           <div className="flex flex-col gap-3">
-            <a href="https://wa.me/919876543210" target="_blank" rel="noreferrer"
+            <a href="https://wa.me/918189800757" target="_blank" rel="noreferrer"
               className="flex items-center justify-center gap-2 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors">
               Share on WhatsApp
             </a>
