@@ -1,114 +1,81 @@
 import { useState } from 'react';
-import { Loader, Search, Phone, Calendar, Wrench, MapPin, X } from 'lucide-react';
-import { supabase, Booking } from '@/lib/supabase';
+import { Loader, Phone, Lock, LogIn } from 'lucide-react';
 import { useRouter } from '@/lib/router';
+import { supabase } from '@/lib/supabase';
 
-const statusColors: Record<string, string> = {
-  pending: 'bg-amber-100 text-amber-700',
-  confirmed: 'bg-blue-100 text-blue-700',
-  in_progress: 'bg-purple-100 text-purple-700',
-  completed: 'bg-green-100 text-green-700',
-  cancelled: 'bg-red-100 text-red-700',
-};
+const SUPABASE_URL = 'https://nitlpxztktgjcjxdgiqm.supabase.co';
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pdGxweHp0a3RnamNqeGRnaXFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxODM5ODcsImV4cCI6MjEwMDc1OTk4N30.mKbYeKEf7u2DjDpPtiVmNasfEx7sH0nwuuNrN_30GiM';
 
 export default function CustomerLogin() {
   const { navigate } = useRouter();
   const [mobile, setMobile] = useState('');
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [searched, setSearched] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSearch = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!mobile || mobile.length < 10) return;
+    setError('');
+    if (!mobile.trim() || !password.trim()) { setError('Please enter your mobile number and password.'); return; }
+    if (!/^[6-9]\d{9}$/.test(mobile)) { setError('Please enter a valid 10-digit mobile number.'); return; }
+
     setLoading(true);
-    setSearched(true);
-    const { data } = await supabase
-      .from('bookings')
-      .select('*')
-      .eq('mobile_number', mobile)
-      .order('created_at', { ascending: false });
-    setBookings(data ?? []);
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ANON_KEY}` },
+        body: JSON.stringify({ mobile, password }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || 'Login failed');
+
+      sessionStorage.setItem('vattams_customer', JSON.stringify(data.customer));
+      navigate('home');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Network error. Please try again.');
+    }
     setLoading(false);
   };
 
   return (
-    <div className="pt-20 md:pt-24 min-h-screen bg-gray-50">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center mb-8">
-          <img src="/logo.svg" alt="VATTAMS HOME SERVICES" className="h-20 w-auto mx-auto mb-4 rounded-xl" />
-          <h1 className="text-3xl font-extrabold text-gray-900 mb-2">Track Your Bookings</h1>
-          <p className="text-gray-500">Enter your mobile number to view your booking history and status.</p>
+    <div className="pt-20 md:pt-24 min-h-screen bg-gray-50 flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-6">
+          <img src="/logo.svg" alt="VATTAMS" className="h-16 w-auto mx-auto mb-3 rounded-xl" />
+          <h1 className="text-2xl font-extrabold text-gray-900">Customer Login</h1>
+          <p className="text-gray-500 text-sm mt-1">Login to book and track your services</p>
         </div>
 
-        <form onSubmit={handleSearch} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-8">
-          <div className="flex gap-3">
-            <div className="relative flex-1">
-              <Phone size={16} className="absolute left-3 top-3.5 text-gray-400" />
-              <input
-                type="tel" required pattern="[0-9]{10}" value={mobile}
-                onChange={(e) => setMobile(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none"
-                placeholder="Enter your 10-digit mobile number"
-              />
-            </div>
-            <button type="submit" disabled={loading}
-              className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold rounded-xl transition-colors">
-              {loading ? <Loader size={18} className="animate-spin" /> : <Search size={18} />}
-              Track
-            </button>
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3 mb-4">{error}</div>
+        )}
+
+        <form onSubmit={handleLogin} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
+          <div className="relative">
+            <Phone size={16} className="absolute left-3 top-3.5 text-gray-400" />
+            <input type="tel" value={mobile} onChange={(e) => setMobile(e.target.value)} maxLength={10}
+              placeholder="10-digit Mobile Number"
+              className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm" />
+          </div>
+          <div className="relative">
+            <Lock size={16} className="absolute left-3 top-3.5 text-gray-400" />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm" />
+          </div>
+          <button type="submit" disabled={loading}
+            className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold rounded-xl transition-colors">
+            {loading ? <Loader size={18} className="animate-spin" /> : <LogIn size={18} />} Login
+          </button>
+          <div className="flex items-center justify-between text-sm">
+            <button type="button" onClick={() => navigate('customer-register')} className="text-blue-600 font-semibold hover:underline">Create Account</button>
+            <button type="button" onClick={() => navigate('customer-forgot')} className="text-gray-500 hover:underline">Forgot Password?</button>
           </div>
         </form>
 
-        {searched && !loading && bookings.length === 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-10 text-center">
-            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-              <X size={28} className="text-gray-400" />
-            </div>
-            <h3 className="font-bold text-gray-900 mb-1">No Bookings Found</h3>
-            <p className="text-gray-500 text-sm mb-4">No bookings associated with this mobile number.</p>
-            <button onClick={() => navigate('booking')}
-              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors">
-              Book a Service
-            </button>
-          </div>
-        )}
-
-        {bookings.length > 0 && (
-          <div className="space-y-4">
-            {bookings.map((b) => (
-              <div key={b.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="text-xs text-gray-400 font-medium">Booking Number</div>
-                    <div className="font-extrabold text-blue-700">{b.booking_number}</div>
-                  </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${statusColors[b.status] ?? 'bg-gray-100 text-gray-700'}`}>
-                    {b.status.replace('_', ' ')}
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Wrench size={14} className="text-gray-400" /> {b.service_category}
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <MapPin size={14} className="text-gray-400" /> {b.city}
-                  </div>
-                  {b.preferred_date && (
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Calendar size={14} className="text-gray-400" /> {b.preferred_date}
-                    </div>
-                  )}
-                  {b.preferred_time && (
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Calendar size={14} className="text-gray-400" /> {b.preferred_time}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <div className="mt-4 text-center text-sm text-gray-400">
+          <button onClick={() => navigate('booking')} className="hover:underline">Book without an account</button>
+        </div>
       </div>
     </div>
   );

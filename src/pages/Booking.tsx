@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Loader, CheckCircle, Calendar, User, Phone, MapPin, Wrench, FileText, Clock, ArrowRight, CreditCard, LucideIcon } from 'lucide-react';
-import { supabase, ServiceCategory } from '@/lib/supabase';
+import { Loader, CheckCircle, Calendar, User, Phone, MapPin, Wrench, FileText, Clock, ArrowRight, CreditCard, LucideIcon, LogIn } from 'lucide-react';
+import { supabase, ServiceCategory, Customer } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import PaymentModal from '@/components/PaymentModal';
 import { notifyCustomer, notifyAdmin } from '@/lib/notifications';
@@ -15,6 +15,13 @@ const tamilNaduCities = [
 
 const timeSlots = ['07:00 - 09:00', '09:00 - 11:00', '11:00 - 13:00', '13:00 - 15:00', '15:00 - 17:00', '17:00 - 19:00', '19:00 - 21:00'];
 
+function parsePriceRange(range: string | null): number {
+  if (!range) return 299;
+  const nums = range.match(/\d+/g);
+  if (nums && nums.length > 0) return parseInt(nums[0], 10);
+  return 299;
+}
+
 export default function Booking() {
   const { navigate } = useRouter();
   const [services, setServices] = useState<ServiceCategory[]>([]);
@@ -22,6 +29,7 @@ export default function Booking() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState<{ number: string; id: string } | null>(null);
   const [showPayment, setShowPayment] = useState(false);
+  const [customer, setCustomer] = useState<Customer | null>(null);
 
   const [form, setForm] = useState({
     customer_name: '', mobile_number: '', city: 'Chennai', address: '',
@@ -29,6 +37,22 @@ export default function Booking() {
   });
 
   useEffect(() => {
+    // Pre-fill from customer session
+    const stored = sessionStorage.getItem('vattams_customer');
+    if (stored) {
+      try {
+        const c = JSON.parse(stored) as Customer;
+        setCustomer(c);
+        setForm((f) => ({
+          ...f,
+          customer_name: c.full_name,
+          mobile_number: c.mobile,
+          city: c.city || 'Chennai',
+          address: c.address || '',
+        }));
+      } catch { /* ignore */ }
+    }
+
     supabase.from('service_categories').select('*').order('created_at').then(({ data }) => {
       if (data) {
         setServices(data);
@@ -37,6 +61,9 @@ export default function Booking() {
       setLoading(false);
     });
   }, []);
+
+  const selectedService = services.find((s) => s.name === form.service_category);
+  const bookingAmount = parsePriceRange(selectedService?.price_range ?? null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +79,8 @@ export default function Booking() {
         problem_description: form.problem_description,
         preferred_date: form.preferred_date || null,
         preferred_time: form.preferred_time || null,
+        amount: bookingAmount,
+        customer_id: customer?.id || null,
         status: 'pending',
       })
       .select('id,booking_number')
@@ -64,7 +93,6 @@ export default function Booking() {
     }
     setSuccess({ number: data.booking_number, id: data.id });
 
-    // Send notifications
     await Promise.all([
       notifyCustomer.bookingReceived(form.mobile_number, data.booking_number, data.id),
       notifyAdmin.newBooking(data.booking_number, form.customer_name, form.service_category, data.id),
@@ -84,30 +112,43 @@ export default function Booking() {
           <div className="bg-blue-50 rounded-xl p-4 mb-6">
             <div className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Your Booking Number</div>
             <div className="text-xl font-extrabold text-blue-700">{success.number}</div>
+            {bookingAmount > 0 && <div className="text-sm text-gray-600 mt-2">Service fee: ₹{bookingAmount}</div>}
           </div>
-          <p className="text-sm text-gray-500 mb-6">Save this number to track your booking status.</p>
+          <p className="text-sm text-gray-500 mb-6">
+            {customer
+              ? 'Track your booking from your profile anytime.'
+              : 'Save this number to track your booking status, or create an account to track easily.'}
+          </p>
           <div className="flex flex-col gap-3">
             <button onClick={() => setShowPayment(true)}
               className="flex items-center justify-center gap-2 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-colors shadow-lg shadow-green-200">
-              <CreditCard size={18} /> Pay Now via UPI
+              <CreditCard size={18} /> Pay ₹{bookingAmount} via UPI
             </button>
-            <a href="https://wa.me/918189800757" target="_blank" rel="noreferrer"
-              className="flex items-center justify-center gap-2 py-3 bg-green-50 hover:bg-green-100 text-green-700 font-semibold rounded-xl transition-colors border border-green-200">
-              Share on WhatsApp
-            </a>
+            {customer && (
+              <button onClick={() => navigate('customer-bookings')}
+                className="flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors">
+                View My Bookings
+              </button>
+            )}
+            {!customer && (
+              <button onClick={() => navigate('customer-register')}
+                className="flex items-center justify-center gap-2 py-3 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold rounded-xl transition-colors border border-blue-200">
+                <LogIn size={18} /> Create Account to Track
+              </button>
+            )}
             <button onClick={() => navigate('home')}
-              className="py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors">
+              className="py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors">
               Back to Home
             </button>
           </div>
-          <p className="text-xs text-gray-400 mt-4">You can pay now or pay after service. Paying now helps us process your request faster.</p>
+          <p className="text-xs text-gray-400 mt-4">You can pay now via UPI or pay after service. Paying now helps us process your request faster.</p>
         </div>
       </div>
       {showPayment && success && (
         <PaymentModal
           open={showPayment}
           onClose={() => setShowPayment(false)}
-          amount={500}
+          amount={bookingAmount}
           purpose="booking"
           payeeType="customer"
           payeeId={form.mobile_number}
@@ -122,7 +163,6 @@ export default function Booking() {
 
   return (
     <div className="pt-20 md:pt-24">
-      {/* Hero */}
       <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-indigo-900 py-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-3">Book a Service</h1>
@@ -141,6 +181,13 @@ export default function Booking() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
+                {!customer && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-sm text-blue-700 flex items-center justify-between">
+                    <span>Have an account? Login to pre-fill your details.</span>
+                    <button type="button" onClick={() => navigate('customer-login')} className="font-bold hover:underline">Login</button>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <Field icon={User} label="Customer Name *">
                     <input type="text" required value={form.customer_name}
@@ -172,6 +219,12 @@ export default function Booking() {
                     </select>
                   </Field>
                 </div>
+
+                {selectedService?.price_range && (
+                  <div className="bg-gray-50 rounded-xl p-3 text-sm text-gray-600">
+                    <span className="font-semibold">Estimated cost:</span> {selectedService.price_range}
+                  </div>
+                )}
 
                 <Field icon={MapPin} label="Address *">
                   <textarea required rows={2} value={form.address}

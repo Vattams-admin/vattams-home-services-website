@@ -7,6 +7,10 @@ import About from '@/pages/About';
 import Contact from '@/pages/Contact';
 import Booking from '@/pages/Booking';
 import CustomerLogin from '@/pages/CustomerLogin';
+import CustomerRegister from '@/pages/CustomerRegister';
+import CustomerForgot from '@/pages/CustomerForgot';
+import CustomerProfile from '@/pages/CustomerProfile';
+import CustomerBookings from '@/pages/CustomerBookings';
 import AdminLogin from '@/pages/AdminLogin';
 import AdminDashboard from '@/pages/AdminDashboard';
 import TechnicianRegister from '@/pages/TechnicianRegister';
@@ -24,6 +28,10 @@ function Pages() {
       case 'contact': return <Contact />;
       case 'booking': return <Booking />;
       case 'customer-login': return <CustomerLogin />;
+      case 'customer-register': return <CustomerRegister />;
+      case 'customer-forgot': return <CustomerForgot />;
+      case 'customer-profile': return <CustomerProfile />;
+      case 'customer-bookings': return <CustomerBookings />;
       case 'admin-login': return <AdminLogin />;
       case 'admin-dashboard': return <AdminDashboard />;
       case 'technician-register': return <TechnicianRegister />;
@@ -33,7 +41,9 @@ function Pages() {
     }
   };
 
-  const hideFooter = page === 'admin-login' || page === 'customer-login' || page === 'technician-login' || page === 'technician-dashboard';
+  const hideFooter = page === 'admin-login' || page === 'admin-dashboard' ||
+    page === 'customer-login' || page === 'customer-register' || page === 'customer-forgot' ||
+    page === 'technician-login' || page === 'technician-dashboard';
 
   return (
     <div className="min-h-screen flex flex-col bg-white">

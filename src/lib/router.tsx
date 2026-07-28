@@ -7,6 +7,10 @@ export type Page =
   | 'contact'
   | 'booking'
   | 'customer-login'
+  | 'customer-register'
+  | 'customer-forgot'
+  | 'customer-profile'
+  | 'customer-bookings'
   | 'admin-login'
   | 'admin-dashboard'
   | 'technician-register'
@@ -27,8 +31,9 @@ function getPageFromHash(): Page {
   const hash = window.location.hash.replace('#', '') as Page;
   const valid: Page[] = [
     'home','services','about','contact','booking',
-    'customer-login','admin-login','admin-dashboard',
-    'technician-register','technician-dashboard',
+    'customer-login','customer-register','customer-forgot','customer-profile','customer-bookings',
+    'admin-login','admin-dashboard',
+    'technician-register','technician-login','technician-dashboard',
   ];
   return valid.includes(hash) ? hash : 'home';
 }

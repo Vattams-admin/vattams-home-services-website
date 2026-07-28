@@ -17,6 +17,7 @@ import {
   sendAnnouncementToTechnicians, sendAnnouncementToCustomers,
   fetchNotifications, NotificationRow,
 } from '@/lib/notifications';
+import { Customer } from '@/lib/supabase';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -40,7 +41,7 @@ const techStatusLabel: Record<string, string> = {
 
 const statusOptions: BookingStatus[] = ['pending', 'confirmed', 'in_progress', 'completed', 'cancelled'];
 
-type Tab = 'bookings' | 'technicians' | 'wallet' | 'payments' | 'social' | 'notifications';
+type Tab = 'bookings' | 'technicians' | 'customers' | 'wallet' | 'payments' | 'reports' | 'social' | 'notifications';
 
 export default function AdminDashboard() {
   const { navigate } = useRouter();
@@ -60,6 +61,8 @@ export default function AdminDashboard() {
   const [walletUpdating, setWalletUpdating] = useState(false);
   const [selectedWalletTech, setSelectedWalletTech] = useState<Technician | null>(null);
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customerFilter, setCustomerFilter] = useState('');
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'pending' | 'success' | 'failed'>('pending');
   const [paymentUpdating, setPaymentUpdating] = useState(false);
   const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
@@ -114,11 +117,14 @@ export default function AdminDashboard() {
     setWalletTxns(txnRes.data ?? []);
     setRecharges((rechargeRes.data ?? []).map((r) => ({ ...r, technician_name: (r as Record<string, unknown>).technician ? ((r as Record<string, { full_name: string }>).technician).full_name : undefined })));
 
-    const [pendingPay, allPay] = await Promise.all([
+    const [pendingPay, allPay, custRes] = await Promise.all([
       fetchPendingPayments(),
       fetchAllPayments(),
+      supabase.from('customers').select('*').order('created_at', { ascending: false }),
     ]);
     setPayments(allPay);
+    if (custRes.data) setCustomers(custRes.data);
+    if (custRes.error) console.error('[AdminDashboard] customers query error:', custRes.error);
     await loadSiteSettings();
     await loadNotifLogs();
     setLoading(false);
@@ -466,6 +472,19 @@ export default function AdminDashboard() {
             {payments.filter((p) => p.status === 'pending').length > 0 && (
               <span className="px-2 py-0.5 rounded-full text-xs bg-amber-500 text-white">{payments.filter((p) => p.status === 'pending').length}</span>
             )}
+          </button>
+          <button onClick={() => setTab('customers')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
+              tab === 'customers' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
+            }`}>
+            <User size={16} /> Customers
+            <span className={`ml-1 px-2 py-0.5 rounded-full text-xs ${tab === 'customers' ? 'bg-white/20' : 'bg-gray-100'}`}>{customers.length}</span>
+          </button>
+          <button onClick={() => setTab('reports')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
+              tab === 'reports' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
+            }`}>
+            <TrendingUp size={16} /> Reports
           </button>
           <button onClick={() => setTab('social')}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
@@ -1138,6 +1157,229 @@ export default function AdminDashboard() {
         </div>
       )}
 
+      {/* ===================== CUSTOMERS TAB ===================== */}
+      {tab === 'customers' && (
+        <div className="max-w-5xl">
+          <div className="mb-6">
+            <h2 className="text-lg font-extrabold text-gray-900 mb-1">Customer Management</h2>
+            <p className="text-sm text-gray-500">View all registered customers and their booking history.</p>
+          </div>
+
+          <div className="mb-4">
+            <input type="text" value={customerFilter} onChange={(e) => setCustomerFilter(e.target.value)}
+              placeholder="Search by name, mobile, email, or city..."
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm" />
+          </div>
+
+          {customers.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
+              <Users size={40} className="text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500">No registered customers yet.</p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100 text-xs text-gray-400 uppercase tracking-wider bg-gray-50">
+                      <th className="text-left py-3 px-4 font-semibold">Name</th>
+                      <th className="text-left py-3 px-4 font-semibold">Mobile</th>
+                      <th className="text-left py-3 px-4 font-semibold">Email</th>
+                      <th className="text-left py-3 px-4 font-semibold">City</th>
+                      <th className="text-left py-3 px-4 font-semibold">Bookings</th>
+                      <th className="text-left py-3 px-4 font-semibold">Joined</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {customers
+                      .filter((c) => {
+                        if (!customerFilter) return true;
+                        const q = customerFilter.toLowerCase();
+                        return c.full_name.toLowerCase().includes(q) ||
+                          c.mobile.includes(q) ||
+                          (c.email ?? '').toLowerCase().includes(q) ||
+                          (c.city ?? '').toLowerCase().includes(q);
+                      })
+                      .map((c) => {
+                        const custBookings = bookings.filter((b) => b.customer_id === c.id || b.mobile_number === c.mobile);
+                        return (
+                          <tr key={c.id} className="border-b border-gray-50 hover:bg-blue-50/30">
+                            <td className="py-3 px-4 font-semibold text-gray-800">{c.full_name}</td>
+                            <td className="py-3 px-4 text-gray-600">{c.mobile}</td>
+                            <td className="py-3 px-4 text-gray-600">{c.email ?? '—'}</td>
+                            <td className="py-3 px-4 text-gray-600">{c.city ?? '—'}</td>
+                            <td className="py-3 px-4">
+                              <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">{custBookings.length}</span>
+                            </td>
+                            <td className="py-3 px-4 text-gray-400 text-xs whitespace-nowrap">{new Date(c.created_at).toLocaleDateString('en-IN')}</td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ===================== REPORTS TAB ===================== */}
+      {tab === 'reports' && (() => {
+        const completedBookings = bookings.filter((b) => b.status === 'completed');
+        const cancelledBookings = bookings.filter((b) => b.status === 'cancelled');
+        const pendingBookings = bookings.filter((b) => b.status === 'pending');
+        const confirmedBookings = bookings.filter((b) => b.status === 'confirmed');
+        const inProgressBookings = bookings.filter((b) => b.status === 'in_progress');
+        const totalRevenue = completedBookings.reduce((sum, b) => sum + (b.amount ?? 0), 0);
+        const pendingRevenue = pendingBookings.concat(confirmedBookings, inProgressBookings).reduce((sum, b) => sum + (b.amount ?? 0), 0);
+        const activeTechs = technicians.filter((t) => t.status === 'active').length;
+        const pendingTechs = technicians.filter((t) => t.status === 'pending').length;
+        const completedPayments = payments.filter((p) => p.status === 'success');
+        const totalPaymentsAmount = completedPayments.reduce((sum, p) => sum + p.amount, 0);
+        const avgBookingValue = completedBookings.length > 0 ? Math.round(totalRevenue / completedBookings.length) : 0;
+
+        // Service distribution
+        const serviceCounts: Record<string, number> = {};
+        bookings.forEach((b) => { serviceCounts[b.service_category] = (serviceCounts[b.service_category] ?? 0) + 1; });
+        const topServices = Object.entries(serviceCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+        const maxServiceCount = topServices[0]?.[1] ?? 1;
+
+        // City distribution
+        const cityCounts: Record<string, number> = {};
+        bookings.forEach((b) => { cityCounts[b.city] = (cityCounts[b.city] ?? 0) + 1; });
+        const topCities = Object.entries(cityCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+        const maxCityCount = topCities[0]?.[1] ?? 1;
+
+        // Monthly revenue (last 6 months)
+        const now = new Date();
+        const months: { label: string; revenue: number; count: number }[] = [];
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const monthStart = d.toISOString();
+          const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 1).toISOString();
+          const monthBookings = completedBookings.filter((b) => b.created_at >= monthStart && b.created_at < monthEnd);
+          const rev = monthBookings.reduce((sum, b) => sum + (b.amount ?? 0), 0);
+          months.push({ label: d.toLocaleString('en-IN', { month: 'short' }), revenue: rev, count: monthBookings.length });
+        }
+        const maxMonthlyRevenue = Math.max(...months.map((m) => m.revenue), 1);
+
+        return (
+          <div className="max-w-5xl space-y-6">
+            <div>
+              <h2 className="text-lg font-extrabold text-gray-900 mb-1">Reports &amp; Analytics</h2>
+              <p className="text-sm text-gray-500">Business performance overview and insights.</p>
+            </div>
+
+            {/* Key Metrics */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <MetricCard icon={DollarSign} label="Total Revenue" value={`₹${totalRevenue.toLocaleString('en-IN')}`} color="green" />
+              <MetricCard icon={Briefcase} label="Total Bookings" value={String(bookings.length)} color="blue" />
+              <MetricCard icon={TrendingUp} label="Avg Booking Value" value={`₹${avgBookingValue.toLocaleString('en-IN')}`} color="purple" />
+              <MetricCard icon={Users} label="Active Technicians" value={String(activeTechs)} color="amber" />
+            </div>
+
+            {/* Booking Status Breakdown */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <h3 className="font-bold text-gray-900 text-sm mb-4">Booking Status Breakdown</h3>
+              <div className="space-y-3">
+                {[
+                  { label: 'Pending', count: pendingBookings.length, color: 'bg-amber-500' },
+                  { label: 'Confirmed', count: confirmedBookings.length, color: 'bg-blue-500' },
+                  { label: 'In Progress', count: inProgressBookings.length, color: 'bg-purple-500' },
+                  { label: 'Completed', count: completedBookings.length, color: 'bg-green-500' },
+                  { label: 'Cancelled', count: cancelledBookings.length, color: 'bg-red-500' },
+                ].map((s) => {
+                  const pct = bookings.length > 0 ? (s.count / bookings.length) * 100 : 0;
+                  return (
+                    <div key={s.label} className="flex items-center gap-3">
+                      <div className="w-24 text-sm text-gray-600 font-medium">{s.label}</div>
+                      <div className="flex-1 bg-gray-100 rounded-full h-6 overflow-hidden">
+                        <div className={`${s.color} h-full rounded-full flex items-center justify-end pr-2 text-xs text-white font-bold transition-all`} style={{ width: `${Math.max(pct, s.count > 0 ? 8 : 0)}%` }}>
+                          {s.count > 0 && s.count}
+                        </div>
+                      </div>
+                      <div className="w-12 text-right text-sm text-gray-500">{pct.toFixed(0)}%</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Monthly Revenue */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <h3 className="font-bold text-gray-900 text-sm mb-4">Monthly Revenue (Last 6 Months)</h3>
+              <div className="flex items-end gap-3 h-48">
+                {months.map((m) => (
+                  <div key={m.label} className="flex-1 flex flex-col items-center gap-2">
+                    <div className="text-xs font-bold text-gray-700">{m.revenue > 0 ? `₹${(m.revenue / 1000).toFixed(1)}k` : '—'}</div>
+                    <div className="w-full bg-gray-100 rounded-t-lg flex items-end" style={{ height: '140px' }}>
+                      <div className="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-lg transition-all"
+                        style={{ height: `${(m.revenue / maxMonthlyRevenue) * 100}%`, minHeight: m.revenue > 0 ? '8px' : '0' }} />
+                    </div>
+                    <div className="text-xs text-gray-500">{m.label}</div>
+                    <div className="text-xs text-gray-400">{m.count} bookings</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Two-column: Services + Cities */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                <h3 className="font-bold text-gray-900 text-sm mb-4">Top Services by Bookings</h3>
+                {topServices.length === 0 ? (
+                  <p className="text-sm text-gray-400 text-center py-6">No bookings yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {topServices.map(([name, count]) => (
+                      <div key={name} className="flex items-center gap-3">
+                        <div className="w-32 text-sm text-gray-600 font-medium truncate">{name}</div>
+                        <div className="flex-1 bg-gray-100 rounded-full h-5 overflow-hidden">
+                          <div className="bg-gradient-to-r from-blue-600 to-blue-400 h-full rounded-full" style={{ width: `${(count / maxServiceCount) * 100}%` }} />
+                        </div>
+                        <div className="w-8 text-right text-sm text-gray-500 font-semibold">{count}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                <h3 className="font-bold text-gray-900 text-sm mb-4">Top Cities by Bookings</h3>
+                {topCities.length === 0 ? (
+                  <p className="text-sm text-gray-400 text-center py-6">No bookings yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {topCities.map(([name, count]) => (
+                      <div key={name} className="flex items-center gap-3">
+                        <div className="w-32 text-sm text-gray-600 font-medium truncate">{name}</div>
+                        <div className="flex-1 bg-gray-100 rounded-full h-5 overflow-hidden">
+                          <div className="bg-gradient-to-r from-green-600 to-green-400 h-full rounded-full" style={{ width: `${(count / maxCityCount) * 100}%` }} />
+                        </div>
+                        <div className="w-8 text-right text-sm text-gray-500 font-semibold">{count}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Summary Stats */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <h3 className="font-bold text-gray-900 text-sm mb-4">Summary</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div><span className="text-gray-400">Pending Revenue:</span> <span className="font-bold text-gray-900">₹{pendingRevenue.toLocaleString('en-IN')}</span></div>
+                <div><span className="text-gray-400">Pending Techs:</span> <span className="font-bold text-gray-900">{pendingTechs}</span></div>
+                <div><span className="text-gray-400">Total Customers:</span> <span className="font-bold text-gray-900">{customers.length}</span></div>
+                <div><span className="text-gray-400">Payments Collected:</span> <span className="font-bold text-gray-900">₹{totalPaymentsAmount.toLocaleString('en-IN')}</span></div>
+                <div><span className="text-gray-400">Cancellation Rate:</span> <span className="font-bold text-gray-900">{bookings.length > 0 ? ((cancelledBookings.length / bookings.length) * 100).toFixed(1) : 0}%</span></div>
+                <div><span className="text-gray-400">Completion Rate:</span> <span className="font-bold text-gray-900">{bookings.length > 0 ? ((completedBookings.length / bookings.length) * 100).toFixed(1) : 0}%</span></div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ===================== SOCIAL MEDIA TAB ===================== */}
       {tab === 'social' && (
         <div className="max-w-3xl">
@@ -1456,6 +1698,24 @@ function InfoRow({ icon: Icon, label, value }: { icon: LucideIcon; label: string
       <div className="flex items-center gap-1.5 text-sm text-gray-700 font-medium">
         <Icon size={14} className="text-gray-400 shrink-0" /> {value}
       </div>
+    </div>
+  );
+}
+
+function MetricCard({ icon: Icon, label, value, color }: { icon: LucideIcon; label: string; value: string; color: 'blue' | 'green' | 'purple' | 'amber' }) {
+  const colorMap = {
+    blue: 'bg-blue-100 text-blue-600',
+    green: 'bg-green-100 text-green-600',
+    purple: 'bg-purple-100 text-purple-600',
+    amber: 'bg-amber-100 text-amber-600',
+  };
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+      <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 ${colorMap[color]}`}>
+        <Icon size={18} />
+      </div>
+      <div className="text-2xl font-extrabold text-gray-900">{value}</div>
+      <div className="text-xs text-gray-400 font-medium">{label}</div>
     </div>
   );
 }

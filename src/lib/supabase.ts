@@ -38,8 +38,20 @@ export interface Booking {
   assigned_technician_id: string | null;
   technician_notes: string | null;
   amount: number | null;
+  customer_id: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface Customer {
+  id: string;
+  full_name: string;
+  mobile: string;
+  email: string | null;
+  city: string | null;
+  address: string | null;
+  created_at: string;
+  updated_at: string | null;
 }
 
 export interface Technician {
