@@ -57,11 +57,7 @@ export default function SocialLinks({ variant = 'footer' }: SocialLinksProps) {
 
   const items = SOCIAL_ITEMS.filter((item) => {
     const val = settings[item.key];
-<<<<<<< HEAD
-    return val && val.trim().length > 0;
-=======
     return typeof val === 'string' && val.trim().length > 0;
->>>>>>> afb9512 (Implement complete notification system with real-time delivery)
   });
 
   const whatsapp = settings.whatsapp_number?.trim();

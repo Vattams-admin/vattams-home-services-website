@@ -4,25 +4,19 @@ import {
   CheckCircle, Clock, X, ChevronDown, LogOut, LayoutDashboard, Users, Briefcase,
   Trash2, Eye, XCircle, Star, Award, Wallet, Lock, Unlock, History, ShieldCheck,
   CreditCard, LucideIcon, Globe, Facebook, Instagram, Twitter, Youtube, MessageCircle, Save,
-<<<<<<< HEAD
-=======
   Bell, BellOff,
->>>>>>> afb9512 (Implement complete notification system with real-time delivery)
 } from 'lucide-react';
 import { supabase, Booking, Technician, BookingStatus, WalletTransaction, WalletRecharge } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { fetchAllPayments, fetchPendingPayments, updatePaymentStatus, PaymentRecord } from '@/lib/payments';
 import { fetchSiteSettings, saveSiteSettings, validateSettings, SiteSettings, SiteSettingsInput } from '@/lib/siteSettings';
 import { refreshSocialLinksCache } from '@/components/SocialLinks';
-<<<<<<< HEAD
-=======
 import NotificationCenter from '@/components/NotificationCenter';
 import {
   notifyCustomer, notifyTechnician, notifyAdmin,
   sendAnnouncementToTechnicians, sendAnnouncementToCustomers,
   fetchNotifications, NotificationRow,
 } from '@/lib/notifications';
->>>>>>> afb9512 (Implement complete notification system with real-time delivery)
 
 const statusColors: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -46,11 +40,7 @@ const techStatusLabel: Record<string, string> = {
 
 const statusOptions: BookingStatus[] = ['pending', 'confirmed', 'in_progress', 'completed', 'cancelled'];
 
-<<<<<<< HEAD
-type Tab = 'bookings' | 'technicians' | 'wallet' | 'payments' | 'social';
-=======
 type Tab = 'bookings' | 'technicians' | 'wallet' | 'payments' | 'social' | 'notifications';
->>>>>>> afb9512 (Implement complete notification system with real-time delivery)
 
 export default function AdminDashboard() {
   const { navigate } = useRouter();
@@ -80,8 +70,6 @@ export default function AdminDashboard() {
   const [socialErrors, setSocialErrors] = useState<Record<string, string>>({});
   const [socialSaving, setSocialSaving] = useState(false);
   const [socialMsg, setSocialMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-<<<<<<< HEAD
-=======
   const [notifLogs, setNotifLogs] = useState<NotificationRow[]>([]);
   const [notifFilter, setNotifFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [announcementModal, setAnnouncementModal] = useState(false);
@@ -91,7 +79,6 @@ export default function AdminDashboard() {
   const [announcementTechId, setAnnouncementTechId] = useState('');
   const [announcementSending, setAnnouncementSending] = useState(false);
   const [announcementResult, setAnnouncementResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
->>>>>>> afb9512 (Implement complete notification system with real-time delivery)
 
   useEffect(() => {
     if (!sessionStorage.getItem('vattams_admin')) {
@@ -133,11 +120,6 @@ export default function AdminDashboard() {
     ]);
     setPayments(allPay);
     await loadSiteSettings();
-<<<<<<< HEAD
-    setLoading(false);
-  };
-
-=======
     await loadNotifLogs();
     setLoading(false);
   };
@@ -147,7 +129,6 @@ export default function AdminDashboard() {
     setNotifLogs(logs);
   };
 
->>>>>>> afb9512 (Implement complete notification system with real-time delivery)
   const loadSiteSettings = async () => {
     const s = await fetchSiteSettings();
     setSiteSettings(s);
@@ -213,8 +194,6 @@ export default function AdminDashboard() {
     await supabase.from('bookings').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
     setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status } : b)));
     if (selectedBooking?.id === id) setSelectedBooking((prev) => (prev ? { ...prev, status } : prev));
-<<<<<<< HEAD
-=======
 
     // Send customer notification based on status
     const booking = bookings.find((b) => b.id === id);
@@ -233,7 +212,6 @@ export default function AdminDashboard() {
       }
     }
 
->>>>>>> afb9512 (Implement complete notification system with real-time delivery)
     setUpdating(false);
   };
 
@@ -246,15 +224,6 @@ export default function AdminDashboard() {
       .eq('id', selectedBooking.id);
     if (bookErr) console.error('[AdminDashboard] assign booking update error:', bookErr);
 
-<<<<<<< HEAD
-    const { error: jobErr } = await supabase.from('technician_jobs').insert({
-      booking_id: selectedBooking.id,
-      technician_id: assignTechId,
-      status: 'assigned',
-    });
-    if (jobErr) console.error('[AdminDashboard] technician_jobs insert error:', jobErr);
-
-=======
     const { data: jobData, error: jobErr } = await supabase.from('technician_jobs').insert({
       booking_id: selectedBooking.id,
       technician_id: assignTechId,
@@ -275,7 +244,6 @@ export default function AdminDashboard() {
         : null,
     ]);
 
->>>>>>> afb9512 (Implement complete notification system with real-time delivery)
     setBookings((prev) =>
       prev.map((b) =>
         b.id === selectedBooking.id ? { ...b, assigned_technician_id: assignTechId, status: 'confirmed' } : b
@@ -290,10 +258,6 @@ export default function AdminDashboard() {
     setTechUpdating(true);
     const { error } = await supabase.from('technicians').update({ status }).eq('id', id);
     if (!error) {
-<<<<<<< HEAD
-      setTechnicians((prev) => prev.map((t) => (t.id === id ? { ...t, status } : t)));
-      if (selectedTech?.id === id) setSelectedTech((prev) => (prev ? { ...prev, status } : prev));
-=======
       const tech = technicians.find((t) => t.id === id);
       setTechnicians((prev) => prev.map((t) => (t.id === id ? { ...t, status } : t)));
       if (selectedTech?.id === id) setSelectedTech((prev) => (prev ? { ...prev, status } : prev));
@@ -306,7 +270,6 @@ export default function AdminDashboard() {
           await notifyTechnician.registrationRejected(id, tech.full_name);
         }
       }
->>>>>>> afb9512 (Implement complete notification system with real-time delivery)
     }
     setTechUpdating(false);
   };
@@ -322,10 +285,7 @@ export default function AdminDashboard() {
       setRecharges((prev) => prev.map((r) => (r.id === rechargeId ? { ...r, status: 'approved', approved_at: new Date().toISOString() } : r)));
       const r = recharges.find((x) => x.id === rechargeId);
       if (r) {
-<<<<<<< HEAD
-=======
         await notifyTechnician.walletRechargeApproved(r.technician_id, Number(r.amount));
->>>>>>> afb9512 (Implement complete notification system with real-time delivery)
         const { data: updatedTech } = await supabase.from('technicians').select('*').eq('id', r.technician_id).maybeSingle();
         if (updatedTech) setTechnicians((prev) => prev.map((t) => (t.id === updatedTech.id ? updatedTech : t)));
         const { data: newTxns } = await supabase.from('wallet_transactions').select('*').order('created_at', { ascending: false }).limit(100);
@@ -344,13 +304,10 @@ export default function AdminDashboard() {
       console.error('[AdminDashboard] recharge reject error:', error);
     } else {
       setRecharges((prev) => prev.map((r) => (r.id === rechargeId ? { ...r, status: 'rejected' } : r)));
-<<<<<<< HEAD
-=======
       const r = recharges.find((x) => x.id === rechargeId);
       if (r) {
         await notifyTechnician.walletRechargeRejected(r.technician_id, Number(r.amount));
       }
->>>>>>> afb9512 (Implement complete notification system with real-time delivery)
     }
     setWalletUpdating(false);
   };
@@ -363,8 +320,6 @@ export default function AdminDashboard() {
     } else {
       setTechnicians((prev) => prev.map((t) => (t.id === techId ? { ...t, wallet_locked: lock } : t)));
       if (selectedWalletTech?.id === techId) setSelectedWalletTech((prev) => (prev ? { ...prev, wallet_locked: lock } : prev));
-<<<<<<< HEAD
-=======
 
       // Send technician notification
       if (lock) {
@@ -372,7 +327,6 @@ export default function AdminDashboard() {
       } else {
         await notifyTechnician.accountUnlocked(techId);
       }
->>>>>>> afb9512 (Implement complete notification system with real-time delivery)
     }
     setWalletUpdating(false);
   };
@@ -393,8 +347,6 @@ export default function AdminDashboard() {
     const updated = await updatePaymentStatus(paymentId, status, undefined, 'admin');
     if (updated) {
       setPayments((prev) => prev.map((p) => (p.payment_id === paymentId ? updated : p)));
-<<<<<<< HEAD
-=======
 
       // Send admin notification
       if (status === 'success') {
@@ -403,7 +355,6 @@ export default function AdminDashboard() {
         await notifyAdmin.failedPayment(updated.payee_name || 'Unknown', Number(updated.amount), paymentId);
       }
 
->>>>>>> afb9512 (Implement complete notification system with real-time delivery)
       // If it's a wallet_recharge success, also approve the recharge request
       if (status === 'success' && updated.purpose === 'wallet_recharge' && updated.reference_id) {
         const { data: recharge } = await supabase.from('wallet_recharges')
@@ -413,10 +364,7 @@ export default function AdminDashboard() {
           await supabase.from('wallet_recharges').update({
             status: 'approved', approved_at: new Date().toISOString(), approved_by: 'admin',
           }).eq('id', recharge.id);
-<<<<<<< HEAD
-=======
           await notifyTechnician.walletRechargeApproved(recharge.technician_id, Number(recharge.amount));
->>>>>>> afb9512 (Implement complete notification system with real-time delivery)
         }
       }
     }
@@ -450,12 +398,6 @@ export default function AdminDashboard() {
               <p className="text-gray-500 text-sm mt-0.5">Manage bookings, technicians, and revenue.</p>
             </div>
           </div>
-<<<<<<< HEAD
-          <button onClick={logout}
-            className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold rounded-xl transition-colors">
-            <LogOut size={16} /> Logout
-          </button>
-=======
           <div className="flex items-center gap-3">
             <NotificationCenter recipientType="admin" recipientId="admin" />
             <button onClick={logout}
@@ -463,7 +405,6 @@ export default function AdminDashboard() {
               <LogOut size={16} /> Logout
             </button>
           </div>
->>>>>>> afb9512 (Implement complete notification system with real-time delivery)
         </div>
 
         {/* Stats Cards */}
@@ -532,15 +473,12 @@ export default function AdminDashboard() {
             }`}>
             <Globe size={16} /> Social Media
           </button>
-<<<<<<< HEAD
-=======
           <button onClick={() => setTab('notifications')}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
               tab === 'notifications' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
             }`}>
             <Bell size={16} /> Notifications
           </button>
->>>>>>> afb9512 (Implement complete notification system with real-time delivery)
         </div>
 
         {/* ===================== BOOKINGS TAB ===================== */}
@@ -1320,8 +1258,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
-<<<<<<< HEAD
-=======
 
       {/* Notifications Tab */}
       {tab === 'notifications' && (
@@ -1509,7 +1445,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
->>>>>>> afb9512 (Implement complete notification system with real-time delivery)
     </div>
   );
 }

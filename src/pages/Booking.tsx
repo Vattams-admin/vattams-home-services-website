@@ -3,10 +3,7 @@ import { Loader, CheckCircle, Calendar, User, Phone, MapPin, Wrench, FileText, C
 import { supabase, ServiceCategory } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import PaymentModal from '@/components/PaymentModal';
-<<<<<<< HEAD
-=======
 import { notifyCustomer, notifyAdmin } from '@/lib/notifications';
->>>>>>> afb9512 (Implement complete notification system with real-time delivery)
 
 const tamilNaduCities = [
   'Chennai', 'Coimbatore', 'Madurai', 'Trichy', 'Salem',
@@ -57,11 +54,7 @@ export default function Booking() {
         preferred_time: form.preferred_time || null,
         status: 'pending',
       })
-<<<<<<< HEAD
-      .select('booking_number')
-=======
       .select('id,booking_number')
->>>>>>> afb9512 (Implement complete notification system with real-time delivery)
       .single();
 
     setSubmitting(false);
@@ -70,15 +63,12 @@ export default function Booking() {
       return;
     }
     setSuccess({ number: data.booking_number, id: data.id });
-<<<<<<< HEAD
-=======
 
     // Send notifications
     await Promise.all([
       notifyCustomer.bookingReceived(form.mobile_number, data.booking_number, data.id),
       notifyAdmin.newBooking(data.booking_number, form.customer_name, form.service_category, data.id),
     ]);
->>>>>>> afb9512 (Implement complete notification system with real-time delivery)
   };
 
   if (success) {
