@@ -55,12 +55,21 @@ export default function AdminDashboard() {
   }, []);
 
   const loadData = async () => {
-    const [{ data: b }, { data: t }] = await Promise.all([
+    const [bookingsRes, techRes] = await Promise.all([
       supabase.from('bookings').select('*').order('created_at', { ascending: false }),
       supabase.from('technicians').select('*').order('created_at', { ascending: false }),
     ]);
-    setBookings(b ?? []);
-    setTechnicians(t ?? []);
+
+    if (bookingsRes.error) console.error('[AdminDashboard] bookings query error:', bookingsRes.error);
+    if (techRes.error) console.error('[AdminDashboard] technicians query error:', techRes.error);
+
+    console.log('[AdminDashboard] bookings raw:', bookingsRes.data);
+    console.log('[AdminDashboard] technicians raw:', techRes.data);
+    console.log('[AdminDashboard] active technicians for dropdown:',
+      (techRes.data ?? []).filter((t) => t.status === 'active'));
+
+    setBookings(bookingsRes.data ?? []);
+    setTechnicians(techRes.data ?? []);
     setLoading(false);
   };
 
@@ -100,15 +109,19 @@ export default function AdminDashboard() {
   const assignTechnician = async () => {
     if (!selectedBooking || !assignTechId) return;
     setUpdating(true);
-    await supabase
+    const { error: bookErr } = await supabase
       .from('bookings')
       .update({ assigned_technician_id: assignTechId, status: 'confirmed', updated_at: new Date().toISOString() })
       .eq('id', selectedBooking.id);
-    await supabase.from('technician_jobs').insert({
+    if (bookErr) console.error('[AdminDashboard] assign booking update error:', bookErr);
+
+    const { error: jobErr } = await supabase.from('technician_jobs').insert({
       booking_id: selectedBooking.id,
       technician_id: assignTechId,
       status: 'assigned',
     });
+    if (jobErr) console.error('[AdminDashboard] technician_jobs insert error:', jobErr);
+
     setBookings((prev) =>
       prev.map((b) =>
         b.id === selectedBooking.id ? { ...b, assigned_technician_id: assignTechId, status: 'confirmed' } : b
@@ -437,6 +450,12 @@ export default function AdminDashboard() {
                       {technicians.filter((t) => t.status === 'active').map((t) => (
                         <option key={t.id} value={t.id}>{t.full_name} — {t.city}</option>
                       ))}
+                      {technicians.filter((t) => t.status === 'active').length === 0 && technicians.length > 0 && (
+                        <option value="" disabled>No approved technicians found (check console for details)</option>
+                      )}
+                      {technicians.length === 0 && (
+                        <option value="" disabled>Loading technicians... (check console)</option>
+                      )}
                     </select>
                     <ChevronDown size={16} className="absolute right-2.5 top-3 text-gray-400 pointer-events-none" />
                   </div>
