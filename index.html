@@ -17,15 +17,6 @@
   </head>
   <body>
     <div id="root"></div>
-    <script>
-      (function () {
-        var host = window.location.hostname;
-        if (host === 'vattams.net') {
-          var newUrl = 'https://www.vattams.net' + window.location.pathname + window.location.search + window.location.hash;
-          window.location.replace(newUrl);
-        }
-      })();
-    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
