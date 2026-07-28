@@ -57,6 +57,14 @@ export interface Technician {
   id_proof_type: string | null;
   id_proof_number: string | null;
   created_at: string;
+  wallet_balance: number;
+  locked_deposit: number;
+  available_balance: number;
+  commission_due: number;
+  deposit_released: boolean;
+  completed_jobs_count: number;
+  wallet_locked: boolean;
+  registration_fee_paid: boolean;
 }
 
 export interface TechnicianJob {
@@ -70,4 +78,54 @@ export interface TechnicianJob {
   job_amount: number | null;
   assigned_at: string;
   completed_at: string | null;
+}
+
+export type WalletTxnType = 'registration_fee' | 'deposit_lock' | 'deposit_release' | 'commission_deduction' | 'recharge_credit' | 'recharge_debit' | 'adjustment';
+
+export interface WalletTransaction {
+  id: string;
+  technician_id: string;
+  type: WalletTxnType;
+  amount: number;
+  balance_after: number | null;
+  description: string | null;
+  booking_id: string | null;
+  recharge_id: string | null;
+  created_at: string;
+}
+
+export type RechargeStatus = 'pending' | 'approved' | 'rejected';
+
+export interface WalletRecharge {
+  id: string;
+  technician_id: string;
+  amount: number;
+  status: RechargeStatus;
+  payment_ref: string | null;
+  admin_notes: string | null;
+  created_at: string;
+  approved_at: string | null;
+  approved_by: string | null;
+}
+
+export type NotificationType = 'registration_fee' | 'deposit_released' | 'wallet_low' | 'account_locked' | 'account_unlocked' | 'recharge_approved' | 'commission_deducted';
+
+export interface TechnicianNotification {
+  id: string;
+  technician_id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+}
+
+export interface WalletSettings {
+  id: string;
+  registration_fee: number;
+  commission_rate: number;
+  deposit_release_job_threshold: number;
+  lock_threshold: number;
+  low_balance_threshold: number;
+  updated_at: string;
 }

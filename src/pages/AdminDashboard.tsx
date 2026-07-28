@@ -2,10 +2,10 @@ import { useState, useEffect, useMemo } from 'react';
 import {
   Loader, Calendar, User, Phone, MapPin, Wrench, DollarSign, TrendingUp,
   CheckCircle, Clock, X, ChevronDown, LogOut, LayoutDashboard, Users, Briefcase,
-  Trash2, Eye, XCircle, Star, Award,
+  Trash2, Eye, XCircle, Star, Award, Wallet, Lock, Unlock, History, ShieldCheck,
   LucideIcon,
 } from 'lucide-react';
-import { supabase, Booking, Technician, BookingStatus } from '@/lib/supabase';
+import { supabase, Booking, Technician, BookingStatus, WalletTransaction, WalletRecharge } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 
 const statusColors: Record<string, string> = {
@@ -30,7 +30,7 @@ const techStatusLabel: Record<string, string> = {
 
 const statusOptions: BookingStatus[] = ['pending', 'confirmed', 'in_progress', 'completed', 'cancelled'];
 
-type Tab = 'bookings' | 'technicians';
+type Tab = 'bookings' | 'technicians' | 'wallet';
 
 export default function AdminDashboard() {
   const { navigate } = useRouter();
@@ -45,6 +45,10 @@ export default function AdminDashboard() {
   const [assignTechId, setAssignTechId] = useState('');
   const [updating, setUpdating] = useState(false);
   const [techUpdating, setTechUpdating] = useState(false);
+  const [walletTxns, setWalletTxns] = useState<WalletTransaction[]>([]);
+  const [recharges, setRecharges] = useState<(WalletRecharge & { technician_name?: string })[]>([]);
+  const [walletUpdating, setWalletUpdating] = useState(false);
+  const [selectedWalletTech, setSelectedWalletTech] = useState<Technician | null>(null);
 
   useEffect(() => {
     if (!sessionStorage.getItem('vattams_admin')) {
@@ -70,6 +74,15 @@ export default function AdminDashboard() {
 
     setBookings(bookingsRes.data ?? []);
     setTechnicians(techRes.data ?? []);
+
+    const [txnRes, rechargeRes] = await Promise.all([
+      supabase.from('wallet_transactions').select('*').order('created_at', { ascending: false }).limit(100),
+      supabase.from('wallet_recharges').select('*, technician:technicians(full_name)').order('created_at', { ascending: false }).limit(50),
+    ]);
+    if (txnRes.error) console.error('[AdminDashboard] wallet_transactions query error:', txnRes.error);
+    if (rechargeRes.error) console.error('[AdminDashboard] wallet_recharges query error:', rechargeRes.error);
+    setWalletTxns(txnRes.data ?? []);
+    setRecharges((rechargeRes.data ?? []).map((r) => ({ ...r, technician_name: (r as Record<string, unknown>).technician ? ((r as Record<string, { full_name: string }>).technician).full_name : undefined })));
     setLoading(false);
   };
 
@@ -140,6 +153,51 @@ export default function AdminDashboard() {
       if (selectedTech?.id === id) setSelectedTech((prev) => (prev ? { ...prev, status } : prev));
     }
     setTechUpdating(false);
+  };
+
+  const approveRecharge = async (rechargeId: string) => {
+    setWalletUpdating(true);
+    const { error } = await supabase.from('wallet_recharges').update({
+      status: 'approved', approved_at: new Date().toISOString(), approved_by: 'admin',
+    }).eq('id', rechargeId);
+    if (error) {
+      console.error('[AdminDashboard] recharge approve error:', error);
+    } else {
+      setRecharges((prev) => prev.map((r) => (r.id === rechargeId ? { ...r, status: 'approved', approved_at: new Date().toISOString() } : r)));
+      const r = recharges.find((x) => x.id === rechargeId);
+      if (r) {
+        const { data: updatedTech } = await supabase.from('technicians').select('*').eq('id', r.technician_id).maybeSingle();
+        if (updatedTech) setTechnicians((prev) => prev.map((t) => (t.id === updatedTech.id ? updatedTech : t)));
+        const { data: newTxns } = await supabase.from('wallet_transactions').select('*').order('created_at', { ascending: false }).limit(100);
+        if (newTxns) setWalletTxns(newTxns);
+      }
+    }
+    setWalletUpdating(false);
+  };
+
+  const rejectRecharge = async (rechargeId: string) => {
+    setWalletUpdating(true);
+    const { error } = await supabase.from('wallet_recharges').update({
+      status: 'rejected', approved_at: new Date().toISOString(), approved_by: 'admin',
+    }).eq('id', rechargeId);
+    if (error) {
+      console.error('[AdminDashboard] recharge reject error:', error);
+    } else {
+      setRecharges((prev) => prev.map((r) => (r.id === rechargeId ? { ...r, status: 'rejected' } : r)));
+    }
+    setWalletUpdating(false);
+  };
+
+  const toggleWalletLock = async (techId: string, lock: boolean) => {
+    setWalletUpdating(true);
+    const { error } = await supabase.from('technicians').update({ wallet_locked: lock }).eq('id', techId);
+    if (error) {
+      console.error('[AdminDashboard] wallet lock toggle error:', error);
+    } else {
+      setTechnicians((prev) => prev.map((t) => (t.id === techId ? { ...t, wallet_locked: lock } : t)));
+      if (selectedWalletTech?.id === techId) setSelectedWalletTech((prev) => (prev ? { ...prev, wallet_locked: lock } : prev));
+    }
+    setWalletUpdating(false);
   };
 
   const deleteTechnician = async (id: string) => {
@@ -226,6 +284,15 @@ export default function AdminDashboard() {
             <span className={`ml-1 px-2 py-0.5 rounded-full text-xs ${tab === 'technicians' ? 'bg-white/20' : 'bg-gray-100'}`}>{technicians.length}</span>
             {stats.pendingTechs > 0 && (
               <span className="px-2 py-0.5 rounded-full text-xs bg-amber-500 text-white">{stats.pendingTechs} new</span>
+            )}
+          </button>
+          <button onClick={() => setTab('wallet')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
+              tab === 'wallet' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
+            }`}>
+            <Wallet size={16} /> Wallet
+            {recharges.filter((r) => r.status === 'pending').length > 0 && (
+              <span className="px-2 py-0.5 rounded-full text-xs bg-amber-500 text-white">{recharges.filter((r) => r.status === 'pending').length}</span>
             )}
           </button>
         </div>
@@ -396,6 +463,174 @@ export default function AdminDashboard() {
               </div>
             </div>
           </>
+        )}
+
+        {/* Wallet Management Tab */}
+        {tab === 'wallet' && (
+          <div className="space-y-6">
+            {/* Wallet Overview Cards per technician */}
+            <div>
+              <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
+                <Wallet size={16} className="text-blue-600" /> Technician Wallets
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {technicians.map((t) => (
+                  <div key={t.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <div className="font-bold text-gray-900 text-sm">{t.full_name}</div>
+                        <div className="text-xs text-gray-400">{t.city} · {t.mobile}</div>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1 ${
+                        t.wallet_locked ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+                      }`}>
+                        {t.wallet_locked ? <><Lock size={10} /> Locked</> : <><Unlock size={10} /> Active</>}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="bg-blue-50 rounded-lg p-2">
+                        <div className="text-xs text-blue-500 font-medium">Balance</div>
+                        <div className="font-bold text-blue-700">₹{Number(t.wallet_balance).toLocaleString('en-IN')}</div>
+                      </div>
+                      <div className="bg-amber-50 rounded-lg p-2">
+                        <div className="text-xs text-amber-500 font-medium">Locked Deposit</div>
+                        <div className="font-bold text-amber-700">₹{Number(t.locked_deposit).toLocaleString('en-IN')}</div>
+                      </div>
+                      <div className="bg-emerald-50 rounded-lg p-2">
+                        <div className="text-xs text-emerald-500 font-medium">Available</div>
+                        <div className="font-bold text-emerald-700">₹{Number(t.available_balance).toLocaleString('en-IN')}</div>
+                      </div>
+                      <div className="bg-red-50 rounded-lg p-2">
+                        <div className="text-xs text-red-500 font-medium">Commission Due</div>
+                        <div className="font-bold text-red-700">₹{Number(t.commission_due).toLocaleString('en-IN')}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                      <div className="text-xs text-gray-500 flex items-center gap-1">
+                        <ShieldCheck size={12} className="text-blue-500" />
+                        {t.deposit_released ? 'Deposit released' : `${t.completed_jobs_count}/3 jobs to release`}
+                      </div>
+                      <button onClick={() => setSelectedWalletTech(t)}
+                        className="text-xs text-blue-600 font-semibold hover:text-blue-700">View Details</button>
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      {t.wallet_locked ? (
+                        <button onClick={() => toggleWalletLock(t.id, false)} disabled={walletUpdating}
+                          className="flex-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors">
+                          Unlock
+                        </button>
+                      ) : (
+                        <button onClick={() => toggleWalletLock(t.id, true)} disabled={walletUpdating}
+                          className="flex-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors">
+                          Lock
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {technicians.length === 0 && (
+                  <div className="col-span-full text-center py-8 text-gray-400 text-sm">No technicians found.</div>
+                )}
+              </div>
+            </div>
+
+            {/* Recharge Approvals */}
+            <div>
+              <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
+                <DollarSign size={16} className="text-green-600" /> Recharge Requests
+              </h3>
+              {recharges.length === 0 ? (
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center text-gray-400 text-sm">
+                  No recharge requests.
+                </div>
+              ) : (
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wider">
+                        <tr>
+                          <th className="text-left px-4 py-3 font-medium">Technician</th>
+                          <th className="text-left px-4 py-3 font-medium">Amount</th>
+                          <th className="text-left px-4 py-3 font-medium">Status</th>
+                          <th className="text-left px-4 py-3 font-medium">Requested</th>
+                          <th className="text-left px-4 py-3 font-medium">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {recharges.map((r) => (
+                          <tr key={r.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 font-medium text-gray-700">{r.technician_name ?? '—'}</td>
+                            <td className="px-4 py-3 font-bold text-gray-900">₹{Number(r.amount).toLocaleString('en-IN')}</td>
+                            <td className="px-4 py-3">
+                              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${
+                                r.status === 'approved' ? 'bg-green-100 text-green-700' :
+                                r.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                                'bg-amber-100 text-amber-700'
+                              }`}>{r.status}</span>
+                            </td>
+                            <td className="px-4 py-3 text-xs text-gray-400">{new Date(r.created_at).toLocaleString('en-IN')}</td>
+                            <td className="px-4 py-3">
+                              {r.status === 'pending' && (
+                                <div className="flex gap-2">
+                                  <button onClick={() => approveRecharge(r.id)} disabled={walletUpdating}
+                                    className="px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors">
+                                    Approve
+                                  </button>
+                                  <button onClick={() => rejectRecharge(r.id)} disabled={walletUpdating}
+                                    className="px-3 py-1.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors">
+                                    Reject
+                                  </button>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Transaction History */}
+            <div>
+              <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
+                <History size={16} className="text-gray-600" /> Transaction History
+              </h3>
+              {walletTxns.length === 0 ? (
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center text-gray-400 text-sm">
+                  No transactions yet.
+                </div>
+              ) : (
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wider">
+                        <tr>
+                          <th className="text-left px-4 py-3 font-medium">Type</th>
+                          <th className="text-left px-4 py-3 font-medium">Amount</th>
+                          <th className="text-left px-4 py-3 font-medium">Description</th>
+                          <th className="text-left px-4 py-3 font-medium">Date</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50">
+                        {walletTxns.map((txn) => (
+                          <tr key={txn.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 capitalize text-gray-700 font-medium">{txn.type.replace(/_/g, ' ')}</td>
+                            <td className={`px-4 py-3 font-bold ${txn.type === 'commission_deduction' || txn.type === 'deposit_lock' || txn.type === 'recharge_debit' ? 'text-red-600' : 'text-green-600'}`}>
+                              {txn.type === 'commission_deduction' || txn.type === 'deposit_lock' || txn.type === 'recharge_debit' ? '-' : '+'}₹{Number(txn.amount).toLocaleString('en-IN')}
+                            </td>
+                            <td className="px-4 py-3 text-xs text-gray-500 max-w-xs truncate">{txn.description}</td>
+                            <td className="px-4 py-3 text-xs text-gray-400">{new Date(txn.created_at).toLocaleString('en-IN')}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         )}
       </div>
 
@@ -575,6 +810,48 @@ export default function AdminDashboard() {
                   className="flex items-center gap-1.5 px-4 py-2.5 bg-white hover:bg-red-50 text-red-600 text-sm font-semibold rounded-xl border border-red-200 transition-colors disabled:opacity-50">
                   <Trash2 size={16} /> Delete
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Wallet Detail Modal */}
+      {selectedWalletTech && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setSelectedWalletTech(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <Wallet size={20} className="text-blue-600" />
+                <h3 className="font-extrabold text-gray-900 text-lg">Wallet — {selectedWalletTech.full_name}</h3>
+              </div>
+              <button onClick={() => setSelectedWalletTech(null)} className="p-2 rounded-lg hover:bg-gray-100">
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+            <div className="p-6 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-blue-50 rounded-xl p-3"><div className="text-xs text-blue-500 font-medium">Total Balance</div><div className="text-lg font-extrabold text-blue-700">₹{Number(selectedWalletTech.wallet_balance).toLocaleString('en-IN')}</div></div>
+                <div className="bg-amber-50 rounded-xl p-3"><div className="text-xs text-amber-500 font-medium">Locked Deposit</div><div className="text-lg font-extrabold text-amber-700">₹{Number(selectedWalletTech.locked_deposit).toLocaleString('en-IN')}</div></div>
+                <div className="bg-emerald-50 rounded-xl p-3"><div className="text-xs text-emerald-500 font-medium">Available</div><div className="text-lg font-extrabold text-emerald-700">₹{Number(selectedWalletTech.available_balance).toLocaleString('en-IN')}</div></div>
+                <div className="bg-red-50 rounded-xl p-3"><div className="text-xs text-red-500 font-medium">Commission Due</div><div className="text-lg font-extrabold text-red-700">₹{Number(selectedWalletTech.commission_due).toLocaleString('en-IN')}</div></div>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <ShieldCheck size={14} className="text-blue-500" />
+                <span className="text-gray-600">{selectedWalletTech.deposit_released ? 'Deposit released' : `Completed ${selectedWalletTech.completed_jobs_count}/3 jobs`}</span>
+              </div>
+              <div className="flex gap-2 pt-2 border-t border-gray-100">
+                {selectedWalletTech.wallet_locked ? (
+                  <button onClick={() => toggleWalletLock(selectedWalletTech.id, false)} disabled={walletUpdating}
+                    className="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors">
+                    Unlock Account
+                  </button>
+                ) : (
+                  <button onClick={() => toggleWalletLock(selectedWalletTech.id, true)} disabled={walletUpdating}
+                    className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors">
+                    Lock Account
+                  </button>
+                )}
               </div>
             </div>
           </div>

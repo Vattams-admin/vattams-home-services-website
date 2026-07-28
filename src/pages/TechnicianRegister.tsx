@@ -95,6 +95,11 @@ export default function TechnicianRegister() {
           <p className="text-blue-200 max-w-lg mx-auto">
             Become a VATTAMS certified technician. Get steady jobs, fair pay, and grow your career.
           </p>
+          <div className="mt-6 inline-flex items-center gap-2 bg-white/10 text-blue-100 rounded-xl px-5 py-3 text-sm">
+            <span className="font-bold text-white">Registration Fee: ₹50</span>
+            <span className="text-blue-200/70">|</span>
+            <span>Refundable security deposit, released after 3 completed jobs</span>
+          </div>
         </div>
       </section>
 
