@@ -38,10 +38,7 @@ export default function TechnicianRegister() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
-    if (form.specializations.length === 0) {
-      setErrorMsg('Please select at least one specialization.');
-      return;
-    }
+
     setSubmitting(true);
     const { error } = await supabase.from('technicians').insert({
       full_name: form.full_name,
@@ -141,7 +138,7 @@ export default function TechnicianRegister() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Specializations *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Specializations <span className="text-gray-400 font-normal">(optional)</span></label>
                 <div className="flex flex-wrap gap-2">
                   {specializations.map((s) => (
                     <button key={s} type="button" onClick={() => toggleSpec(s)}
