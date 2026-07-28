@@ -19,6 +19,7 @@ export default function TechnicianRegister() {
   const { navigate } = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const [form, setForm] = useState({
     full_name: '', mobile: '', email: '', city: 'Chennai',
     experience_years: '0', id_proof_type: 'Aadhaar', id_proof_number: '',
@@ -36,6 +37,11 @@ export default function TechnicianRegister() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg('');
+    if (form.specializations.length === 0) {
+      setErrorMsg('Please select at least one specialization.');
+      return;
+    }
     setSubmitting(true);
     const { error } = await supabase.from('technicians').insert({
       full_name: form.full_name,
@@ -51,7 +57,11 @@ export default function TechnicianRegister() {
     setSubmitting(false);
     if (error) {
       console.error('Technician registration error:', error.message, error.code);
-      alert('Registration failed. Please try again.');
+      let msg = error.message || 'Registration failed. Please try again.';
+      if (error.code === '23505') {
+        msg = 'This mobile number is already registered. Please use a different number.';
+      }
+      setErrorMsg(msg);
       return;
     }
     setSuccess(true);
@@ -173,6 +183,12 @@ export default function TechnicianRegister() {
                     placeholder="ID number" />
                 </div>
               </div>
+
+              {errorMsg && (
+                <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
+                  {errorMsg}
+                </div>
+              )}
 
               <button type="submit" disabled={submitting}
                 className="w-full flex items-center justify-center gap-2 py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold rounded-xl transition-colors shadow-lg shadow-blue-200">
