@@ -1,5 +1,6 @@
 import { Phone, MessageCircle, Calendar, Star, ArrowRight } from 'lucide-react';
 import { useRouter } from '@/lib/router';
+import SocialLinks from '@/components/SocialLinks';
 
 export default function Hero() {
   const { navigate } = useRouter();
@@ -83,6 +84,9 @@ export default function Hero() {
               WhatsApp
             </a>
           </div>
+
+          {/* Social Links */}
+          <SocialLinks variant="hero" />
 
           {/* Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

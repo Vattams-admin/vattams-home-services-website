@@ -1,5 +1,6 @@
-import { Phone, Mail, MapPin, MessageCircle, Facebook, Instagram, Twitter } from 'lucide-react';
+import { Phone, Mail, MapPin, MessageCircle } from 'lucide-react';
 import { useRouter, Page } from '@/lib/router';
+import SocialLinks from '@/components/SocialLinks';
 
 export default function Footer() {
   const { navigate } = useRouter();
@@ -36,17 +37,7 @@ export default function Footer() {
               Tamil Nadu's most trusted home appliance repair and maintenance service. 
               Certified technicians at your doorstep.
             </p>
-            <div className="flex gap-3 mt-5">
-              <a href="#" className="w-9 h-9 rounded-full bg-blue-700 flex items-center justify-center hover:bg-blue-600 transition-colors">
-                <Facebook size={16} />
-              </a>
-              <a href="#" className="w-9 h-9 rounded-full bg-pink-700 flex items-center justify-center hover:bg-pink-600 transition-colors">
-                <Instagram size={16} />
-              </a>
-              <a href="#" className="w-9 h-9 rounded-full bg-sky-700 flex items-center justify-center hover:bg-sky-600 transition-colors">
-                <Twitter size={16} />
-              </a>
-            </div>
+            <SocialLinks variant="footer" />
           </div>
 
           {/* Quick Links */}

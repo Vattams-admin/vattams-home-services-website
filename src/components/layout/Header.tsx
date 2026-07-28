@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Menu, X, Phone, MessageCircle, ChevronDown } from 'lucide-react';
 import { useRouter, Page } from '@/lib/router';
+import SocialLinks from '@/components/SocialLinks';
 
 const navLinks: { label: string; page: Page }[] = [
   { label: 'Home', page: 'home' },
@@ -168,6 +169,7 @@ export default function Header() {
                 <MessageCircle size={15} /> WhatsApp
               </a>
             </div>
+            <SocialLinks variant="mobile" />
           </nav>
         </div>
       )}

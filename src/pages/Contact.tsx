@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Phone, Mail, MapPin, MessageCircle, Send, Loader } from 'lucide-react';
+import SocialLinks from '@/components/SocialLinks';
 
 export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', message: '' });
@@ -62,6 +63,11 @@ export default function Contact() {
                     </a>
                   );
                 })}
+              </div>
+
+              <div className="mt-8">
+                <h3 className="font-bold text-gray-900 mb-3">Follow Us</h3>
+                <SocialLinks variant="contact" />
               </div>
 
               <div className="mt-8 bg-blue-50 rounded-2xl p-6">

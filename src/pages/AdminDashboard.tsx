@@ -3,11 +3,13 @@ import {
   Loader, Calendar, User, Phone, MapPin, Wrench, DollarSign, TrendingUp,
   CheckCircle, Clock, X, ChevronDown, LogOut, LayoutDashboard, Users, Briefcase,
   Trash2, Eye, XCircle, Star, Award, Wallet, Lock, Unlock, History, ShieldCheck,
-  CreditCard, LucideIcon,
+  CreditCard, LucideIcon, Globe, Facebook, Instagram, Twitter, Youtube, MessageCircle, Save,
 } from 'lucide-react';
 import { supabase, Booking, Technician, BookingStatus, WalletTransaction, WalletRecharge } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { fetchAllPayments, fetchPendingPayments, updatePaymentStatus, PaymentRecord } from '@/lib/payments';
+import { fetchSiteSettings, saveSiteSettings, validateSettings, SiteSettings, SiteSettingsInput } from '@/lib/siteSettings';
+import { refreshSocialLinksCache } from '@/components/SocialLinks';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -31,7 +33,7 @@ const techStatusLabel: Record<string, string> = {
 
 const statusOptions: BookingStatus[] = ['pending', 'confirmed', 'in_progress', 'completed', 'cancelled'];
 
-type Tab = 'bookings' | 'technicians' | 'wallet' | 'payments';
+type Tab = 'bookings' | 'technicians' | 'wallet' | 'payments' | 'social';
 
 export default function AdminDashboard() {
   const { navigate } = useRouter();
@@ -53,6 +55,14 @@ export default function AdminDashboard() {
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'pending' | 'success' | 'failed'>('pending');
   const [paymentUpdating, setPaymentUpdating] = useState(false);
+  const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
+  const [socialForm, setSocialForm] = useState<SiteSettingsInput>({
+    google_business_url: '', facebook_url: '', instagram_url: '',
+    twitter_url: '', youtube_url: '', whatsapp_number: '', website_url: '',
+  });
+  const [socialErrors, setSocialErrors] = useState<Record<string, string>>({});
+  const [socialSaving, setSocialSaving] = useState(false);
+  const [socialMsg, setSocialMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     if (!sessionStorage.getItem('vattams_admin')) {
@@ -93,7 +103,43 @@ export default function AdminDashboard() {
       fetchAllPayments(),
     ]);
     setPayments(allPay);
+    await loadSiteSettings();
     setLoading(false);
+  };
+
+  const loadSiteSettings = async () => {
+    const s = await fetchSiteSettings();
+    setSiteSettings(s);
+    setSocialForm({
+      google_business_url: s.google_business_url ?? '',
+      facebook_url: s.facebook_url ?? '',
+      instagram_url: s.instagram_url ?? '',
+      twitter_url: s.twitter_url ?? '',
+      youtube_url: s.youtube_url ?? '',
+      whatsapp_number: s.whatsapp_number ?? '',
+      website_url: s.website_url ?? '',
+    });
+  };
+
+  const handleSocialSave = async () => {
+    setSocialSaving(true);
+    setSocialMsg(null);
+    const errors = validateSettings(socialForm);
+    setSocialErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      setSocialMsg({ type: 'error', text: 'Please fix the validation errors before saving.' });
+      setSocialSaving(false);
+      return;
+    }
+    const result = await saveSiteSettings(socialForm, 'admin');
+    if (result.success) {
+      setSocialMsg({ type: 'success', text: 'Social media links saved successfully!' });
+      refreshSocialLinksCache();
+      await loadSiteSettings();
+    } else {
+      setSocialMsg({ type: 'error', text: result.error ?? 'Failed to save settings.' });
+    }
+    setSocialSaving(false);
   };
 
   const filteredBookings = useMemo(() => {
@@ -333,6 +379,12 @@ export default function AdminDashboard() {
             {payments.filter((p) => p.status === 'pending').length > 0 && (
               <span className="px-2 py-0.5 rounded-full text-xs bg-amber-500 text-white">{payments.filter((p) => p.status === 'pending').length}</span>
             )}
+          </button>
+          <button onClick={() => setTab('social')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
+              tab === 'social' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
+            }`}>
+            <Globe size={16} /> Social Media
           </button>
         </div>
 
@@ -988,6 +1040,127 @@ export default function AdminDashboard() {
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
               <div className="text-xs text-green-500 font-semibold uppercase">Success</div>
               <div className="text-2xl font-extrabold text-green-600">{payments.filter((p) => p.status === 'success').length}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===================== SOCIAL MEDIA TAB ===================== */}
+      {tab === 'social' && (
+        <div className="max-w-3xl">
+          <div className="mb-6">
+            <h2 className="text-lg font-extrabold text-gray-900 mb-1">Social Media &amp; Google Business</h2>
+            <p className="text-sm text-gray-500">
+              Manage your social media profile links and Google Business Profile. Icons appear on the Home page, Contact page, Footer, and Mobile Menu automatically. Empty fields hide the icon.
+            </p>
+          </div>
+
+          {socialMsg && (
+            <div className={'rounded-xl p-3 text-sm mb-4 ' + (socialMsg.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200')}>
+              {socialMsg.text}
+            </div>
+          )}
+
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
+            {/* Google Business */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
+                <Globe size={16} className="text-blue-600" /> Google Business Profile URL
+              </label>
+              <input type="url" value={socialForm.google_business_url}
+                onChange={(e) => setSocialForm({ ...socialForm, google_business_url: e.target.value })}
+                placeholder="https://business.google.com/..."
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm" />
+              {socialErrors.google_business_url && <p className="text-xs text-red-500 mt-1">{socialErrors.google_business_url}</p>}
+            </div>
+
+            {/* Facebook */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
+                <Facebook size={16} className="text-blue-700" /> Facebook Page URL
+              </label>
+              <input type="url" value={socialForm.facebook_url}
+                onChange={(e) => setSocialForm({ ...socialForm, facebook_url: e.target.value })}
+                placeholder="https://facebook.com/yourpage"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm" />
+              {socialErrors.facebook_url && <p className="text-xs text-red-500 mt-1">{socialErrors.facebook_url}</p>}
+            </div>
+
+            {/* Instagram */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
+                <Instagram size={16} className="text-pink-600" /> Instagram Profile URL
+              </label>
+              <input type="url" value={socialForm.instagram_url}
+                onChange={(e) => setSocialForm({ ...socialForm, instagram_url: e.target.value })}
+                placeholder="https://instagram.com/yourprofile"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm" />
+              {socialErrors.instagram_url && <p className="text-xs text-red-500 mt-1">{socialErrors.instagram_url}</p>}
+            </div>
+
+            {/* Twitter / X */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
+                <Twitter size={16} className="text-sky-600" /> X (Twitter) Profile URL
+              </label>
+              <input type="url" value={socialForm.twitter_url}
+                onChange={(e) => setSocialForm({ ...socialForm, twitter_url: e.target.value })}
+                placeholder="https://x.com/yourhandle"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm" />
+              {socialErrors.twitter_url && <p className="text-xs text-red-500 mt-1">{socialErrors.twitter_url}</p>}
+            </div>
+
+            {/* YouTube */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
+                <Youtube size={16} className="text-red-600" /> YouTube Channel URL
+              </label>
+              <input type="url" value={socialForm.youtube_url}
+                onChange={(e) => setSocialForm({ ...socialForm, youtube_url: e.target.value })}
+                placeholder="https://youtube.com/@yourchannel"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm" />
+              {socialErrors.youtube_url && <p className="text-xs text-red-500 mt-1">{socialErrors.youtube_url}</p>}
+            </div>
+
+            {/* WhatsApp */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
+                <MessageCircle size={16} className="text-green-500" /> WhatsApp Number
+              </label>
+              <input type="tel" value={socialForm.whatsapp_number}
+                onChange={(e) => setSocialForm({ ...socialForm, whatsapp_number: e.target.value })}
+                placeholder="918189800757"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm" />
+              {socialErrors.whatsapp_number && <p className="text-xs text-red-500 mt-1">{socialErrors.whatsapp_number}</p>}
+              <p className="text-xs text-gray-400 mt-1">Enter in international format without + (e.g. 918189800757)</p>
+            </div>
+
+            {/* Website */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
+                <Globe size={16} className="text-gray-600" /> Website URL
+              </label>
+              <input type="url" value={socialForm.website_url}
+                onChange={(e) => setSocialForm({ ...socialForm, website_url: e.target.value })}
+                placeholder="https://www.yourwebsite.com"
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm" />
+              {socialErrors.website_url && <p className="text-xs text-red-500 mt-1">{socialErrors.website_url}</p>}
+            </div>
+
+            {siteSettings?.updated_at && (
+              <p className="text-xs text-gray-400">Last updated: {new Date(siteSettings.updated_at).toLocaleString('en-IN')}{siteSettings.updated_by ? ` by ${siteSettings.updated_by}` : ''}</p>
+            )}
+
+            <div className="flex gap-3 pt-2">
+              <button onClick={handleSocialSave} disabled={socialSaving}
+                className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-bold rounded-xl transition-colors">
+                {socialSaving ? <Loader size={16} className="animate-spin" /> : <Save size={16} />}
+                Save Settings
+              </button>
+              <button onClick={() => { setSocialForm({ google_business_url: '', facebook_url: '', instagram_url: '', twitter_url: '', youtube_url: '', whatsapp_number: '', website_url: '' }); setSocialErrors({}); setSocialMsg(null); }}
+                className="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-xl transition-colors">
+                Clear All
+              </button>
             </div>
           </div>
         </div>
