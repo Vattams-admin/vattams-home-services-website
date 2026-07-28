@@ -4,7 +4,7 @@ import { useRouter } from '@/lib/router';
 
 export default function AdminLogin() {
   const { navigate } = useRouter();
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -14,11 +14,11 @@ export default function AdminLogin() {
     setLoading(true);
     setError('');
     await new Promise((r) => setTimeout(r, 600));
-    if (username === 'admin' && password === 'admin123') {
+    if (email === 'admin@vattams.net' && password === 'Admin@venki&123') {
       sessionStorage.setItem('vattams_admin', 'true');
       navigate('admin-dashboard');
     } else {
-      setError('Invalid credentials. Use admin / admin123.');
+      setError('Invalid credentials.');
     }
     setLoading(false);
   };
@@ -39,13 +39,13 @@ export default function AdminLogin() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-blue-100 mb-1.5">Username</label>
+              <label className="block text-sm font-medium text-blue-100 mb-1.5">Email</label>
               <input
-                type="text" required value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                type="email" required value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-blue-200/50 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all"
-                placeholder="admin"
-                autoComplete="username"
+                placeholder="admin@vattams.net"
+                autoComplete="email"
               />
             </div>
             <div>
@@ -76,7 +76,7 @@ export default function AdminLogin() {
 
           <div className="mt-6 text-center">
             <p className="text-blue-200/60 text-xs">
-              Demo credentials: admin / admin123
+
             </p>
           </div>
         </div>
