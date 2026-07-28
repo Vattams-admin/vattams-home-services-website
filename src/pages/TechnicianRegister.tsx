@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Loader, Wrench, CheckCircle, Lock, Eye, EyeOff } from 'lucide-react';
+import { Loader, Wrench, CheckCircle, Lock, Eye, EyeOff, CreditCard } from 'lucide-react';
 import { useRouter } from '@/lib/router';
+import PaymentModal from '@/components/PaymentModal';
 
 const tamilNaduCities = [
   'Chennai', 'Coimbatore', 'Madurai', 'Trichy', 'Salem',
@@ -18,6 +19,8 @@ export default function TechnicianRegister() {
   const { navigate } = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [techId, setTechId] = useState('');
+  const [showPayment, setShowPayment] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({
@@ -82,6 +85,7 @@ export default function TechnicianRegister() {
         return;
       }
 
+      setTechId(data.technician.id);
       setSuccess(true);
     } catch (err) {
       setErrorMsg('Network error. Please try again.');
@@ -92,6 +96,7 @@ export default function TechnicianRegister() {
 
   if (success) {
     return (
+      <>
       <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-gray-100 p-8 text-center">
           <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
@@ -99,14 +104,34 @@ export default function TechnicianRegister() {
           </div>
           <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Registration Submitted!</h2>
           <p className="text-gray-500 mb-6">
-            Thank you for applying. Our team will verify your details and contact you within 48 hours.
+            Thank you for applying. Pay the ₹50 registration fee now to speed up approval, or wait for our team to verify your details.
           </p>
-          <button onClick={() => navigate('home')}
-            className="py-3 px-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors">
-            Back to Home
-          </button>
+          <div className="flex flex-col gap-3">
+            <button onClick={() => setShowPayment(true)}
+              className="flex items-center justify-center gap-2 py-3 px-8 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-colors shadow-lg shadow-green-200">
+              <CreditCard size={18} /> Pay ₹50 Registration Fee
+            </button>
+            <button onClick={() => navigate('home')}
+              className="py-3 px-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors">
+              Back to Home
+            </button>
+          </div>
         </div>
       </div>
+      {showPayment && (
+        <PaymentModal
+          open={showPayment}
+          onClose={() => setShowPayment(false)}
+          amount={50}
+          purpose="registration_fee"
+          payeeType="technician"
+          payeeId={techId}
+          payeeName={form.full_name}
+          referenceId={techId}
+          note="Technician Registration Fee"
+        />
+      )}
+      </>
     );
   }
 

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Loader, CheckCircle, Calendar, User, Phone, MapPin, Wrench, FileText, Clock, ArrowRight, LucideIcon } from 'lucide-react';
+import { Loader, CheckCircle, Calendar, User, Phone, MapPin, Wrench, FileText, Clock, ArrowRight, CreditCard, LucideIcon } from 'lucide-react';
 import { supabase, ServiceCategory } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
+import PaymentModal from '@/components/PaymentModal';
 
 const tamilNaduCities = [
   'Chennai', 'Coimbatore', 'Madurai', 'Trichy', 'Salem',
@@ -18,7 +19,8 @@ export default function Booking() {
   const [services, setServices] = useState<ServiceCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState<{ number: string } | null>(null);
+  const [success, setSuccess] = useState<{ number: string; id: string } | null>(null);
+  const [showPayment, setShowPayment] = useState(false);
 
   const [form, setForm] = useState({
     customer_name: '', mobile_number: '', city: 'Chennai', address: '',
@@ -59,11 +61,12 @@ export default function Booking() {
       alert('Booking failed. Please try again or call us.');
       return;
     }
-    setSuccess({ number: data.booking_number });
+    setSuccess({ number: data.booking_number, id: data.id });
   };
 
   if (success) {
     return (
+      <>
       <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-gray-100 p-8 text-center">
           <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
@@ -77,8 +80,12 @@ export default function Booking() {
           </div>
           <p className="text-sm text-gray-500 mb-6">Save this number to track your booking status.</p>
           <div className="flex flex-col gap-3">
+            <button onClick={() => setShowPayment(true)}
+              className="flex items-center justify-center gap-2 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-colors shadow-lg shadow-green-200">
+              <CreditCard size={18} /> Pay Now via UPI
+            </button>
             <a href="https://wa.me/918189800757" target="_blank" rel="noreferrer"
-              className="flex items-center justify-center gap-2 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors">
+              className="flex items-center justify-center gap-2 py-3 bg-green-50 hover:bg-green-100 text-green-700 font-semibold rounded-xl transition-colors border border-green-200">
               Share on WhatsApp
             </a>
             <button onClick={() => navigate('home')}
@@ -86,10 +93,25 @@ export default function Booking() {
               Back to Home
             </button>
           </div>
+          <p className="text-xs text-gray-400 mt-4">You can pay now or pay after service. Paying now helps us process your request faster.</p>
         </div>
       </div>
-    );
-  }
+      {showPayment && success && (
+        <PaymentModal
+          open={showPayment}
+          onClose={() => setShowPayment(false)}
+          amount={500}
+          purpose="booking"
+          payeeType="customer"
+          payeeId={form.mobile_number}
+          payeeName={form.customer_name}
+          referenceId={success.id}
+          note={`Booking ${success.number}`}
+        />
+      )}
+    </>
+  );
+}
 
   return (
     <div className="pt-20 md:pt-24">
@@ -183,7 +205,7 @@ export default function Booking() {
                   )}
                 </button>
                 <p className="text-center text-xs text-gray-400">
-                  By booking, you agree to our terms. No payment required now — pay after service.
+                  By booking, you agree to our terms. You can pay now via UPI or pay after service.
                 </p>
               </form>
             )}

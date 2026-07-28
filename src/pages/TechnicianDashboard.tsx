@@ -3,13 +3,15 @@ import {
   Loader, Wrench, MapPin, Phone, DollarSign, TrendingUp, CheckCircle,
   Clock, Camera, FileSignature, LogOut, Briefcase, Star, Wallet,
   Lock, Unlock, Bell, History, Plus, AlertCircle, ArrowDownCircle,
-  ArrowUpCircle, ShieldCheck,
+  ArrowUpCircle, ShieldCheck, CreditCard,
 } from 'lucide-react';
 import {
   supabase, Technician, TechnicianJob, Booking, JobStatus,
   WalletTransaction, WalletRecharge, TechnicianNotification,
 } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
+import PaymentModal from '@/components/PaymentModal';
+import { fetchPaymentsByPayee, PaymentRecord } from '@/lib/payments';
 
 const jobStatusColors: Record<string, string> = {
   assigned: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -45,6 +47,11 @@ export default function TechnicianDashboard() {
   const [rechargeAmount, setRechargeAmount] = useState('');
   const [rechargeSubmitting, setRechargeSubmitting] = useState(false);
   const [rechargeMsg, setRechargeMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showPayment, setShowPayment] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState(0);
+  const [paymentPurpose, setPaymentPurpose] = useState<'wallet_recharge' | 'commission'>('wallet_recharge');
+  const [paymentNote, setPaymentNote] = useState('');
+  const [payments, setPayments] = useState<PaymentRecord[]>([]);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('vattams_tech_id');
@@ -70,7 +77,7 @@ export default function TechnicianDashboard() {
       return;
     }
     setTechnician(tech);
-    await Promise.all([loadJobs(tech.id), loadWalletData(tech.id)]);
+    await Promise.all([loadJobs(tech.id), loadWalletData(tech.id), loadPayments(tech.id)]);
     setLoading(false);
   }, []);
 
@@ -102,6 +109,11 @@ export default function TechnicianDashboard() {
     setNotifications(notifRes.data ?? []);
   }, []);
 
+  const loadPayments = useCallback(async (techId: string) => {
+    const data = await fetchPaymentsByPayee(techId);
+    setPayments(data);
+  }, []);
+
   const updateJobStatus = async (jobId: string, status: JobStatus) => {
     setUpdatingId(jobId);
     const updates: Record<string, unknown> = { status };
@@ -110,6 +122,27 @@ export default function TechnicianDashboard() {
     if (error) console.error('[TechDashboard] job status update error:', error);
     setJobs((prev) => prev.map((j) => (j.id === jobId ? { ...j, status } : j)));
     setUpdatingId(null);
+  };
+
+  const openRechargePayment = () => {
+    const amt = parseFloat(rechargeAmount);
+    if (isNaN(amt) || amt <= 0) {
+      setRechargeMsg({ type: 'error', text: 'Please enter a valid amount.' });
+      return;
+    }
+    setPaymentAmount(amt);
+    setPaymentPurpose('wallet_recharge');
+    setPaymentNote(`Wallet Recharge - ${technician?.full_name ?? ''}`);
+    setShowPayment(true);
+  };
+
+  const openCommissionPayment = () => {
+    const amt = Number(technician?.commission_due ?? 0);
+    if (amt <= 0) return;
+    setPaymentAmount(amt);
+    setPaymentPurpose('commission');
+    setPaymentNote(`Commission Payment - ${technician?.full_name ?? ''}`);
+    setShowPayment(true);
   };
 
   const submitRecharge = async () => {
@@ -135,6 +168,13 @@ export default function TechnicianDashboard() {
       setRechargeAmount('');
     }
     setRechargeSubmitting(false);
+  };
+
+  const handlePaymentSuccess = () => {
+    if (technician) loadPayments(technician.id);
+    if (paymentPurpose === 'wallet_recharge' && technician) {
+      submitRecharge();
+    }
   };
 
   const markNotificationRead = async (notifId: string) => {
@@ -301,6 +341,12 @@ export default function TechnicianDashboard() {
                 <div className="bg-red-50 rounded-xl p-4 border border-red-100">
                   <div className="text-xs text-red-600 font-semibold mb-1">Commission Due</div>
                   <div className="text-2xl font-extrabold text-red-700">₹{Number(technician.commission_due).toLocaleString('en-IN')}</div>
+                  {Number(technician.commission_due) > 0 && (
+                    <button onClick={openCommissionPayment}
+                      className="mt-2 flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition-colors">
+                      <CreditCard size={14} /> Pay Commission Now
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -389,7 +435,7 @@ export default function TechnicianDashboard() {
             <div>
               <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 mb-4">
                 <p className="text-sm text-blue-700">
-                  Submit a recharge request. After admin approves your payment, the amount will be credited to your wallet automatically.
+                  Enter the amount you want to recharge, then pay via UPI. After your payment is verified by admin, the amount will be credited to your wallet.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 mb-4">
@@ -402,12 +448,17 @@ export default function TechnicianDashboard() {
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm"
                   />
                 </div>
+                <button onClick={openRechargePayment} disabled={rechargeSubmitting || !rechargeAmount}
+                  className="flex items-center justify-center gap-2 px-6 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm font-bold rounded-xl transition-colors shadow-sm shadow-green-200">
+                  <CreditCard size={16} /> Pay Now via UPI
+                </button>
                 <button onClick={submitRecharge} disabled={rechargeSubmitting}
-                  className="flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors">
+                  className="flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 disabled:opacity-50 text-sm font-semibold rounded-xl transition-colors border border-blue-200">
                   {rechargeSubmitting ? <Loader size={16} className="animate-spin" /> : <Plus size={16} />}
-                  Submit Request
+                  Submit Request Only
                 </button>
               </div>
+              <p className="text-xs text-gray-400 mb-4">Use "Pay Now via UPI" to pay instantly with QR code. Use "Submit Request Only" if you've already paid via other means.</p>
               {rechargeMsg && (
                 <div className={'rounded-xl p-3 text-sm mb-4 ' + (rechargeMsg.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200')}>
                   {rechargeMsg.text}
@@ -431,6 +482,29 @@ export default function TechnicianDashboard() {
                         r.status === 'rejected' ? 'bg-red-100 text-red-700 border border-red-200' :
                         'bg-amber-100 text-amber-700 border border-amber-200'
                       )}>{r.status}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Payment History */}
+              <div className="text-sm font-semibold text-gray-700 mb-2 mt-6">UPI Payment History</div>
+              {payments.length === 0 ? (
+                <p className="text-gray-400 text-sm text-center py-8">No payments yet.</p>
+              ) : (
+                <div className="space-y-2">
+                  {payments.map((p) => (
+                    <div key={p.id} className="flex items-center justify-between rounded-xl border border-gray-100 p-3">
+                      <div>
+                        <div className="text-sm font-semibold text-gray-800">₹{Number(p.amount).toLocaleString('en-IN')} <span className="text-gray-400 font-normal">· {p.purpose.replace(/_/g, ' ')}</span></div>
+                        <div className="text-xs text-gray-400">{new Date(p.created_at).toLocaleString('en-IN')}</div>
+                        {p.utr && <div className="text-xs text-gray-500">UTR: {p.utr}</div>}
+                      </div>
+                      <span className={'px-2.5 py-1 rounded-full text-xs font-semibold capitalize ' + (
+                        p.status === 'success' ? 'bg-green-100 text-green-700 border border-green-200' :
+                        p.status === 'failed' ? 'bg-red-100 text-red-700 border border-red-200' :
+                        'bg-amber-100 text-amber-700 border border-amber-200'
+                      )}>{p.status}</span>
                     </div>
                   ))}
                 </div>
@@ -544,6 +618,21 @@ export default function TechnicianDashboard() {
           )}
         </div>
       </div>
+
+      {showPayment && technician && (
+        <PaymentModal
+          open={showPayment}
+          onClose={() => setShowPayment(false)}
+          amount={paymentAmount}
+          purpose={paymentPurpose}
+          payeeType="technician"
+          payeeId={technician.id}
+          payeeName={technician.full_name}
+          referenceId={technician.id}
+          note={paymentNote}
+          onSuccess={handlePaymentSuccess}
+        />
+      )}
     </div>
   );
 }
