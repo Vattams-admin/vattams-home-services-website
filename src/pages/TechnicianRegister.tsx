@@ -103,14 +103,9 @@ export default function TechnicianRegister() {
             <CheckCircle size={40} className="text-green-600" />
           </div>
           <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Registration Submitted!</h2>
-          <p className="text-gray-500 mb-6">
-            Thank you for applying. Pay the ₹50 registration fee now to speed up approval, or wait for our team to verify your details.
-          </p>
+         
           <div className="flex flex-col gap-3">
-            <button onClick={() => setShowPayment(true)}
-              className="flex items-center justify-center gap-2 py-3 px-8 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-colors shadow-lg shadow-green-200">
-              <CreditCard size={18} /> Pay ₹50 Registration Fee
-            </button>
+            <>
             <button onClick={() => navigate('home')}
               className="py-3 px-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors">
               Back to Home
