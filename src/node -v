@@ -1,0 +1,9 @@
+node -v
+npm -v
+node -v
+npm -v
+cd C:\Users\Sys\Downloads\vattams-home-services-website
+npm install
+npm run dev
+pwd dir
+
