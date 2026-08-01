@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://vattams.net/sitemap.xml
+Sitemap: https://vattams.net/sitemap.xml 
