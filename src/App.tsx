@@ -1,6 +1,7 @@
 import { RouterProvider, useRouter } from '@/lib/router';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import Schema from '@/components/Schema';
 
 import Home from '@/pages/Home';
 import Services from '@/pages/Services';
@@ -24,45 +25,6 @@ import AdminDashboard from '@/pages/AdminDashboard';
 import TechnicianRegister from '@/pages/TechnicianRegister';
 import TechnicianLogin from '@/pages/TechnicianLogin';
 import TechnicianDashboard from '@/pages/TechnicianDashboard';
-
-function Schema() {
-  const schema = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "LocalBusiness",
-        "@id": "https://vattams.net/#business",
-        "name": "VATTAMS Home Services",
-        "url": "https://vattams.net",
-        "logo": "https://vattams.net/logo.png",
-        "image": "https://vattams.net/logo.png",
-        "telephone": "+91-XXXXXXXXXX",
-        "email": "info@vattams.net",
-        "priceRange": "₹₹",
-        "areaServed": {
-          "@type": "State",
-          "name": "Tamil Nadu"
-        },
-        "sameAs": []
-      },
-      {
-        "@type": "WebSite",
-        "@id": "https://vattams.net/#website",
-        "url": "https://vattams.net",
-        "name": "VATTAMS Home Services"
-      }
-    ]
-  };
-
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{
-        __html: JSON.stringify(schema),
-      }}
-    />
-  );
-}
 
 function Pages() {
   const { page } = useRouter();

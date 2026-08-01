@@ -36,6 +36,7 @@ function getPageFromHash(): Page {
   const valid: Page[] = [
     'home','services','about','contact','booking',
     'customer-login','customer-register','customer-forgot','customer-profile','customer-bookings',
+    'customer-dashboard','customer-payments','customer-reviews','customer-support',
     'admin-login','admin-dashboard',
     'technician-register','technician-login','technician-dashboard',
   ];
