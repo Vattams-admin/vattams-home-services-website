@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Loader, CheckCircle, Calendar, User, Phone, MapPin, Wrench, FileText, Clock, ArrowRight, CreditCard, LucideIcon, LogIn } from 'lucide-react';
+import { Loader, CheckCircle, Calendar, User, Phone, MapPin, Wrench, FileText, Clock, ArrowRight, LogIn, Receipt, LucideIcon } from 'lucide-react';
 import { supabase, ServiceCategory, Customer } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
-import PaymentModal from '@/components/PaymentModal';
 import { notifyCustomer, notifyAdmin } from '@/lib/notifications';
+import { getPricingFromService, formatINR } from '@/lib/pricing';
 
 const tamilNaduCities = [
   'Chennai', 'Coimbatore', 'Madurai', 'Trichy', 'Salem',
@@ -15,20 +15,12 @@ const tamilNaduCities = [
 
 const timeSlots = ['07:00 - 09:00', '09:00 - 11:00', '11:00 - 13:00', '13:00 - 15:00', '15:00 - 17:00', '17:00 - 19:00', '19:00 - 21:00'];
 
-function parsePriceRange(range: string | null): number {
-  if (!range) return 299;
-  const nums = range.match(/\d+/g);
-  if (nums && nums.length > 0) return parseInt(nums[0], 10);
-  return 299;
-}
-
 export default function Booking() {
   const { navigate } = useRouter();
   const [services, setServices] = useState<ServiceCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState<{ number: string; id: string } | null>(null);
-  const [showPayment, setShowPayment] = useState(false);
   const [customer, setCustomer] = useState<Customer | null>(null);
 
   const [form, setForm] = useState({
@@ -63,7 +55,7 @@ export default function Booking() {
   }, []);
 
   const selectedService = services.find((s) => s.name === form.service_category);
-  const bookingAmount = parsePriceRange(selectedService?.price_range ?? null);
+  const pricing = getPricingFromService(selectedService);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +71,12 @@ export default function Booking() {
         problem_description: form.problem_description,
         preferred_date: form.preferred_date || null,
         preferred_time: form.preferred_time || null,
-        amount: bookingAmount,
+        amount: pricing.totalAmount,
+        base_price: pricing.basePrice,
+        gst_amount: pricing.gstAmount,
+        platform_fee: pricing.platformFee,
+        commission_amount: pricing.commissionAmount,
+        total_amount: pricing.totalAmount,
         customer_id: customer?.id || null,
         status: 'pending',
       })
@@ -101,7 +98,6 @@ export default function Booking() {
 
   if (success) {
     return (
-      <>
       <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-gray-100 p-8 text-center">
           <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
@@ -112,18 +108,8 @@ export default function Booking() {
           <div className="bg-blue-50 rounded-xl p-4 mb-6">
             <div className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Your Booking Number</div>
             <div className="text-xl font-extrabold text-blue-700">{success.number}</div>
-            {bookingAmount > 0 && <div className="text-sm text-gray-600 mt-2">Service fee: ₹{bookingAmount}</div>}
           </div>
-          <p className="text-sm text-gray-500 mb-6">
-            {customer
-              ? 'Track your booking from your profile anytime.'
-              : 'Save this number to track your booking status, or create an account to track easily.'}
-          </p>
           <div className="flex flex-col gap-3">
-            <button onClick={() => setShowPayment(true)}
-              className="flex items-center justify-center gap-2 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-colors shadow-lg shadow-green-200">
-              <CreditCard size={18} /> Pay ₹{bookingAmount} via UPI
-            </button>
             {customer && (
               <button onClick={() => navigate('customer-bookings')}
                 className="flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors">
@@ -141,25 +127,10 @@ export default function Booking() {
               Back to Home
             </button>
           </div>
-          <p className="text-xs text-gray-400 mt-4">You can pay now via UPI or pay after service. Paying now helps us process your request faster.</p>
         </div>
       </div>
-      {showPayment && success && (
-        <PaymentModal
-          open={showPayment}
-          onClose={() => setShowPayment(false)}
-          amount={bookingAmount}
-          purpose="booking"
-          payeeType="customer"
-          payeeId={form.mobile_number}
-          payeeName={form.customer_name}
-          referenceId={success.id}
-          note={`Booking ${success.number}`}
-        />
-      )}
-    </>
-  );
-}
+    );
+  }
 
   return (
     <div className="pt-20 md:pt-24">
@@ -220,9 +191,30 @@ export default function Booking() {
                   </Field>
                 </div>
 
-                {selectedService?.price_range && (
-                  <div className="bg-gray-50 rounded-xl p-3 text-sm text-gray-600">
-                    <span className="font-semibold">Estimated cost:</span> {selectedService.price_range}
+                {selectedService && (
+                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Receipt size={16} className="text-blue-600" />
+                      <span className="font-semibold text-gray-800 text-sm">Price Breakdown</span>
+                    </div>
+                    <div className="space-y-1.5 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Service Charge</span>
+                        <span className="font-semibold text-gray-800">{formatINR(pricing.basePrice)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">GST ({selectedService.gst_rate ?? 18}%)</span>
+                        <span className="font-semibold text-gray-800">{formatINR(pricing.gstAmount)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Platform Fee</span>
+                        <span className="font-semibold text-gray-800">{formatINR(pricing.platformFee)}</span>
+                      </div>
+                      <div className="border-t border-gray-200 pt-1.5 flex justify-between">
+                        <span className="font-bold text-gray-900">Total Amount</span>
+                        <span className="font-extrabold text-blue-700 text-lg">{formatINR(pricing.totalAmount)}</span>
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -265,7 +257,7 @@ export default function Booking() {
                   )}
                 </button>
                 <p className="text-center text-xs text-gray-400">
-                  By booking, you agree to our terms. You can pay now via UPI or pay after service.
+                  By booking, you agree to our terms. Payment will be collected after service completion.
                 </p>
               </form>
             )}

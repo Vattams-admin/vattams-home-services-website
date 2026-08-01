@@ -22,7 +22,12 @@ import { Customer } from '@/lib/supabase';
 const statusColors: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-700 border-amber-200',
   confirmed: 'bg-blue-100 text-blue-700 border-blue-200',
+  assigned: 'bg-cyan-100 text-cyan-700 border-cyan-200',
+  accepted: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+  on_the_way: 'bg-sky-100 text-sky-700 border-sky-200',
   in_progress: 'bg-purple-100 text-purple-700 border-purple-200',
+  job_started: 'bg-violet-100 text-violet-700 border-violet-200',
+  job_completed: 'bg-teal-100 text-teal-700 border-teal-200',
   completed: 'bg-green-100 text-green-700 border-green-200',
   cancelled: 'bg-red-100 text-red-700 border-red-200',
 };
@@ -39,7 +44,7 @@ const techStatusLabel: Record<string, string> = {
   inactive: 'Rejected',
 };
 
-const statusOptions: BookingStatus[] = ['pending', 'confirmed', 'in_progress', 'completed', 'cancelled'];
+const statusOptions: BookingStatus[] = ['pending', 'confirmed', 'assigned', 'accepted', 'on_the_way', 'in_progress', 'job_started', 'job_completed', 'completed', 'cancelled'];
 
 type Tab = 'bookings' | 'technicians' | 'customers' | 'wallet' | 'payments' | 'reports' | 'social' | 'notifications';
 
@@ -181,15 +186,24 @@ export default function AdminDashboard() {
   }, [technicians, techFilter]);
 
   const stats = useMemo(() => {
-    const revenue = bookings
-      .filter((b) => b.status === 'completed' && b.amount)
-      .reduce((sum, b) => sum + (b.amount ?? 0), 0);
+    const completedBookings = bookings.filter((b) => b.status === 'completed' || b.status === 'job_completed');
+    const revenue = completedBookings.reduce((sum, b) => sum + (b.total_amount ?? b.amount ?? 0), 0);
+    const totalGST = completedBookings.reduce((sum, b) => sum + (b.gst_amount ?? 0), 0);
+    const totalCommission = completedBookings.reduce((sum, b) => sum + (b.commission_amount ?? 0), 0);
+    const totalPlatformFee = completedBookings.reduce((sum, b) => sum + (b.platform_fee ?? 0), 0);
+    const techEarnings = completedBookings.reduce((sum, b) => sum + ((b.base_price ?? b.amount ?? 0) - (b.commission_amount ?? 0)), 0);
     return {
       total: bookings.length,
       pending: bookings.filter((b) => b.status === 'pending').length,
-      inProgress: bookings.filter((b) => b.status === 'in_progress').length,
-      completed: bookings.filter((b) => b.status === 'completed').length,
+      assigned: bookings.filter((b) => ['assigned', 'accepted'].includes(b.status)).length,
+      inProgress: bookings.filter((b) => ['on_the_way', 'in_progress', 'job_started'].includes(b.status)).length,
+      completed: completedBookings.length,
+      cancelled: bookings.filter((b) => b.status === 'cancelled').length,
       revenue,
+      totalGST,
+      totalCommission,
+      totalPlatformFee,
+      techEarnings,
       technicians: technicians.filter((t) => t.status === 'active').length,
       pendingTechs: technicians.filter((t) => t.status === 'pending').length,
     };
@@ -418,10 +432,31 @@ export default function AdminDashboard() {
           {[
             { icon: Briefcase, label: 'Total Bookings', value: stats.total, color: 'bg-blue-600' },
             { icon: Clock, label: 'Pending', value: stats.pending, color: 'bg-amber-500' },
+            { icon: CheckCircle, label: 'Assigned', value: stats.assigned, color: 'bg-cyan-500' },
             { icon: TrendingUp, label: 'In Progress', value: stats.inProgress, color: 'bg-purple-500' },
             { icon: CheckCircle, label: 'Completed', value: stats.completed, color: 'bg-green-500' },
-            { icon: Users, label: 'Technicians', value: stats.technicians, color: 'bg-indigo-500' },
-            { icon: DollarSign, label: 'Revenue', value: `₹${stats.revenue.toLocaleString('en-IN')}`, color: 'bg-emerald-600' },
+            { icon: XCircle, label: 'Cancelled', value: stats.cancelled, color: 'bg-red-500' },
+          ].map((s) => {
+            const Icon = s.icon;
+            return (
+              <div key={s.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                <div className={`w-10 h-10 rounded-lg ${s.color} flex items-center justify-center mb-3`}>
+                  <Icon size={18} className="text-white" />
+                </div>
+                <div className="text-2xl font-extrabold text-gray-900">{s.value}</div>
+                <div className="text-xs text-gray-400 font-medium">{s.label}</div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Revenue Breakdown */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {[
+            { icon: DollarSign, label: 'Total Revenue', value: `₹${stats.revenue.toLocaleString('en-IN')}`, color: 'bg-emerald-600' },
+            { icon: TrendingUp, label: 'GST Collected', value: `₹${stats.totalGST.toLocaleString('en-IN')}`, color: 'bg-orange-500' },
+            { icon: Wallet, label: 'Commission', value: `₹${stats.totalCommission.toLocaleString('en-IN')}`, color: 'bg-blue-500' },
+            { icon: Briefcase, label: 'Tech Earnings', value: `₹${stats.techEarnings.toLocaleString('en-IN')}`, color: 'bg-indigo-500' },
           ].map((s) => {
             const Icon = s.icon;
             return (

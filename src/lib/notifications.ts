@@ -213,6 +213,34 @@ export const notifyCustomer = {
       message: `Your booking ${bookingNumber} has been cancelled. If this was unexpected, please contact us.`,
       type: 'booking_cancelled', referenceType: 'booking', referenceId: bookingId,
     }),
+  bookingAccepted: (mobile: string, bookingNumber: string, techName: string, bookingId: string) =>
+    createNotification({
+      recipientType: 'customer', recipientId: mobile,
+      title: 'Booking Accepted',
+      message: `${techName} has accepted your booking ${bookingNumber}. They will be on their way shortly.`,
+      type: 'booking_accepted', referenceType: 'booking', referenceId: bookingId,
+    }),
+  jobStarted: (mobile: string, bookingNumber: string, bookingId: string) =>
+    createNotification({
+      recipientType: 'customer', recipientId: mobile,
+      title: 'Job Started',
+      message: `The technician has started work on your booking ${bookingNumber}.`,
+      type: 'job_started', referenceType: 'booking', referenceId: bookingId,
+    }),
+  jobCompleted: (mobile: string, bookingNumber: string, bookingId: string) =>
+    createNotification({
+      recipientType: 'customer', recipientId: mobile,
+      title: 'Job Completed',
+      message: `Your booking ${bookingNumber} has been completed. Please rate your experience!`,
+      type: 'job_completed', referenceType: 'booking', referenceId: bookingId,
+    }),
+  otpGenerated: (mobile: string, bookingNumber: string, otp: string, purpose: string, bookingId: string) =>
+    createNotification({
+      recipientType: 'customer', recipientId: mobile,
+      title: `OTP for ${purpose}`,
+      message: `Your OTP for booking ${bookingNumber} is ${otp}. Share it with the technician to ${purpose.toLowerCase()}.`,
+      type: 'otp_generated', referenceType: 'booking', referenceId: bookingId,
+    }),
 };
 
 export const notifyTechnician = {
@@ -292,6 +320,13 @@ export const notifyTechnician = {
       title: 'Account Unlocked',
       message: `Your account has been unlocked. You can now accept new jobs.`,
       type: 'account_unlocked', referenceType: 'technician', referenceId: techId,
+    }),
+  newBooking: (techId: string, bookingNumber: string, serviceCategory: string, jobId: string) =>
+    createNotification({
+      recipientType: 'technician', recipientId: techId,
+      title: 'New Booking Available',
+      message: `New ${serviceCategory} booking ${bookingNumber} is available. Accept it before others do!`,
+      type: 'new_booking', referenceType: 'job', referenceId: jobId,
     }),
 };
 

@@ -10,9 +10,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 
-export type BookingStatus = 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
+export type BookingStatus = 'pending' | 'confirmed' | 'assigned' | 'accepted' | 'on_the_way' | 'in_progress' | 'job_started' | 'job_completed' | 'completed' | 'cancelled';
 export type TechnicianStatus = 'pending' | 'active' | 'inactive';
-export type JobStatus = 'assigned' | 'accepted' | 'in_progress' | 'completed' | 'rejected';
+export type JobStatus = 'assigned' | 'accepted' | 'on_the_way' | 'in_progress' | 'job_started' | 'job_completed' | 'completed' | 'rejected';
 
 export interface ServiceCategory {
   id: string;
@@ -20,6 +20,10 @@ export interface ServiceCategory {
   description: string | null;
   icon: string | null;
   price_range: string | null;
+  base_price: number;
+  gst_rate: number;
+  platform_fee: number;
+  commission_rate: number;
   created_at: string;
 }
 
@@ -39,6 +43,17 @@ export interface Booking {
   technician_notes: string | null;
   amount: number | null;
   customer_id: string | null;
+  base_price: number | null;
+  gst_amount: number | null;
+  platform_fee: number | null;
+  commission_amount: number | null;
+  total_amount: number | null;
+  start_otp: string | null;
+  complete_otp: string | null;
+  otp_verified_at: string | null;
+  job_started_at: string | null;
+  job_completed_at: string | null;
+  rescheduled_from: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -77,6 +92,9 @@ export interface Technician {
   completed_jobs_count: number;
   wallet_locked: boolean;
   registration_fee_paid: boolean;
+  latitude: number | null;
+  longitude: number | null;
+  radius_km: number;
 }
 
 export interface TechnicianJob {
@@ -139,6 +157,7 @@ export interface WalletSettings {
   deposit_release_job_threshold: number;
   lock_threshold: number;
   low_balance_threshold: number;
+  assignment_radius_km: number;
   updated_at: string;
 }
 
@@ -150,5 +169,16 @@ export interface Review {
   technician_id: string | null;
   rating: number;
   review_text: string | null;
+  created_at: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  booking_id: string;
+  sender_type: 'customer' | 'technician' | 'admin';
+  sender_id: string;
+  sender_name: string | null;
+  message: string;
+  is_read: boolean;
   created_at: string;
 }
