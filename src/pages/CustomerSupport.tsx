@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Phone, MessageCircle, Mail, MapPin, Send, Loader, HeadphonesIcon, ChevronRight } from 'lucide-react';
+import { Mail, MapPin, Send, Loader, Headphones, ChevronRight } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import { supabase, Customer } from '@/lib/supabase';
+import CommunicationCenter, { SUPPORT_PHONE, SUPPORT_WHATSAPP } from '@/components/CommunicationCenter';
 
-const SUPPORT_PHONE = '+918189800757';
-const SUPPORT_WHATSAPP = '918189800757';
 const SUPPORT_EMAIL = 'support@vattams.net';
 
 export default function CustomerSupport() {
@@ -54,30 +53,18 @@ export default function CustomerSupport() {
   return (
     <div className="pt-20 md:pt-24 min-h-screen bg-gray-50">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
-        <h1 className="text-2xl font-extrabold text-gray-900 mb-6 flex items-center gap-2"><HeadphonesIcon size={24} className="text-blue-600" /> Customer Support</h1>
+        <h1 className="text-2xl font-extrabold text-gray-900 mb-6 flex items-center gap-2"><Headphones size={24} className="text-blue-600" /> Customer Support</h1>
 
         {toast && (
           <div className={`rounded-xl p-3 text-sm mb-4 ${toast.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>{toast.text}</div>
         )}
 
         {/* Quick Support Options */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <a href={`tel:${SUPPORT_PHONE}`} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md hover:border-blue-200 transition-all group">
-            <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mb-3 group-hover:bg-blue-600 transition-colors">
-              <Phone size={20} className="text-blue-600 group-hover:text-white transition-colors" />
-            </div>
-            <div className="font-bold text-gray-900 text-sm">Call Support</div>
-            <div className="text-xs text-gray-500 mt-1">{SUPPORT_PHONE}</div>
-          </a>
+        <div className="mb-6">
+          <CommunicationCenter variant="full" />
+        </div>
 
-          <a href={`https://wa.me/${SUPPORT_WHATSAPP}`} target="_blank" rel="noreferrer" className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md hover:border-green-200 transition-all group">
-            <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center mb-3 group-hover:bg-green-500 transition-colors">
-              <MessageCircle size={20} className="text-green-600 group-hover:text-white transition-colors" />
-            </div>
-            <div className="font-bold text-gray-900 text-sm">WhatsApp Support</div>
-            <div className="text-xs text-gray-500 mt-1">Chat with us instantly</div>
-          </a>
-
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6">
           <a href={`mailto:${SUPPORT_EMAIL}`} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md hover:border-amber-200 transition-all group">
             <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center mb-3 group-hover:bg-amber-500 transition-colors">
               <Mail size={20} className="text-amber-600 group-hover:text-white transition-colors" />
@@ -115,7 +102,7 @@ export default function CustomerSupport() {
           <h2 className="font-bold text-gray-900 text-sm mb-4">Business Information</h2>
           <div className="space-y-3">
             <div className="flex items-center gap-3 text-sm text-gray-600">
-              <Phone size={16} className="text-gray-400" /> {SUPPORT_PHONE}
+              <span className="font-semibold">{SUPPORT_PHONE}</span>
             </div>
             <div className="flex items-center gap-3 text-sm text-gray-600">
               <Mail size={16} className="text-gray-400" /> {SUPPORT_EMAIL}

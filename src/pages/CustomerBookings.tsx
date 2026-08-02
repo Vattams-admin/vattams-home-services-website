@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Loader, Briefcase, Calendar, Clock, MapPin, Wrench, User, Phone, CheckCircle, X, ChevronRight, Trash2, RefreshCw, Star } from 'lucide-react';
+import { Loader, Briefcase, Calendar, Clock, MapPin, Wrench, User, CheckCircle, X, ChevronRight, Trash2, RefreshCw, Star } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import { supabase, Booking, Customer } from '@/lib/supabase';
+import CommunicationCenter from '@/components/CommunicationCenter';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -19,7 +20,7 @@ export default function CustomerBookings() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Booking | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
-  const [technician, setTechnician] = useState<{ full_name: string; mobile: string; rating: number } | null>(null);
+  const [technician, setTechnician] = useState<{ full_name: string; rating: number; profile_photo_url: string | null; is_online: boolean } | null>(null);
   const [hasReview, setHasReview] = useState(false);
   const [filter, setFilter] = useState<'all' | 'active' | 'completed' | 'cancelled'>('all');
   const [actionLoading, setActionLoading] = useState(false);
@@ -57,7 +58,7 @@ export default function CustomerBookings() {
     setHasReview(false);
     if (b.assigned_technician_id) {
       const { data: tech } = await supabase.from('technicians')
-        .select('full_name, mobile, rating').eq('id', b.assigned_technician_id).maybeSingle();
+        .select('full_name, rating, profile_photo_url, is_online').eq('id', b.assigned_technician_id).maybeSingle();
       setTechnician(tech);
     }
     if (b.status === 'completed') {
@@ -234,7 +235,6 @@ export default function CustomerBookings() {
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <InfoRow icon={User} label="Customer" value={selected.customer_name} />
-                <InfoRow icon={Phone} label="Mobile" value={selected.mobile_number} />
                 <InfoRow icon={Wrench} label="Service" value={selected.service_category} />
                 <InfoRow icon={MapPin} label="City" value={selected.city} />
                 {selected.preferred_date && <InfoRow icon={Calendar} label="Date" value={selected.preferred_date} />}
@@ -251,22 +251,39 @@ export default function CustomerBookings() {
                 </div>
               )}
 
-              {/* Assigned Technician */}
+              {/* Assigned Technician — no phone number shown */}
               {technician && (
                 <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
                   <div className="text-xs text-blue-600 font-semibold uppercase tracking-wider mb-2">Assigned Technician</div>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-200 flex items-center justify-center"><User size={18} className="text-blue-700" /></div>
+                    <div className="w-10 h-10 rounded-full bg-blue-200 flex items-center justify-center overflow-hidden">
+                      {technician.profile_photo_url ? (
+                        <img src={technician.profile_photo_url} alt={technician.full_name} className="w-full h-full object-cover" />
+                      ) : (
+                        <User size={18} className="text-blue-700" />
+                      )}
+                    </div>
                     <div className="flex-1">
                       <div className="font-bold text-gray-900 text-sm">{technician.full_name}</div>
                       <div className="text-xs text-gray-500 flex items-center gap-2">
-                        <Phone size={12} /> {technician.mobile}
                         {technician.rating > 0 && <span className="flex items-center gap-0.5"><Star size={12} className="text-amber-500 fill-amber-500" /> {technician.rating}</span>}
+                        <span className={'flex items-center gap-1 ' + (technician.is_online ? 'text-green-600' : 'text-gray-400')}>
+                          <span className={'w-2 h-2 rounded-full ' + (technician.is_online ? 'bg-green-500' : 'bg-gray-300')} />
+                          {technician.is_online ? 'Online' : 'Offline'}
+                        </span>
                       </div>
                     </div>
                   </div>
                 </div>
               )}
+
+              {/* VATTAMS Communication Center */}
+              <CommunicationCenter
+                bookingNumber={selected.booking_number}
+                customerName={selected.customer_name}
+                serviceCategory={selected.service_category}
+                variant="full"
+              />
 
               <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                 <span className="text-sm text-gray-500">Status:</span>

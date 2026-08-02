@@ -15,6 +15,7 @@ import PaymentModal from '@/components/PaymentModal';
 import { fetchPaymentsByPayee, PaymentRecord } from '@/lib/payments';
 import { formatINR } from '@/lib/pricing';
 import { notifyCustomer, notifyTechnician } from '@/lib/notifications';
+import CommunicationCenter from '@/components/CommunicationCenter';
 
 const jobStatusColors: Record<string, string> = {
   assigned: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -65,9 +66,6 @@ export default function TechnicianDashboard() {
   const [otpInput, setOtpInput] = useState('');
   const [otpError, setOtpError] = useState('');
   const [otpVerifying, setOtpVerifying] = useState(false);
-  const [chatModal, setChatModal] = useState<Booking | null>(null);
-  const [chatMessages, setChatMessages] = useState<{ id: string; sender_type: string; message: string; created_at: string }[]>([]);
-  const [chatInput, setChatInput] = useState('');
 
   useEffect(() => {
     const stored = sessionStorage.getItem('vattams_tech_id');
@@ -252,24 +250,6 @@ export default function TechnicianDashboard() {
       setOtpError('Failed to verify OTP. Please try again.');
     }
     setOtpVerifying(false);
-  };
-
-  const loadChatMessages = async (bookingId: string) => {
-    const { data } = await supabase.from('chat_messages').select('*').eq('booking_id', bookingId).order('created_at', { ascending: true });
-    setChatMessages(data ?? []);
-  };
-
-  const sendChatMessage = async () => {
-    if (!chatModal || !chatInput.trim() || !technician) return;
-    const { data } = await supabase.from('chat_messages').insert({
-      booking_id: chatModal.id,
-      sender_type: 'technician',
-      sender_id: technician.id,
-      sender_name: technician.full_name,
-      message: chatInput.trim(),
-    }).select().single();
-    if (data) setChatMessages((prev) => [...prev, data]);
-    setChatInput('');
   };
 
   const updateJobStatus = async (jobId: string, status: JobStatus) => {
@@ -796,16 +776,13 @@ export default function TechnicianDashboard() {
                         </div>
                       )}
 
-                      {/* Privacy: Chat & Secure Call */}
-                      <div className="flex gap-2 mb-3">
-                        <button onClick={() => { if (job.booking) { setChatModal(job.booking); loadChatMessages(job.booking.id); } }}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg transition-colors border border-blue-200">
-                          <MessageCircle size={14} /> In-app Chat
-                        </button>
-                        <button disabled title="Secure call will be available soon"
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-400 text-xs font-semibold rounded-lg border border-gray-200 cursor-not-allowed">
-                          <Phone size={14} /> Secure Call
-                        </button>
+                      {/* VATTAMS Communication Center */}
+                      <div className="mb-3">
+                        <CommunicationCenter
+                          bookingNumber={job.booking?.booking_number}
+                          customerName={job.booking?.customer_name}
+                          serviceCategory={job.booking?.service_category}
+                        />
                       </div>
 
                       {/* Action Buttons */}
@@ -891,48 +868,6 @@ export default function TechnicianDashboard() {
               className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-xl transition-colors">
               {otpVerifying ? <Loader size={16} className="animate-spin mx-auto" /> : 'Verify OTP'}
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* Chat Modal */}
-      {chatModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setChatModal(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                <MessageCircle size={20} className="text-blue-600" />
-                <div>
-                  <h3 className="font-bold text-gray-900 text-sm">Chat with Customer</h3>
-                  <p className="text-xs text-gray-400">{chatModal.booking_number}</p>
-                </div>
-              </div>
-              <button onClick={() => setChatModal(null)} className="p-2 rounded-lg hover:bg-gray-100">
-                <X size={18} className="text-gray-500" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
-              {chatMessages.length === 0 ? (
-                <p className="text-center text-gray-400 text-sm py-8">No messages yet. Start the conversation!</p>
-              ) : (
-                chatMessages.map((m) => (
-                  <div key={m.id} className={'flex ' + (m.sender_type === 'technician' ? 'justify-end' : 'justify-start')}>
-                    <div className={'max-w-[75%] rounded-xl px-3 py-2 text-sm ' + (m.sender_type === 'technician' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-800')}>
-                      {m.message}
-                      <div className={'text-xs mt-0.5 ' + (m.sender_type === 'technician' ? 'text-blue-200' : 'text-gray-400')}>{new Date(m.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-            <div className="p-4 border-t border-gray-100 flex gap-2">
-              <input type="text" value={chatInput} onChange={(e) => setChatInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') sendChatMessage(); }}
-                placeholder="Type a message..."
-                className="flex-1 px-3 py-2 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm" />
-              <button onClick={sendChatMessage} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors">
-                Send
-              </button>
-            </div>
           </div>
         </div>
       )}

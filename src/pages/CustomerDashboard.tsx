@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Loader, Briefcase, Calendar, Clock, MapPin, Wrench, CheckCircle, X, ChevronRight, Bell, TrendingUp, CreditCard, Star, Phone, MessageCircle, User } from 'lucide-react';
+import { Loader, Briefcase, Calendar, Clock, MapPin, Wrench, CheckCircle, X, ChevronRight, Bell, TrendingUp, CreditCard, Star, Phone, User } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import { supabase, Booking, Customer } from '@/lib/supabase';
+import CommunicationCenter from '@/components/CommunicationCenter';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -252,7 +253,6 @@ export default function CustomerDashboard() {
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <InfoRow icon={User} label="Customer" value={selected.customer_name} />
-                <InfoRow icon={Phone} label="Mobile" value={selected.mobile_number} />
                 <InfoRow icon={Wrench} label="Service" value={selected.service_category} />
                 <InfoRow icon={MapPin} label="City" value={selected.city} />
                 {selected.preferred_date && <InfoRow icon={Calendar} label="Date" value={selected.preferred_date} />}
@@ -272,6 +272,14 @@ export default function CustomerDashboard() {
                 <span className="text-sm text-gray-500">Status:</span>
                 <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize border ${statusColors[selected.status]}`}>{selected.status.replace('_', ' ')}</span>
               </div>
+
+              {/* VATTAMS Communication Center */}
+              <CommunicationCenter
+                bookingNumber={selected.booking_number}
+                customerName={selected.customer_name}
+                serviceCategory={selected.service_category}
+                variant="full"
+              />
             </div>
           </div>
         </div>
