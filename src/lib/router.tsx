@@ -19,20 +19,34 @@ export type Page =
   | 'admin-dashboard'
   | 'technician-register'
   | 'technician-login'
-  | 'technician-dashboard';
+  | 'technician-dashboard'
+  | 'city-landing';
 
 interface RouterContextType {
   page: Page;
   navigate: (page: Page) => void;
+  citySlug: string | null;
 }
 
 const RouterContext = createContext<RouterContextType>({
   page: 'home',
   navigate: () => {},
+  citySlug: null,
 });
 
-function getPageFromHash(): Page {
-  const hash = window.location.hash.replace('#', '') as Page;
+interface RouteInfo {
+  page: Page;
+  citySlug: string | null;
+}
+
+function getRouteFromHash(): RouteInfo {
+  const hash = window.location.hash.replace('#', '');
+
+  if (hash.startsWith('city-')) {
+    const slug = hash.replace('city-', '');
+    return { page: 'city-landing', citySlug: slug };
+  }
+
   const valid: Page[] = [
     'home','services','about','contact','booking',
     'customer-login','customer-register','customer-forgot','customer-profile','customer-bookings',
@@ -40,26 +54,26 @@ function getPageFromHash(): Page {
     'admin-login','admin-dashboard',
     'technician-register','technician-login','technician-dashboard',
   ];
-  return valid.includes(hash) ? hash : 'home';
+  return { page: valid.includes(hash as Page) ? (hash as Page) : 'home', citySlug: null };
 }
 
 export function RouterProvider({ children }: { children: ReactNode }) {
-  const [page, setPage] = useState<Page>(getPageFromHash);
+  const [route, setRoute] = useState<RouteInfo>(getRouteFromHash);
 
   useEffect(() => {
-    const onHashChange = () => setPage(getPageFromHash());
+    const onHashChange = () => setRoute(getRouteFromHash());
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
   const navigate = (p: Page) => {
     window.location.hash = p;
-    setPage(p);
+    setRoute({ page: p, citySlug: null });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
-    <RouterContext.Provider value={{ page, navigate }}>
+    <RouterContext.Provider value={{ page: route.page, navigate, citySlug: route.citySlug }}>
       {children}
     </RouterContext.Provider>
   );

@@ -25,9 +25,11 @@ import AdminDashboard from '@/pages/AdminDashboard';
 import TechnicianRegister from '@/pages/TechnicianRegister';
 import TechnicianLogin from '@/pages/TechnicianLogin';
 import TechnicianDashboard from '@/pages/TechnicianDashboard';
+import CityLanding from '@/pages/CityLanding';
+import { getCityBySlug } from '@/lib/cities';
 
 function Pages() {
-  const { page } = useRouter();
+  const { page, citySlug } = useRouter();
 
   const renderPage = () => {
     switch (page) {
@@ -69,6 +71,10 @@ function Pages() {
         return <TechnicianLogin />;
       case 'technician-dashboard':
         return <TechnicianDashboard />;
+      case 'city-landing': {
+        const city = citySlug ? getCityBySlug(citySlug) : undefined;
+        return city ? <CityLanding city={city} /> : <Home />;
+      }
       default:
         return <Home />;
     }

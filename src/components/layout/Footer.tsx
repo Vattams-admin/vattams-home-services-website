@@ -74,6 +74,23 @@ export default function Footer() {
             </ul>
           </div>
 
+          {/* Cities Served */}
+          <div>
+            <h4 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">Cities We Serve</h4>
+            <ul className="space-y-2">
+              {['Chennai','Coimbatore','Madurai','Trichy','Salem','Erode','Tiruppur','Vellore','Hosur','Tirunelveli'].map((c) => (
+                <li key={c}>
+                  <a
+                    href={`#city-${c.toLowerCase()}`}
+                    className="text-gray-400 hover:text-blue-400 text-sm transition-colors"
+                  >
+                    {c}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
           {/* Contact */}
           <div>
             <h4 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">Contact Us</h4>
