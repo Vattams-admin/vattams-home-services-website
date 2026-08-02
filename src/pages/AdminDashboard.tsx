@@ -4,11 +4,13 @@ import {
   CheckCircle, Clock, X, ChevronDown, LogOut, LayoutDashboard, Users, Briefcase,
   Trash2, Eye, XCircle, Star, Award, Wallet, Lock, Unlock, History, ShieldCheck,
   CreditCard, LucideIcon, Globe, Facebook, Instagram, Twitter, Youtube, MessageCircle, Save,
-  Bell, BellOff,
+  Bell, BellOff, Search,
 } from 'lucide-react';
 import { supabase, Booking, Technician, BookingStatus, WalletTransaction, WalletRecharge } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { fetchAllPayments, fetchPendingPayments, updatePaymentStatus, PaymentRecord } from '@/lib/payments';
+import { fetchAllServicePrices, getPricingFromServicePrice, formatINR, type PricingBreakdown } from '@/lib/pricing';
+import { ServicePrice } from '@/lib/supabase';
 import { fetchSiteSettings, saveSiteSettings, validateSettings, SiteSettings, SiteSettingsInput } from '@/lib/siteSettings';
 import { refreshSocialLinksCache } from '@/components/SocialLinks';
 import NotificationCenter from '@/components/NotificationCenter';
@@ -46,7 +48,7 @@ const techStatusLabel: Record<string, string> = {
 
 const statusOptions: BookingStatus[] = ['pending', 'confirmed', 'assigned', 'accepted', 'on_the_way', 'in_progress', 'job_started', 'job_completed', 'completed', 'cancelled'];
 
-type Tab = 'bookings' | 'technicians' | 'customers' | 'wallet' | 'payments' | 'reports' | 'social' | 'notifications';
+type Tab = 'bookings' | 'technicians' | 'customers' | 'wallet' | 'payments' | 'reports' | 'social' | 'notifications' | 'pricing';
 
 export default function AdminDashboard() {
   const { navigate } = useRouter();
@@ -87,6 +89,11 @@ export default function AdminDashboard() {
   const [announcementTechId, setAnnouncementTechId] = useState('');
   const [announcementSending, setAnnouncementSending] = useState(false);
   const [announcementResult, setAnnouncementResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [servicePrices, setServicePrices] = useState<ServicePrice[]>([]);
+  const [priceSearch, setPriceSearch] = useState('');
+  const [priceEdits, setPriceEdits] = useState<Record<string, { base_price: string; gst_rate: string; platform_fee: string; commission_rate: string; is_active: boolean }>>({});
+  const [priceSaving, setPriceSaving] = useState(false);
+  const [priceMsg, setPriceMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     if (!sessionStorage.getItem('vattams_admin')) {
@@ -132,7 +139,24 @@ export default function AdminDashboard() {
     if (custRes.error) console.error('[AdminDashboard] customers query error:', custRes.error);
     await loadSiteSettings();
     await loadNotifLogs();
+    await loadServicePrices();
     setLoading(false);
+  };
+
+  const loadServicePrices = async () => {
+    const prices = await fetchAllServicePrices();
+    setServicePrices(prices);
+    const edits: Record<string, { base_price: string; gst_rate: string; platform_fee: string; commission_rate: string; is_active: boolean }> = {};
+    prices.forEach((p) => {
+      edits[p.id] = {
+        base_price: String(p.base_price),
+        gst_rate: String(p.gst_rate),
+        platform_fee: String(p.platform_fee),
+        commission_rate: String(p.commission_rate),
+        is_active: p.is_active,
+      };
+    });
+    setPriceEdits(edits);
   };
 
   const loadNotifLogs = async () => {
@@ -526,6 +550,12 @@ export default function AdminDashboard() {
               tab === 'social' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
             }`}>
             <Globe size={16} /> Social Media
+          </button>
+          <button onClick={() => setTab('pricing')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
+              tab === 'pricing' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
+            }`}>
+            <Wrench size={16} /> Service Pricing
           </button>
           <button onClick={() => setTab('notifications')}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
@@ -1720,6 +1750,126 @@ export default function AdminDashboard() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {tab === 'pricing' && (
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-2xl font-extrabold text-gray-900 mb-1">Service Pricing</h2>
+            <p className="text-gray-500 text-sm">Edit base price, GST, platform fee, and commission for each service. Changes take effect immediately for new bookings.</p>
+          </div>
+
+          {priceMsg && (
+            <div className={'rounded-xl p-3 text-sm ' + (priceMsg.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200')}>
+              {priceMsg.text}
+            </div>
+          )}
+
+          <div className="relative max-w-md">
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              value={priceSearch}
+              onChange={(e) => setPriceSearch(e.target.value)}
+              placeholder="Search service..."
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm"
+            />
+          </div>
+
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-100">
+                    <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase">Service</th>
+                    <th className="text-right px-4 py-3 text-xs font-bold text-gray-500 uppercase">Base Price</th>
+                    <th className="text-right px-4 py-3 text-xs font-bold text-gray-500 uppercase">GST %</th>
+                    <th className="text-right px-4 py-3 text-xs font-bold text-gray-500 uppercase">Platform Fee</th>
+                    <th className="text-right px-4 py-3 text-xs font-bold text-gray-500 uppercase">Commission %</th>
+                    <th className="text-center px-4 py-3 text-xs font-bold text-gray-500 uppercase">Active</th>
+                    <th className="text-right px-4 py-3 text-xs font-bold text-gray-500 uppercase">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {servicePrices
+                    .filter((p) => p.service_name.toLowerCase().includes(priceSearch.toLowerCase()))
+                    .map((p) => {
+                      const edit = priceEdits[p.id] ?? { base_price: String(p.base_price), gst_rate: String(p.gst_rate), platform_fee: String(p.platform_fee), commission_rate: String(p.commission_rate), is_active: p.is_active };
+                      const breakdown: PricingBreakdown = getPricingFromServicePrice({
+                        ...p,
+                        base_price: Number(edit.base_price) || 0,
+                        gst_rate: Number(edit.gst_rate) || 0,
+                        platform_fee: Number(edit.platform_fee) || 0,
+                        commission_rate: Number(edit.commission_rate) || 0,
+                      });
+                      return (
+                        <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50/50">
+                          <td className="px-4 py-3 font-semibold text-gray-900 text-sm">{p.service_name}</td>
+                          <td className="px-4 py-3">
+                            <input type="number" value={edit.base_price} onChange={(e) => setPriceEdits((prev) => ({ ...prev, [p.id]: { ...edit, base_price: e.target.value } }))}
+                              className="w-24 px-2 py-1.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-100 outline-none text-sm text-right" />
+                          </td>
+                          <td className="px-4 py-3">
+                            <input type="number" step="0.01" value={edit.gst_rate} onChange={(e) => setPriceEdits((prev) => ({ ...prev, [p.id]: { ...edit, gst_rate: e.target.value } }))}
+                              className="w-20 px-2 py-1.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-100 outline-none text-sm text-right" />
+                          </td>
+                          <td className="px-4 py-3">
+                            <input type="number" value={edit.platform_fee} onChange={(e) => setPriceEdits((prev) => ({ ...prev, [p.id]: { ...edit, platform_fee: e.target.value } }))}
+                              className="w-24 px-2 py-1.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-100 outline-none text-sm text-right" />
+                          </td>
+                          <td className="px-4 py-3">
+                            <input type="number" step="0.01" value={edit.commission_rate} onChange={(e) => setPriceEdits((prev) => ({ ...prev, [p.id]: { ...edit, commission_rate: e.target.value } }))}
+                              className="w-20 px-2 py-1.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-100 outline-none text-sm text-right" />
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <button onClick={() => setPriceEdits((prev) => ({ ...prev, [p.id]: { ...edit, is_active: !edit.is_active } }))}
+                              className={'w-10 h-6 rounded-full transition-colors ' + (edit.is_active ? 'bg-green-500' : 'bg-gray-300')}>
+                              <span className={'block w-4 h-4 bg-white rounded-full transition-transform ' + (edit.is_active ? 'translate-x-5' : 'translate-x-1')} />
+                            </button>
+                          </td>
+                          <td className="px-4 py-3 text-right font-bold text-blue-700 text-sm">{formatINR(breakdown.totalAmount)}</td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <button
+            onClick={async () => {
+              setPriceSaving(true);
+              setPriceMsg(null);
+              try {
+                const updates = Object.entries(priceEdits).map(([id, edit]) =>
+                  supabase.from('service_prices').update({
+                    base_price: Number(edit.base_price) || 0,
+                    gst_rate: Number(edit.gst_rate) || 0,
+                    platform_fee: Number(edit.platform_fee) || 0,
+                    commission_rate: Number(edit.commission_rate) || 0,
+                    is_active: edit.is_active,
+                    updated_at: new Date().toISOString(),
+                  }).eq('id', id),
+                );
+                const results = await Promise.all(updates);
+                const failed = results.filter((r) => r.error);
+                if (failed.length > 0) {
+                  setPriceMsg({ type: 'error', text: `${failed.length} service(s) failed to save.` });
+                } else {
+                  setPriceMsg({ type: 'success', text: 'All service prices updated successfully!' });
+                  await loadServicePrices();
+                }
+              } catch {
+                setPriceMsg({ type: 'error', text: 'Failed to save prices. Please try again.' });
+              }
+              setPriceSaving(false);
+            }}
+            disabled={priceSaving}
+            className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-xl transition-colors">
+            {priceSaving ? <Loader size={16} className="animate-spin" /> : <Save size={16} />}
+            Save Changes
+          </button>
         </div>
       )}
     </div>

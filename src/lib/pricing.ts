@@ -1,4 +1,4 @@
-import { ServiceCategory } from './supabase';
+import { supabase, ServicePrice } from './supabase';
 
 export interface PricingBreakdown {
   basePrice: number;
@@ -30,13 +30,59 @@ export function calculatePricing(
   };
 }
 
-export function getPricingFromService(svc: ServiceCategory | undefined): PricingBreakdown {
-  if (!svc) return calculatePricing(299, 18, 49, 10);
+export async function fetchServicePrices(): Promise<ServicePrice[]> {
+  const { data, error } = await supabase
+    .from('service_prices')
+    .select('*')
+    .eq('is_active', true)
+    .order('service_name');
+  if (error) {
+    console.error('Failed to fetch service prices:', error);
+    return [];
+  }
+  return (data ?? []) as ServicePrice[];
+}
+
+export async function fetchAllServicePrices(): Promise<ServicePrice[]> {
+  const { data, error } = await supabase
+    .from('service_prices')
+    .select('*')
+    .order('service_name');
+  if (error) {
+    console.error('Failed to fetch service prices:', error);
+    return [];
+  }
+  return (data ?? []) as ServicePrice[];
+}
+
+export async function getPricingForService(serviceName: string): Promise<PricingBreakdown | null> {
+  const { data, error } = await supabase
+    .from('service_prices')
+    .select('*')
+    .eq('service_name', serviceName)
+    .eq('is_active', true)
+    .maybeSingle();
+
+  if (error || !data) {
+    console.error('Failed to fetch pricing for service:', serviceName, error);
+    return null;
+  }
+
+  const sp = data as ServicePrice;
   return calculatePricing(
-    svc.base_price ?? 299,
-    svc.gst_rate ?? 18,
-    svc.platform_fee ?? 49,
-    svc.commission_rate ?? 10,
+    Number(sp.base_price),
+    Number(sp.gst_rate),
+    Number(sp.platform_fee),
+    Number(sp.commission_rate),
+  );
+}
+
+export function getPricingFromServicePrice(sp: ServicePrice): PricingBreakdown {
+  return calculatePricing(
+    Number(sp.base_price),
+    Number(sp.gst_rate),
+    Number(sp.platform_fee),
+    Number(sp.commission_rate),
   );
 }
 

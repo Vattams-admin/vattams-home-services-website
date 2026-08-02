@@ -349,7 +349,7 @@ export default function TechnicianDashboard() {
       active: jobs.filter((j) => ['assigned', 'accepted', 'on_the_way', 'in_progress', 'job_started'].includes(j.status)).length,
       earnings: completedJobs.reduce((s, j) => {
         const basePrice = j.booking?.base_price ?? j.job_amount ?? 0;
-        const commission = j.booking?.commission_amount ?? Math.round(basePrice * 0.1);
+        const commission = j.booking?.commission_amount ?? 0;
         return s + (basePrice - commission);
       }, 0),
       hasActiveJob: !!activeJob,
@@ -762,8 +762,8 @@ export default function TechnicianDashboard() {
                         <div className="text-xs font-semibold text-gray-500 uppercase mb-2">Earnings Breakdown</div>
                         <div className="space-y-1 text-sm">
                           <div className="flex justify-between"><span className="text-gray-600">Service Charge</span><span className="font-semibold text-gray-800">{formatINR(job.booking.base_price ?? job.job_amount ?? 0)}</span></div>
-                          <div className="flex justify-between"><span className="text-gray-600">Commission Deduction</span><span className="font-semibold text-red-600">-{formatINR(job.booking.commission_amount ?? Math.round((job.booking.base_price ?? 0) * 0.1))}</span></div>
-                          <div className="flex justify-between border-t border-gray-200 pt-1"><span className="font-bold text-gray-900">Net Earnings</span><span className="font-extrabold text-green-600">{formatINR((job.booking.base_price ?? job.job_amount ?? 0) - (job.booking.commission_amount ?? Math.round((job.booking.base_price ?? 0) * 0.1)))}</span></div>
+                          <div className="flex justify-between"><span className="text-gray-600">Commission Deduction</span><span className="font-semibold text-red-600">-{formatINR(job.booking.commission_amount ?? 0)}</span></div>
+                          <div className="flex justify-between border-t border-gray-200 pt-1"><span className="font-bold text-gray-900">Net Earnings</span><span className="font-extrabold text-green-600">{formatINR((job.booking.base_price ?? job.job_amount ?? 0) - (job.booking.commission_amount ?? 0))}</span></div>
                         </div>
                       </div>
                       <div className="mb-3">

@@ -161,6 +161,18 @@ export interface WalletSettings {
   updated_at: string;
 }
 
+export interface ServicePrice {
+  id: string;
+  service_name: string;
+  base_price: number;
+  gst_rate: number;
+  platform_fee: number;
+  commission_rate: number;
+  is_active: boolean;
+  updated_at: string;
+  created_at: string;
+}
+
 export interface Review {
   id: string;
   booking_id: string;

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Loader, CheckCircle, Calendar, User, Phone, MapPin, Wrench, FileText, Clock, ArrowRight, LogIn, Receipt, LucideIcon } from 'lucide-react';
-import { supabase, ServiceCategory, Customer } from '@/lib/supabase';
+import { supabase, ServiceCategory, Customer, ServicePrice } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { notifyCustomer, notifyAdmin } from '@/lib/notifications';
-import { getPricingFromService, formatINR } from '@/lib/pricing';
+import { getPricingFromServicePrice, formatINR, type PricingBreakdown } from '@/lib/pricing';
 
 const tamilNaduCities = [
   'Chennai', 'Coimbatore', 'Madurai', 'Trichy', 'Salem',
@@ -18,6 +18,7 @@ const timeSlots = ['07:00 - 09:00', '09:00 - 11:00', '11:00 - 13:00', '13:00 - 1
 export default function Booking() {
   const { navigate } = useRouter();
   const [services, setServices] = useState<ServiceCategory[]>([]);
+  const [servicePrices, setServicePrices] = useState<Record<string, ServicePrice>>({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState<{ number: string; id: string } | null>(null);
@@ -45,17 +46,26 @@ export default function Booking() {
       } catch { /* ignore */ }
     }
 
-    supabase.from('service_categories').select('*').order('created_at').then(({ data }) => {
-      if (data) {
-        setServices(data);
-        if (data[0]) setForm((f) => ({ ...f, service_category: data[0].name }));
+    Promise.all([
+      supabase.from('service_categories').select('*').order('created_at'),
+      supabase.from('service_prices').select('*').eq('is_active', true),
+    ]).then(([catRes, priceRes]) => {
+      if (catRes.data) {
+        setServices(catRes.data);
+        if (catRes.data[0]) setForm((f) => ({ ...f, service_category: catRes.data[0].name }));
+      }
+      if (priceRes.data) {
+        const map: Record<string, ServicePrice> = {};
+        (priceRes.data as ServicePrice[]).forEach((sp) => { map[sp.service_name] = sp; });
+        setServicePrices(map);
       }
       setLoading(false);
     });
   }, []);
 
   const selectedService = services.find((s) => s.name === form.service_category);
-  const pricing = getPricingFromService(selectedService);
+  const servicePrice = servicePrices[form.service_category];
+  const pricing: PricingBreakdown | null = servicePrice ? getPricingFromServicePrice(servicePrice) : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,12 +81,12 @@ export default function Booking() {
         problem_description: form.problem_description,
         preferred_date: form.preferred_date || null,
         preferred_time: form.preferred_time || null,
-        amount: pricing.totalAmount,
-        base_price: pricing.basePrice,
-        gst_amount: pricing.gstAmount,
-        platform_fee: pricing.platformFee,
-        commission_amount: pricing.commissionAmount,
-        total_amount: pricing.totalAmount,
+        amount: pricing?.totalAmount ?? 0,
+        base_price: pricing?.basePrice ?? 0,
+        gst_amount: pricing?.gstAmount ?? 0,
+        platform_fee: pricing?.platformFee ?? 0,
+        commission_amount: pricing?.commissionAmount ?? 0,
+        total_amount: pricing?.totalAmount ?? 0,
         customer_id: customer?.id || null,
         status: 'pending',
       })
@@ -191,7 +201,7 @@ export default function Booking() {
                   </Field>
                 </div>
 
-                {selectedService && (
+                {selectedService && pricing && (
                   <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                     <div className="flex items-center gap-2 mb-3">
                       <Receipt size={16} className="text-blue-600" />
@@ -203,7 +213,7 @@ export default function Booking() {
                         <span className="font-semibold text-gray-800">{formatINR(pricing.basePrice)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">GST ({selectedService.gst_rate ?? 18}%)</span>
+                        <span className="text-gray-600">GST ({servicePrice?.gst_rate ?? 18}%)</span>
                         <span className="font-semibold text-gray-800">{formatINR(pricing.gstAmount)}</span>
                       </div>
                       <div className="flex justify-between">
