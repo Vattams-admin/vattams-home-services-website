@@ -33,10 +33,10 @@ export function calculatePricing(
 export function getPricingFromService(svc: ServiceCategory | undefined): PricingBreakdown {
   if (!svc) return calculatePricing(299, 18, 49, 10);
   return calculatePricing(
-    svc.base_price ?? 450,
+    svc.base_price ?? 299,
     svc.gst_rate ?? 18,
-    svc.platform_fee ?? 60,
-    svc.commission_rate ?? 20,
+    svc.platform_fee ?? 49,
+    svc.commission_rate ?? 10,
   );
 }
 
