@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Tag, Loader, Plus, Trash2, CheckCircle, XCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { fetchActiveCoupons, type Coupon } from '@/lib/coupons';
+import { formatCurrency } from '@/lib/pricing';
 
 interface CouponForm {
   code: string;
@@ -162,7 +163,7 @@ export default function AdminCoupons() {
               </div>
               <div className="text-xs text-gray-400 space-y-0.5">
                 {c.max_uses && <div>Max uses: {c.max_uses} (used: {c.used_count})</div>}
-                {c.min_order_amount > 0 && <div>Min order: ₹{c.min_order_amount}</div>}
+                {c.min_order_amount > 0 && <div>Min order: {formatCurrency(c.min_order_amount)}</div>}
                 {c.valid_until && <div>Valid until: {new Date(c.valid_until).toLocaleDateString('en-IN')}</div>}
               </div>
             </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Loader, Briefcase, Calendar, Clock, MapPin, Wrench, User, CheckCircle, X, ChevronRight, Trash2, RefreshCw, Star } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import { supabase, Booking, Customer } from '@/lib/supabase';
+import { formatCurrency } from '@/lib/pricing';
 import CommunicationCenter from '@/components/CommunicationCenter';
 
 const statusColors: Record<string, string> = {
@@ -176,7 +177,7 @@ export default function CustomerBookings() {
                     <div className="flex items-center gap-1.5"><MapPin size={14} className="text-gray-400" /> {b.city}</div>
                     {b.preferred_date && <div className="flex items-center gap-1.5"><Calendar size={14} className="text-gray-400" /> {b.preferred_date}</div>}
                     {b.preferred_time && <div className="flex items-center gap-1.5"><Clock size={14} className="text-gray-400" /> {b.preferred_time}</div>}
-                    {b.amount && <div className="font-bold text-gray-900">₹{b.amount}</div>}
+                    {b.amount && <div className="font-bold text-gray-900">{formatCurrency(b.amount)}</div>}
                   </div>
 
                   {!isCancelled ? (

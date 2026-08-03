@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Loader, Briefcase, Calendar, Clock, MapPin, Wrench, CheckCircle, X, ChevronRight, Bell, TrendingUp, CreditCard, Star, Phone, User } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import { supabase, Booking, Customer } from '@/lib/supabase';
+import { formatCurrency } from '@/lib/pricing';
 import CommunicationCenter from '@/components/CommunicationCenter';
 
 const statusColors: Record<string, string> = {
@@ -134,7 +135,7 @@ export default function CustomerDashboard() {
                         <div className="flex items-center gap-1.5"><MapPin size={14} className="text-gray-400" /> {b.city}</div>
                         {b.preferred_date && <div className="flex items-center gap-1.5"><Calendar size={14} className="text-gray-400" /> {b.preferred_date}</div>}
                         {b.preferred_time && <div className="flex items-center gap-1.5"><Clock size={14} className="text-gray-400" /> {b.preferred_time}</div>}
-                        {b.amount && <div className="font-bold text-gray-900">₹{b.amount}</div>}
+                        {b.amount && <div className="font-bold text-gray-900">{formatCurrency(b.amount)}</div>}
                       </div>
                       <div className="flex items-center gap-1">
                         {statusSteps.map((s, i) => (
@@ -170,7 +171,7 @@ export default function CustomerDashboard() {
                       <div className="text-xs text-gray-400">{b.booking_number} · {new Date(b.created_at).toLocaleDateString('en-IN')}</div>
                     </div>
                     <div className="flex items-center gap-3">
-                      {b.amount && <span className="font-bold text-gray-900 text-sm">₹{b.amount}</span>}
+                      {b.amount && <span className="font-bold text-gray-900 text-sm">{formatCurrency(b.amount)}</span>}
                       <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">Completed</span>
                       <ChevronRight size={16} className="text-gray-400" />
                     </div>

@@ -7,6 +7,7 @@ import {
   type PaymentPurpose, type PayeeType,
 } from '@/lib/payments';
 import { supabase } from '@/lib/supabase';
+import { formatCurrency } from '@/lib/pricing';
 
 interface PaymentModalProps {
   open: boolean;
@@ -133,7 +134,7 @@ export default function PaymentModal({
         <div className="px-6 py-4 bg-blue-50 border-b border-blue-100">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-blue-700">Amount to Pay</span>
-            <span className="text-2xl font-extrabold text-blue-900">₹{amount.toFixed(2)}</span>
+            <span className="text-2xl font-extrabold text-blue-900">{formatCurrency(amount)}</span>
           </div>
         </div>
 
@@ -241,7 +242,7 @@ export default function PaymentModal({
               <div>
                 <h3 className="text-xl font-extrabold text-gray-900 mb-1">Payment Submitted!</h3>
                 <p className="text-sm text-gray-500">
-                  Your payment of ₹{amount.toFixed(2)} has been recorded with UTR: <span className="font-mono font-semibold">{utr}</span>.
+                  Your payment of {formatCurrency(amount)} has been recorded with UTR: <span className="font-mono font-semibold">{utr}</span>.
                   It will be verified by our team shortly.
                 </p>
               </div>
