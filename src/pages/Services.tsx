@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Wind, Sparkles, Thermometer, Zap, RotateCw, Flame, Droplets, Wrench, ArrowRight, Loader, Check, LucideIcon } from 'lucide-react';
+import { Wind, Sparkles, Thermometer, Zap, RotateCw, Flame, Droplets, Wrench, ArrowRight, Loader, Check, LucideIcon, Briefcase } from 'lucide-react';
 import { supabase, ServiceCategory } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
+import JoinTechnicianButton from '@/components/JoinTechnicianButton';
 
 const iconMap: Record<string, LucideIcon> = {
   wind: Wind, sparkles: Sparkles, thermometer: Thermometer, zap: Zap,
@@ -112,6 +113,18 @@ export default function Services() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Join as Technician CTA */}
+      <section className="py-12 bg-gradient-to-r from-orange-500 to-amber-600 text-white">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <Briefcase size={32} className="mx-auto mb-3" />
+          <h2 className="text-2xl md:text-3xl font-extrabold mb-3">Are You a Skilled Technician?</h2>
+          <p className="text-white/90 mb-6 max-w-xl mx-auto">Join VATTAMS and start receiving job requests near you. Free registration, flexible hours, secure payments.</p>
+          <button onClick={() => navigate('join-technician')} className="inline-flex items-center gap-2 px-8 py-3.5 bg-white text-orange-600 font-extrabold rounded-xl shadow-lg transition-all hover:scale-105">
+            <Briefcase size={18} /> Join as a Technician
+          </button>
         </div>
       </section>
     </div>

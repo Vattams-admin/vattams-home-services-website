@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Loader, CheckCircle, Calendar, User, Phone, MapPin, Wrench, FileText, Clock, ArrowRight, LogIn, Receipt, LucideIcon, Tag } from 'lucide-react';
+import { Loader, CheckCircle, Calendar, User, Phone, MapPin, Wrench, FileText, Clock, ArrowRight, LogIn, Receipt, LucideIcon, Tag, Briefcase } from 'lucide-react';
 import { supabase, ServiceCategory, Customer, ServicePrice } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { notifyCustomer, notifyAdmin } from '@/lib/notifications';
@@ -153,6 +153,10 @@ export default function Booking() {
             <button onClick={() => navigate('home')}
               className="py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors">
               Back to Home
+            </button>
+            <button onClick={() => navigate('join-technician')}
+              className="flex items-center justify-center gap-2 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-colors">
+              <Briefcase size={16} /> Join as a Technician
             </button>
           </div>
         </div>

@@ -62,6 +62,7 @@ export default function CustomerDashboard() {
     { label: 'Profile', icon: User, page: 'customer-profile' as const, color: 'bg-purple-100 text-purple-600' },
     { label: 'Support', icon: Phone, page: 'customer-support' as const, color: 'bg-red-100 text-red-600' },
     { label: 'Book New', icon: Wrench, page: 'booking' as const, color: 'bg-indigo-100 text-indigo-600' },
+    { label: 'Join as Tech', icon: Briefcase, page: 'join-technician' as const, color: 'bg-orange-100 text-orange-600' },
   ];
 
   return (

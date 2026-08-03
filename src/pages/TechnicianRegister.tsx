@@ -1,91 +1,142 @@
-import { useState } from 'react';
-import { Loader, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Sparkles, Send, CheckCircle, Loader, Upload, ArrowRight, ArrowLeft, Briefcase, X, AlertCircle } from 'lucide-react';
 import { useRouter } from '@/lib/router';
-
-const tamilNaduCities = [
-  'Chennai', 'Coimbatore', 'Madurai', 'Trichy', 'Salem',
-  'Tirunelveli', 'Erode', 'Vellore', 'Thoothukudi', 'Namakkal',
-  'Thanjavur', 'Dindigul', 'Tiruppur', 'Hosur', 'Nagercoil', 'Other',
-];
-
-const specializations = [
-  'AC Installation', 'AC Deep Cleaning', 'AC Gas Refill',
-  'Refrigerator Repair', 'Washing Machine Repair', 'Microwave Repair',
-  'Water Heater Repair', 'RO Water Purifier', 'Electrical Services', 'Plumbing Services',
-];
+import {
+  STEPS, EMPTY_FORM, calculateProfileScore, uploadDocument,
+  submitTechnicianApplication, type TechnicianFormData, type StepKey,
+} from '@/lib/technicianRegistration';
 
 export default function TechnicianRegister() {
   const { navigate } = useRouter();
+  const [stepIndex, setStepIndex] = useState(0);
+  const [form, setForm] = useState<TechnicianFormData>(EMPTY_FORM);
+  const [inputValue, setInputValue] = useState('');
+  const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [form, setForm] = useState({
-    full_name: '', mobile: '', email: '', city: 'Chennai',
-    experience_years: '0', id_proof_type: 'Aadhaar', id_proof_number: '',
-    specializations: [] as string[],
-    password: '', confirmPassword: '',
-  });
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState('');
+  const [chatHistory, setChatHistory] = useState<{ role: 'ai' | 'user'; text: string }[]>([]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const toggleSpec = (spec: string) => {
-    setForm((f) => ({
-      ...f,
-      specializations: f.specializations.includes(spec)
-        ? f.specializations.filter((s) => s !== spec)
-        : [...f.specializations, spec],
-    }));
-  };
+  const currentStep = STEPS[stepIndex];
+  const { score, missing } = calculateProfileScore(form);
+  const progress = Math.round((stepIndex / STEPS.length) * 100);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMsg('');
-
-    if (form.password.length < 6) {
-      setErrorMsg('Password must be at least 6 characters.');
-      return;
+  useEffect(() => {
+    if (stepIndex === 0 && chatHistory.length === 0) {
+      setChatHistory([{ role: 'ai', text: currentStep.question }]);
     }
-    if (form.password !== form.confirmPassword) {
-      setErrorMsg('Passwords do not match.');
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatHistory, stepIndex]);
+
+  const handleNext = () => {
+    setError('');
+    const step = currentStep;
+
+    if (step.type === 'review') {
+      handleSubmit();
       return;
     }
 
-    setSubmitting(true);
+    if (step.type === 'boolean') {
+      const val = inputValue === 'yes';
+      if (step.field) {
+        setForm({ ...form, [step.field]: val });
+      }
+      setChatHistory([...chatHistory, { role: 'user', text: val ? 'Yes' : 'No' }]);
+      setInputValue('');
+      advance();
+      return;
+    }
 
-    try {
-      const supabaseUrl = 'https://nitlpxztktgjcjxdgiqm.supabase.co';
-      const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pdGxweHp0a3RnamNqeGRnaXFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxODM5ODcsImV4cCI6MjEwMDc1OTk4N30.mKbYeKEf7u2DjDpPtiVmNasfEx7sH0nwuuNrN_30GiM';
+    if (step.type === 'multiselect') {
+      if (step.validate) {
+        const err = step.validate(inputValue, form);
+        if (err) { setError(err); return; }
+      }
+      const selectedArr = (form[step.field as keyof TechnicianFormData] as string[]) || [];
+      setChatHistory([...chatHistory, { role: 'user', text: selectedArr.length > 0 ? selectedArr.join(', ') : 'None selected' }]);
+      setInputValue('');
+      advance();
+      return;
+    }
 
-      const response = await fetch(`${supabaseUrl}/functions/v1/technician-auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${anonKey}`,
-        },
-        body: JSON.stringify({
-          full_name: form.full_name,
-          mobile: form.mobile,
-          email: form.email || undefined,
-          city: form.city,
-          specializations: form.specializations,
-          experience_years: parseInt(form.experience_years) || 0,
-          id_proof_type: form.id_proof_type,
-          id_proof_number: form.id_proof_number,
-          password: form.password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setErrorMsg(data.error || 'Registration failed. Please try again.');
-        setSubmitting(false);
+    if (step.type === 'upload') {
+      if (!step.optional && !form[step.field as keyof TechnicianFormData]) {
+        setError('Please upload the required document');
         return;
       }
+      setChatHistory([...chatHistory, { role: 'user', text: form[step.field as keyof TechnicianFormData] ? 'Uploaded' : 'Skipped' }]);
+      advance();
+      return;
+    }
 
+    const value = inputValue.trim();
+    if (step.optional && value.toLowerCase() === 'skip') {
+      setChatHistory([...chatHistory, { role: 'user', text: 'Skipped' }]);
+      setInputValue('');
+      advance();
+      return;
+    }
+
+    if (step.validate) {
+      const err = step.validate(value, form);
+      if (err) { setError(err); return; }
+    }
+
+    if (step.field) {
+      setForm({ ...form, [step.field]: value });
+    }
+    setChatHistory([...chatHistory, { role: 'user', text: value }]);
+    setInputValue('');
+    advance();
+  };
+
+  const advance = () => {
+    setTimeout(() => {
+      setStepIndex((i) => i + 1);
+      setChatHistory((h) => [...h, { role: 'ai', text: STEPS[stepIndex + 1].question }]);
+    }, 300);
+  };
+
+  const handleBack = () => {
+    if (stepIndex > 0) {
+      setStepIndex((i) => i - 1);
+      setChatHistory((h) => h.slice(0, -2));
+      setError('');
+    }
+  };
+
+  const toggleArrayItem = (field: keyof TechnicianFormData, item: string) => {
+    const arr = form[field] as string[];
+    const newArr = arr.includes(item) ? arr.filter((x) => x !== item) : [...arr, item];
+    setForm({ ...form, [field]: newArr });
+  };
+
+  const handleFileUpload = async (file: File, field: keyof TechnicianFormData, docType: string) => {
+    setUploading(true);
+    setError('');
+    setUploadProgress('Uploading...');
+    try {
+      const url = await uploadDocument(file, form.mobile || 'temp', docType);
+      setForm({ ...form, [field]: url });
+      setUploadProgress('Uploaded successfully!');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Upload failed');
+      setUploadProgress('');
+    }
+    setUploading(false);
+  };
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    setError('');
+    try {
+      await submitTechnicianApplication(form);
       setSuccess(true);
     } catch (err) {
-      setErrorMsg('Network error. Please try again.');
-      console.error('Registration error:', err);
+      setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
     }
     setSubmitting(false);
   };
@@ -97,153 +148,241 @@ export default function TechnicianRegister() {
           <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
             <CheckCircle size={40} className="text-green-600" />
           </div>
-          <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Registration Submitted Successfully!</h2>
-          <p className="text-gray-500 mb-6">Our team will review your application.</p>
-          <button onClick={() => navigate('home')}
-            className="py-3 px-8 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors">
-            Back to Home
-          </button>
+          <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Application Submitted!</h2>
+          <p className="text-gray-500 mb-2">Your profile score: <span className="font-bold text-orange-600">{score}%</span></p>
+          <p className="text-gray-500 mb-6">Our team will review your application within 24-48 hours. You'll receive a WhatsApp message once approved.</p>
+          <div className="flex gap-3 justify-center">
+            <button onClick={() => navigate('home')} className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors">
+              Back to Home
+            </button>
+            <button onClick={() => navigate('technician-login')} className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors">
+              Login
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="pt-20 md:pt-24">
-      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-indigo-900 py-14">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 text-blue-200 rounded-full px-4 py-1.5 text-sm font-semibold mb-4">
-            <img src="/logo.svg" alt="VATTAMS" className="h-8 w-auto rounded-md" /> Join Our Team
+    <div className="pt-20 md:pt-24 min-h-screen bg-gray-50">
+      {/* Hero */}
+      <section className="bg-gradient-to-br from-orange-500 to-amber-600 py-10 text-white">
+        <div className="max-w-2xl mx-auto px-4 text-center">
+          <div className="inline-flex items-center gap-2 bg-white/20 rounded-full px-4 py-1.5 text-sm font-semibold mb-4">
+            <Sparkles size={16} /> AI Registration Assistant
           </div>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-3">Technician Registration</h1>
-          <p className="text-blue-200 max-w-lg mx-auto">
-            Become a VATTAMS certified technician. Get steady jobs, fair pay, and grow your career.
-          </p>
+          <h1 className="text-2xl md:text-3xl font-extrabold mb-2">Join as a Technician</h1>
+          <p className="text-white/90 text-sm">Answer a few questions — our AI guides you step by step</p>
         </div>
       </section>
 
-      <section className="py-12 bg-gray-50">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name *</label>
-                  <input type="text" required value={form.full_name}
-                    onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-                    placeholder="Your full name" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Mobile Number *</label>
-                  <input type="tel" required pattern="[0-9]{10}" value={form.mobile}
-                    onChange={(e) => setForm({ ...form, mobile: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-                    placeholder="10-digit mobile" />
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        {/* Progress bar */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-semibold text-gray-600">Step {stepIndex + 1} of {STEPS.length}</span>
+            <span className="text-sm font-bold text-orange-600">{progress}% Complete</span>
+          </div>
+          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div className="h-full bg-orange-500 rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
+          </div>
+          <div className="mt-2 flex items-center gap-2">
+            <span className="text-xs text-gray-500">Profile Score:</span>
+            <span className="text-xs font-bold text-orange-600">{score}%</span>
+            {missing.length > 0 && (
+              <span className="text-xs text-gray-400">• {missing.length} items pending</span>
+            )}
+          </div>
+        </div>
+
+        {/* Chat area */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="h-64 md:h-80 overflow-y-auto p-4 space-y-3 bg-gray-50">
+            {chatHistory.map((msg, i) => (
+              <div key={i} className={'flex ' + (msg.role === 'user' ? 'justify-end' : 'justify-start')}>
+                <div className={'max-w-[85%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-line ' +
+                  (msg.role === 'user'
+                    ? 'bg-orange-500 text-white rounded-br-sm'
+                    : 'bg-white text-gray-800 border border-gray-200 rounded-bl-sm shadow-sm')}>
+                  {msg.text}
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
-                  <input type="email" value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-                    placeholder="you@example.com" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">City *</label>
-                  <select required value={form.city}
-                    onChange={(e) => setForm({ ...form, city: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all bg-white">
-                    {tamilNaduCities.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
+            ))}
+            {submitting && (
+              <div className="flex justify-start">
+                <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-sm px-4 py-2.5 shadow-sm flex items-center gap-2">
+                  <Loader size={14} className="animate-spin text-orange-500" />
+                  <span className="text-sm text-gray-500">Submitting application...</span>
                 </div>
               </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Specializations <span className="text-gray-400 font-normal">(optional)</span></label>
+          {/* Input area */}
+          <div className="border-t border-gray-100 p-4">
+            {error && (
+              <div className="mb-3 flex items-center gap-2 text-red-600 text-sm bg-red-50 rounded-lg px-3 py-2">
+                <AlertCircle size={14} /> {error}
+              </div>
+            )}
+
+            {currentStep.type === 'text' || currentStep.type === 'tel' || currentStep.type === 'email' || currentStep.type === 'number' || currentStep.type === 'password' ? (
+              <div className="flex gap-2">
+                <input
+                  type={currentStep.type === 'number' ? 'number' : currentStep.type === 'password' ? 'password' : currentStep.type === 'tel' ? 'tel' : 'text'}
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleNext(); }}
+                  placeholder={currentStep.placeholder}
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-100 outline-none text-sm"
+                  autoFocus
+                />
+                <button onClick={handleNext} className="px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl transition-colors">
+                  <Send size={18} />
+                </button>
+              </div>
+            ) : currentStep.type === 'select' ? (
+              <div className="space-y-2">
                 <div className="flex flex-wrap gap-2">
-                  {specializations.map((s) => (
-                    <button key={s} type="button" onClick={() => toggleSpec(s)}
-                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                        form.specializations.includes(s)
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}>
-                      {s}
+                  {currentStep.options?.map((opt) => (
+                    <button key={opt} onClick={() => { setInputValue(opt); if (currentStep.field) setForm({ ...form, [currentStep.field]: opt }); }}
+                      className={'px-4 py-2 rounded-lg text-sm font-semibold transition-colors ' +
+                        (form[currentStep.field as keyof TechnicianFormData] === opt ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')}>
+                      {opt}
                     </button>
                   ))}
                 </div>
+                <button onClick={handleNext} className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2">
+                  Continue <ArrowRight size={16} />
+                </button>
               </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Experience (Years)</label>
-                  <input type="number" min="0" value={form.experience_years}
-                    onChange={(e) => setForm({ ...form, experience_years: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-                    placeholder="0" />
+            ) : currentStep.type === 'multiselect' ? (
+              <div className="space-y-2">
+                <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
+                  {currentStep.options?.map((opt) => {
+                    const arr = form[currentStep.field as keyof TechnicianFormData] as string[];
+                    const selected = arr?.includes(opt);
+                    return (
+                      <button key={opt} onClick={() => toggleArrayItem(currentStep.field as keyof TechnicianFormData, opt)}
+                        className={'px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ' +
+                          (selected ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')}>
+                        {selected ? '✓ ' : ''}{opt}
+                      </button>
+                    );
+                  })}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">ID Proof Type</label>
-                  <select value={form.id_proof_type}
-                    onChange={(e) => setForm({ ...form, id_proof_type: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all bg-white">
-                    <option>Aadhaar</option>
-                    <option>PAN</option>
-                    <option>Driving License</option>
-                    <option>Voter ID</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">ID Proof Number</label>
-                  <input type="text" value={form.id_proof_number}
-                    onChange={(e) => setForm({ ...form, id_proof_number: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-                    placeholder="ID number" />
-                </div>
+                <button onClick={handleNext} className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2">
+                  Confirm Selection <ArrowRight size={16} />
+                </button>
               </div>
-
-              {/* Password fields */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Password * <span className="text-gray-400 font-normal">(min 6 characters)</span></label>
-                  <div className="relative">
-                    <input type={showPassword ? 'text' : 'password'} required minLength={6} value={form.password}
-                      onChange={(e) => setForm({ ...form, password: e.target.value })}
-                      className="w-full pl-4 pr-10 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-                      placeholder="Create a password" />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600">
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
+            ) : currentStep.type === 'boolean' ? (
+              <div className="flex gap-2">
+                <button onClick={() => setInputValue('yes')} onClickCapture={handleNext}
+                  className="flex-1 py-3 bg-green-50 hover:bg-green-100 text-green-700 font-bold rounded-xl transition-colors text-sm">
+                  ✓ Yes
+                </button>
+                <button onClick={() => setInputValue('no')} onClickCapture={handleNext}
+                  className="flex-1 py-3 bg-red-50 hover:bg-red-100 text-red-700 font-bold rounded-xl transition-colors text-sm">
+                  ✗ No
+                </button>
+              </div>
+            ) : currentStep.type === 'upload' ? (
+              <div className="space-y-3">
+                {uploading && <p className="text-sm text-orange-600 font-semibold">{uploadProgress}</p>}
+                {form[currentStep.field as keyof TechnicianFormData] && (
+                  <div className="flex items-center gap-2 text-green-600 text-sm font-semibold">
+                    <CheckCircle size={16} /> Document uploaded
                   </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Confirm Password *</label>
-                  <input type={showPassword ? 'text' : 'password'} required minLength={6} value={form.confirmPassword}
-                    onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-                    placeholder="Re-enter password" />
-                </div>
+                )}
+                <label className="flex items-center justify-center gap-2 w-full py-3 border-2 border-dashed border-orange-300 rounded-xl cursor-pointer hover:bg-orange-50 transition-colors text-sm font-semibold text-orange-600">
+                  <Upload size={18} />
+                  {form[currentStep.field as keyof TechnicianFormData] ? 'Re-upload' : 'Upload Document'}
+                  <input type="file" accept="image/*,.pdf" className="hidden"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileUpload(f, currentStep.field as keyof TechnicianFormData, currentStep.key); }} />
+                </label>
+                {currentStep.optional && (
+                  <button onClick={handleNext} className="w-full py-2 text-gray-500 text-sm font-semibold hover:text-gray-700">
+                    Skip this step
+                  </button>
+                )}
+                {!currentStep.optional && form[currentStep.field as keyof TechnicianFormData] && (
+                  <button onClick={handleNext} className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2">
+                    Continue <ArrowRight size={16} />
+                  </button>
+                )}
               </div>
-
-              {errorMsg && (
-                <div className="bg-red-50 border border-red-300 text-red-700 text-sm font-medium rounded-xl px-4 py-3 flex items-start gap-2">
-                  <span className="mt-0.5 shrink-0">&#9888;</span>
-                  <span>{errorMsg}</span>
+            ) : currentStep.type === 'review' ? (
+              <div className="space-y-3">
+                <div className="bg-gray-50 rounded-xl p-4 max-h-48 overflow-y-auto space-y-1.5">
+                  <div className="text-xs font-bold text-gray-500 mb-2">Application Summary</div>
+                  {[
+                    ['Name', form.full_name], ['Mobile', form.mobile], ['WhatsApp', form.whatsapp_number],
+                    ['Email', form.email || '—'], ['City', form.city], ['Area', form.area],
+                    ['PIN', form.pincode], ['Services', form.service_categories.join(', ')],
+                    ['Experience', form.experience_years + ' years'], ['Days', form.available_days.join(', ')],
+                    ['Working Time', form.working_time], ['Vehicle', form.has_vehicle ? 'Yes' : 'No'],
+                    ['Tools', form.has_tools ? 'Yes' : 'No'],
+                    ['Aadhaar', form.aadhaar_url ? 'Uploaded' : 'Missing'],
+                    ['PAN', form.pan_url ? 'Uploaded' : 'Missing'],
+                    ['Profile Photo', form.profile_photo_url ? 'Uploaded' : 'Missing'],
+                    ['Bank', form.bank_name ? `${form.bank_name} (${form.bank_ifsc})` : 'Missing'],
+                    ['UPI', form.upi_id || '—'],
+                  ].map(([label, val]) => (
+                    <div key={label} className="flex justify-between text-xs">
+                      <span className="text-gray-500">{label}</span>
+                      <span className="font-semibold text-gray-800 text-right max-w-[60%]">{val}</span>
+                    </div>
+                  ))}
                 </div>
-              )}
+                <div className="bg-orange-50 rounded-xl p-3 flex items-center justify-between">
+                  <span className="text-sm font-bold text-orange-700">Profile Score: {score}%</span>
+                  {missing.length > 0 && (
+                    <span className="text-xs text-orange-600">{missing.length} items missing</span>
+                  )}
+                </div>
+                {missing.length > 0 && (
+                  <div className="text-xs text-gray-500">
+                    <span className="font-semibold">Missing:</span> {missing.join(', ')}
+                  </div>
+                )}
+                <button onClick={handleSubmit} disabled={submitting}
+                  className="w-full py-3 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2">
+                  {submitting ? <Loader size={18} className="animate-spin" /> : <><CheckCircle size={18} /> Submit Application</>}
+                </button>
+              </div>
+            ) : null}
 
-              <button type="submit" disabled={submitting}
-                className="w-full flex items-center justify-center gap-2 py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold rounded-xl transition-colors shadow-lg shadow-blue-200">
-                {submitting ? <Loader size={18} className="animate-spin" /> : 'Submit Application'}
+            {stepIndex > 0 && currentStep.type !== 'review' && (
+              <button onClick={handleBack} className="mt-3 text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1">
+                <ArrowLeft size={12} /> Back
               </button>
-            </form>
+            )}
           </div>
         </div>
-      </section>
+
+        {/* Profile score card */}
+        <div className="mt-4 bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-bold text-gray-700">Profile Completeness</span>
+            <span className="text-lg font-extrabold text-orange-600">{score}%</span>
+          </div>
+          <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-3">
+            <div className="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-500" style={{ width: `${score}%` }} />
+          </div>
+          {missing.length > 0 && (
+            <div className="space-y-1">
+              {missing.slice(0, 5).map((m) => (
+                <div key={m} className="flex items-center gap-1.5 text-xs text-gray-400">
+                  <X size={10} /> {m}
+                </div>
+              ))}
+              {missing.length > 5 && <div className="text-xs text-gray-400">+{missing.length - 5} more...</div>}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

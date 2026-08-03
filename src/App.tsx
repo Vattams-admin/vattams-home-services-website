@@ -1,6 +1,7 @@
 import { Suspense, lazy } from 'react';
 import { RouterProvider, useRouter } from '@/lib/router';
 import Header from '@/components/layout/Header';
+import FloatingJoinButton from '@/components/FloatingJoinButton';
 import Footer from '@/components/layout/Footer';
 import Schema from '@/components/Schema';
 import { Loader } from 'lucide-react';
@@ -26,6 +27,8 @@ const TechnicianRegister = lazy(() => import('@/pages/TechnicianRegister'));
 const TechnicianLogin = lazy(() => import('@/pages/TechnicianLogin'));
 const TechnicianDashboard = lazy(() => import('@/pages/TechnicianDashboard'));
 const CityLanding = lazy(() => import('@/pages/CityLanding'));
+const JoinTechnician = lazy(() => import('@/pages/JoinTechnician'));
+const NotFound = lazy(() => import('@/pages/NotFound'));
 
 import { getCityBySlug } from '@/lib/cities';
 
@@ -86,8 +89,12 @@ function Pages() {
         const city = citySlug ? getCityBySlug(citySlug) : undefined;
         return city ? <CityLanding city={city} /> : <Home />;
       }
+      case 'join-technician':
+        return <JoinTechnician />;
+      case 'not-found':
+        return <NotFound />;
       default:
-        return <Home />;
+        return <NotFound />;
     }
   };
 
@@ -113,6 +120,7 @@ function Pages() {
         </Suspense>
       </main>
       {!hideFooter && <Footer />}
+      <FloatingJoinButton />
     </div>
   );
 }

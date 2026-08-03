@@ -11,7 +11,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 });
 
 export type BookingStatus = 'pending' | 'confirmed' | 'assigned' | 'accepted' | 'on_the_way' | 'in_progress' | 'job_started' | 'job_completed' | 'completed' | 'cancelled';
-export type TechnicianStatus = 'pending' | 'active' | 'inactive';
+export type TechnicianStatus = 'pending' | 'active' | 'inactive' | 'rejected' | 'suspended';
 export type JobStatus = 'assigned' | 'accepted' | 'on_the_way' | 'in_progress' | 'job_started' | 'job_completed' | 'completed' | 'rejected';
 
 export interface ServiceCategory {
@@ -107,6 +107,26 @@ export interface Technician {
   is_online: boolean;
   profile_photo_url: string | null;
   last_active_at: string | null;
+  whatsapp_number: string | null;
+  area: string | null;
+  pincode: string | null;
+  available_days: string[];
+  working_time: string | null;
+  has_vehicle: boolean;
+  has_tools: boolean;
+  upi_id: string | null;
+  bank_account_number: string | null;
+  bank_ifsc: string | null;
+  bank_name: string | null;
+  bank_holder_name: string | null;
+  aadhaar_url: string | null;
+  pan_url: string | null;
+  dl_url: string | null;
+  profile_score: number;
+  rejection_reason: string | null;
+  suspend_reason: string | null;
+  mobile_verified: boolean;
+  whatsapp_verified: boolean;
 }
 
 export interface TechnicianJob {

@@ -3,6 +3,7 @@ import { Menu, X, Phone, MessageCircle, ChevronDown, User, Briefcase, LogOut, Lo
 import { useRouter, Page } from '@/lib/router';
 import SocialLinks from '@/components/SocialLinks';
 import NotificationCenter from '@/components/NotificationCenter';
+import JoinTechnicianButton from '@/components/JoinTechnicianButton';
 import { Customer } from '@/lib/supabase';
 
 const navLinks: { label: string; page: Page }[] = [
@@ -63,6 +64,7 @@ export default function Header() {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-2">
+            <JoinTechnicianButton size="sm" variant="solid" />
             <a href="tel:+918189800757" className="flex items-center gap-2 px-4 py-2 rounded-lg border border-blue-200 text-blue-700 text-sm font-medium hover:bg-blue-50 transition-colors">
               <Phone size={15} /> Call
             </a>
@@ -185,6 +187,10 @@ export default function Header() {
               <button onClick={() => { navigate('booking'); close(); }}
                 className="w-full text-left px-4 py-3 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700">
                 Book a Service
+              </button>
+              <button onClick={() => { navigate('join-technician'); close(); }}
+                className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600">
+                <Briefcase size={15} /> Join as a Technician
               </button>
               {customer ? (
                 <>

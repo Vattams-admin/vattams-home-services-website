@@ -1,4 +1,4 @@
-import { Calendar, Star, ArrowRight } from 'lucide-react';
+import { Calendar, Star, ArrowRight, Briefcase } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import SocialLinks from '@/components/SocialLinks';
 import CommunicationCenter from '@/components/CommunicationCenter';
@@ -66,6 +66,14 @@ export default function Hero() {
             >
               <Calendar size={18} />
               Book Service
+              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+            </button>
+            <button
+              onClick={() => navigate('join-technician')}
+              className="group flex items-center gap-2 px-8 py-4 bg-orange-500 hover:bg-orange-400 text-white font-bold rounded-xl shadow-2xl shadow-orange-900/50 transition-all duration-300 hover:scale-105"
+            >
+              <Briefcase size={18} />
+              Join as a Technician
               <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </button>
             <CommunicationCenter className="!flex-row" />

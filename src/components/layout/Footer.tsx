@@ -1,4 +1,4 @@
-import { Phone, Mail, MapPin, MessageCircle } from 'lucide-react';
+import { Phone, Mail, MapPin, MessageCircle, Briefcase } from 'lucide-react';
 import { useRouter, Page } from '@/lib/router';
 import SocialLinks from '@/components/SocialLinks';
 
@@ -17,7 +17,7 @@ export default function Footer() {
     { label: 'About Us', page: 'about' },
     { label: 'Contact', page: 'contact' },
     { label: 'Book Service', page: 'booking' },
-    { label: 'Technician Registration', page: 'technician-register' },
+    { label: 'Join as a Technician', page: 'join-technician' },
   ];
 
   return (
@@ -121,12 +121,18 @@ export default function Footer() {
                 </span>
               </li>
             </ul>
-            <div className="mt-5">
+            <div className="mt-5 space-y-2">
               <button
                 onClick={() => navigate('booking')}
                 className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors"
               >
                 Book a Service
+              </button>
+              <button
+                onClick={() => navigate('join-technician')}
+                className="w-full flex items-center justify-center gap-2 py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-lg transition-colors"
+              >
+                <Briefcase size={15} /> Join as a Technician
               </button>
             </div>
           </div>

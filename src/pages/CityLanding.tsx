@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react';
 import {
   Phone, MessageCircle, MapPin, Star, ChevronRight, Wrench,
   Zap, Droplet, Wind, Camera, Snowflake, WashingMachine, Microwave,
-  CheckCircle, ArrowRight, Clock, ShieldCheck, Award, ThumbsUp,
+  CheckCircle, ArrowRight, Clock, ShieldCheck, Award, ThumbsUp, Briefcase,
 } from 'lucide-react';
 import { CityData, SERVICE_CATEGORIES, cities } from '@/lib/cities';
 import { useRouter } from '@/lib/router';
@@ -368,6 +368,10 @@ export default function CityLanding({ city }: { city: CityData }) {
             <button onClick={() => navigate('booking')}
               className="flex items-center justify-center gap-2 px-8 py-4 bg-amber-500 hover:bg-amber-600 text-blue-900 font-bold rounded-xl transition-colors shadow-lg">
               Book Now <ArrowRight size={18} />
+            </button>
+            <button onClick={() => navigate('join-technician')}
+              className="flex items-center justify-center gap-2 px-8 py-4 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition-colors shadow-lg">
+              <Briefcase size={18} /> Join as Technician
             </button>
             <a href="https://wa.me/918189800757" target="_blank" rel="noreferrer"
               className="flex items-center justify-center gap-2 px-8 py-4 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl transition-colors">

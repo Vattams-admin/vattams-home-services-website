@@ -17,6 +17,24 @@ interface RegisterBody {
   id_proof_type?: string;
   id_proof_number?: string;
   password: string;
+  whatsapp_number?: string;
+  area?: string;
+  pincode?: string;
+  available_days?: string[];
+  working_time?: string;
+  has_vehicle?: boolean;
+  has_tools?: boolean;
+  aadhaar_url?: string;
+  pan_url?: string;
+  dl_url?: string;
+  profile_photo_url?: string;
+  bank_name?: string;
+  bank_holder_name?: string;
+  bank_account_number?: string;
+  bank_ifsc?: string;
+  upi_id?: string;
+  profile_score?: number;
+  mobile_verified?: boolean;
 }
 
 interface LoginBody {
@@ -59,7 +77,9 @@ Deno.serve(async (req: Request) => {
 });
 
 async function handleRegister(supabase: ReturnType<typeof createClient>, body: RegisterBody) {
-  const { full_name, mobile, email, city, specializations, experience_years, id_proof_type, id_proof_number, password } = body;
+  const { full_name, mobile, email, city, specializations, experience_years, id_proof_type, id_proof_number, password,
+    whatsapp_number, area, pincode, available_days, working_time, has_vehicle, has_tools,
+    aadhaar_url, pan_url, dl_url, profile_photo_url, bank_name, bank_holder_name, bank_account_number, bank_ifsc, upi_id, profile_score, mobile_verified } = body;
 
   if (!full_name || !mobile || !city || !password) {
     return new Response(
@@ -91,6 +111,24 @@ async function handleRegister(supabase: ReturnType<typeof createClient>, body: R
       id_proof_number: id_proof_number || null,
       status: "pending",
       password_hash: passwordHash,
+      whatsapp_number: whatsapp_number || null,
+      area: area || null,
+      pincode: pincode || null,
+      available_days: available_days || [],
+      working_time: working_time || null,
+      has_vehicle: has_vehicle ?? false,
+      has_tools: has_tools ?? false,
+      aadhaar_url: aadhaar_url || null,
+      pan_url: pan_url || null,
+      dl_url: dl_url || null,
+      profile_photo_url: profile_photo_url || null,
+      bank_name: bank_name || null,
+      bank_holder_name: bank_holder_name || null,
+      bank_account_number: bank_account_number || null,
+      bank_ifsc: bank_ifsc || null,
+      upi_id: upi_id || null,
+      profile_score: profile_score || 0,
+      mobile_verified: mobile_verified ?? false,
     })
     .select("id, full_name, mobile, email, city, status")
     .single();
@@ -165,7 +203,14 @@ async function handleLogin(supabase: ReturnType<typeof createClient>, body: Logi
 
   if (technician.status === "rejected") {
     return new Response(
-      JSON.stringify({ error: "Your application has been rejected. Please contact support." }),
+      JSON.stringify({ error: "Your application has been rejected. " + (technician.rejection_reason || "Please contact support.") }),
+      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+
+  if (technician.status === "suspended") {
+    return new Response(
+      JSON.stringify({ error: "Your account has been suspended. " + (technician.suspend_reason || "Please contact support.") }),
       { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }

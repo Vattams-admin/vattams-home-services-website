@@ -21,6 +21,8 @@ export type Page =
   | 'technician-register'
   | 'technician-login'
   | 'technician-dashboard'
+  | 'join-technician'
+  | 'not-found'
   | 'city-landing';
 
 interface RouterContextType {
@@ -54,6 +56,7 @@ function getRouteFromHash(): RouteInfo {
     'customer-dashboard','customer-payments','customer-reviews','customer-support',
     'admin-login','admin-dashboard',
     'technician-register','technician-login','technician-dashboard',
+    'join-technician','not-found',
   ];
   return { page: valid.includes(hash as Page) ? (hash as Page) : 'home', citySlug: null };
 }

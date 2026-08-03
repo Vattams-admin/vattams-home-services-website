@@ -53,6 +53,8 @@ const techStatusLabel: Record<string, string> = {
   pending: 'Pending',
   active: 'Approved',
   inactive: 'Rejected',
+  rejected: 'Rejected',
+  suspended: 'Suspended',
 };
 
 const statusOptions: BookingStatus[] = ['pending', 'confirmed', 'assigned', 'accepted', 'on_the_way', 'in_progress', 'job_started', 'job_completed', 'completed', 'cancelled'];
@@ -66,7 +68,7 @@ export default function AdminDashboard() {
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | BookingStatus>('all');
-  const [techFilter, setTechFilter] = useState<'all' | 'pending' | 'active' | 'inactive'>('all');
+  const [techFilter, setTechFilter] = useState<'all' | 'pending' | 'active' | 'inactive' | 'rejected' | 'suspended'>('all');
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [selectedTech, setSelectedTech] = useState<Technician | null>(null);
   const [assignTechId, setAssignTechId] = useState('');
@@ -307,9 +309,12 @@ export default function AdminDashboard() {
     setUpdating(false);
   };
 
-  const updateTechStatus = async (id: string, status: 'active' | 'inactive') => {
+  const updateTechStatus = async (id: string, status: 'active' | 'inactive' | 'rejected' | 'suspended', reason?: string) => {
     setTechUpdating(true);
-    const { error } = await supabase.from('technicians').update({ status }).eq('id', id);
+    const updateData: Record<string, unknown> = { status };
+    if (status === 'rejected' && reason) updateData.rejection_reason = reason;
+    if (status === 'suspended' && reason) updateData.suspend_reason = reason;
+    const { error } = await supabase.from('technicians').update(updateData).eq('id', id);
     if (!error) {
       const tech = technicians.find((t) => t.id === id);
       setTechnicians((prev) => prev.map((t) => (t.id === id ? { ...t, status } : t)));
@@ -670,6 +675,8 @@ export default function AdminDashboard() {
                 { key: 'pending', label: 'Pending' },
                 { key: 'active', label: 'Approved' },
                 { key: 'inactive', label: 'Rejected' },
+                { key: 'rejected', label: 'Rejected' },
+                { key: 'suspended', label: 'Suspended' },
               ] as const).map((s) => (
                 <button key={s.key} onClick={() => setTechFilter(s.key)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -1101,10 +1108,16 @@ export default function AdminDashboard() {
                     <CheckCircle size={16} /> Approve
                   </button>
                 )}
-                {selectedTech.status !== 'inactive' && (
-                  <button onClick={() => updateTechStatus(selectedTech.id, 'inactive')} disabled={techUpdating}
+                {selectedTech.status !== 'inactive' && selectedTech.status !== 'rejected' && (
+                  <button onClick={() => updateTechStatus(selectedTech.id, 'rejected')} disabled={techUpdating}
                     className="flex items-center gap-1.5 px-4 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors">
                     <XCircle size={16} /> Reject
+                  </button>
+                )}
+                {selectedTech.status === 'active' && (
+                  <button onClick={() => updateTechStatus(selectedTech.id, 'suspended')} disabled={techUpdating}
+                    className="flex items-center gap-1.5 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors">
+                    <ShieldCheck size={16} /> Suspend
                   </button>
                 )}
                 <button onClick={() => deleteTechnician(selectedTech.id)} disabled={techUpdating}
@@ -1112,6 +1125,26 @@ export default function AdminDashboard() {
                   <Trash2 size={16} /> Delete
                 </button>
               </div>
+
+              {/* Documents */}
+              {(selectedTech.aadhaar_url || selectedTech.pan_url || selectedTech.dl_url || selectedTech.profile_photo_url) && (
+                <div className="pt-4 border-t border-gray-100">
+                  <h4 className="text-sm font-bold text-gray-700 mb-3">Uploaded Documents</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { label: 'Aadhaar', url: selectedTech.aadhaar_url },
+                      { label: 'PAN', url: selectedTech.pan_url },
+                      { label: 'Driving License', url: selectedTech.dl_url },
+                      { label: 'Profile Photo', url: selectedTech.profile_photo_url },
+                    ].filter((d): d is { label: string; url: string } => !!d.url).map((d) => (
+                      <a key={d.label} href={d.url} target="_blank" rel="noreferrer"
+                        className="flex items-center gap-2 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg transition-colors">
+                        <FileText size={14} /> {d.label}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
