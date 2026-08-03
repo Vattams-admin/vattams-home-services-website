@@ -6,13 +6,21 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
+interface PushRequest {
+  userType: 'customer' | 'technician' | 'admin';
+  userId: string;
+  title: string;
+  body: string;
+  data?: Record<string, string>;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
   }
 
   try {
-    const { userType, userId, title, body, data } = await req.json();
+    const { userType, userId, title, body, data } = await req.json() as PushRequest;
 
     if (!userType || !userId || !title || !body) {
       return new Response(
@@ -62,9 +70,19 @@ Deno.serve(async (req: Request) => {
           },
           body: JSON.stringify({
             to: t.token,
-            notification: { title, body, sound: "default" },
+            notification: { title, body, sound: "default", icon: "logo.svg", badge: "favicon.svg" },
             data: data ?? {},
             priority: "high",
+            webpush: {
+              notification: {
+                title,
+                body,
+                icon: "/logo.svg",
+                badge: "/favicon.svg",
+                requireInteraction: true,
+              },
+              fcm_options: { link: data?.url ?? "/" },
+            },
           }),
         }),
       ),
@@ -82,7 +100,7 @@ Deno.serve(async (req: Request) => {
     );
   } catch (err) {
     return new Response(
-      JSON.stringify({ error: err.message }),
+      JSON.stringify({ error: (err as Error).message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }

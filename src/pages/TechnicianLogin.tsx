@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Lock, Loader, Eye, EyeOff, Phone, Mail, AlertCircle, Wrench } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import { Technician } from '@/lib/supabase';
+import { initFCM, registerServiceWorker } from '@/lib/fcm';
 
 export default function TechnicianLogin() {
   const { navigate } = useRouter();
@@ -40,6 +41,8 @@ export default function TechnicianLogin() {
       const technician = data.technician as Technician;
       sessionStorage.setItem('vattams_tech_id', technician.id);
       sessionStorage.setItem('vattams_tech_data', JSON.stringify(technician));
+      void registerServiceWorker();
+      void initFCM('technician', technician.id);
       navigate('technician-dashboard');
     } catch (err) {
       setError('Network error. Please try again.');

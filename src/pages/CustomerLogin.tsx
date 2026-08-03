@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Loader, Phone, Lock, LogIn } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import { supabase } from '@/lib/supabase';
+import { initFCM, registerServiceWorker } from '@/lib/fcm';
 
 const SUPABASE_URL = 'https://nitlpxztktgjcjxdgiqm.supabase.co';
 const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pdGxweHp0a3RnamNqeGRnaXFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxODM5ODcsImV4cCI6MjEwMDc1OTk4N30.mKbYeKEf7u2DjDpPtiVmNasfEx7sH0nwuuNrN_30GiM';
@@ -30,6 +31,8 @@ export default function CustomerLogin() {
       if (!res.ok || data.error) throw new Error(data.error || 'Login failed');
 
       sessionStorage.setItem('vattams_customer', JSON.stringify(data.customer));
+      void registerServiceWorker();
+      void initFCM('customer', data.customer.mobile);
       navigate('home');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Network error. Please try again.');

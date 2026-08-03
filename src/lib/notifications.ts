@@ -1,7 +1,29 @@
 import { supabase } from '@/lib/supabase';
+import { sendPushNotification } from '@/lib/fcm';
 
 export type NotificationRecipientType = 'customer' | 'technician' | 'admin';
 export type NotificationStatus = 'sent' | 'delivered' | 'read' | 'failed';
+
+async function sendPushForNotification(
+  input: CreateNotificationInput,
+): Promise<void> {
+  if (input.recipientType === 'admin') return;
+  try {
+    await sendPushNotification(
+      input.recipientType,
+      input.recipientId,
+      input.title,
+      input.message,
+      {
+        type: input.type,
+        referenceType: input.referenceType ?? '',
+        referenceId: input.referenceId ?? '',
+      },
+    );
+  } catch (err) {
+    console.error('[notifications] push send error:', err);
+  }
+}
 
 export interface NotificationRow {
   id: string;
@@ -42,7 +64,7 @@ export async function createNotification(input: CreateNotificationInput): Promis
       type: input.type,
       reference_type: input.referenceType ?? null,
       reference_id: input.referenceId ?? null,
-      channels: input.channels ?? ['in_app'],
+      channels: input.channels ?? ['in_app', 'push'],
       status: 'sent',
       is_read: false,
     })
@@ -52,6 +74,7 @@ export async function createNotification(input: CreateNotificationInput): Promis
     console.error('[notifications] insert error:', error);
     return null;
   }
+  void sendPushForNotification(input);
   return data as NotificationRow;
 }
 
@@ -65,7 +88,7 @@ export async function createNotificationsBatch(inputs: CreateNotificationInput[]
     type: i.type,
     reference_type: i.referenceType ?? null,
     reference_id: i.referenceId ?? null,
-    channels: i.channels ?? ['in_app'],
+    channels: i.channels ?? ['in_app', 'push'],
     status: 'sent' as const,
     is_read: false,
   }));
@@ -74,6 +97,7 @@ export async function createNotificationsBatch(inputs: CreateNotificationInput[]
     console.error('[notifications] batch insert error:', error);
     return 0;
   }
+  for (const input of inputs) void sendPushForNotification(input);
   return rows.length;
 }
 
@@ -383,7 +407,7 @@ export const notifyAdmin = {
 };
 
 export async function sendAnnouncementToTechnicians(technicians: { id: string; full_name: string }[], title: string, message: string): Promise<number> {
-  return createNotificationsBatch(
+  const count = await createNotificationsBatch(
     technicians.map((t) => ({
       recipientType: 'technician' as const,
       recipientId: t.id,
@@ -393,10 +417,12 @@ export async function sendAnnouncementToTechnicians(technicians: { id: string; f
       referenceType: 'announcement',
     })),
   );
+  for (const t of technicians) void sendPushNotification('technician', t.id, title, message, { type: 'announcement' });
+  return count;
 }
 
 export async function sendAnnouncementToCustomers(mobiles: string[], title: string, message: string): Promise<number> {
-  return createNotificationsBatch(
+  const count = await createNotificationsBatch(
     mobiles.map((m) => ({
       recipientType: 'customer' as const,
       recipientId: m,
@@ -406,4 +432,6 @@ export async function sendAnnouncementToCustomers(mobiles: string[], title: stri
       referenceType: 'announcement',
     })),
   );
+  for (const m of mobiles) void sendPushNotification('customer', m, title, message, { type: 'announcement' });
+  return count;
 }
