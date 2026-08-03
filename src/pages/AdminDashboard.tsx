@@ -4,7 +4,7 @@ import {
   CheckCircle, Clock, X, ChevronDown, LogOut, LayoutDashboard, Users, Briefcase,
   Trash2, Eye, XCircle, Star, Award, Wallet, Lock, Unlock, History, ShieldCheck,
   CreditCard, LucideIcon, Globe, Facebook, Instagram, Twitter, Youtube, MessageCircle, Save,
-  Bell, BellOff, Search,
+  Bell, BellOff, Search, FileText, Tag, Sparkles, Send, BarChart3, Brain,
 } from 'lucide-react';
 import { supabase, Booking, Technician, BookingStatus, WalletTransaction, WalletRecharge } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
@@ -20,6 +20,15 @@ import {
   fetchNotifications, NotificationRow,
 } from '@/lib/notifications';
 import { Customer } from '@/lib/supabase';
+import { fetchAnalyticsSummary, fetchRevenueGraph, fetchServiceRevenue, fetchCityRevenue, fetchTechnicianPerformance, predictDemand, generateAIRecommendations } from '@/lib/analytics';
+import { fetchAllReminders, type CRMReminder } from '@/lib/crm';
+import { generateSocialContent, generateBlogPost, generateCityPage, generateFAQ, generateOfferPoster, saveContentDraft, fetchContentDrafts, type ContentDraft } from '@/lib/aiContent';
+import { fetchActiveCoupons, validateCoupon, type Coupon } from '@/lib/coupons';
+import { autoAssignTechnician } from '@/lib/aiAssignment';
+import AdminAIDashboard from '@/components/admin/AdminAIDashboard';
+import AdminCRM from '@/components/admin/AdminCRM';
+import AdminContent from '@/components/admin/AdminContent';
+import AdminCoupons from '@/components/admin/AdminCoupons';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -48,7 +57,7 @@ const techStatusLabel: Record<string, string> = {
 
 const statusOptions: BookingStatus[] = ['pending', 'confirmed', 'assigned', 'accepted', 'on_the_way', 'in_progress', 'job_started', 'job_completed', 'completed', 'cancelled'];
 
-type Tab = 'bookings' | 'technicians' | 'customers' | 'wallet' | 'payments' | 'reports' | 'social' | 'notifications' | 'pricing';
+type Tab = 'bookings' | 'technicians' | 'customers' | 'wallet' | 'payments' | 'reports' | 'social' | 'notifications' | 'pricing' | 'ai-dashboard' | 'crm' | 'content' | 'coupons';
 
 export default function AdminDashboard() {
   const { navigate } = useRouter();
@@ -562,6 +571,30 @@ export default function AdminDashboard() {
               tab === 'notifications' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
             }`}>
             <Bell size={16} /> Notifications
+          </button>
+          <button onClick={() => setTab('ai-dashboard')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
+              tab === 'ai-dashboard' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
+            }`}>
+            <TrendingUp size={16} /> AI Dashboard
+          </button>
+          <button onClick={() => setTab('crm')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
+              tab === 'crm' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
+            }`}>
+            <Calendar size={16} /> AI CRM
+          </button>
+          <button onClick={() => setTab('content')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
+              tab === 'content' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
+            }`}>
+            <FileText size={16} /> AI Content
+          </button>
+          <button onClick={() => setTab('coupons')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
+              tab === 'coupons' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
+            }`}>
+            <Tag size={16} /> Coupons
           </button>
         </div>
 
@@ -1872,6 +1905,11 @@ export default function AdminDashboard() {
           </button>
         </div>
       )}
+
+      {tab === 'ai-dashboard' && <AdminAIDashboard />}
+      {tab === 'crm' && <AdminCRM />}
+      {tab === 'content' && <AdminContent />}
+      {tab === 'coupons' && <AdminCoupons />}
     </div>
   );
 }

@@ -1,0 +1,27 @@
+{
+  "name": "VATTAMS Home Services",
+  "short_name": "VATTAMS",
+  "description": "India's trusted home services platform. Book AC repair, plumbing, electrical, cleaning, and more.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["home", "services", "repair"],
+  "lang": "en-IN",
+  "scope": "/"
+}

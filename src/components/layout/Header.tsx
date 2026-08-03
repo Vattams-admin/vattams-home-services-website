@@ -8,6 +8,7 @@ import { Customer } from '@/lib/supabase';
 const navLinks: { label: string; page: Page }[] = [
   { label: 'Home', page: 'home' },
   { label: 'Services', page: 'services' },
+  { label: 'AI Assistant', page: 'ai-assistant' },
   { label: 'About', page: 'about' },
   { label: 'Contact', page: 'contact' },
 ];

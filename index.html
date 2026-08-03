@@ -13,6 +13,8 @@
 </script>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>VATTAMS Home Services | Service With Care - Tamil Nadu</title>
     <meta name="description" content="VATTAMS Home Services - Professional AC, Washing Machine, Refrigerator, Electrical, Plumbing and Home Appliance Services across Tamil Nadu. Verified technicians, transparent pricing, same day service." />
@@ -24,6 +26,10 @@
     <meta property="og:type" content="website" />
     <meta property="og:image" content="/logo.svg" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="VATTAMS Home Services | Service With Care" />
+    <meta name="twitter:description" content="Professional Home Services Across Tamil Nadu. AC, Washing Machine, Refrigerator, Electrical, Plumbing and more." />
+    <meta name="twitter:image" content="/logo.svg" />
+    <link rel="canonical" href="https://vattams.net" />
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
@@ -31,5 +37,12 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    </script>
   </body>
 </html>

@@ -1,32 +1,41 @@
+import { Suspense, lazy } from 'react';
 import { RouterProvider, useRouter } from '@/lib/router';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import Schema from '@/components/Schema';
+import { Loader } from 'lucide-react';
 
-import Home from '@/pages/Home';
-import Services from '@/pages/Services';
-import About from '@/pages/About';
-import Contact from '@/pages/Contact';
-import Booking from '@/pages/Booking';
+const Home = lazy(() => import('@/pages/Home'));
+const Services = lazy(() => import('@/pages/Services'));
+const About = lazy(() => import('@/pages/About'));
+const Contact = lazy(() => import('@/pages/Contact'));
+const Booking = lazy(() => import('@/pages/Booking'));
+const AIAssistant = lazy(() => import('@/pages/AIAssistant'));
+const CustomerLogin = lazy(() => import('@/pages/CustomerLogin'));
+const CustomerRegister = lazy(() => import('@/pages/CustomerRegister'));
+const CustomerForgot = lazy(() => import('@/pages/CustomerForgot'));
+const CustomerProfile = lazy(() => import('@/pages/CustomerProfile'));
+const CustomerBookings = lazy(() => import('@/pages/CustomerBookings'));
+const CustomerDashboard = lazy(() => import('@/pages/CustomerDashboard'));
+const CustomerPayments = lazy(() => import('@/pages/CustomerPayments'));
+const CustomerReviews = lazy(() => import('@/pages/CustomerReviews'));
+const CustomerSupport = lazy(() => import('@/pages/CustomerSupport'));
+const AdminLogin = lazy(() => import('@/pages/AdminLogin'));
+const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'));
+const TechnicianRegister = lazy(() => import('@/pages/TechnicianRegister'));
+const TechnicianLogin = lazy(() => import('@/pages/TechnicianLogin'));
+const TechnicianDashboard = lazy(() => import('@/pages/TechnicianDashboard'));
+const CityLanding = lazy(() => import('@/pages/CityLanding'));
 
-import CustomerLogin from '@/pages/CustomerLogin';
-import CustomerRegister from '@/pages/CustomerRegister';
-import CustomerForgot from '@/pages/CustomerForgot';
-import CustomerProfile from '@/pages/CustomerProfile';
-import CustomerBookings from '@/pages/CustomerBookings';
-import CustomerDashboard from '@/pages/CustomerDashboard';
-import CustomerPayments from '@/pages/CustomerPayments';
-import CustomerReviews from '@/pages/CustomerReviews';
-import CustomerSupport from '@/pages/CustomerSupport';
-
-import AdminLogin from '@/pages/AdminLogin';
-import AdminDashboard from '@/pages/AdminDashboard';
-
-import TechnicianRegister from '@/pages/TechnicianRegister';
-import TechnicianLogin from '@/pages/TechnicianLogin';
-import TechnicianDashboard from '@/pages/TechnicianDashboard';
-import CityLanding from '@/pages/CityLanding';
 import { getCityBySlug } from '@/lib/cities';
+
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <Loader className="animate-spin text-blue-600" size={32} />
+    </div>
+  );
+}
 
 function Pages() {
   const { page, citySlug } = useRouter();
@@ -43,6 +52,8 @@ function Pages() {
         return <Contact />;
       case 'booking':
         return <Booking />;
+      case 'ai-assistant':
+        return <AIAssistant />;
       case 'customer-login':
         return <CustomerLogin />;
       case 'customer-register':
@@ -96,7 +107,11 @@ function Pages() {
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Header />
-      <main className="flex-1">{renderPage()}</main>
+      <main className="flex-1">
+        <Suspense fallback={<PageLoader />}>
+          {renderPage()}
+        </Suspense>
+      </main>
       {!hideFooter && <Footer />}
     </div>
   );

@@ -7,6 +7,8 @@ export interface PricingBreakdown {
   commissionAmount: number;
   totalAmount: number;
   technicianEarnings: number;
+  discountAmount: number;
+  finalAmount: number;
 }
 
 export function calculatePricing(
@@ -14,11 +16,13 @@ export function calculatePricing(
   gstRate: number,
   platformFee: number,
   commissionRate: number,
+  discountAmount: number = 0,
 ): PricingBreakdown {
   const gstAmount = Math.round((basePrice * gstRate / 100) * 100) / 100;
   const totalAmount = Math.round((basePrice + gstAmount + platformFee) * 100) / 100;
   const commissionAmount = Math.round((basePrice * commissionRate / 100) * 100) / 100;
   const technicianEarnings = Math.round((basePrice - commissionAmount) * 100) / 100;
+  const finalAmount = Math.max(0, Math.round((totalAmount - discountAmount) * 100) / 100);
 
   return {
     basePrice,
@@ -27,6 +31,8 @@ export function calculatePricing(
     commissionAmount,
     totalAmount,
     technicianEarnings,
+    discountAmount,
+    finalAmount,
   };
 }
 

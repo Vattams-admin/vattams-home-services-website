@@ -6,6 +6,7 @@ export type Page =
   | 'about'
   | 'contact'
   | 'booking'
+  | 'ai-assistant'
   | 'customer-login'
   | 'customer-register'
   | 'customer-forgot'
@@ -48,7 +49,7 @@ function getRouteFromHash(): RouteInfo {
   }
 
   const valid: Page[] = [
-    'home','services','about','contact','booking',
+    'home','services','about','contact','booking','ai-assistant',
     'customer-login','customer-register','customer-forgot','customer-profile','customer-bookings',
     'customer-dashboard','customer-payments','customer-reviews','customer-support',
     'admin-login','admin-dashboard',

@@ -1,0 +1,57 @@
+# VATTAMS Home Services
+
+> VATTAMS is India's trusted home services platform connecting customers with certified technicians for AC repair, refrigerator repair, washing machine service, plumbing, electrical work, pest control, deep cleaning, and more.
+
+## What We Do
+
+VATTAMS provides on-demand home maintenance and repair services across India. Customers book services through our web app or AI assistant, and we automatically assign the nearest available certified technician based on location, rating, availability, and workload.
+
+## Services
+
+- AC Repair & Service
+- Refrigerator Repair
+- Washing Machine Repair
+- RO Water Purifier Service
+- Microwave Repair
+- TV Repair
+- Geyser Repair
+- Chimney Repair
+- Electrical Work
+- Plumbing
+- Carpentry
+- Pest Control
+- Deep Cleaning
+- Appliance Installation
+
+## How It Works
+
+1. Customer describes their problem (via chat or AI assistant)
+2. Our AI system identifies the service category and urgency
+3. The nearest available technician is automatically assigned
+4. Technician arrives and verifies Start OTP with customer
+5. Work is performed
+6. End OTP verification completes the job
+7. Payment is processed securely
+
+## Key Features
+
+- AI Booking Assistant for natural language booking
+- AI Price Calculator with transparent pricing (base price, GST, platform fee, commission)
+- AI Technician Assignment based on proximity, rating, and availability
+- Secure OTP verification (Start & End) for every job
+- Real-time chat between customers, technicians, and admin
+- Wallet system for technicians with commission tracking
+- CRM automation for reminders and follow-ups
+- Push notifications for all booking events
+- Communication Center routing all calls through VATTAMS support
+
+## Coverage
+
+We operate across major Indian cities including Hyderabad, Bangalore, Chennai, Mumbai, Delhi, Pune, Kolkata, and more.
+
+## Contact
+
+- Website: https://vattams.net
+- Support Phone: +91 81898 00757
+- WhatsApp: +91 81898 00757
+- Email: support@vattams.net

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Loader, CheckCircle, Calendar, User, Phone, MapPin, Wrench, FileText, Clock, ArrowRight, LogIn, Receipt, LucideIcon } from 'lucide-react';
+import { Loader, CheckCircle, Calendar, User, Phone, MapPin, Wrench, FileText, Clock, ArrowRight, LogIn, Receipt, LucideIcon, Tag } from 'lucide-react';
 import { supabase, ServiceCategory, Customer, ServicePrice } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { notifyCustomer, notifyAdmin } from '@/lib/notifications';
-import { getPricingFromServicePrice, formatINR, type PricingBreakdown } from '@/lib/pricing';
+import { getPricingFromServicePrice, calculatePricing, formatINR, type PricingBreakdown } from '@/lib/pricing';
+import { validateCoupon, type Coupon } from '@/lib/coupons';
 
 const tamilNaduCities = [
   'Chennai', 'Coimbatore', 'Madurai', 'Trichy', 'Salem',
@@ -21,6 +22,9 @@ export default function Booking() {
   const [servicePrices, setServicePrices] = useState<Record<string, ServicePrice>>({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
+  const [couponResult, setCouponResult] = useState<{ valid: boolean; error?: string; discountAmount: number; coupon?: Coupon } | null>(null);
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [success, setSuccess] = useState<{ number: string; id: string } | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
 
@@ -65,7 +69,19 @@ export default function Booking() {
 
   const selectedService = services.find((s) => s.name === form.service_category);
   const servicePrice = servicePrices[form.service_category];
-  const pricing: PricingBreakdown | null = servicePrice ? getPricingFromServicePrice(servicePrice) : null;
+  const basePricing: PricingBreakdown | null = servicePrice ? getPricingFromServicePrice(servicePrice) : null;
+  const discount = couponResult?.valid ? couponResult.discountAmount : 0;
+  const pricing: PricingBreakdown | null = basePricing
+    ? calculatePricing(basePricing.basePrice, servicePrice?.gst_rate ?? 18, basePricing.platformFee, servicePrice?.commission_rate ?? 10, discount)
+    : null;
+
+  const handleValidateCoupon = async () => {
+    if (!couponCode.trim() || !pricing) return;
+    setValidatingCoupon(true);
+    const result = await validateCoupon(couponCode.trim(), pricing.totalAmount);
+    setCouponResult(result);
+    setValidatingCoupon(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,7 +102,9 @@ export default function Booking() {
         gst_amount: pricing?.gstAmount ?? 0,
         platform_fee: pricing?.platformFee ?? 0,
         commission_amount: pricing?.commissionAmount ?? 0,
-        total_amount: pricing?.totalAmount ?? 0,
+        total_amount: pricing?.finalAmount ?? pricing?.totalAmount ?? 0,
+        coupon_code: couponResult?.valid ? couponResult.coupon?.code ?? null : null,
+        discount_amount: couponResult?.valid ? couponResult.discountAmount : 0,
         customer_id: customer?.id || null,
         status: 'pending',
       })
@@ -220,11 +238,41 @@ export default function Booking() {
                         <span className="text-gray-600">Platform Fee</span>
                         <span className="font-semibold text-gray-800">{formatINR(pricing.platformFee)}</span>
                       </div>
+                      {couponResult?.valid && couponResult.discountAmount > 0 && (
+                        <div className="flex justify-between text-green-600">
+                          <span>Discount ({couponResult.coupon?.code})</span>
+                          <span className="font-semibold">-{formatINR(couponResult.discountAmount)}</span>
+                        </div>
+                      )}
                       <div className="border-t border-gray-200 pt-1.5 flex justify-between">
                         <span className="font-bold text-gray-900">Total Amount</span>
-                        <span className="font-extrabold text-blue-700 text-lg">{formatINR(pricing.totalAmount)}</span>
+                        <span className="font-extrabold text-blue-700 text-lg">{formatINR(pricing.finalAmount)}</span>
                       </div>
                     </div>
+                  </div>
+                )}
+
+                {selectedService && pricing && (
+                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Tag size={16} className="text-blue-600" />
+                      <span className="font-semibold text-gray-800 text-sm">Have a Coupon Code?</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <input type="text" value={couponCode} onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponResult(null); }}
+                        placeholder="Enter coupon code"
+                        className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-blue-500 uppercase" />
+                      <button type="button" onClick={handleValidateCoupon} disabled={validatingCoupon || !couponCode.trim()}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white text-sm font-semibold rounded-lg transition-colors">
+                        {validatingCoupon ? '...' : 'Apply'}
+                      </button>
+                    </div>
+                    {couponResult?.valid && (
+                      <p className="text-xs text-green-600 mt-2 font-semibold">✓ Coupon applied! You save {formatINR(couponResult.discountAmount)}</p>
+                    )}
+                    {couponResult && !couponResult.valid && (
+                      <p className="text-xs text-red-600 mt-2 font-semibold">✗ {couponResult.error}</p>
+                    )}
                   </div>
                 )}
 

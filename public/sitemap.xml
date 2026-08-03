@@ -27,6 +27,18 @@
   </url>
 
   <url>
+    <loc>https://vattams.net/ai-assistant</loc>
+    <priority>0.9</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+
+  <url>
+    <loc>https://vattams.net/services</loc>
+    <priority>0.9</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+
+  <url>
     <loc>https://vattams.net/#city-chennai</loc>
     <priority>0.9</priority>
     <changefreq>weekly</changefreq>

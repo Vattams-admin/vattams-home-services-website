@@ -56,6 +56,13 @@ export interface Booking {
   rescheduled_from: string | null;
   created_at: string;
   updated_at: string;
+  otp_verification_status: string | null;
+  job_duration_minutes: number | null;
+  ai_booking: boolean | null;
+  urgency: string | null;
+  coupon_code: string | null;
+  discount_amount: number | null;
+  invoice_number: string | null;
 }
 
 export interface Customer {
@@ -95,6 +102,11 @@ export interface Technician {
   latitude: number | null;
   longitude: number | null;
   radius_km: number;
+  acceptance_rate: number;
+  current_workload: number;
+  is_online: boolean;
+  profile_photo_url: string | null;
+  last_active_at: string | null;
 }
 
 export interface TechnicianJob {

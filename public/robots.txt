@@ -1,4 +1,32 @@
 User-agent: *
 Allow: /
+Disallow: /admin-dashboard
+Disallow: /customer-dashboard
+Disallow: /technician-dashboard
+
+# AI Crawlers
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: Bingbot
+Allow: /
 
 Sitemap: https://vattams.net/sitemap.xml
