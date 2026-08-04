@@ -1,10 +1,10 @@
 # VATTAMS Home Services
 
-> VATTAMS is India's trusted home services platform connecting customers with certified technicians for AC repair, refrigerator repair, washing machine service, plumbing, electrical work, pest control, deep cleaning, and more.
+> VATTAMS is Tamil Nadu's trusted home services platform connecting customers with certified technicians for AC repair, refrigerator repair, washing machine service, plumbing, electrical work, and more. Government of India MSME (Udyam) Registered Enterprise — UDYAM-TN-02-0274720.
 
 ## What We Do
 
-VATTAMS provides on-demand home maintenance and repair services across India. Customers book services through our web app or AI assistant, and we automatically assign the nearest available certified technician based on location, rating, availability, and workload.
+VATTAMS provides on-demand home maintenance and repair services across Tamil Nadu. Customers book services through our web app or AI assistant, and we automatically assign the nearest available certified technician based on location, rating, availability, and workload.
 
 ## Services
 
@@ -47,7 +47,7 @@ VATTAMS provides on-demand home maintenance and repair services across India. Cu
 
 ## Coverage
 
-We operate across major Indian cities including Hyderabad, Bangalore, Chennai, Mumbai, Delhi, Pune, Kolkata, and more.
+We operate across Tamil Nadu including Chennai, Coimbatore, Madurai, Trichy, Salem, Erode, Tiruppur, Vellore, Hosur, Tirunelveli, Thanjavur, Dindigul, Cuddalore, and more.
 
 ## Contact
 
@@ -55,3 +55,8 @@ We operate across major Indian cities including Hyderabad, Bangalore, Chennai, M
 - Support Phone: +91 81898 00757
 - WhatsApp: +91 81898 00757
 - Email: support@vattams.net
+
+## MSME Registration
+
+Government of India MSME (Udyam) Registered Enterprise
+Udyam Registration Number: UDYAM-TN-02-0274720

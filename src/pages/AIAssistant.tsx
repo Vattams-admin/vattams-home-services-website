@@ -50,7 +50,7 @@ export default function AIAssistant() {
   const createBooking = async (data: Record<string, unknown>) => {
     setCreating(true);
     const sessionId = `ai-${Date.now()}`;
-    const customer = localStorage.getItem('vattams_customer');
+    const customer = sessionStorage.getItem('vattams_customer');
     const customerId = customer ? JSON.parse(customer).id : null;
     const customerName = customer ? JSON.parse(customer).full_name : 'Guest User';
     const customerMobile = customer ? JSON.parse(customer).mobile : '';

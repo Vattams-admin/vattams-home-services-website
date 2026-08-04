@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Briefcase, TrendingUp, Shield, Wallet, Star, Clock, CheckCircle, ArrowRight, Phone, MapPin, Users, Award } from 'lucide-react';
+import { Briefcase, TrendingUp, Shield, Wallet, Star, Clock, CheckCircle, ArrowRight, Phone, MapPin, Users, Award, ShieldCheck } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import JoinTechnicianButton from '@/components/JoinTechnicianButton';
 
@@ -220,6 +220,19 @@ export default function JoinTechnician() {
             Register Now — It's Free
             <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
           </button>
+        </div>
+      </section>
+
+      {/* MSME Trust Badge */}
+      <section className="py-12 bg-gray-50">
+        <div className="max-w-3xl mx-auto px-4 text-center">
+          <div className="inline-flex flex-col items-center gap-2 bg-white rounded-2xl border border-amber-200 shadow-sm px-8 py-6">
+            <div className="inline-flex items-center gap-2 text-amber-600">
+              <ShieldCheck size={20} />
+              <span className="font-bold text-sm uppercase tracking-wider">Government of India MSME Registered</span>
+            </div>
+            <p className="text-gray-500 text-sm">Udyam Registration No: <span className="font-bold text-gray-700">UDYAM-TN-02-0274720</span></p>
+          </div>
         </div>
       </section>
     </div>

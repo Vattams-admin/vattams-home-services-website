@@ -13,7 +13,7 @@ export default function CustomerForgot() {
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [generatedOtp, setGeneratedOtp] = useState('');
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [resendTimer, setResendTimer] = useState(0);
@@ -38,7 +38,6 @@ export default function CustomerForgot() {
       });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || 'Failed to send OTP');
-      setGeneratedOtp(data.otp);
       setStep('otp');
       startResendTimer();
     } catch (err) {
@@ -97,7 +96,6 @@ export default function CustomerForgot() {
       });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || 'Failed to resend');
-      setGeneratedOtp(data.otp);
       setOtp('');
       startResendTimer();
     } catch (err) {
@@ -145,11 +143,6 @@ export default function CustomerForgot() {
 
         {step === 'otp' && (
           <form onSubmit={handleVerifyOtp} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
-            {generatedOtp && (
-              <div className="bg-blue-50 border border-blue-200 text-blue-700 text-sm rounded-xl p-3 text-center">
-                Your OTP (demo mode): <span className="font-bold tracking-wider">{generatedOtp}</span>
-              </div>
-            )}
             <div className="relative">
               <KeyRound size={16} className="absolute left-3 top-3.5 text-gray-400" />
               <input value={otp} onChange={(e) => setOtp(e.target.value)} maxLength={6}

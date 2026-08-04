@@ -110,8 +110,8 @@ export default function Footer() {
               </li>
               <li className="flex items-start gap-3">
                 <Mail size={15} className="text-blue-400 mt-0.5 shrink-0" />
-                <a href="mailto:support@vattams.in" className="text-gray-400 hover:text-white text-sm transition-colors">
-                  support@vattams.in
+                <a href="mailto:support@vattams.net" className="text-gray-400 hover:text-white text-sm transition-colors">
+                  support@vattams.net
                 </a>
               </li>
               <li className="flex items-start gap-3">
@@ -141,6 +141,18 @@ export default function Footer() {
         <div className="border-t border-gray-800 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500">
           <span>© 2026 VATTAMS HOME SERVICES. All rights reserved.</span>
           <span className="italic text-amber-500/70">Service With Care</span>
+        </div>
+
+        {/* MSME Trust Badge */}
+        <div className="border-t border-gray-800 mt-6 pt-6">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 text-center">
+            <div className="inline-flex items-center gap-2 bg-amber-900/30 border border-amber-700/40 rounded-lg px-4 py-2">
+              <span className="text-amber-400 text-xs font-bold uppercase tracking-wider">Govt. of India MSME Registered</span>
+            </div>
+            <p className="text-gray-500 text-xs">
+              Udyam Registration No: <span className="font-bold text-gray-400">UDYAM-TN-02-0274720</span>
+            </p>
+          </div>
         </div>
       </div>
     </footer>

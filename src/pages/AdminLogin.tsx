@@ -13,12 +13,22 @@ export default function AdminLogin() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    await new Promise((r) => setTimeout(r, 600));
-    if (email === 'admin@vattams.net' && password === 'Admin@venki&123') {
-      sessionStorage.setItem('vattams_admin', 'true');
+    try {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-auth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await response.json();
+      if (!response.ok || data.error) {
+        setError(data.error || 'Invalid credentials.');
+        return;
+      }
+      sessionStorage.setItem('vattams_admin', data.sessionToken);
+      sessionStorage.setItem('vattams_admin_expires', data.expiresAt);
       navigate('admin-dashboard');
-    } else {
-      setError('Invalid credentials.');
+    } catch {
+      setError('Network error. Please try again.');
     }
     setLoading(false);
   };
@@ -73,12 +83,6 @@ export default function AdminLogin() {
               {loading ? <Loader size={18} className="animate-spin" /> : 'Sign In'}
             </button>
           </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-blue-200/60 text-xs">
-
-            </p>
-          </div>
         </div>
       </div>
     </div>

@@ -90,7 +90,6 @@ Deno.serve(async (req: Request) => {
         return jsonResponse({
           success: true,
           message: "OTP sent successfully",
-          otp: otp, // In production, this would be sent via SMS. Returning for dev/testing.
           pending_registration: { full_name, mobile, password, email: email || null, city: city || null, address: address || null },
         });
       }
@@ -227,7 +226,6 @@ Deno.serve(async (req: Request) => {
         return jsonResponse({
           success: true,
           message: "OTP sent successfully",
-          otp: otp, // In production, sent via SMS. Returning for dev/testing.
         });
       }
 
@@ -396,7 +394,6 @@ Deno.serve(async (req: Request) => {
         return jsonResponse({
           success: true,
           message: "OTP resent successfully",
-          otp: otp,
         });
       }
 
@@ -404,7 +401,7 @@ Deno.serve(async (req: Request) => {
         return errorResponse("Invalid action");
     }
   } catch (err) {
-    return errorResponse(err.message || "An unexpected error occurred");
+    return errorResponse(err instanceof Error ? err.message : "An unexpected error occurred");
   }
 });
 

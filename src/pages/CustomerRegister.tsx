@@ -12,7 +12,7 @@ export default function CustomerRegister() {
   const [step, setStep] = useState<Step>('form');
   const [form, setForm] = useState({ full_name: '', mobile: '', password: '', email: '', city: '', address: '' });
   const [otp, setOtp] = useState('');
-  const [generatedOtp, setGeneratedOtp] = useState('');
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [resendTimer, setResendTimer] = useState(0);
@@ -60,7 +60,6 @@ export default function CustomerRegister() {
       });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || 'Registration failed');
-      setGeneratedOtp(data.otp);
       setStep('otp');
       startResendTimer();
     } catch (err) {
@@ -106,7 +105,6 @@ export default function CustomerRegister() {
       });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || 'Failed to resend OTP');
-      setGeneratedOtp(data.otp);
       setOtp('');
       startResendTimer();
     } catch (err) {
@@ -157,11 +155,6 @@ export default function CustomerRegister() {
 
         {step === 'otp' && (
           <form onSubmit={handleVerifyOtp} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
-            {generatedOtp && (
-              <div className="bg-blue-50 border border-blue-200 text-blue-700 text-sm rounded-xl p-3 text-center">
-                Your OTP (demo mode): <span className="font-bold tracking-wider">{generatedOtp}</span>
-              </div>
-            )}
             <Input icon={KeyRound} name="otp" placeholder="6-digit OTP" value={otp} onChange={(e) => setOtp(e.target.value)} maxLength={6} />
             <button type="submit" disabled={loading}
               className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold rounded-xl transition-colors">

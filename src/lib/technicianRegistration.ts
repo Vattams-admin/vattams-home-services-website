@@ -316,8 +316,19 @@ export function calculateProfileScore(form: TechnicianFormData): { score: number
   return { score, missing };
 }
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+
+export function validateFile(file: File): string | null {
+  if (file.size > MAX_FILE_SIZE) return 'File size must be under 10MB';
+  if (!ALLOWED_MIME_TYPES.includes(file.type)) return 'Only JPG, PNG, WebP, and PDF files are allowed';
+  return null;
+}
+
 export async function uploadDocument(file: File, technicianMobile: string, docType: string): Promise<string> {
-  const ext = file.name.split('.').pop();
+  const validationError = validateFile(file);
+  if (validationError) throw new Error(validationError);
+  const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
   const fileName = `${technicianMobile}/${docType}.${ext}`;
   const { error } = await supabase.storage.from('technician-docs').upload(fileName, file, { upsert: true });
   if (error) throw new Error(error.message);

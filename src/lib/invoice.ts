@@ -9,7 +9,7 @@ export function generateInvoiceHTML(booking: Booking): string {
   const platformFee = booking.platform_fee ?? 0;
   const discount = booking.discount_amount ?? 0;
   const total = booking.total_amount ?? booking.amount ?? 0;
-  const finalAmount = total - discount;
+  const finalAmount = discount > 0 ? total : total;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -95,6 +95,7 @@ export function generateInvoiceHTML(booking: Booking): string {
   <div class="footer">
     <p>Thank you for choosing VATTAMS Home Services!</p>
     <p>Support: +91 81898 00757 | support@vattams.net</p>
+    <p style="margin-top:8px;font-size:11px;color:#a3a3a3;">Government of India MSME (Udyam) Registered Enterprise | UDYAM-TN-02-0274720</p>
   </div>
 </div>
 </body>

@@ -35,6 +35,10 @@ export async function validateCoupon(code: string, orderAmount: number): Promise
 
   const coupon = data as Coupon;
 
+  if (coupon.valid_from && new Date(coupon.valid_from) > new Date()) {
+    return { valid: false, error: 'Coupon is not yet active', discountAmount: 0 };
+  }
+
   if (coupon.valid_until && new Date(coupon.valid_until) < new Date()) {
     return { valid: false, error: 'Coupon has expired', discountAmount: 0 };
   }
@@ -82,9 +86,15 @@ export async function redeemCoupon(
   });
 
   if (updateError) {
+    const { data: current } = await supabase
+      .from('coupons')
+      .select('used_count')
+      .eq('id', couponId)
+      .maybeSingle();
+    const newCount = (current?.used_count ?? 0) + 1;
     const { error: rawUpdateError } = await supabase
       .from('coupons')
-      .update({ used_count: couponId } as never)
+      .update({ used_count: newCount })
       .eq('id', couponId);
     if (rawUpdateError) console.error('[coupons] usage increment error:', rawUpdateError);
   }

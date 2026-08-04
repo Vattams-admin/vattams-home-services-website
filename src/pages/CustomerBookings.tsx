@@ -8,12 +8,17 @@ import CommunicationCenter from '@/components/CommunicationCenter';
 const statusColors: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-700 border-amber-200',
   confirmed: 'bg-blue-100 text-blue-700 border-blue-200',
+  assigned: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+  accepted: 'bg-cyan-100 text-cyan-700 border-cyan-200',
+  on_the_way: 'bg-teal-100 text-teal-700 border-teal-200',
   in_progress: 'bg-purple-100 text-purple-700 border-purple-200',
+  job_started: 'bg-purple-100 text-purple-700 border-purple-200',
   completed: 'bg-green-100 text-green-700 border-green-200',
+  job_completed: 'bg-green-100 text-green-700 border-green-200',
   cancelled: 'bg-red-100 text-red-700 border-red-200',
 };
 
-const statusSteps = ['pending', 'confirmed', 'in_progress', 'completed'];
+const statusSteps = ['pending', 'confirmed', 'assigned', 'on_the_way', 'in_progress', 'completed'];
 
 export default function CustomerBookings() {
   const { navigate } = useRouter();
@@ -71,13 +76,19 @@ export default function CustomerBookings() {
 
   const handleCancel = async () => {
     if (!selected || !customer) return;
-    if (!['pending', 'confirmed'].includes(selected.status)) {
-      showToast('error', 'Only pending or confirmed bookings can be cancelled.');
+    if (!['pending', 'confirmed', 'assigned', 'accepted'].includes(selected.status)) {
+      showToast('error', 'Only active bookings can be cancelled.');
       return;
     }
     setActionLoading(true);
     const { error } = await supabase.from('bookings')
       .update({ status: 'cancelled', updated_at: new Date().toISOString() }).eq('id', selected.id);
+    if (!error && selected.assigned_technician_id) {
+      await supabase.from('technician_jobs')
+        .update({ status: 'cancelled' })
+        .eq('booking_id', selected.id);
+      await supabase.rpc('decrement_technician_workload', { tech_id: selected.assigned_technician_id });
+    }
     setActionLoading(false);
     if (error) { showToast('error', 'Failed to cancel booking.'); return; }
     showToast('success', 'Booking cancelled successfully.');
@@ -88,17 +99,20 @@ export default function CustomerBookings() {
   const handleReschedule = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selected || !customer) return;
-    if (!['pending', 'confirmed'].includes(selected.status)) {
-      showToast('error', 'Only pending or confirmed bookings can be rescheduled.');
+    if (!['pending', 'confirmed', 'assigned', 'accepted'].includes(selected.status)) {
+      showToast('error', 'Only active bookings can be rescheduled.');
       return;
     }
     if (!rescheduleForm.date) { showToast('error', 'Please select a new date.'); return; }
 
     setActionLoading(true);
+    const oldDate = selected.preferred_date;
+    const oldTime = selected.preferred_time;
     const { error } = await supabase.from('bookings')
       .update({
         preferred_date: rescheduleForm.date,
         preferred_time: rescheduleForm.time || null,
+        rescheduled_from: oldDate ? `${oldDate} ${oldTime ?? ''}`.trim() : null,
         updated_at: new Date().toISOString(),
       }).eq('id', selected.id);
 
@@ -334,11 +348,12 @@ export default function CustomerBookings() {
                 <select value={rescheduleForm.time} onChange={(e) => setRescheduleForm({ ...rescheduleForm, time: e.target.value })}
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm">
                   <option value="">Any time</option>
-                  <option value="08:00-10:00">8:00 AM - 10:00 AM</option>
-                  <option value="10:00-12:00">10:00 AM - 12:00 PM</option>
-                  <option value="12:00-14:00">12:00 PM - 2:00 PM</option>
-                  <option value="14:00-16:00">2:00 PM - 4:00 PM</option>
-                  <option value="16:00-18:00">4:00 PM - 6:00 PM</option>
+                  <option value="07:00 - 09:00">7:00 AM - 9:00 AM</option>
+                  <option value="09:00 - 11:00">9:00 AM - 11:00 AM</option>
+                  <option value="11:00 - 13:00">11:00 AM - 1:00 PM</option>
+                  <option value="13:00 - 15:00">1:00 PM - 3:00 PM</option>
+                  <option value="15:00 - 17:00">3:00 PM - 5:00 PM</option>
+                  <option value="17:00 - 19:00">5:00 PM - 7:00 PM</option>
                 </select>
               </div>
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-700">

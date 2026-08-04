@@ -107,7 +107,11 @@ export default function AdminDashboard() {
   const [priceMsg, setPriceMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
-    if (!sessionStorage.getItem('vattams_admin')) {
+    const adminToken = sessionStorage.getItem('vattams_admin');
+    const expiresAt = sessionStorage.getItem('vattams_admin_expires');
+    if (!adminToken || (expiresAt && new Date(expiresAt) < new Date())) {
+      sessionStorage.removeItem('vattams_admin');
+      sessionStorage.removeItem('vattams_admin_expires');
       navigate('admin-login');
       return;
     }
@@ -431,6 +435,7 @@ export default function AdminDashboard() {
 
   const logout = () => {
     sessionStorage.removeItem('vattams_admin');
+    sessionStorage.removeItem('vattams_admin_expires');
     navigate('home');
   };
 
