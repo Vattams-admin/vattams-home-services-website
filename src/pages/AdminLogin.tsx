@@ -27,9 +27,10 @@ export default function AdminLogin() {
       sessionStorage.setItem('vattams_admin', data.sessionToken);
       sessionStorage.setItem('vattams_admin_expires', data.expiresAt);
       navigate('admin-dashboard');
-    } catch {
-      setError('Network error. Please try again.');
-    }
+    } catch (err) {
+  console.error(err);
+  setError(err instanceof Error ? err.message : "Network error");
+}
     setLoading(false);
   };
 
