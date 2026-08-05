@@ -6,7 +6,7 @@ import {
   submitTechnicianApplication, type TechnicianFormData, type StepKey,
 } from '@/lib/technicianRegistration';
 
-export default function TechnicianRegister() {
+export default function TechnicianRegister() 
   const { navigate } = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
   const [form, setForm] = useState<TechnicianFormData>(EMPTY_FORM);
@@ -135,11 +135,17 @@ export default function TechnicianRegister() {
     try {
       await submitTechnicianApplication(form);
       setSuccess(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
-    }
-    setSubmitting(false);
-  };
+    }catch (err: any) {
+  console.error("Registration Error:", err);
+
+  alert(JSON.stringify(err, null, 2));
+
+  setError(
+    err?.message ||
+    JSON.stringify(err) ||
+    "Registration failed."
+  );
+}
 
   if (success) {
     return (
@@ -397,4 +403,4 @@ export default function TechnicianRegister() {
       </div>
     </div>
   );
-}
+  }
