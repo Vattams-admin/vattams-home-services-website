@@ -20,7 +20,18 @@ export default function AdminLogin() {
       email,
       password,
     });
+const { data, error } = await supabase.auth.signInWithPassword({
+  email,
+  password,
+});
 
+console.log("DATA:", data);
+console.log("ERROR:", error);
+
+if (error) {
+  setError(error.message);
+  return;
+}
     if (error) {
       setError(error.message);
       return;
