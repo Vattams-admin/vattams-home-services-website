@@ -148,21 +148,27 @@ export default function TechnicianRegister() {
           <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
             <CheckCircle size={40} className="text-green-600" />
           </div>
-          <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Registration Submitted Successfully!!</h2>
+          <h2 className="text-2xl font-extrabold text-gray-900 mb-2">
+  Registration Submitted Successfully!
+</h2>
           <p className="text-gray-500 mb-2">Your profile score: <span className="font-bold text-orange-600">{score}%</span></p>
-          <p className="text-gray-500 mb-6">
-  Thank you for registering with VATTAMS HOME SERVICES.
-  Your application has been submitted successfully.
-  Our Admin Team will review your profile within 24–48 hours.
-  Once approved, you will receive a confirmation through Email and WhatsApp.
-  After approval, you can log in to your Technician Dashboard.
+          <p className="text-gray-500 mb-6 leading-7">
+  Thank you for registering with <strong>VATTAMS HOME SERVICES</strong>.<br /><br />
+
+  Your technician registration has been received successfully.
+
+  Our Admin Team will carefully review your profile, uploaded documents and service details within <strong>24–48 hours</strong>.
+
+  Once your application is approved, you will receive a confirmation through WhatsApp and Email.
+
+  After approval, you can log in to your Technician Dashboard and start accepting service requests.
 </p>
           <div className="flex gap-3 justify-center">
             <button onClick={() => navigate('home')} className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors">
-              Back to Home
+              Go to Home
             </button>
             <button onClick={() => navigate('technician-login')} className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors">
-              Login
+              Technician Login
             </button>
           </div>
         </div>
