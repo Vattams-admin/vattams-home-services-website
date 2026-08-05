@@ -352,20 +352,7 @@ export function validateFile(file: File): string | null {
     throw error;
   }
 
-  const { data } = supabase.storage
-    .from('technician-docs')
-    .getPublicUrl(fileName);
-
-  return data.publicUrl;
-}
-
-    const { data } = supabase.storage
-      .from('technician-docs')
-      .getPublicUrl(fileName);
-
-    return data.publicUrl;
-
-  } catch (err: any) {
+ } catch (err: any) {
     console.error(err);
     throw err;
   }
