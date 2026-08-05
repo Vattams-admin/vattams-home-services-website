@@ -324,25 +324,19 @@ export function validateFile(file: File): string | null {
   if (!ALLOWED_MIME_TYPES.includes(file.type)) return 'Only JPG, PNG, WebP, and PDF files are allowed';
   return null;
 }
-
-  try {
-    const validationError = validateFile(file);
-    if (validationError) throw new Error(validationError);
-
-    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-    const fileName = ${technicianMobile}/${docType}.${ext};
-
-    export async function uploadDocument(
+export async function uploadDocument(
   file: File,
   technicianMobile: string,
   docType: string
 ): Promise<string> {
-  const validationError = validateFile(file);
-  if (validationError) throw new Error(validationError);
+
+  try {
+
+    const validationError = validateFile(file);
+    if (validationError) throw new Error(validationError);
 
   const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
   const fileName = ${technicianMobile}/${docType}.${ext};
-
   const { error } = await supabase.storage
     .from('technician-docs')
     .upload(fileName, file, { upsert: true });
