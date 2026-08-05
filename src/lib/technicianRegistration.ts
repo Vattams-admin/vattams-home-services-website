@@ -370,7 +370,6 @@ export async function submitTechnicianApplication(form: TechnicianFormData): Pro
       bank_ifsc: form.bank_ifsc,
       upi_id: form.upi_id || null,
       profile_score: score,
-      mobile_verified: form.mobile_verified,
     }),
   });
 
