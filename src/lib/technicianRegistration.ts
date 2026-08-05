@@ -53,7 +53,7 @@ export interface TechnicianFormData {
   bank_holder_name: string;
   upi_id: string;
   password: string;
-  mobile_verified: boolean;
+  // OTP removed;
 }
 
 export const EMPTY_FORM: TechnicianFormData = {
@@ -80,7 +80,7 @@ export const EMPTY_FORM: TechnicianFormData = {
   bank_holder_name: '',
   upi_id: '',
   password: '',
-  mobile_verified: false,
+  
 };
 
 export type StepKey =
@@ -113,7 +113,7 @@ export const STEPS: StepDef[] = [
   },
   {
     key: 'mobile',
-    question: 'Great! What is your mobile number? We will send an OTP to verify it.',
+    question: 'Great! What is your mobile number?',
     field: 'mobile',
     type: 'tel',
     placeholder: '10-digit mobile number',
@@ -292,7 +292,7 @@ export function calculateProfileScore(form: TechnicianFormData): { score: number
   const checks: { label: string; done: boolean }[] = [
     { label: 'Full Name', done: !!form.full_name },
     { label: 'Mobile Number', done: !!form.mobile },
-    { label: 'Mobile Verified (OTP)', done: form.mobile_verified },
+    { label: 'Mobile Number', done: !!form.mobile },
     { label: 'WhatsApp Number', done: !!form.whatsapp_number },
     { label: 'Email', done: !!form.email },
     { label: 'City', done: !!form.city },
