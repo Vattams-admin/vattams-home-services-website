@@ -1,47 +1,70 @@
-import { Suspense, lazy } from 'react';
 import { RouterProvider, useRouter } from '@/lib/router';
 import Header from '@/components/layout/Header';
-import FloatingJoinButton from '@/components/FloatingJoinButton';
 import Footer from '@/components/layout/Footer';
-import Schema from '@/components/Schema';
-import { Loader } from 'lucide-react';
 
-const Home = lazy(() => import('@/pages/Home'));
-const Services = lazy(() => import('@/pages/Services'));
-const About = lazy(() => import('@/pages/About'));
-const Contact = lazy(() => import('@/pages/Contact'));
-const Booking = lazy(() => import('@/pages/Booking'));
-const AIAssistant = lazy(() => import('@/pages/AIAssistant'));
-const CustomerLogin = lazy(() => import('@/pages/CustomerLogin'));
-const CustomerRegister = lazy(() => import('@/pages/CustomerRegister'));
-const CustomerForgot = lazy(() => import('@/pages/CustomerForgot'));
-const CustomerProfile = lazy(() => import('@/pages/CustomerProfile'));
-const CustomerBookings = lazy(() => import('@/pages/CustomerBookings'));
-const CustomerDashboard = lazy(() => import('@/pages/CustomerDashboard'));
-const CustomerPayments = lazy(() => import('@/pages/CustomerPayments'));
-const CustomerReviews = lazy(() => import('@/pages/CustomerReviews'));
-const CustomerSupport = lazy(() => import('@/pages/CustomerSupport'));
-const AdminLogin = lazy(() => import('@/pages/AdminLogin'));
-const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'));
-const TechnicianRegister = lazy(() => import('@/pages/TechnicianRegister'));
-const TechnicianLogin = lazy(() => import('@/pages/TechnicianLogin'));
-const TechnicianDashboard = lazy(() => import('@/pages/TechnicianDashboard'));
-const CityLanding = lazy(() => import('@/pages/CityLanding'));
-const JoinTechnician = lazy(() => import('@/pages/JoinTechnician'));
-const NotFound = lazy(() => import('@/pages/NotFound'));
+import Home from '@/pages/Home';
+import Services from '@/pages/Services';
+import About from '@/pages/About';
+import Contact from '@/pages/Contact';
+import Booking from '@/pages/Booking';
 
-import { getCityBySlug } from '@/lib/cities';
+import CustomerLogin from '@/pages/CustomerLogin';
+import CustomerRegister from '@/pages/CustomerRegister';
+import CustomerForgot from '@/pages/CustomerForgot';
+import CustomerProfile from '@/pages/CustomerProfile';
+import CustomerBookings from '@/pages/CustomerBookings';
+import CustomerDashboard from '@/pages/CustomerDashboard';
+import CustomerPayments from '@/pages/CustomerPayments';
+import CustomerReviews from '@/pages/CustomerReviews';
+import CustomerSupport from '@/pages/CustomerSupport';
 
-function PageLoader() {
+import AdminLogin from '@/pages/AdminLogin';
+import AdminDashboard from '@/pages/AdminDashboard';
+
+import TechnicianRegister from '@/pages/TechnicianRegister';
+import TechnicianLogin from '@/pages/TechnicianLogin';
+import TechnicianDashboard from '@/pages/TechnicianDashboard';
+
+function Schema() {
+  const schema = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "LocalBusiness",
+        "@id": "https://vattams.net/#business",
+        "name": "VATTAMS Home Services",
+        "url": "https://vattams.net",
+        "logo": "https://vattams.net/logo.png",
+        "image": "https://vattams.net/logo.png",
+        "telephone": "+91-XXXXXXXXXX",
+        "email": "info@vattams.net",
+        "priceRange": "₹₹",
+        "areaServed": {
+          "@type": "State",
+          "name": "Tamil Nadu"
+        },
+        "sameAs": []
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://vattams.net/#website",
+        "url": "https://vattams.net",
+        "name": "VATTAMS Home Services"
+      }
+    ]
+  };
+
   return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <Loader className="animate-spin text-blue-600" size={32} />
-    </div>
-  );
-}
+  <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{
+      __html: JSON.stringify(schema),
+    }}
+  />
+);
 
 function Pages() {
-  const { page, citySlug } = useRouter();
+  const { page } = useRouter();
 
   const renderPage = () => {
     switch (page) {
@@ -55,8 +78,6 @@ function Pages() {
         return <Contact />;
       case 'booking':
         return <Booking />;
-      case 'ai-assistant':
-        return <AIAssistant />;
       case 'customer-login':
         return <CustomerLogin />;
       case 'customer-register':
@@ -85,16 +106,8 @@ function Pages() {
         return <TechnicianLogin />;
       case 'technician-dashboard':
         return <TechnicianDashboard />;
-      case 'city-landing': {
-        const city = citySlug ? getCityBySlug(citySlug) : undefined;
-        return city ? <CityLanding city={city} /> : <Home />;
-      }
-      case 'join-technician':
-        return <JoinTechnician />;
-      case 'not-found':
-        return <NotFound />;
       default:
-        return <NotFound />;
+        return <Home />;
     }
   };
 
@@ -114,13 +127,8 @@ function Pages() {
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Header />
-      <main className="flex-1">
-        <Suspense fallback={<PageLoader />}>
-          {renderPage()}
-        </Suspense>
-      </main>
+      <main className="flex-1">{renderPage()}</main>
       {!hideFooter && <Footer />}
-      <FloatingJoinButton />
     </div>
   );
 }

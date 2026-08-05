@@ -325,18 +325,50 @@ export function validateFile(file: File): string | null {
   return null;
 }
 
-export async function uploadDocument(file: File, technicianMobile: string, docType: string): Promise<string> {
+  try {
+    const validationError = validateFile(file);
+    if (validationError) throw new Error(validationError);
+
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+    const fileName = ${technicianMobile}/${docType}.${ext};
+
+    export async function uploadDocument(
+  file: File,
+  technicianMobile: string,
+  docType: string
+): Promise<string> {
   const validationError = validateFile(file);
   if (validationError) throw new Error(validationError);
+
   const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-  const fileName = `${technicianMobile}/${docType}.${ext}`;
-  const { error } = await supabase.storage.from('technician-docs').upload(fileName, file, { upsert: true });
- catch (err: any) {
+  const fileName = ${technicianMobile}/${docType}.${ext};
+
+  const { error } = await supabase.storage
+    .from('technician-docs')
+    .upload(fileName, file, { upsert: true });
+
   if (error) {
-  console.error("Supabase Error:", error);
-  alert(JSON.stringify(error, null, 2));
-  throw error;
+    console.error("Supabase Error:", error);
+    throw error;
+  }
+
+  const { data } = supabase.storage
+    .from('technician-docs')
+    .getPublicUrl(fileName);
+
+  return data.publicUrl;
 }
+
+    const { data } = supabase.storage
+      .from('technician-docs')
+      .getPublicUrl(fileName);
+
+    return data.publicUrl;
+
+  } catch (err: any) {
+    console.error(err);
+    throw err;
+  }
 }
   const { data } = supabase.storage.from('technician-docs').getPublicUrl(fileName);
   return data.publicUrl;
