@@ -9,36 +9,36 @@ export default function AdminLogin() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  const handleSubmit = async (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   setLoading(true);
   setError('');
 
-const { data, error } = await supabase.auth.signInWithPassword({
-  email,
-  password,
-});
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-console.log("DATA:", data);
-console.log("ERROR:", error);
+    console.log("DATA:", data);
+    console.log("ERROR:", error);
 
-if (error) {
-  setError(error.message);
-  return;
-}
-
-    if (!data.user) {
-      setError('Invalid email or password.');
+    if (error) {
+      setError(error.message);
       return;
     }
 
-    sessionStorage.setItem('vattams_admin', 'logged_in');
-    navigate('admin-dashboard');
+    if (!data.user) {
+      setError("Invalid email or password.");
+      return;
+    }
+
+    sessionStorage.setItem("vattams_admin", "logged_in");
+    navigate("admin-dashboard");
 
   } catch (err) {
     console.error(err);
-    setError('Unable to connect to the server.');
+    setError("Unable to connect to the server.");
   } finally {
     setLoading(false);
   }
