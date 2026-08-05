@@ -331,7 +331,13 @@ export async function uploadDocument(file: File, technicianMobile: string, docTy
   const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
   const fileName = `${technicianMobile}/${docType}.${ext}`;
   const { error } = await supabase.storage.from('technician-docs').upload(fileName, file, { upsert: true });
-  if (error) throw new Error(error.message);
+ catch (err: any) {
+  if (error) {
+  console.error("Supabase Error:", error);
+  alert(JSON.stringify(error, null, 2));
+  throw error;
+}
+}
   const { data } = supabase.storage.from('technician-docs').getPublicUrl(fileName);
   return data.publicUrl;
 }
@@ -367,7 +373,6 @@ export async function submitTechnicianApplication(
         bank_account_number: form.bank_account_number,
         bank_ifsc: form.bank_ifsc,
         upi_id: form.upi_id || null,
-        password: form.password,
         profile_score: score,
         status: 'pending'
       }
