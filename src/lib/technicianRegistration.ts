@@ -334,8 +334,7 @@ export async function uploadDocument(
     if (validationError) throw new Error(validationError);
 
     const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-    const fileName = ${technicianMobile}/${docType}.${ext};
-
+    const fileName = '${technicianMobile}/${docType}.${ext}';
     const { error } = await supabase.storage
       .from('technician-docs')
       .upload(fileName, file, { upsert: true });
@@ -366,10 +365,6 @@ export async function uploadDocument(
     console.error(err);
     throw err;
   }
-}
-  const { data } = supabase.storage.from('technician-docs').getPublicUrl(fileName);
-  return data.publicUrl;
-}
 
 export async function submitTechnicianApplication(
   form: TechnicianFormData
