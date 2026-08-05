@@ -6,7 +6,7 @@ import {
   submitTechnicianApplication, type TechnicianFormData, type StepKey,
 } from '@/lib/technicianRegistration';
 
-export default function TechnicianRegister() 
+export default function TechnicianRegister() {
   const { navigate } = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
   const [form, setForm] = useState<TechnicianFormData>(EMPTY_FORM);
