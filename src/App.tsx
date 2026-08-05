@@ -54,7 +54,7 @@ function Schema() {
     ]
   };
 
-  return (
+ return (
   <script
     type="application/ld+json"
     dangerouslySetInnerHTML={{
@@ -62,6 +62,7 @@ function Schema() {
     }}
   />
 );
+}
 
 function Pages() {
   const { page } = useRouter();
