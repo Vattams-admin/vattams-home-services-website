@@ -129,23 +129,25 @@ export default function TechnicianRegister()
     setUploading(false);
   };
 
-  const handleSubmit = async () => {
-    setSubmitting(true);
-    setError('');
-    try {
-      await submitTechnicianApplication(form);
-      setSuccess(true);
-    }catch (err: any) {
-  console.error("Registration Error:", err);
+ const handleSubmit = async () => {
+  setSubmitting(true);
+  setError('');
 
-  alert(JSON.stringify(err, null, 2));
+  try {
+    await submitTechnicianApplication(form);
+    setSuccess(true);
+  } catch (err: any) {
+    console.error("Registration Error:", err);
 
-  setError(
-    err?.message ||
-    JSON.stringify(err) ||
-    "Registration failed."
-  );
-}
+    setError(
+      err?.message ||
+      JSON.stringify(err) ||
+      "Registration failed."
+    );
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   if (success) {
     return (
