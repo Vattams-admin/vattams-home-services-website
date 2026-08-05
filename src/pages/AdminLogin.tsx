@@ -15,11 +15,6 @@ export default function AdminLogin() {
   setLoading(true);
   setError('');
 
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
 const { data, error } = await supabase.auth.signInWithPassword({
   email,
   password,
@@ -32,10 +27,6 @@ if (error) {
   setError(error.message);
   return;
 }
-    if (error) {
-      setError(error.message);
-      return;
-    }
 
     if (!data.user) {
       setError('Invalid email or password.');
