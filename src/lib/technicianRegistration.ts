@@ -329,24 +329,40 @@ export async function uploadDocument(
   technicianMobile: string,
   docType: string
 ): Promise<string> {
-
   try {
-
     const validationError = validateFile(file);
     if (validationError) throw new Error(validationError);
 
-  const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-  const fileName = ${technicianMobile}/${docType}.${ext};
-  const { error } = await supabase.storage
-    .from('technician-docs')
-    .upload(fileName, file, { upsert: true });
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+    const fileName = ${technicianMobile}/${docType}.${ext};
 
-  if (error) {
-    console.error("Supabase Error:", error);
-    throw error;
+    const { error } = await supabase.storage
+      .from('technician-docs')
+      .upload(fileName, file, { upsert: true });
+
+    if (error) {
+      console.error(error);
+      throw error;
+    }
+
+    const { data } = supabase.storage
+      .from('technician-docs')
+      .getPublicUrl(fileName);
+
+    return data.publicUrl;
+  } catch (err: any) {
+    console.error(err);
+    throw err;
   }
+}
+  
 
- } catch (err: any) {
+    const { data } = supabase.storage
+      .from('technician-docs')
+      .getPublicUrl(fileName);
+
+    return data.publicUrl;
+  } catch (err: any) {
     console.error(err);
     throw err;
   }
