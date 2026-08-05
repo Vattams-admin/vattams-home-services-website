@@ -150,7 +150,13 @@ export default function TechnicianRegister() {
           </div>
           <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Application Submitted!</h2>
           <p className="text-gray-500 mb-2">Your profile score: <span className="font-bold text-orange-600">{score}%</span></p>
-          <p className="text-gray-500 mb-6">Our team will review your application within 24-48 hours. You'll receive a WhatsApp message once approved.</p>
+          <p className="text-gray-500 mb-6">
+  Thank you for registering with VATTAMS HOME SERVICES.
+  Your application has been submitted successfully.
+  Our Admin Team will review your profile within 24–48 hours.
+  Once approved, you will receive a confirmation through Email and WhatsApp.
+  After approval, you can log in to your Technician Dashboard.
+</p>
           <div className="flex gap-3 justify-center">
             <button onClick={() => navigate('home')} className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors">
               Back to Home
