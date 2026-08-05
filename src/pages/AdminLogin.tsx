@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Lock, Loader } from 'lucide-react';
 import { useRouter } from '@/lib/router';
+import { supabase } from '@/lib/supabase';
 
 export default function AdminLogin() {
   const { navigate } = useRouter();
@@ -10,29 +11,36 @@ export default function AdminLogin() {
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    try {
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-auth`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await response.json();
-      if (!response.ok || data.error) {
-        setError(data.error || 'Invalid credentials.');
-        return;
-      }
-      sessionStorage.setItem('vattams_admin', data.sessionToken);
-      sessionStorage.setItem('vattams_admin_expires', data.expiresAt);
-      navigate('admin-dashboard');
-    } catch (err) {
-  console.error(err);
-  setError(err instanceof Error ? err.message : "Network error");
-}
+  e.preventDefault();
+  setLoading(true);
+  setError('');
+
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setError(error.message);
+      return;
+    }
+
+    if (!data.user) {
+      setError('Invalid email or password.');
+      return;
+    }
+
+    sessionStorage.setItem('vattams_admin', 'logged_in');
+    navigate('admin-dashboard');
+
+  } catch (err) {
+    console.error(err);
+    setError('Unable to connect to the server.');
+  } finally {
     setLoading(false);
-  };
+  }
+};
 
   return (
     <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-950 via-blue-900 to-indigo-900 px-4">
