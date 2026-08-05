@@ -61,7 +61,9 @@ export default function TechnicianLogin() {
               <Wrench size={16} /> Technician Portal
             </div>
             <h1 className="text-2xl font-extrabold text-white mb-1">Technician Login</h1>
-            <p className="text-blue-200 text-sm">Sign in with your mobile number or email and password.</p>
+            <p className="text-blue-200 text-sm">
+  Login using your registered mobile number or email address and password.
+</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -113,12 +115,12 @@ export default function TechnicianLogin() {
 
           <div className="mt-6 text-center space-y-2">
             <p className="text-blue-200/60 text-xs">
-              Only approved technicians can log in. Pending applications will be rejected at login.
+              Only approved technicians can access the Technician Dashboard. If your application is under review, please wait for admin approval.
             </p>
             <p className="text-blue-200/50 text-xs">
-              Don't have an account?{' '}
+              New to VATTAMS?{' '}
               <button onClick={() => navigate('technician-register')} className="text-blue-300 underline font-medium">
-                Register here
+                Register as a Technician
               </button>
             </p>
           </div>
