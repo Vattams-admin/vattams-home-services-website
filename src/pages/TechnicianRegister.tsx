@@ -148,7 +148,7 @@ export default function TechnicianRegister() {
           <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
             <CheckCircle size={40} className="text-green-600" />
           </div>
-          <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Application Submitted!</h2>
+          <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Registration Submitted Successfully!!</h2>
           <p className="text-gray-500 mb-2">Your profile score: <span className="font-bold text-orange-600">{score}%</span></p>
           <p className="text-gray-500 mb-6">
   Thank you for registering with VATTAMS HOME SERVICES.
