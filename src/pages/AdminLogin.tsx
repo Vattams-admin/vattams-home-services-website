@@ -9,6 +9,20 @@ export default function AdminLogin() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const signInWithGoogle = async () => {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo:`${window.location.origin}/admin-dashboard`,
+    },
+  });
+
+  if (error) {
+    console.error(error);
+  }
+};
+
+
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   setLoading(true);
@@ -93,9 +107,12 @@ const handleSubmit = async (e: React.FormEvent) => {
               className="w-full flex items-center justify-center gap-2 py-3.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white font-bold rounded-xl transition-colors">
               {loading ? <Loader size={18} className="animate-spin" /> : 'Sign In'}
             </button>
+            <button onClick={signInWithGoogle}>
+  Sign in with Google
+</button>
           </form>
         </div>
       </div>
     </div>
   );
-}
+  }
