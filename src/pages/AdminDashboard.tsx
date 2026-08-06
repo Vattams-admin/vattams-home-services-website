@@ -1091,17 +1091,7 @@ export default function AdminDashboard() {
     </div>
   )}
 </div>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedTech.service_categories.map((s) => (
-                      <span key={s} className="px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">{s}</span>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-sm text-gray-400">No service_categories selected.</div>
-                )}
-              </div>
-
-              {(selectedTech.id_proof_type || selectedTech.id_proof_number) && (
+            {(selectedTech.id_proof_type || selectedTech.id_proof_number) && (
                 <div>
                   <div className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">ID Proof</div>
                   <div className="text-sm text-gray-700 bg-gray-50 rounded-xl p-3">
