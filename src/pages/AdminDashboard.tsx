@@ -731,8 +731,8 @@ export default function AdminDashboard() {
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-600 hidden sm:table-cell">{t.mobile}</td>
                           <td className="px-4 py-3 text-sm text-gray-600 hidden md:table-cell">
-                            {t.specializations.length > 0 ? (
-                              <span className="line-clamp-1 max-w-[180px]">{t.specializations.join(', ')}</span>
+                            {t.service_categories.length > 0 ? (
+                              <span className="line-clamp-1 max-w-[180px]">{t.service_categories.join(', ')}</span>
                             ) : (
                               <span className="text-gray-300">—</span>
                             )}
