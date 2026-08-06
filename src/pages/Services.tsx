@@ -22,11 +22,30 @@ export default function Services() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.from('service_categories').select('*').order('created_at').then(({ data }) => {
-      if (data) setServices(data);
+  const loadServices = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('service_categories')
+        .select('*')
+        .order('created_at');
+
+      if (error) {
+        console.error('Service Load Error:', error);
+        setServices([]);
+        return;
+      }
+
+      setServices(data || []);
+    } catch (err) {
+      console.error('Unexpected Error:', err);
+      setServices([]);
+    } finally {
       setLoading(false);
-    });
-  }, []);
+    }
+  };
+
+  loadServices();
+}, []);
 
   return (
     <div className="pt-20 md:pt-24">
