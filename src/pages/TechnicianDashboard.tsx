@@ -139,7 +139,7 @@ export default function TechnicianDashboard() {
       setAvailableBookings([]);
       return;
     }
-    // Find pending bookings matching technician's specializations and city
+    // Find pending bookings matching technician's service_categories and city
     const { data: tech } = await supabase.from('technicians').select('*').eq('id', techId).maybeSingle();
     if (!tech) return;
     const { data: pending } = await supabase
@@ -149,8 +149,8 @@ export default function TechnicianDashboard() {
       .eq('city', tech.city)
       .order('created_at', { ascending: false });
     if (!pending) { setAvailableBookings([]); return; }
-    // Filter by specialization match
-    const matched = pending.filter((b) => tech.specializations.some((s: string) => b.service_category.toLowerCase().includes(s.toLowerCase())));
+    // Filter by service_categories match
+    const matched = pending.filter((b) => tech.service_categories.some((s: string) => b.service_category.toLowerCase().includes(s.toLowerCase())));
     setAvailableBookings(matched);
   }, []);
 
