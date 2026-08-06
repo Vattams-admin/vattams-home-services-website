@@ -1069,7 +1069,7 @@ export default function AdminDashboard() {
               )}
 
               <div>
-                <div className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-2">Specializations</div>
+                <div className="text-xs text-gray-400 font-medium uppercase tracking-wider service_categories
                 {selectedTech.service_categories.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {selectedTech.service_categories.map((s) => (
