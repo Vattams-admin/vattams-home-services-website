@@ -12,7 +12,7 @@ interface RegisterBody {
   mobile: string;
   email?: string;
   city: string;
-  specializations?: string[];
+  service_categories?: string[];?: string[];
   experience_years?: number;
   id_proof_type?: string;
   id_proof_number?: string;
@@ -77,7 +77,7 @@ Deno.serve(async (req: Request) => {
 });
 
 async function handleRegister(supabase: ReturnType<typeof createClient>, body: RegisterBody) {
-  const { full_name, mobile, email, city, specializations, experience_years, id_proof_type, id_proof_number, password,
+  const { full_name, mobile, email, city, service_categories, experience_years, id_proof_type, id_proof_number, password,
     whatsapp_number, area, pincode, available_days, working_time, has_vehicle, has_tools,
     aadhaar_url, pan_url, dl_url, profile_photo_url, bank_name, bank_holder_name, bank_account_number, bank_ifsc, upi_id, profile_score, mobile_verified } = body;
 
@@ -105,7 +105,7 @@ async function handleRegister(supabase: ReturnType<typeof createClient>, body: R
       mobile,
       email: email || null,
       city,
-      specializations: specializations || [],
+      service_categories: service_categories || [],
       experience_years: experience_years || 0,
       id_proof_type: id_proof_type || null,
       id_proof_number: id_proof_number || null,
