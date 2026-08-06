@@ -4,9 +4,8 @@ import { useRouter } from '@/lib/router';
 import { supabase } from '@/lib/supabase';
 import { initFCM, registerServiceWorker } from '@/lib/fcm';
 
-const SUPABASE_URL = 'https://nitlpxztktgjcjxdgiqm.supabase.co';
-const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pdGxweHp0a3RnamNqeGRnaXFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxODM5ODcsImV4cCI6MjEwMDc1OTk4N30.mKbYeKEf7u2DjDpPtiVmNasfEx7sH0nwuuNrN_30GiM';
-
+const SUPABASE_URL = 'https//nfcibyprftnowaiwlxxc.supabase.co';
+const ANON_KEY ='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mY2lieXByZnRub3dhaXdseHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4ODMzOTgsImV4cCI6MjA5OTQ1OTM5OH0.5ZMjWYOuRBKNKG3ZonXXOBAfBapm54naphNXrHxq16k';
 export default function CustomerLogin() {
   const { navigate } = useRouter();
   const [mobile, setMobile] = useState('');

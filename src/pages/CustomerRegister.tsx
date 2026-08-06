@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Loader, User, Phone, Lock, Mail, MapPin, Home, KeyRound, ShieldCheck } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 
-const SUPABASE_URL = https://nfcibyprftnowaiwlxxc.supabase.co
-const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mY2lieXByZnRub3dhaXdseHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4ODMzOTgsImV4cCI6MjA5OTQ1OTM5OH0.5ZMjWYOuRBKNKG3ZonXXOBAfBapm54naphNXrHxq16k
+const SUPABASE_URL = 'https://nfcibyprftnowaiwlxxc.supabase.co';
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mY2lieXByZnRub3dhaXdseHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4ODMzOTgsImV4cCI6MjA5OTQ1OTM5OH0.5ZMjWYOuRBKNKG3ZonXXOBAfBapm54naphNXrHxq16k';
 type Step = 'form' | 'otp' | 'success';
 
 export default function CustomerRegister() {
