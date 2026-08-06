@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS technicians (
   mobile text NOT NULL UNIQUE,
   email text,
   city text NOT NULL,
-  specializations text[] DEFAULT '{}',
+  service_categories text[] DEFAULT '{}',
   experience_years int DEFAULT 0,
   status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','active','inactive')),
   rating numeric(3,2) DEFAULT 0,
