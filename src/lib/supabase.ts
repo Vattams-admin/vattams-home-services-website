@@ -82,7 +82,7 @@ export interface Technician {
   mobile: string;
   email: string | null;
   city: string;
-  specializations: string[];
+  service_categories: string[];
   experience_years: number;
   status: TechnicianStatus;
   rating: number;
