@@ -1068,9 +1068,29 @@ export default function AdminDashboard() {
                 <InfoRow icon={User} label="Email" value={selectedTech.email} />
               )}
 
-              <div>
-                <div className="text-xs text-gray-400 font-medium uppercase tracking-wider service_categories
-                {selectedTech.service_categories.length > 0 ? (
+            <div>
+  <div className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-2">
+    Service Categories
+  </div>
+
+  {selectedTech.service_categories &&
+  selectedTech.service_categories.length > 0 ? (
+    <div className="flex flex-wrap gap-2">
+      {selectedTech.service_categories.map((s) => (
+        <span
+          key={s}
+          className="px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100"
+        >
+          {s}
+        </span>
+      ))}
+    </div>
+  ) : (
+    <div className="text-sm text-gray-400">
+      No service categories selected.
+    </div>
+  )}
+</div>
                   <div className="flex flex-wrap gap-2">
                     {selectedTech.service_categories.map((s) => (
                       <span key={s} className="px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">{s}</span>
