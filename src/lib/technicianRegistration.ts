@@ -360,10 +360,13 @@ export async function submitTechnicianApplication(
   const { score } = calculateProfileScore(form);
 
   const response = await fetch(
-    'https://nfcibyprftnowaiwlxxc.supabase.co/functions/v1/technician-auth/register',
+    'https://nfcibyprftnowaiwlxxc.supabase.co/functions/v1/smooth-processor/register',
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mY2lieXByZnRub3dhaXdseHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4ODMzOTgsImV4cCI6MjA5OTQ1OTM5OH0.5ZMjWYOuRBKNKG3ZonXXOBAfBapm54naphNXrHxq16k',
+      },
       body: JSON.stringify({
         full_name: form.full_name,
         mobile: form.mobile,
