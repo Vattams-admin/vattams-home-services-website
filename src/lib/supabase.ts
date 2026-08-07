@@ -4,8 +4,8 @@ const supabaseUrl = 'https://nfcibyprftnowaiwlxxc.supabase.co';
 const supabaseAnonKey ='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mY2lieXByZnRub3dhaXdseHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4ODMzOTgsImV4cCI6MjA5OTQ1OTM5OH0.5ZMjWYOuRBKNKG3ZonXXOBAfBapm54naphNXrHxq16k';
   export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
-    persistSession: false,
-    autoRefreshToken: false,
+    persistSession: true,
+    autoRefreshToken: true,
   }
 })
 export type BookingStatus = 'pending' | 'confirmed' | 'assigned' | 'accepted' | 'on_the_way' | 'in_progress' | 'job_started' | 'job_completed' | 'completed' | 'cancelled';
