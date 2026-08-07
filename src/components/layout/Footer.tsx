@@ -34,7 +34,7 @@ export default function Footer() {
             <h3 className="text-white font-bold text-lg">VATTAMS HOME SERVICES</h3>
             <p className="text-amber-400 text-sm font-medium italic mb-4">Service With Care</p>
             <p className="text-gray-400 text-sm leading-relaxed">
-              Tamil Nadu's most trusted home appliance repair and maintenance service. 
+              India's most trusted home appliance repair and maintenance service. 
               Certified technicians at your doorstep.
             </p>
             <SocialLinks variant="footer" />
@@ -117,7 +117,7 @@ export default function Footer() {
               <li className="flex items-start gap-3">
                 <MapPin size={15} className="text-red-400 mt-0.5 shrink-0" />
                 <span className="text-gray-400 text-sm">
-                  Serving across Tamil Nadu
+                  Serving across India
                 </span>
               </li>
             </ul>
