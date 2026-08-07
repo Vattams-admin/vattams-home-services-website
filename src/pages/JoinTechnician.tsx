@@ -7,7 +7,7 @@ const FAQS = [
   { q: 'How do I join VATTAMS as a technician?', a: 'Click the "Join as a Technician" button, complete the AI-guided registration with your details and document uploads, and our team will review your application within 24-48 hours.' },
   { q: 'What documents do I need to register?', a: 'You need your Aadhaar card, PAN card, a profile photo, and bank details. A driving license is optional. All documents are uploaded securely during registration.' },
   { q: 'How much can I earn as a VATTAMS technician?', a: 'Earnings depend on the number of jobs you accept and your service category. Technicians keep the majority of the service fee, with a small platform commission. You can track earnings in your dashboard.' },
-  { q: 'Which cities does VATTAMS operate in?', a: 'We currently operate across Tamil Nadu including Chennai, Coimbatore, Madurai, Tiruchirappalli, Salem, Tirunelveli, and more cities are being added regularly.' },
+  { q: 'Which cities does VATTAMS operate in?', a: 'We currently operate across India, including Chennai, Coimbatore, Madurai, Tiruchirappalli, Salem, Tirunelveli, and more cities are being added regularly.' },
   { q: 'What services can I offer?', a: 'We support 15+ service categories including Electrician, Plumber, AC Technician, RO Technician, Carpenter, Painter, House Cleaning, CCTV, Home Appliance Repair, Pest Control, and more.' },
   { q: 'Do I need my own vehicle and tools?', a: 'Having your own vehicle and tools is preferred but not mandatory. During registration, you can indicate what you have available.' },
   { q: 'How does the job assignment work?', a: 'Our AI system automatically matches nearby technicians to customer bookings based on location, availability, rating, and workload. You receive job notifications and can accept or reject them.' },
@@ -45,9 +45,9 @@ export default function JoinTechnician() {
         {
           '@type': 'JobPosting',
           title: 'Home Service Technician — Join VATTAMS',
-          description: 'Join VATTAMS as a home service technician. Work flexibly across Tamil Nadu providing AC repair, plumbing, electrical, cleaning, and other home services. Earn per job with secure payments.',
+          description: 'Join VATTAMS as a home service technician. Work flexibly across India providing AC repair, plumbing, electrical, cleaning, and other home services. Earn per job with secure payments.',
           hiringOrganization: { '@type': 'Organization', name: 'VATTAMS Home Services', sameAs: 'https://vattams.net' },
-          jobLocation: { '@type': 'Place', address: { '@type': 'PostalAddress', addressRegion: 'Tamil Nadu', addressCountry: 'IN' } },
+          jobLocation: { '@type': 'Place', address: { '@type': 'PostalAddress', addressCountry: 'IN' } },
           employmentType: 'CONTRACTOR',
           datePosted: new Date().toISOString(),
           validThrough: new Date(Date.now() + 90 * 86400000).toISOString(),
@@ -64,10 +64,10 @@ export default function JoinTechnician() {
     });
     script.id = 'join-technician-schema';
     document.head.appendChild(script);
-    document.title = 'Join as a Technician — Technician Jobs in Tamil Nadu | VATTAMS';
+    document.title = 'Join as a Technician — Technician Jobs in India | VATTAMS';
     const metaDesc = document.createElement('meta');
     metaDesc.name = 'description';
-    metaDesc.content = 'Join VATTAMS as a technician. Electrician jobs, plumber jobs, AC technician jobs, and home service jobs across Tamil Nadu. Free registration, flexible hours, secure payments.';
+    metaDesc.content = 'Join VATTAMS as a technician. Electrician jobs, plumber jobs, AC technician jobs, and home service jobs across India. Free registration, flexible hours, secure payments.';
     metaDesc.id = 'join-technician-meta';
     document.head.appendChild(metaDesc);
     return () => {
@@ -83,7 +83,7 @@ export default function JoinTechnician() {
         <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
         <div className="relative max-w-5xl mx-auto px-4 py-16 md:py-24 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/20 rounded-full text-sm font-semibold mb-6">
-            <Briefcase size={16} /> Now Hiring Across Tamil Nadu
+            <Briefcase size={16} /> Now Hiring Across India
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">
             Join as a Technician<br />Earn on Your Own Schedule
@@ -179,7 +179,7 @@ export default function JoinTechnician() {
       {/* Cities */}
       <section className="py-12 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-2xl font-extrabold text-gray-900 mb-6">Technician Jobs in Tamil Nadu</h2>
+          <h2 className="text-2xl font-extrabold text-gray-900 mb-6">Technician Jobs in India</h2>
           <div className="flex flex-wrap gap-3 justify-center">
             {CITIES.map((c) => (
               <span key={c} className="px-4 py-2 bg-white text-gray-700 rounded-lg text-sm font-semibold border border-gray-200">
