@@ -42,7 +42,7 @@ export default function Contact() {
                   { icon: Phone, label: 'Call Us', value: '+91 81898 00757', href: 'tel:+918189800757', color: 'bg-blue-600' },
                   { icon: MessageCircle, label: 'WhatsApp', value: 'Chat with us', href: 'https://wa.me/918189800757', color: 'bg-green-500' },
                   { icon: Mail, label: 'Email', value: 'support@vattams.in', href: 'mailto:support@vattams.in', color: 'bg-amber-500' },
-                  { icon: MapPin, label: 'Service Area', value: 'Across Tamil Nadu', href: '#', color: 'bg-rose-500' },
+                  { icon: MapPin, label: 'Service Area', value: 'Across India', href: '#', color: 'bg-rose-500' },
                 ].map((c) => {
                   const Icon = c.icon;
                   return (
