@@ -359,45 +359,45 @@ export async function submitTechnicianApplication(
 ): Promise<any> {
   const { score } = calculateProfileScore(form);
 
- const result = await supabase
-  .from('technicians')
-  .insert([
-  {
-    full_name: form.full_name,
-    mobile: form.mobile,
-    whatsapp_number: form.whatsapp_number,
-    email: form.email || null,
-    city: form.city,
-    area: form.area,
-    pincode: form.pincode,
-    service_categories: form.service_categories,
-    experience_years: Number(form.experience_years),
-    available_days: form.available_days,
-    working_time: form.working_time,
-    has_vehicle: form.has_vehicle,
-    has_tools: form.has_tools,
-    aadhaar_url: form.aadhaar_url,
-    pan_url: form.pan_url,
-    dl_url: form.dl_url || null,
-    profile_photo_url: form.profile_photo_url,
-    bank_name: form.bank_name,
-    bank_holder_name: form.bank_holder_name,
-    bank_account_number: form.bank_account_number,
-    bank_ifsc: form.bank_ifsc,
-    upi_id: form.upi_id || null,
-    profile_score: score,
-    status: "pending"
+  const response = await fetch(
+    'https://nfcibyprftnowaiwlxxc.supabase.co/functions/v1/technician-auth/register',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        full_name: form.full_name,
+        mobile: form.mobile,
+        email: form.email || undefined,
+        city: form.city,
+        service_categories: form.service_categories,
+        experience_years: Number(form.experience_years),
+        password: form.password,
+        whatsapp_number: form.whatsapp_number,
+        area: form.area,
+        pincode: form.pincode,
+        available_days: form.available_days,
+        working_time: form.working_time,
+        has_vehicle: form.has_vehicle,
+        has_tools: form.has_tools,
+        aadhaar_url: form.aadhaar_url,
+        pan_url: form.pan_url,
+        dl_url: form.dl_url || undefined,
+        profile_photo_url: form.profile_photo_url,
+        bank_name: form.bank_name,
+        bank_holder_name: form.bank_holder_name,
+        bank_account_number: form.bank_account_number,
+        bank_ifsc: form.bank_ifsc,
+        upi_id: form.upi_id || undefined,
+        profile_score: score,
+      }),
+    }
+  );
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error || 'Registration failed.');
   }
-])
-  .select()
-  .single();
 
-console.log(result);
-
-if (result.error) {
-  alert(JSON.stringify(result.error));
-  throw result.error;
-}
-
-  return data;
+  return result.technician;
 }
