@@ -42,8 +42,8 @@ function Schema() {
         "email": "info@vattams.net",
         "priceRange": "₹₹",
         "areaServed": {
-          "@type": "State",
-          "name": "Tamil Nadu"
+          "@type": "Country",
+          "name": "India"
         },
         "sameAs": []
       },
