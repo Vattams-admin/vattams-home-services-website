@@ -5,6 +5,7 @@ import Footer from '@/components/layout/Footer';
 import Home from '@/pages/Home';
 import Services from '@/pages/Services';
 import About from '@/pages/About';
+import Founder from '@/pages/Founder';
 import Contact from '@/pages/Contact';
 import Booking from '@/pages/Booking';
 
@@ -76,6 +77,8 @@ function Pages() {
         return <Services />;
       case 'about':
         return <About />;
+      case 'founder':
+        return <Founder />;
       case 'contact':
         return <Contact />;
       case 'booking':
