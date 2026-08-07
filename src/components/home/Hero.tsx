@@ -12,7 +12,7 @@ export default function Hero() {
       <div className="absolute inset-0">
         <img
           src="https://images.pexels.com/photos/1669799/pexels-photo-1669799.jpeg?auto=compress&cs=tinysrgb&w=1920&q=80"
-          alt="Tamil Nadu Home"
+          alt="Indian Home"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-blue-950/95 via-blue-900/80 to-blue-800/50" />
@@ -41,14 +41,14 @@ export default function Hero() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 mb-6">
             <Star size={14} className="text-amber-400 fill-amber-400" />
-            <span className="text-white/90 text-sm font-medium">Tamil Nadu's #1 Home Service Platform</span>
+            <span className="text-white/90 text-sm font-medium">India's #1 Home Service Platform</span>
           </div>
 
           {/* Headline */}
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white leading-tight mb-6">
             Professional Home Services{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-300">
-              Across Tamil Nadu
+              Across India
             </span>
           </h1>
 
