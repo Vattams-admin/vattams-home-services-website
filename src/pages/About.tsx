@@ -1,6 +1,8 @@
 import { Target, Eye, Heart, ShieldCheck, Users, Award, TrendingUp, Handshake } from 'lucide-react';
+import { useRouter } from '@/lib/router';
 
 export default function About() {
+  const { navigate } = useRouter();
   return (
     <div className="pt-20 md:pt-24">
       {/* Hero */}
@@ -37,6 +39,12 @@ export default function About() {
                 From AC installation to plumbing, our certified technicians handle it all —
                 with genuine spare parts and a service warranty on every job.
               </p>
+              <button
+                onClick={() => navigate('founder')}
+                className="mt-4 inline-flex items-center gap-2 text-blue-700 font-semibold hover:text-blue-800"
+              >
+                Meet Our Founder →
+              </button>
             </div>
             <div className="relative">
               <img
