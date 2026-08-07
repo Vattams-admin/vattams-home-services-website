@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from './supabase';
 
 export type Page =
   | 'home'
@@ -75,6 +76,15 @@ export function RouterProvider({ children }: { children: ReactNode }) {
     setRoute({ page: p, citySlug: null });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        sessionStorage.setItem('vattams_admin', 'logged_in');
+        navigate('admin-dashboard');
+      }
+    });
+  }, []);
 
   return (
     <RouterContext.Provider value={{ page: route.page, navigate, citySlug: route.citySlug }}>
