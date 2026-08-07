@@ -15,7 +15,7 @@ export default function About() {
             Service With Care
           </h1>
           <p className="text-blue-200 max-w-xl mx-auto text-base md:text-lg">
-            VATTAMS Home Services is Tamil Nadu's trusted home appliance repair and maintenance platform.
+            VATTAMS Home Services is India's trusted home appliance repair and maintenance platform.
           </p>
         </div>
       </section>
@@ -27,9 +27,9 @@ export default function About() {
             <div>
               <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-4">Our Story</h2>
               <p className="text-gray-600 leading-relaxed mb-4">
-                Founded with a mission to bring reliable home services to every household in Tamil Nadu,
+                Founded with a mission to bring reliable home services to every household in India,
                 VATTAMS Home Services has grown into a trusted platform connecting customers with
-                verified technicians across the state.
+                verified technicians across the country.
               </p>
               <p className="text-gray-600 leading-relaxed mb-4">
                 We believe that home appliance repair should be hassle-free, transparent, and affordable.
@@ -66,8 +66,8 @@ export default function About() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { icon: Target, title: 'Our Mission', text: 'To make home services accessible, affordable, and reliable for every household in Tamil Nadu.', gradient: 'from-blue-500 to-blue-700' },
-              { icon: Eye, title: 'Our Vision', text: 'To be Tamil Nadu\'s most trusted home service platform, known for quality and care.', gradient: 'from-amber-500 to-orange-500' },
+              { icon: Target, title: 'Our Mission', text: 'To make home services accessible, affordable, and reliable for every household in India.', gradient: 'from-blue-500 to-blue-700' },
+              { icon: Eye, title: 'Our Vision', text: 'To be India\'s most trusted home service platform, known for quality and care.', gradient: 'from-amber-500 to-orange-500' },
               { icon: Heart, title: 'Our Values', text: 'Trust, transparency, and customer-first thinking in everything we do.', gradient: 'from-emerald-500 to-teal-600' },
             ].map((v) => {
               const Icon = v.icon;
