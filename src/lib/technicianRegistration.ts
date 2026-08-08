@@ -360,7 +360,7 @@ export async function submitTechnicianApplication(
   const { score } = calculateProfileScore(form);
 
   const response = await fetch(
-    'https://nfcibyprftnowaiwlxxc.supabase.co/functions/v1/smooth-processor/register',
+    'https://nfcibyprftnowaiwlxxc.supabase.co/functions/v1/technician-auth/register',
     {
       method: 'POST',
       headers: {
