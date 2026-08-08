@@ -29,7 +29,7 @@ Deno.serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const { action, booking_id, technician_id, otp, purpose } = await req.json();
+    const { action, booking_id, technician_id, otp, purpose, status } = await req.json();
 
     if (action === "assign_booking") {
       // First-accept assignment: first technician to accept gets the booking
@@ -48,6 +48,27 @@ Deno.serve(async (req: Request) => {
       if (booking.status !== "pending" && booking.status !== "confirmed") {
         return new Response(JSON.stringify({ error: "Booking already assigned" }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Block technicians who owe platform fee + GST + commission from a previous job
+      const { data: techRow, error: techError } = await supabase
+        .from("technicians")
+        .select("wallet_locked, commission_due")
+        .eq("id", technician_id)
+        .maybeSingle() as { data: { wallet_locked: boolean; commission_due: number } | null; error: unknown };
+
+      if (techError || !techRow) {
+        return new Response(JSON.stringify({ error: "Technician not found" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (techRow.wallet_locked) {
+        return new Response(JSON.stringify({
+          error: `Account locked. Please pay Rs ${techRow.commission_due} (platform fee + GST + commission) from your last job before accepting a new one.`,
+        }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
@@ -161,7 +182,6 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === "update_status") {
-      const { status } = await req.json();
       await supabase.from("bookings").update({
         status,
         updated_at: new Date().toISOString(),
