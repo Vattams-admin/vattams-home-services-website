@@ -1,6 +1,7 @@
 import { RouterProvider, useRouter } from '@/lib/router';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import AIChatWidget from '@/components/AIChatWidget';
 
 import Home from '@/pages/Home';
 import Services from '@/pages/Services';
@@ -131,11 +132,18 @@ function Pages() {
     page === 'technician-login' ||
     page === 'technician-dashboard';
 
+  const hideChatWidget =
+    page === 'admin-login' ||
+    page === 'admin-dashboard' ||
+    page === 'technician-login' ||
+    page === 'technician-dashboard';
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Header />
       <main className="flex-1">{renderPage()}</main>
       {!hideFooter && <Footer />}
+      {!hideChatWidget && <AIChatWidget />}
     </div>
   );
 }
