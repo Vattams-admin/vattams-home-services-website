@@ -47,6 +47,11 @@ interface RouteInfo {
 function getRouteFromHash(): RouteInfo {
   const hash = window.location.hash.replace('#', '');
 
+  // Root visit (vattams.net with no hash at all) goes straight to admin login.
+  if (!hash) {
+    return { page: 'admin-login', citySlug: null };
+  }
+
   if (hash.startsWith('city-')) {
     const slug = hash.replace('city-', '');
     return { page: 'city-landing', citySlug: slug };
