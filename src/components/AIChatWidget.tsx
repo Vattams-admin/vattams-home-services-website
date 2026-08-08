@@ -113,6 +113,12 @@ export default function AIChatWidget() {
   }, []);
 
   useEffect(() => {
+    const openHandler = () => setOpen(true);
+    window.addEventListener('vattams:open-chat', openHandler);
+    return () => window.removeEventListener('vattams:open-chat', openHandler);
+  }, []);
+
+  useEffect(() => {
     if (open) endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, open]);
 
