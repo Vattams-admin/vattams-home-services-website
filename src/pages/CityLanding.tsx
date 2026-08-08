@@ -31,7 +31,7 @@ function buildSchema(city: CityData) {
     logo: `${baseUrl}/logo.svg`,
     image: `${baseUrl}/logo.svg`,
     telephone: '+91-81898-00757',
-    email: 'support@vattams.in',
+    email: 'admin@vattams.net',
     priceRange: '₹₹',
     address: {
       '@type': 'PostalAddress',
@@ -259,21 +259,26 @@ export default function CityLanding({ city }: { city: CityData }) {
         </div>
       </section>
 
-      {/* Google Maps placeholder */}
+      {/* Embedded map */}
       <section className="py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-4">Find Us in {city.name}</h2>
           <p className="text-gray-500 text-center mb-8">VATTAMS technicians serve all areas of {city.name}</p>
-          <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-sm bg-gray-100 h-80 flex items-center justify-center">
-            <div className="text-center">
-              <MapPin size={48} className="text-blue-600 mx-auto mb-3" />
-              <p className="text-gray-500 font-medium">{city.name}, {city.state}</p>
-              <p className="text-gray-400 text-sm mt-1">Lat: {city.geo.lat}, Lng: {city.geo.lng}</p>
-              <a href={`https://www.google.com/maps/search/?api=1&query=${city.geo.lat},${city.geo.lng}`} target="_blank" rel="noreferrer"
-                className="inline-flex items-center gap-1.5 mt-4 text-blue-600 font-semibold text-sm hover:text-blue-700">
-                View on Google Maps <ArrowRight size={14} />
-              </a>
-            </div>
+          <div className="relative rounded-2xl overflow-hidden border border-gray-200 shadow-sm h-80">
+            <iframe
+              title={`Map of ${city.name}`}
+              src={`https://www.google.com/maps?q=${city.geo.lat},${city.geo.lng}&z=11&output=embed`}
+              className="w-full h-full border-0"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${city.geo.lat},${city.geo.lng}`}
+              target="_blank" rel="noreferrer"
+              className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 bg-white shadow-md rounded-full px-4 py-2 text-blue-600 font-semibold text-xs hover:text-blue-700"
+            >
+              Open in Google Maps <ArrowRight size={12} />
+            </a>
           </div>
         </div>
       </section>
