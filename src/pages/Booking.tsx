@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Loader, CheckCircle, Calendar, User, Phone, MapPin, Wrench, FileText, Clock, ArrowRight, LogIn, Receipt, LucideIcon, Tag, Briefcase } from 'lucide-react';
+import { Loader, CheckCircle, Calendar, User, Phone, MapPin, Wrench, FileText, Clock, ArrowRight, LogIn, Receipt, LucideIcon, Tag, Briefcase, Sparkles } from 'lucide-react';
 import { supabase, ServiceCategory, Customer, ServicePrice } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { notifyCustomer, notifyAdmin } from '@/lib/notifications';
@@ -127,6 +127,13 @@ export default function Booking() {
       notifyCustomer.bookingReceived(form.mobile_number, data.booking_number, data.id),
       notifyAdmin.newBooking(data.booking_number, form.customer_name, form.service_category, data.id),
     ]);
+
+    // Automatically find and assign the best matching technician (no manual
+    // accept needed). If none are eligible, the booking simply stays
+    // pending and can still be picked up manually as a fallback.
+    void supabase.functions.invoke('booking-ops', {
+      body: { action: 'auto_assign', booking_id: data.id },
+    });
   };
 
   if (success) {
@@ -182,6 +189,20 @@ export default function Booking() {
 
       <section className="py-12 bg-gray-50">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent('vattams:open-chat'))}
+            className="w-full flex items-center gap-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-2xl p-4 mb-5 text-left transition-colors"
+          >
+            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shrink-0">
+              <Sparkles size={18} className="text-white" />
+            </div>
+            <div>
+              <div className="font-bold text-blue-900 text-sm">Not sure what you need?</div>
+              <div className="text-blue-700 text-xs">Ask our AI Assistant about services, pricing, or how booking works</div>
+            </div>
+          </button>
+
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
             {loading ? (
               <div className="flex justify-center py-16">
