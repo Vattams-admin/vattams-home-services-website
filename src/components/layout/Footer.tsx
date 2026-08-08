@@ -78,7 +78,7 @@ export default function Footer() {
           <div>
             <h4 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">Cities We Serve</h4>
             <ul className="space-y-2">
-              {['Chennai','Coimbatore','Madurai','Trichy','Salem','Erode','Tiruppur','Vellore','Hosur','Tirunelveli'].map((c) => (
+              {['Chennai','Coimbatore','Madurai','Trichy','Salem','Delhi','Mumbai','Bangalore','Hyderabad','Pune'].map((c) => (
                 <li key={c}>
                   <a
                     href={`#city-${c.toLowerCase()}`}
