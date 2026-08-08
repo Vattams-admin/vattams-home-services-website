@@ -36,7 +36,7 @@ function buildSchema(city: CityData) {
     address: {
       '@type': 'PostalAddress',
       addressLocality: city.name,
-      addressRegion: 'Tamil Nadu',
+      addressRegion: city.state,
       addressCountry: 'IN',
     },
     geo: {
@@ -142,7 +142,7 @@ export default function CityLanding({ city }: { city: CityData }) {
 
   const schema = useMemo(() => buildSchema(city), [city]);
 
-  const otherCities = cities.filter((c) => c.slug !== city.slug).slice(0, 12);
+  const otherCities = cities.filter((c) => c.slug !== city.slug && c.state === city.state).slice(0, 12);
 
   return (
     <div className="pt-16 md:pt-20">
@@ -168,7 +168,7 @@ export default function CityLanding({ city }: { city: CityData }) {
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 bg-blue-700/50 rounded-full px-4 py-1.5 mb-6">
               <MapPin size={14} className="text-amber-400" />
-              <span className="text-sm font-medium text-blue-100">Serving {city.name}, Tamil Nadu</span>
+              <span className="text-sm font-medium text-blue-100">Serving {city.name}, {city.state}</span>
             </div>
             <h1 className="text-3xl md:text-5xl font-extrabold leading-tight mb-4">{city.h1}</h1>
             <p className="text-lg text-blue-100 mb-8 leading-relaxed">{city.intro}</p>
@@ -267,7 +267,7 @@ export default function CityLanding({ city }: { city: CityData }) {
           <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-sm bg-gray-100 h-80 flex items-center justify-center">
             <div className="text-center">
               <MapPin size={48} className="text-blue-600 mx-auto mb-3" />
-              <p className="text-gray-500 font-medium">{city.name}, Tamil Nadu</p>
+              <p className="text-gray-500 font-medium">{city.name}, {city.state}</p>
               <p className="text-gray-400 text-sm mt-1">Lat: {city.geo.lat}, Lng: {city.geo.lng}</p>
               <a href={`https://www.google.com/maps/search/?api=1&query=${city.geo.lat},${city.geo.lng}`} target="_blank" rel="noreferrer"
                 className="inline-flex items-center gap-1.5 mt-4 text-blue-600 font-semibold text-sm hover:text-blue-700">
@@ -344,10 +344,11 @@ export default function CityLanding({ city }: { city: CityData }) {
       </section>
 
       {/* Other cities */}
+      {otherCities.length > 0 && (
       <section className="py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-4">Also Serving Other Cities in Tamil Nadu</h2>
-          <p className="text-gray-500 text-center mb-12">VATTAMS provides home services across Tamil Nadu</p>
+          <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-4">Also Serving Other Cities in {city.state}</h2>
+          <p className="text-gray-500 text-center mb-12">VATTAMS provides home services across {city.state}</p>
           <div className="flex flex-wrap justify-center gap-3">
             {otherCities.map((c) => (
               <button key={c.slug} onClick={() => { window.location.hash = `city-${c.slug}`; window.scrollTo({ top: 0, behavior: 'smooth' }); }}
@@ -358,6 +359,7 @@ export default function CityLanding({ city }: { city: CityData }) {
           </div>
         </div>
       </section>
+      )}
 
       {/* CTA */}
       <section className="bg-gradient-to-br from-blue-900 to-blue-800 py-16 md:py-20">
