@@ -6,11 +6,12 @@ import { notifyCustomer, notifyAdmin } from '@/lib/notifications';
 import { getPricingFromServicePrice, calculatePricing, formatINR, type PricingBreakdown } from '@/lib/pricing';
 import { validateCoupon, redeemCoupon, type Coupon } from '@/lib/coupons';
 
-const tamilNaduCities = [
+const bookingCities = [
   'Chennai', 'Coimbatore', 'Madurai', 'Trichy', 'Salem',
   'Tirunelveli', 'Erode', 'Vellore', 'Thoothukudi', 'Namakkal',
   'Thanjavur', 'Dindigul', 'Tiruppur', 'Hosur', 'Nagercoil',
   'Kanchipuram', 'Kumbakonam', 'Cuddalore', 'Puducherry', 'Villupuram',
+  'Delhi', 'Mumbai', 'Bangalore', 'Hyderabad', 'Pune',
   'Other',
 ];
 
@@ -215,7 +216,7 @@ export default function Booking() {
                     <select required value={form.city}
                       onChange={(e) => setForm({ ...form, city: e.target.value })}
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all bg-white">
-                      {tamilNaduCities.map((c) => <option key={c} value={c}>{c}</option>)}
+                      {bookingCities.map((c) => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </Field>
                   <Field icon={Wrench} label="Service Category *">
