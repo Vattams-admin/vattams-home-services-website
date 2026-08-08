@@ -12,7 +12,7 @@ interface RegisterBody {
   mobile: string;
   email?: string;
   city: string;
-  service_categories?: string[];?: string[];
+  service_categories?: string[];
   experience_years?: number;
   id_proof_type?: string;
   id_proof_number?: string;
