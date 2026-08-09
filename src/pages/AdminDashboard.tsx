@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+,import { useState, useEffect, useMemo } from 'react';
 import {
   Loader, Calendar, User, Phone, MapPin, Wrench, DollarSign, TrendingUp,
   CheckCircle, Clock, X, ChevronDown, LogOut, LayoutDashboard, Users, Briefcase,
@@ -20,7 +20,6 @@ import {
   fetchNotifications, NotificationRow,
 } from '@/lib/notifications';
 import { Customer } from '@/lib/supabase';
-import { fetchAnalyticsSummary, fetchRevenueGraph, fetchServiceRevenue, fetchCityRevenue, fetchTechnicianPerformance, predictDemand, generateAIRecommendations } from '@/lib/analytics';
 import { fetchAllReminders, type CRMReminder } from '@/lib/crm';
 import { generateSocialContent, generateBlogPost, generateCityPage, generateFAQ, generateOfferPoster, saveContentDraft, fetchContentDrafts, type ContentDraft } from '@/lib/aiContent';
 import { fetchActiveCoupons, validateCoupon, type Coupon } from '@/lib/coupons';
