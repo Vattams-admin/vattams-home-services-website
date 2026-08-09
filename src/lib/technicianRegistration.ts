@@ -354,53 +354,48 @@ export async function uploadDocument(
     throw err;
   }
 }
+
 export async function submitTechnicianApplication(
   form: TechnicianFormData
 ): Promise<any> {
   const { score } = calculateProfileScore(form);
 
-  const response = await fetch(
-    'https://nfcibyprftnowaiwlxxc.supabase.co/functions/v1/technician-auth/register',
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mY2lieXByZnRub3dhaXdseHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4ODMzOTgsImV4cCI6MjA5OTQ1OTM5OH0.5ZMjWYOuRBKNKG3ZonXXOBAfBapm54naphNXrHxq16k',
-      },
-      body: JSON.stringify({
+  const { data, error } = await supabase
+    .from('technicians')
+    .insert([
+      {
         full_name: form.full_name,
         mobile: form.mobile,
-        email: form.email || undefined,
-        city: form.city,
-        service_categories: form.service_categories,
-        experience_years: Number(form.experience_years),
-        password: form.password,
         whatsapp_number: form.whatsapp_number,
+        email: form.email || null,
+        city: form.city,
         area: form.area,
         pincode: form.pincode,
+        service_categories: form.service_categories,
+        experience_years: Number(form.experience_years),
         available_days: form.available_days,
         working_time: form.working_time,
         has_vehicle: form.has_vehicle,
         has_tools: form.has_tools,
         aadhaar_url: form.aadhaar_url,
         pan_url: form.pan_url,
-        dl_url: form.dl_url || undefined,
+        dl_url: form.dl_url || null,
         profile_photo_url: form.profile_photo_url,
         bank_name: form.bank_name,
         bank_holder_name: form.bank_holder_name,
         bank_account_number: form.bank_account_number,
         bank_ifsc: form.bank_ifsc,
-        upi_id: form.upi_id || undefined,
+        upi_id: form.upi_id || null,
         profile_score: score,
-      }),
-    }
-  );
+        status: 'pending'
+      }
+    ])
+    .select()
+    .single();
 
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.error || 'Registration failed.');
+  if (error) {
+    throw new Error(error.message);
   }
 
-  return result.technician;
+  return data;
 }
