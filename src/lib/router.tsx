@@ -46,9 +46,13 @@ interface RouteInfo {
 
 function getRouteFromHash(): RouteInfo {
   const hash = window.location.hash.replace('#', '');
+  const path = window.location.pathname;
 
-  // Root visit (vattams.net with no hash at all) goes straight to admin login.
-  if (!hash) {
+  // Only the literal root domain (vattams.net, no path, no hash) goes to
+  // admin login. Any other path-style URL (e.g. /services, /booking — used
+  // by old links, search results, or the sitemap) still resolves normally
+  // instead of also being swallowed by the admin redirect.
+  if (!hash && (path === '/' || path === '')) {
     return { page: 'admin-login', citySlug: null };
   }
 
