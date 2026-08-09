@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from './supabase';
 
 export type Page =
   | 'home'
@@ -45,59 +44,116 @@ interface RouteInfo {
 }
 
 function getRouteFromHash(): RouteInfo {
-  const hash = window.location.hash.replace('#', '');
+  const hash = window.location.hash.replace(/^#/, '');
   const path = window.location.pathname;
 
-  // Only the literal root domain (vattams.net, no path, no hash) goes to
-  // admin login. Any other path-style URL (e.g. /services, /booking — used
-  // by old links, search results, or the sitemap) still resolves normally
-  // instead of also being swallowed by the admin redirect.
+  // ROOT DOMAIN MUST ALWAYS OPEN HOME PAGE
+  // Example:
+  // https://vattams.net
+  // https://vattams.net/
   if (!hash && (path === '/' || path === '')) {
-    return { page: 'admin-login', citySlug: null };
+    return {
+      page: 'home',
+      citySlug: null,
+    };
   }
 
+  // City landing pages
   if (hash.startsWith('city-')) {
     const slug = hash.replace('city-', '');
-    return { page: 'city-landing', citySlug: slug };
+
+    return {
+      page: 'city-landing',
+      citySlug: slug,
+    };
   }
 
-  const valid: Page[] = [
-    'home','services','about','founder','contact','booking','ai-assistant',
-    'customer-login','customer-register','customer-forgot','customer-profile','customer-bookings',
-    'customer-dashboard','customer-payments','customer-reviews','customer-support',
-    'admin-login','admin-dashboard',
-    'technician-register','technician-login','technician-dashboard',
-    'join-technician','not-found',
+  const validPages: Page[] = [
+    'home',
+    'services',
+    'about',
+    'founder',
+    'contact',
+    'booking',
+    'ai-assistant',
+
+    'customer-login',
+    'customer-register',
+    'customer-forgot',
+    'customer-profile',
+    'customer-bookings',
+    'customer-dashboard',
+    'customer-payments',
+    'customer-reviews',
+    'customer-support',
+
+    'admin-login',
+    'admin-dashboard',
+
+    'technician-register',
+    'technician-login',
+    'technician-dashboard',
+
+    'join-technician',
+
+    'not-found',
   ];
-  return { page: valid.includes(hash as Page) ? (hash as Page) : 'home', citySlug: null };
+
+  if (validPages.includes(hash as Page)) {
+    return {
+      page: hash as Page,
+      citySlug: null,
+    };
+  }
+
+  // Unknown route → Home
+  return {
+    page: 'home',
+    citySlug: null,
+  };
 }
 
-export function RouterProvider({ children }: { children: ReactNode }) {
-  const [route, setRoute] = useState<RouteInfo>(getRouteFromHash);
+export function RouterProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const [route, setRoute] = useState<RouteInfo>(() => getRouteFromHash());
 
   useEffect(() => {
-    const onHashChange = () => setRoute(getRouteFromHash());
+    const onHashChange = () => {
+      setRoute(getRouteFromHash());
+    };
+
     window.addEventListener('hashchange', onHashChange);
-    return () => window.removeEventListener('hashchange', onHashChange);
+
+    return () => {
+      window.removeEventListener('hashchange', onHashChange);
+    };
   }, []);
 
-  const navigate = (p: Page) => {
-    window.location.hash = p;
-    setRoute({ page: p, citySlug: null });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const navigate = (page: Page) => {
+    window.location.hash = page;
+
+    setRoute({
+      page,
+      citySlug: null,
+    });
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
   };
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        sessionStorage.setItem('vattams_admin', 'logged_in');
-        navigate('admin-dashboard');
-      }
-    });
-  }, []);
-
   return (
-    <RouterContext.Provider value={{ page: route.page, navigate, citySlug: route.citySlug }}>
+    <RouterContext.Provider
+      value={{
+        page: route.page,
+        navigate,
+        citySlug: route.citySlug,
+      }}
+    >
       {children}
     </RouterContext.Provider>
   );
