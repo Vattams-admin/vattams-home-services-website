@@ -10,10 +10,7 @@ const iconMap: Record<string, LucideIcon> = {
 };
 
 const colorPalette = [
-  'from-blue-500 to-blue-700', 'from-cyan-500 to-blue-600', 'from-sky-400 to-blue-600',
-  'from-teal-500 to-cyan-600', 'from-indigo-500 to-blue-700', 'from-blue-600 to-indigo-700',
-  'from-amber-500 to-orange-600', 'from-blue-400 to-cyan-500', 'from-yellow-500 to-amber-600',
-  'from-emerald-500 to-teal-600',
+  'from-royal-700 to-royal-900', 'from-gold-500 to-gold-700', 'from-royal-600 to-royal-800',
 ];
 
 export default function Services() {
@@ -50,15 +47,15 @@ export default function Services() {
   return (
     <div className="pt-20 md:pt-24">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-indigo-900 py-16 md:py-20">
+      <section className="bg-gradient-to-br from-royal-950 via-royal-900 to-royal-800 py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 text-blue-200 rounded-full px-4 py-1.5 text-sm font-semibold mb-4">
+          <div className="inline-flex items-center gap-2 bg-white/10 text-gold-300 rounded-full px-4 py-1.5 text-sm font-semibold mb-4">
             Our Services
           </div>
-          <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-4">
+          <h1 className="font-display text-3xl md:text-5xl font-bold text-white mb-4">
             Professional Home Services
           </h1>
-          <p className="text-blue-200 max-w-xl mx-auto text-base md:text-lg">
+          <p className="text-royal-100 max-w-xl mx-auto text-base md:text-lg">
             From AC installation to plumbing — we cover all your home appliance needs with certified technicians.
           </p>
         </div>
@@ -69,7 +66,7 @@ export default function Services() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {loading ? (
             <div className="flex justify-center py-16">
-              <Loader className="animate-spin text-blue-600" size={32} />
+              <Loader className="animate-spin text-royal-700" size={32} />
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -88,13 +85,13 @@ export default function Services() {
                     <p className="text-gray-500 text-sm leading-relaxed mb-4">{svc.description}</p>
                     <div className="flex items-center justify-between">
                       {svc.price_range && (
-                        <span className="bg-blue-50 text-blue-700 text-sm font-semibold px-3 py-1.5 rounded-full">
+                        <span className="bg-gold-50 text-gold-700 text-sm font-semibold px-3 py-1.5 rounded-full">
                           {svc.price_range}
                         </span>
                       )}
                       <button
                         onClick={() => navigate('booking')}
-                        className="flex items-center gap-1.5 text-blue-600 hover:text-blue-700 text-sm font-semibold"
+                        className="flex items-center gap-1.5 text-gold-700 hover:text-gold-800 text-sm font-semibold"
                       >
                         Book Now <ArrowRight size={14} />
                       </button>
@@ -110,7 +107,7 @@ export default function Services() {
       {/* What's Included */}
       <section className="py-16 bg-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 text-center mb-10">
+          <h2 className="font-display text-2xl md:text-3xl font-bold text-royal-900 text-center mb-10">
             What's Included in Every Service
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -124,8 +121,8 @@ export default function Services() {
               'Same-day service available',
               'Pay after service completion',
             ].map((item) => (
-              <div key={item} className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl">
-                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
+              <div key={item} className="flex items-center gap-3 p-4 bg-gold-50 rounded-xl">
+                <div className="w-8 h-8 rounded-full bg-royal-800 flex items-center justify-center shrink-0">
                   <Check size={16} className="text-white" />
                 </div>
                 <span className="text-gray-700 font-medium text-sm">{item}</span>
@@ -136,12 +133,12 @@ export default function Services() {
       </section>
 
       {/* Join as Technician CTA */}
-      <section className="py-12 bg-gradient-to-r from-orange-500 to-amber-600 text-white">
+      <section className="py-12 bg-gradient-to-r from-wine-700 to-wine-600 text-white">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <Briefcase size={32} className="mx-auto mb-3" />
-          <h2 className="text-2xl md:text-3xl font-extrabold mb-3">Are You a Skilled Technician?</h2>
+          <h2 className="font-display text-2xl md:text-3xl font-bold mb-3">Are You a Skilled Technician?</h2>
           <p className="text-white/90 mb-6 max-w-xl mx-auto">Join VATTAMS and start receiving job requests near you. Free registration, flexible hours, secure payments.</p>
-          <button onClick={() => navigate('join-technician')} className="inline-flex items-center gap-2 px-8 py-3.5 bg-white text-orange-600 font-extrabold rounded-xl shadow-lg transition-all hover:scale-105">
+          <button onClick={() => navigate('join-technician')} className="inline-flex items-center gap-2 px-8 py-3.5 bg-gold-500 hover:bg-gold-400 text-royal-950 font-extrabold rounded-xl shadow-lg transition-all hover:scale-105">
             <Briefcase size={18} /> Join as a Technician
           </button>
         </div>
