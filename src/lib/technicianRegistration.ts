@@ -454,3 +454,95 @@ export function calculateProfileScore(
     {
       label: 'Vehicle Info',
       done:
+        form.has_vehicle !== null,
+    },
+    {
+      label: 'Tools Info',
+      done:
+        form.has_tools !== null,
+    },
+    {
+      label: 'Bank Details',
+      done:
+        !!form.bank_account_number &&
+        !!form.bank_ifsc,
+    },
+  ];
+
+  const completed =
+    checks.filter((c) => c.done).length;
+
+  const score = Math.round(
+    (completed / checks.length) * 100
+  );
+
+  const missing = checks
+    .filter((c) => !c.done)
+    .map((c) => c.label);
+
+  return {
+    score,
+    missing,
+  };
+}
+
+export async function submitTechnicianApplication(
+  form: TechnicianFormData
+): Promise<{ success: boolean }> {
+  const { score } =
+    calculateProfileScore(form);
+
+  const { error } = await supabase
+    .from('technicians')
+    .insert([
+      {
+        full_name: form.full_name,
+        mobile: form.mobile,
+        whatsapp_number:
+          form.whatsapp_number,
+        email: form.email || null,
+        city: form.city,
+        area: form.area,
+        pincode: form.pincode,
+        service_categories:
+          form.service_categories,
+        experience_years:
+          Number(form.experience_years),
+        available_days:
+          form.available_days,
+        working_time:
+          form.working_time,
+        has_vehicle:
+          form.has_vehicle,
+        has_tools:
+          form.has_tools,
+
+        bank_name:
+          form.bank_name,
+        bank_holder_name:
+          form.bank_holder_name,
+        bank_account_number:
+          form.bank_account_number,
+        bank_ifsc:
+          form.bank_ifsc,
+        upi_id:
+          form.upi_id || null,
+
+        profile_score: score,
+        status: 'pending',
+      },
+    ]);
+
+  if (error) {
+    console.error(
+      'Technician registration error:',
+      error
+    );
+
+    throw new Error(error.message);
+  }
+
+  return {
+    success: true,
+  };
+}
