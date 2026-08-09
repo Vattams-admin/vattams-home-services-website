@@ -21,7 +21,7 @@ const serviceIcons: Record<string, typeof Wrench> = {
 
 function buildSchema(city: CityData) {
   const baseUrl = 'https://vattams.net';
-  const cityUrl = `${baseUrl}/city/${city.slug}`;
+  const cityUrl = `${baseUrl}/#city-${city.slug}`;
 
   const localBusinessSchema = {
     '@type': 'LocalBusiness',
@@ -67,8 +67,8 @@ function buildSchema(city: CityData) {
   const breadcrumbSchema = {
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: baseUrl },
-      { '@type': 'ListItem', position: 2, name: 'Services', item: `${baseUrl}/services` },
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${baseUrl}/#home` },
+      { '@type': 'ListItem', position: 2, name: 'Services', item: `${baseUrl}/#services` },
       { '@type': 'ListItem', position: 3, name: city.name, item: cityUrl },
     ],
   };
@@ -81,7 +81,7 @@ function buildSchema(city: CityData) {
 
 function injectMetaTags(city: CityData) {
   const baseUrl = 'https://vattams.net';
-  const cityUrl = `${baseUrl}/city/${city.slug}`;
+  const cityUrl = `${baseUrl}/#city-${city.slug}`;
 
   const tags: { name?: string; property?: string; content: string; key: string }[] = [
     { name: 'title', content: city.seoTitle, key: 'meta-title' },
