@@ -79,13 +79,13 @@ export default function JoinTechnician() {
   return (
     <div className="pt-20 md:pt-24">
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-orange-500 to-amber-600 text-white">
+      <section className="relative overflow-hidden bg-gradient-to-br from-wine-700 to-wine-600 text-white">
         <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
         <div className="relative max-w-5xl mx-auto px-4 py-16 md:py-24 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/20 rounded-full text-sm font-semibold mb-6">
             <Briefcase size={16} /> Now Hiring Across India
           </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">
+          <h1 className="font-display text-4xl md:text-5xl font-bold mb-4 leading-tight">
             Join as a Technician<br />Earn on Your Own Schedule
           </h1>
           <p className="text-lg md:text-xl text-white/90 mb-8 max-w-2xl mx-auto">
@@ -94,7 +94,7 @@ export default function JoinTechnician() {
           <div className="flex flex-wrap gap-4 justify-center">
             <button
               onClick={() => navigate('technician-register')}
-              className="group flex items-center gap-2 px-8 py-4 bg-white text-orange-600 font-extrabold rounded-xl shadow-2xl transition-all duration-300 hover:scale-105"
+              className="group flex items-center gap-2 px-8 py-4 bg-gold-500 hover:bg-gold-400 text-royal-950 font-extrabold rounded-xl shadow-2xl transition-all duration-300 hover:scale-105"
             >
               Start Registration
               <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
@@ -117,12 +117,12 @@ export default function JoinTechnician() {
       {/* Benefits */}
       <section className="py-16 md:py-20 bg-white">
         <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-4">Why Join VATTAMS?</h2>
+          <h2 className="font-display text-3xl font-bold text-royal-900 text-center mb-4">Why Join VATTAMS?</h2>
           <p className="text-gray-500 text-center mb-12 max-w-2xl mx-auto">Everything you need to succeed as a home service professional.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {BENEFITS.map((b) => (
               <div key={b.title} className="bg-gray-50 rounded-2xl p-6 border border-gray-100 hover:shadow-lg transition-shadow">
-                <div className="w-12 h-12 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center mb-4">
+                <div className="w-12 h-12 rounded-xl bg-wine-50 text-wine-700 flex items-center justify-center mb-4">
                   <b.icon size={24} />
                 </div>
                 <h3 className="font-bold text-gray-900 mb-2">{b.title}</h3>
@@ -136,7 +136,7 @@ export default function JoinTechnician() {
       {/* How it works */}
       <section className="py-16 md:py-20 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-12">How It Works</h2>
+          <h2 className="font-display text-3xl font-bold text-royal-900 text-center mb-12">How It Works</h2>
           <div className="space-y-8">
             {[
               { num: '1', title: 'Register Online', desc: 'Complete the AI-guided registration with your details, services, and documents.' },
@@ -145,7 +145,7 @@ export default function JoinTechnician() {
               { num: '4', title: 'Get Paid', desc: 'Receive payments directly to your bank account or UPI after each completed job.' },
             ].map((s) => (
               <div key={s.num} className="flex gap-4 items-start">
-                <div className="w-12 h-12 rounded-full bg-orange-500 text-white font-extrabold flex items-center justify-center shrink-0 text-lg">
+                <div className="w-12 h-12 rounded-full bg-wine-600 text-white font-extrabold flex items-center justify-center shrink-0 text-lg">
                   {s.num}
                 </div>
                 <div>
@@ -164,11 +164,11 @@ export default function JoinTechnician() {
       {/* Services */}
       <section className="py-16 bg-white">
         <div className="max-w-5xl mx-auto px-4">
-          <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-4">Service Categories</h2>
+          <h2 className="font-display text-3xl font-bold text-royal-900 text-center mb-4">Service Categories</h2>
           <p className="text-gray-500 text-center mb-10">Choose from 15+ service categories</p>
           <div className="flex flex-wrap gap-3 justify-center">
             {SERVICE_KEYWORDS.map((s) => (
-              <span key={s} className="px-4 py-2 bg-orange-50 text-orange-700 rounded-lg text-sm font-semibold border border-orange-100">
+              <span key={s} className="px-4 py-2 bg-wine-50 text-wine-700 rounded-lg text-sm font-semibold border border-wine-100">
                 {s}
               </span>
             ))}
@@ -193,13 +193,13 @@ export default function JoinTechnician() {
       {/* FAQ */}
       <section className="py-16 md:py-20 bg-white" ref={faqRef}>
         <div className="max-w-3xl mx-auto px-4">
-          <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-10">Frequently Asked Questions</h2>
+          <h2 className="font-display text-3xl font-bold text-royal-900 text-center mb-10">Frequently Asked Questions</h2>
           <div className="space-y-4">
             {FAQS.map((f) => (
               <details key={f.q} className="group bg-gray-50 rounded-xl border border-gray-100 p-4">
                 <summary className="font-bold text-gray-900 cursor-pointer flex items-center justify-between list-none">
                   {f.q}
-                  <span className="text-orange-500 group-open:rotate-180 transition-transform">▼</span>
+                  <span className="text-wine-600 group-open:rotate-180 transition-transform">▼</span>
                 </summary>
                 <p className="text-gray-500 mt-3 text-sm">{f.a}</p>
               </details>
@@ -209,13 +209,13 @@ export default function JoinTechnician() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 bg-gradient-to-r from-orange-500 to-amber-600 text-white text-center">
+      <section className="py-16 bg-gradient-to-r from-wine-700 to-wine-600 text-white text-center">
         <div className="max-w-2xl mx-auto px-4">
-          <h2 className="text-3xl font-extrabold mb-4">Ready to Start Earning?</h2>
+          <h2 className="font-display text-3xl font-bold mb-4">Ready to Start Earning?</h2>
           <p className="text-white/90 mb-8">Join 500+ technicians already working with VATTAMS. Registration takes just 5 minutes.</p>
           <button
             onClick={() => navigate('technician-register')}
-            className="group inline-flex items-center gap-2 px-8 py-4 bg-white text-orange-600 font-extrabold rounded-xl shadow-2xl transition-all duration-300 hover:scale-105"
+            className="group inline-flex items-center gap-2 px-8 py-4 bg-gold-500 hover:bg-gold-400 text-royal-950 font-extrabold rounded-xl shadow-2xl transition-all duration-300 hover:scale-105"
           >
             Register Now — It's Free
             <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
@@ -226,8 +226,8 @@ export default function JoinTechnician() {
       {/* MSME Trust Badge */}
       <section className="py-12 bg-gray-50">
         <div className="max-w-3xl mx-auto px-4 text-center">
-          <div className="inline-flex flex-col items-center gap-2 bg-white rounded-2xl border border-amber-200 shadow-sm px-8 py-6">
-            <div className="inline-flex items-center gap-2 text-amber-600">
+          <div className="inline-flex flex-col items-center gap-2 bg-white rounded-2xl border border-gold-200 shadow-sm px-8 py-6">
+            <div className="inline-flex items-center gap-2 text-gold-700">
               <ShieldCheck size={20} />
               <span className="font-bold text-sm uppercase tracking-wider">Government of India MSME Registered</span>
             </div>
