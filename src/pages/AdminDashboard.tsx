@@ -1389,12 +1389,31 @@ export default function AdminDashboard() {
         const topServices = Object.entries(serviceCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
         const maxServiceCount = topServices[0]?.[1] ?? 1;
 
-        // City distribution
+       // City distribution
         const cityCounts: Record<string, number> = {};
-        bookings.forEach((b) => { cityCounts[b.city] = (cityCounts[b.city] ?? 0) + 1; });
+        const cityRevenueMap: Record<string, number> = {};
+        bookings.forEach((b) => {
+          cityCounts[b.city] = (cityCounts[b.city] ?? 0) + 1;
+          if (b.status === 'completed') {
+            cityRevenueMap[b.city] = (cityRevenueMap[b.city] ?? 0) + (b.amount ?? 0);
+          }
+        });
         const topCities = Object.entries(cityCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
         const maxCityCount = topCities[0]?.[1] ?? 1;
+        const topCitiesByRevenue = Object.entries(cityRevenueMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
+        const maxCityRevenue = topCitiesByRevenue[0]?.[1] ?? 1;
 
+        // Technician performance leaderboard
+        const techPerformance = technicians
+          .map((t) => ({
+            technician: t,
+            completedJobs: t.completed_jobs_count ?? 0,
+            earnings: t.wallet_balance ?? 0,
+            rating: t.rating ?? 0,
+          }))
+          .sort((a, b) => b.completedJobs - a.completedJobs)
+          .slice(0, 8);
+        const maxTechJobs = techPerformance[0]?.completedJobs || 1;
         // Monthly revenue (last 6 months)
         const now = new Date();
         const months: { label: string; revenue: number; count: number }[] = [];
