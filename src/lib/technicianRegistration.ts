@@ -51,11 +51,13 @@ export interface TechnicianFormData {
   working_time: string;
   has_vehicle: boolean | null;
   has_tools: boolean | null;
+
   bank_account_number: string;
   bank_ifsc: string;
   bank_name: string;
   bank_holder_name: string;
   upi_id: string;
+
   password: string;
 }
 
@@ -73,11 +75,13 @@ export const EMPTY_FORM: TechnicianFormData = {
   working_time: '',
   has_vehicle: null,
   has_tools: null,
+
   bank_account_number: '',
   bank_ifsc: '',
   bank_name: '',
   bank_holder_name: '',
   upi_id: '',
+
   password: '',
 };
 
@@ -135,8 +139,8 @@ export const STEPS: StepDef[] = [
     field: 'full_name',
     type: 'text',
     placeholder: 'Enter your full name',
-    validate: (v) =>
-      v.trim().length < 2
+    validate: (value) =>
+      value.trim().length < 2
         ? 'Name must be at least 2 characters'
         : null,
   },
@@ -147,8 +151,8 @@ export const STEPS: StepDef[] = [
     field: 'mobile',
     type: 'tel',
     placeholder: '10-digit mobile number',
-    validate: (v) =>
-      !/^[6-9]\d{9}$/.test(v.trim())
+    validate: (value) =>
+      !/^[6-9]\d{9}$/.test(value.trim())
         ? 'Enter a valid 10-digit Indian mobile number'
         : null,
   },
@@ -160,8 +164,8 @@ export const STEPS: StepDef[] = [
     field: 'whatsapp_number',
     type: 'tel',
     placeholder: '10-digit WhatsApp number',
-    validate: (v) =>
-      !/^[6-9]\d{9}$/.test(v.trim())
+    validate: (value) =>
+      !/^[6-9]\d{9}$/.test(value.trim())
         ? 'Enter a valid 10-digit WhatsApp number'
         : null,
   },
@@ -174,9 +178,9 @@ export const STEPS: StepDef[] = [
     type: 'email',
     placeholder: 'your@email.com',
     optional: true,
-    validate: (v) =>
-      v.trim() &&
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())
+    validate: (value) =>
+      value.trim() &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
         ? 'Enter a valid email or type "skip"'
         : null,
   },
@@ -203,19 +207,18 @@ export const STEPS: StepDef[] = [
       'Sivakasi',
       'Other',
     ],
-    validate: (v) =>
-      !v ? 'Please select your city' : null,
+    validate: (value) =>
+      !value ? 'Please select your city' : null,
   },
 
   {
     key: 'area',
-    question:
-      'What area or locality do you work in?',
+    question: 'What area or locality do you work in?',
     field: 'area',
     type: 'text',
     placeholder: 'e.g. T Nagar, Anna Nagar',
-    validate: (v) =>
-      v.trim().length < 2
+    validate: (value) =>
+      value.trim().length < 2
         ? 'Please enter your area'
         : null,
   },
@@ -226,8 +229,8 @@ export const STEPS: StepDef[] = [
     field: 'pincode',
     type: 'text',
     placeholder: '6-digit PIN code',
-    validate: (v) =>
-      !/^\d{6}$/.test(v.trim())
+    validate: (value) =>
+      !/^\d{6}$/.test(value.trim())
         ? 'Enter a valid 6-digit PIN code'
         : null,
   },
@@ -239,7 +242,7 @@ export const STEPS: StepDef[] = [
     field: 'service_categories',
     type: 'multiselect',
     options: TECHNICIAN_SERVICES,
-    validate: (_v, form) =>
+    validate: (_value, form) =>
       form.service_categories.length === 0
         ? 'Select at least one service'
         : null,
@@ -252,10 +255,12 @@ export const STEPS: StepDef[] = [
     field: 'experience_years',
     type: 'number',
     placeholder: 'e.g. 5',
-    validate: (v) => {
-      const n = Number(v);
+    validate: (value) => {
+      const number = Number(value);
 
-      return isNaN(n) || n < 0 || n > 50
+      return isNaN(number) ||
+        number < 0 ||
+        number > 50
         ? 'Enter a valid number (0-50)'
         : null;
     },
@@ -268,7 +273,7 @@ export const STEPS: StepDef[] = [
     field: 'available_days',
     type: 'multiselect',
     options: AVAILABLE_DAYS,
-    validate: (_v, form) =>
+    validate: (_value, form) =>
       form.available_days.length === 0
         ? 'Select at least one day'
         : null,
@@ -281,8 +286,8 @@ export const STEPS: StepDef[] = [
     field: 'working_time',
     type: 'select',
     options: TIME_SLOTS,
-    validate: (v) =>
-      !v
+    validate: (value) =>
+      !value
         ? 'Please select your working time'
         : null,
   },
@@ -309,10 +314,9 @@ export const STEPS: StepDef[] = [
       "Let's collect your bank details for payments. What is your bank name?",
     field: 'bank_name',
     type: 'text',
-    placeholder:
-      'e.g. State Bank of India',
-    validate: (v) =>
-      v.trim().length < 2
+    placeholder: 'e.g. State Bank of India',
+    validate: (value) =>
+      value.trim().length < 2
         ? 'Please enter your bank name'
         : null,
   },
@@ -325,8 +329,8 @@ export const STEPS: StepDef[] = [
     type: 'text',
     placeholder:
       'Name as per bank records',
-    validate: (v) =>
-      v.trim().length < 2
+    validate: (value) =>
+      value.trim().length < 2
         ? 'Please enter account holder name'
         : null,
   },
@@ -337,10 +341,9 @@ export const STEPS: StepDef[] = [
       'What is your bank account number?',
     field: 'bank_account_number',
     type: 'text',
-    placeholder:
-      'Account number',
-    validate: (v) =>
-      v.trim().length < 8
+    placeholder: 'Account number',
+    validate: (value) =>
+      value.trim().length < 8
         ? 'Enter a valid account number'
         : null,
   },
@@ -351,11 +354,10 @@ export const STEPS: StepDef[] = [
       'What is the IFSC code for your bank branch?',
     field: 'bank_ifsc',
     type: 'text',
-    placeholder:
-      'e.g. SBIN0001234',
-    validate: (v) =>
+    placeholder: 'e.g. SBIN0001234',
+    validate: (value) =>
       !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(
-        v.trim().toUpperCase()
+        value.trim().toUpperCase()
       )
         ? 'Enter a valid IFSC code (e.g. SBIN0001234)'
         : null,
@@ -367,8 +369,7 @@ export const STEPS: StepDef[] = [
       'What is your UPI ID for quick payments? (Optional — type "skip" if not available)',
     field: 'upi_id',
     type: 'text',
-    placeholder:
-      'e.g. yourname@paytm',
+    placeholder: 'e.g. yourname@paytm',
     optional: true,
   },
 
@@ -378,10 +379,9 @@ export const STEPS: StepDef[] = [
       'Finally, create a password for your technician account (min 6 characters). You will use this to log in.',
     field: 'password',
     type: 'password',
-    placeholder:
-      'Create a password',
-    validate: (v) =>
-      v.length < 6
+    placeholder: 'Create a password',
+    validate: (value) =>
+      value.length < 6
         ? 'Password must be at least 6 characters'
         : null,
   },
@@ -409,76 +409,106 @@ export function calculateProfileScore(
       label: 'Full Name',
       done: !!form.full_name,
     },
+
     {
       label: 'Mobile Number',
       done: !!form.mobile,
     },
+
     {
       label: 'WhatsApp Number',
       done: !!form.whatsapp_number,
     },
+
     {
       label: 'Email',
       done: !!form.email,
     },
+
     {
       label: 'City',
       done: !!form.city,
     },
+
     {
       label: 'Area',
       done: !!form.area,
     },
+
     {
       label: 'PIN Code',
       done: !!form.pincode,
     },
+
     {
       label: 'Service Categories',
       done:
         form.service_categories.length > 0,
     },
+
     {
       label: 'Experience',
       done: !!form.experience_years,
     },
+
     {
       label: 'Available Days',
       done:
         form.available_days.length > 0,
     },
+
     {
       label: 'Working Time',
       done: !!form.working_time,
     },
+
     {
       label: 'Vehicle Info',
-      done:
-        form.has_vehicle !== null,
+      done: form.has_vehicle !== null,
     },
+
     {
       label: 'Tools Info',
-      done:
-        form.has_tools !== null,
+      done: form.has_tools !== null,
     },
+
     {
-      label: 'Bank Details',
-      done:
-        !!form.bank_account_number &&
-        !!form.bank_ifsc,
+      label: 'Bank Name',
+      done: !!form.bank_name,
+    },
+
+    {
+      label: 'Account Holder Name',
+      done: !!form.bank_holder_name,
+    },
+
+    {
+      label: 'Bank Account Number',
+      done: !!form.bank_account_number,
+    },
+
+    {
+      label: 'IFSC Code',
+      done: !!form.bank_ifsc,
+    },
+
+    {
+      label: 'UPI ID',
+      done: !!form.upi_id,
     },
   ];
 
-  const completed =
-    checks.filter((c) => c.done).length;
+  const completed = checks.filter(
+    (check) => check.done
+  ).length;
 
   const score = Math.round(
     (completed / checks.length) * 100
   );
 
   const missing = checks
-    .filter((c) => !c.done)
-    .map((c) => c.label);
+    .filter((check) => !check.done)
+    .map((check) => check.label);
 
   return {
     score,
@@ -488,11 +518,11 @@ export function calculateProfileScore(
 
 export async function submitTechnicianApplication(
   form: TechnicianFormData
-): Promise<{ success: boolean }> {
+): Promise<any> {
   const { score } =
     calculateProfileScore(form);
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('technicians')
     .insert([
       {
@@ -500,49 +530,58 @@ export async function submitTechnicianApplication(
         mobile: form.mobile,
         whatsapp_number:
           form.whatsapp_number,
+
         email: form.email || null,
+
         city: form.city,
         area: form.area,
         pincode: form.pincode,
+
         service_categories:
           form.service_categories,
+
         experience_years:
           Number(form.experience_years),
+
         available_days:
           form.available_days,
+
         working_time:
           form.working_time,
+
         has_vehicle:
           form.has_vehicle,
+
         has_tools:
           form.has_tools,
 
         bank_name:
           form.bank_name,
+
         bank_holder_name:
           form.bank_holder_name,
+
         bank_account_number:
           form.bank_account_number,
+
         bank_ifsc:
           form.bank_ifsc,
+
         upi_id:
           form.upi_id || null,
 
-        profile_score: score,
+        profile_score:
+          score,
+
         status: 'pending',
       },
-    ]);
+    ])
+    .select()
+    .single();
 
   if (error) {
-    console.error(
-      'Technician registration error:',
-      error
-    );
-
     throw new Error(error.message);
   }
 
-  return {
-    success: true,
-  };
+  return data;
 }
