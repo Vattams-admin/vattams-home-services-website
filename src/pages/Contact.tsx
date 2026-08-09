@@ -41,7 +41,7 @@ export default function Contact() {
                 {[
                   { icon: Phone, label: 'Call Us', value: '+91 81898 00757', href: 'tel:+918189800757', color: 'bg-blue-600' },
                   { icon: MessageCircle, label: 'WhatsApp', value: 'Chat with us', href: 'https://wa.me/918189800757', color: 'bg-green-500' },
-                  { icon: Mail, label: 'Email', value: 'support@vattams.in', href: 'mailto:support@vattams.in', color: 'bg-amber-500' },
+                  { icon: Mail, label: 'Email', value: 'admin@vattams.net', href: 'mailto:admin@vattams.net', color: 'bg-amber-500' },
                   { icon: MapPin, label: 'Service Area', value: 'Across India', href: '#', color: 'bg-rose-500' },
                 ].map((c) => {
                   const Icon = c.icon;
@@ -76,6 +76,20 @@ export default function Contact() {
                   <div className="flex justify-between"><span>Monday - Saturday</span><span className="font-medium">7:00 AM - 9:00 PM</span></div>
                   <div className="flex justify-between"><span>Sunday</span><span className="font-medium">8:00 AM - 6:00 PM</span></div>
                 </div>
+              </div>
+
+              <div className="mt-8">
+                <h3 className="font-bold text-gray-900 mb-3">Our Office</h3>
+                <div className="relative rounded-2xl overflow-hidden border border-gray-100 shadow-sm h-56">
+                  <iframe
+                    title="VATTAMS office location"
+                    src="https://www.google.com/maps?q=13.0827,80.2707&z=12&output=embed"
+                    className="w-full h-full border-0"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                </div>
+                <p className="text-gray-400 text-xs mt-2">Chennai, Tamil Nadu, India</p>
               </div>
             </div>
 
