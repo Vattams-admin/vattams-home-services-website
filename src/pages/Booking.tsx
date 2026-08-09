@@ -5,15 +5,9 @@ import { useRouter } from '@/lib/router';
 import { notifyCustomer, notifyAdmin } from '@/lib/notifications';
 import { getPricingFromServicePrice, calculatePricing, formatINR, type PricingBreakdown } from '@/lib/pricing';
 import { validateCoupon, redeemCoupon, type Coupon } from '@/lib/coupons';
+import { cities } from '@/lib/cities';
 
-const bookingCities = [
-  'Chennai', 'Coimbatore', 'Madurai', 'Trichy', 'Salem',
-  'Tirunelveli', 'Erode', 'Vellore', 'Thoothukudi', 'Namakkal',
-  'Thanjavur', 'Dindigul', 'Tiruppur', 'Hosur', 'Nagercoil',
-  'Kanchipuram', 'Kumbakonam', 'Cuddalore', 'Puducherry', 'Villupuram',
-  'Delhi', 'Mumbai', 'Bangalore', 'Hyderabad', 'Pune',
-  'Other',
-];
+const bookingCities = [...cities.map((c) => c.name), 'Other'];
 
 const timeSlots = ['07:00 - 09:00', '09:00 - 11:00', '11:00 - 13:00', '13:00 - 15:00', '15:00 - 17:00', '17:00 - 19:00', '19:00 - 21:00'];
 
@@ -114,10 +108,9 @@ export default function Booking() {
 
     setSubmitting(false);
     if (error) {
-  console.error('BOOKING ERROR:', error);
-  alert(`Booking failed: ${error.message}`);
-  return;
-}
+      alert('Booking failed. Please try again or call us.');
+      return;
+    }
     setSuccess({ number: data.booking_number, id: data.id });
 
     if (couponResult?.valid && couponResult.coupon) {
@@ -146,20 +139,20 @@ export default function Booking() {
           </div>
           <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Booking Confirmed!</h2>
           <p className="text-gray-500 mb-4">Your service request has been received. Our team will contact you shortly.</p>
-          <div className="bg-blue-50 rounded-xl p-4 mb-6">
+          <div className="bg-gold-50 rounded-xl p-4 mb-6">
             <div className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Your Booking Number</div>
-            <div className="text-xl font-extrabold text-blue-700">{success.number}</div>
+            <div className="text-xl font-extrabold text-gold-700">{success.number}</div>
           </div>
           <div className="flex flex-col gap-3">
             {customer && (
               <button onClick={() => navigate('customer-bookings')}
-                className="flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors">
+                className="flex items-center justify-center gap-2 py-3 bg-royal-800 hover:bg-royal-900 text-white font-semibold rounded-xl transition-colors">
                 View My Bookings
               </button>
             )}
             {!customer && (
               <button onClick={() => navigate('customer-register')}
-                className="flex items-center justify-center gap-2 py-3 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold rounded-xl transition-colors border border-blue-200">
+                className="flex items-center justify-center gap-2 py-3 bg-gold-50 hover:bg-gold-100 text-gold-700 font-semibold rounded-xl transition-colors border border-gold-200">
                 <LogIn size={18} /> Create Account to Track
               </button>
             )}
@@ -168,7 +161,7 @@ export default function Booking() {
               Back to Home
             </button>
             <button onClick={() => navigate('join-technician')}
-              className="flex items-center justify-center gap-2 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-colors">
+              className="flex items-center justify-center gap-2 py-3 bg-wine-600 hover:bg-wine-500 text-white font-semibold rounded-xl transition-colors">
               <Briefcase size={16} /> Join as a Technician
             </button>
           </div>
@@ -179,10 +172,10 @@ export default function Booking() {
 
   return (
     <div className="pt-20 md:pt-24">
-      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-indigo-900 py-14">
+      <section className="bg-gradient-to-br from-royal-950 via-royal-900 to-royal-800 py-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-3">Book a Service</h1>
-          <p className="text-blue-200 max-w-lg mx-auto">
+          <p className="text-royal-100 max-w-lg mx-auto">
             Fill in the details below and our team will reach out to confirm your booking.
           </p>
         </div>
@@ -193,26 +186,26 @@ export default function Booking() {
           <button
             type="button"
             onClick={() => window.dispatchEvent(new CustomEvent('vattams:open-chat'))}
-            className="w-full flex items-center gap-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-2xl p-4 mb-5 text-left transition-colors"
+            className="w-full flex items-center gap-3 bg-gold-50 hover:bg-gold-100 border border-gold-200 rounded-2xl p-4 mb-5 text-left transition-colors"
           >
-            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-royal-800 flex items-center justify-center shrink-0">
               <Sparkles size={18} className="text-white" />
             </div>
             <div>
-              <div className="font-bold text-blue-900 text-sm">Not sure what you need?</div>
-              <div className="text-blue-700 text-xs">Ask our AI Assistant about services, pricing, or how booking works</div>
+              <div className="font-bold text-royal-900 text-sm">Not sure what you need?</div>
+              <div className="text-gold-700 text-xs">Ask our AI Assistant about services, pricing, or how booking works</div>
             </div>
           </button>
 
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
             {loading ? (
               <div className="flex justify-center py-16">
-                <Loader className="animate-spin text-blue-600" size={32} />
+                <Loader className="animate-spin text-royal-700" size={32} />
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
                 {!customer && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-sm text-blue-700 flex items-center justify-between">
+                  <div className="bg-gold-50 border border-gold-200 rounded-xl p-3 text-sm text-gold-700 flex items-center justify-between">
                     <span>Have an account? Login to pre-fill your details.</span>
                     <button type="button" onClick={() => navigate('customer-login')} className="font-bold hover:underline">Login</button>
                   </div>
@@ -222,13 +215,13 @@ export default function Booking() {
                   <Field icon={User} label="Customer Name *">
                     <input type="text" required value={form.customer_name}
                       onChange={(e) => setForm({ ...form, customer_name: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all"
                       placeholder="Your full name" />
                   </Field>
                   <Field icon={Phone} label="Mobile Number *">
                     <input type="tel" required pattern="[0-9]{10}" value={form.mobile_number}
                       onChange={(e) => setForm({ ...form, mobile_number: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all"
                       placeholder="10-digit mobile number" />
                   </Field>
                 </div>
@@ -237,14 +230,14 @@ export default function Booking() {
                   <Field icon={MapPin} label="City *">
                     <select required value={form.city}
                       onChange={(e) => setForm({ ...form, city: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all bg-white">
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all bg-white">
                       {bookingCities.map((c) => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </Field>
                   <Field icon={Wrench} label="Service Category *">
                     <select required value={form.service_category}
                       onChange={(e) => setForm({ ...form, service_category: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all bg-white">
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all bg-white">
                       {services.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
                     </select>
                   </Field>
@@ -253,7 +246,7 @@ export default function Booking() {
                 {selectedService && pricing && (
                   <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                     <div className="flex items-center gap-2 mb-3">
-                      <Receipt size={16} className="text-blue-600" />
+                      <Receipt size={16} className="text-royal-700" />
                       <span className="font-semibold text-gray-800 text-sm">Price Breakdown</span>
                     </div>
                     <div className="space-y-1.5 text-sm">
@@ -277,7 +270,7 @@ export default function Booking() {
                       )}
                       <div className="border-t border-gray-200 pt-1.5 flex justify-between">
                         <span className="font-bold text-gray-900">Total Amount</span>
-                        <span className="font-extrabold text-blue-700 text-lg">{formatINR(pricing.finalAmount)}</span>
+                        <span className="font-extrabold text-gold-700 text-lg">{formatINR(pricing.finalAmount)}</span>
                       </div>
                     </div>
                   </div>
@@ -286,15 +279,15 @@ export default function Booking() {
                 {selectedService && pricing && (
                   <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                     <div className="flex items-center gap-2 mb-2">
-                      <Tag size={16} className="text-blue-600" />
+                      <Tag size={16} className="text-royal-700" />
                       <span className="font-semibold text-gray-800 text-sm">Have a Coupon Code?</span>
                     </div>
                     <div className="flex gap-2">
                       <input type="text" value={couponCode} onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponResult(null); }}
                         placeholder="Enter coupon code"
-                        className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-blue-500 uppercase" />
+                        className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-gold-500 uppercase" />
                       <button type="button" onClick={handleValidateCoupon} disabled={validatingCoupon || !couponCode.trim()}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white text-sm font-semibold rounded-lg transition-colors">
+                        className="px-4 py-2 bg-royal-800 hover:bg-royal-900 disabled:bg-gray-300 text-white text-sm font-semibold rounded-lg transition-colors">
                         {validatingCoupon ? '...' : 'Apply'}
                       </button>
                     </div>
@@ -310,14 +303,14 @@ export default function Booking() {
                 <Field icon={MapPin} label="Address *">
                   <textarea required rows={2} value={form.address}
                     onChange={(e) => setForm({ ...form, address: e.target.value })}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all resize-none"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all resize-none"
                     placeholder="Full address with landmark" />
                 </Field>
 
                 <Field icon={FileText} label="Problem Description">
                   <textarea rows={3} value={form.problem_description}
                     onChange={(e) => setForm({ ...form, problem_description: e.target.value })}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all resize-none"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all resize-none"
                     placeholder="Describe the issue you're facing..." />
                 </Field>
 
@@ -325,12 +318,12 @@ export default function Booking() {
                   <Field icon={Calendar} label="Preferred Date">
                     <input type="date" value={form.preferred_date} min={new Date().toISOString().split('T')[0]}
                       onChange={(e) => setForm({ ...form, preferred_date: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all" />
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all" />
                   </Field>
                   <Field icon={Clock} label="Preferred Time">
                     <select value={form.preferred_time}
                       onChange={(e) => setForm({ ...form, preferred_time: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all bg-white">
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all bg-white">
                       <option value="">Any time</option>
                       {timeSlots.map((t) => <option key={t} value={t}>{t}</option>)}
                     </select>
@@ -338,7 +331,7 @@ export default function Booking() {
                 </div>
 
                 <button type="submit" disabled={submitting}
-                  className="w-full flex items-center justify-center gap-2 py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold rounded-xl transition-colors shadow-lg shadow-blue-200">
+                  className="w-full flex items-center justify-center gap-2 py-4 bg-royal-800 hover:bg-royal-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors shadow-lg shadow-royal-200">
                   {submitting ? (
                     <><Loader size={18} className="animate-spin" /> Confirming...</>
                   ) : (
