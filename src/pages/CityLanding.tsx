@@ -153,9 +153,9 @@ export default function CityLanding({ city }: { city: CityData }) {
       <nav className="bg-gray-50 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <ol className="flex items-center gap-1.5 text-xs text-gray-500 flex-wrap">
-            <li><button onClick={() => navigate('home')} className="hover:text-blue-600">Home</button></li>
+            <li><button onClick={() => navigate('home')} className="hover:text-gold-700">Home</button></li>
             <li><ChevronRight size={12} /></li>
-            <li><button onClick={() => navigate('services')} className="hover:text-blue-600">Services</button></li>
+            <li><button onClick={() => navigate('services')} className="hover:text-gold-700">Services</button></li>
             <li><ChevronRight size={12} /></li>
             <li className="text-gray-900 font-medium">{city.name}</li>
           </ol>
@@ -163,18 +163,18 @@ export default function CityLanding({ city }: { city: CityData }) {
       </nav>
 
       {/* Hero */}
-      <section className="bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 text-white">
+      <section className="bg-gradient-to-br from-royal-950 via-royal-900 to-royal-800 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 bg-blue-700/50 rounded-full px-4 py-1.5 mb-6">
-              <MapPin size={14} className="text-amber-400" />
-              <span className="text-sm font-medium text-blue-100">Serving {city.name}, {city.state}</span>
+            <div className="inline-flex items-center gap-2 bg-white/10 border border-gold-400/30 rounded-full px-4 py-1.5 mb-6">
+              <MapPin size={14} className="text-gold-400" />
+              <span className="text-sm font-medium text-gold-100">Serving {city.name}, {city.state}</span>
             </div>
-            <h1 className="text-3xl md:text-5xl font-extrabold leading-tight mb-4">{city.h1}</h1>
-            <p className="text-lg text-blue-100 mb-8 leading-relaxed">{city.intro}</p>
+            <h1 className="font-display text-3xl md:text-5xl font-bold leading-tight mb-4">{city.h1}</h1>
+            <p className="text-lg text-royal-100 mb-8 leading-relaxed">{city.intro}</p>
             <div className="flex flex-col sm:flex-row gap-3">
               <button onClick={() => navigate('booking')}
-                className="flex items-center justify-center gap-2 px-6 py-3.5 bg-amber-500 hover:bg-amber-600 text-blue-900 font-bold rounded-xl transition-colors shadow-lg shadow-amber-500/20">
+                className="flex items-center justify-center gap-2 px-6 py-3.5 bg-gold-500 hover:bg-gold-400 text-royal-950 font-bold rounded-xl transition-colors shadow-lg shadow-gold-500/20">
                 Book Now <ArrowRight size={18} />
               </button>
               <a href="https://wa.me/918189800757" target="_blank" rel="noreferrer"
@@ -203,8 +203,8 @@ export default function CityLanding({ city }: { city: CityData }) {
               const Icon = t.icon;
               return (
                 <div key={t.label} className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-                    <Icon size={22} className="text-blue-600" />
+                  <div className="w-12 h-12 rounded-xl bg-gold-50 flex items-center justify-center shrink-0">
+                    <Icon size={22} className="text-gold-700" />
                   </div>
                   <div>
                     <div className="font-bold text-gray-900 text-sm">{t.label}</div>
@@ -222,7 +222,7 @@ export default function CityLanding({ city }: { city: CityData }) {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           {city.contentSections.map((sec, idx) => (
             <div key={idx} className="mb-10">
-              <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-4">{sec.heading}</h2>
+              <h2 className="font-display text-2xl md:text-3xl font-bold text-royal-900 mb-4">{sec.heading}</h2>
               <p className="text-gray-600 leading-relaxed text-base">{sec.body}</p>
             </div>
           ))}
@@ -232,7 +232,7 @@ export default function CityLanding({ city }: { city: CityData }) {
       {/* Service categories */}
       <section className="bg-gray-50 py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-4">Our Services in {city.name}</h2>
+          <h2 className="font-display text-3xl font-bold text-royal-900 text-center mb-4">Our Services in {city.name}</h2>
           <p className="text-gray-500 text-center mb-12 max-w-2xl mx-auto">
             Comprehensive home repair and maintenance services by certified technicians across {city.name}
           </p>
@@ -241,15 +241,15 @@ export default function CityLanding({ city }: { city: CityData }) {
               const Icon = serviceIcons[svc] ?? Wrench;
               return (
                 <div key={svc} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow">
-                  <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center mb-4">
-                    <Icon size={24} className="text-blue-600" />
+                  <div className="w-12 h-12 rounded-xl bg-gold-50 flex items-center justify-center mb-4">
+                    <Icon size={24} className="text-gold-700" />
                   </div>
                   <h3 className="font-bold text-gray-900 text-lg mb-2">{svc} in {city.name}</h3>
                   <p className="text-sm text-gray-500 mb-4">
                     Professional {svc.toLowerCase()} services in {city.name} by verified, experienced technicians. Transparent pricing with GST invoice.
                   </p>
                   <button onClick={() => navigate('booking')}
-                    className="text-blue-600 font-semibold text-sm flex items-center gap-1 hover:gap-2 transition-all">
+                    className="text-gold-700 font-semibold text-sm flex items-center gap-1 hover:gap-2 transition-all">
                     Book {svc} <ArrowRight size={14} />
                   </button>
                 </div>
@@ -262,7 +262,7 @@ export default function CityLanding({ city }: { city: CityData }) {
       {/* Embedded map */}
       <section className="py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-4">Find Us in {city.name}</h2>
+          <h2 className="font-display text-3xl font-bold text-royal-900 text-center mb-4">Find Us in {city.name}</h2>
           <p className="text-gray-500 text-center mb-8">VATTAMS technicians serve all areas of {city.name}</p>
           <div className="relative rounded-2xl overflow-hidden border border-gray-200 shadow-sm h-80">
             <iframe
@@ -275,7 +275,7 @@ export default function CityLanding({ city }: { city: CityData }) {
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${city.geo.lat},${city.geo.lng}`}
               target="_blank" rel="noreferrer"
-              className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 bg-white shadow-md rounded-full px-4 py-2 text-blue-600 font-semibold text-xs hover:text-blue-700"
+              className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 bg-white shadow-md rounded-full px-4 py-2 text-gold-700 font-semibold text-xs hover:text-gold-800"
             >
               Open in Google Maps <ArrowRight size={12} />
             </a>
@@ -286,14 +286,14 @@ export default function CityLanding({ city }: { city: CityData }) {
       {/* Nearby areas */}
       <section className="bg-gray-50 py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-4">Areas We Cover in {city.name}</h2>
+          <h2 className="font-display text-3xl font-bold text-royal-900 text-center mb-4">Areas We Cover in {city.name}</h2>
           <p className="text-gray-500 text-center mb-12 max-w-2xl mx-auto">
             VATTAMS provides home services across all neighborhoods and surrounding areas of {city.name}
           </p>
           <div className="flex flex-wrap justify-center gap-3 max-w-4xl mx-auto">
             {city.nearbyAreas.map((area) => (
               <span key={area} className="inline-flex items-center gap-1.5 px-4 py-2 bg-white rounded-full border border-gray-200 text-sm text-gray-700 shadow-sm">
-                <MapPin size={12} className="text-blue-500" /> {area}
+                <MapPin size={12} className="text-gold-600" /> {area}
               </span>
             ))}
           </div>
@@ -303,19 +303,19 @@ export default function CityLanding({ city }: { city: CityData }) {
       {/* Testimonials */}
       <section className="py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-4">Customer Reviews in {city.name}</h2>
+          <h2 className="font-display text-3xl font-bold text-royal-900 text-center mb-4">Customer Reviews in {city.name}</h2>
           <p className="text-gray-500 text-center mb-12">Real reviews from {city.name} customers who trusted VATTAMS</p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {city.testimonials.map((t, idx) => (
               <div key={idx} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                 <div className="flex items-center gap-1 mb-3">
                   {[...Array(t.rating)].map((_, i) => (
-                    <Star key={i} size={16} className="text-amber-400 fill-amber-400" />
+                    <Star key={i} size={16} className="text-gold-500 fill-gold-500" />
                   ))}
                 </div>
                 <p className="text-gray-600 text-sm leading-relaxed mb-4">"{t.text}"</p>
                 <div className="flex items-center gap-3 pt-3 border-t border-gray-50">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-700">
+                  <div className="w-10 h-10 rounded-full bg-royal-100 flex items-center justify-center font-bold text-royal-700">
                     {t.name.charAt(0)}
                   </div>
                   <div>
@@ -332,7 +332,7 @@ export default function CityLanding({ city }: { city: CityData }) {
       {/* FAQ */}
       <section className="bg-gray-50 py-16 md:py-20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-4">Frequently Asked Questions — {city.name}</h2>
+          <h2 className="font-display text-3xl font-bold text-royal-900 text-center mb-4">Frequently Asked Questions — {city.name}</h2>
           <p className="text-gray-500 text-center mb-12">Everything you need to know about home services in {city.name}</p>
           <div className="space-y-3">
             {city.faqs.map((faq, idx) => (
@@ -352,13 +352,13 @@ export default function CityLanding({ city }: { city: CityData }) {
       {otherCities.length > 0 && (
       <section className="py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-4">Also Serving Other Cities in {city.state}</h2>
+          <h2 className="font-display text-3xl font-bold text-royal-900 text-center mb-4">Also Serving Other Cities in {city.state}</h2>
           <p className="text-gray-500 text-center mb-12">VATTAMS provides home services across {city.state}</p>
           <div className="flex flex-wrap justify-center gap-3">
             {otherCities.map((c) => (
               <button key={c.slug} onClick={() => { window.location.hash = `city-${c.slug}`; window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-white rounded-full border border-gray-200 text-sm text-gray-700 shadow-sm hover:border-blue-300 hover:text-blue-700 transition-colors">
-                <MapPin size={12} className="text-blue-500" /> {c.name}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-white rounded-full border border-gray-200 text-sm text-gray-700 shadow-sm hover:border-gold-300 hover:text-gold-700 transition-colors">
+                <MapPin size={12} className="text-gold-600" /> {c.name}
               </button>
             ))}
           </div>
@@ -367,17 +367,17 @@ export default function CityLanding({ city }: { city: CityData }) {
       )}
 
       {/* CTA */}
-      <section className="bg-gradient-to-br from-blue-900 to-blue-800 py-16 md:py-20">
+      <section className="bg-gradient-to-br from-royal-950 to-royal-800 py-16 md:py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">Ready to Book a Service in {city.name}?</h2>
-          <p className="text-blue-100 mb-8 text-lg">Get verified technicians at your doorstep in {city.name} with transparent pricing and a 30-day warranty.</p>
+          <p className="text-royal-100 mb-8 text-lg">Get verified technicians at your doorstep in {city.name} with transparent pricing and a 30-day warranty.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button onClick={() => navigate('booking')}
-              className="flex items-center justify-center gap-2 px-8 py-4 bg-amber-500 hover:bg-amber-600 text-blue-900 font-bold rounded-xl transition-colors shadow-lg">
+              className="flex items-center justify-center gap-2 px-8 py-4 bg-gold-500 hover:bg-gold-400 text-royal-950 font-bold rounded-xl transition-colors shadow-lg">
               Book Now <ArrowRight size={18} />
             </button>
             <button onClick={() => navigate('join-technician')}
-              className="flex items-center justify-center gap-2 px-8 py-4 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition-colors shadow-lg">
+              className="flex items-center justify-center gap-2 px-8 py-4 bg-wine-600 hover:bg-wine-500 text-white font-bold rounded-xl transition-colors shadow-lg">
               <Briefcase size={18} /> Join as Technician
             </button>
             <a href="https://wa.me/918189800757" target="_blank" rel="noreferrer"
