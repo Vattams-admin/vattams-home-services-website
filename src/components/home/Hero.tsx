@@ -15,7 +15,7 @@ export default function Hero() {
           alt="Indian Home"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-950/95 via-blue-900/80 to-blue-800/50" />
+        <div className="absolute inset-0 bg-gradient-to-r from-royal-950/95 via-royal-900/80 to-royal-800/50" />
       </div>
 
       {/* Floating particles */}
@@ -40,20 +40,20 @@ export default function Hero() {
         <div className="max-w-3xl">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 mb-6">
-            <Star size={14} className="text-amber-400 fill-amber-400" />
+            <Star size={14} className="text-gold-400 fill-gold-400" />
             <span className="text-white/90 text-sm font-medium">India's #1 Home Service Platform</span>
           </div>
 
           {/* Headline */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white leading-tight mb-6">
+          <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-bold text-white leading-tight mb-6">
             Professional Home Services{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-300">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold-400 to-gold-300">
               Across India
             </span>
           </h1>
 
           {/* Subtitle */}
-          <p className="text-blue-100 text-lg md:text-xl leading-relaxed mb-10 max-w-2xl">
+          <p className="text-royal-100 text-lg md:text-xl leading-relaxed mb-10 max-w-2xl">
             AC, Washing Machine, Refrigerator, Electrical, Plumbing and Home Appliance Services — 
             by verified technicians at your doorstep.
           </p>
@@ -62,7 +62,7 @@ export default function Hero() {
           <div className="flex flex-wrap gap-4 mb-12">
             <button
               onClick={() => navigate('booking')}
-              className="group flex items-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-2xl shadow-blue-900/50 transition-all duration-300 hover:scale-105"
+              className="group flex items-center gap-2 px-8 py-4 bg-royal-700 hover:bg-royal-600 text-white font-bold rounded-xl shadow-2xl shadow-royal-900/50 transition-all duration-300 hover:scale-105"
             >
               <Calendar size={18} />
               Book Service
@@ -70,7 +70,7 @@ export default function Hero() {
             </button>
             <button
               onClick={() => navigate('join-technician')}
-              className="group flex items-center gap-2 px-8 py-4 bg-orange-500 hover:bg-orange-400 text-white font-bold rounded-xl shadow-2xl shadow-orange-900/50 transition-all duration-300 hover:scale-105"
+              className="group flex items-center gap-2 px-8 py-4 bg-wine-600 hover:bg-wine-500 text-white font-bold rounded-xl shadow-2xl shadow-wine-900/50 transition-all duration-300 hover:scale-105"
             >
               <Briefcase size={18} />
               Join as a Technician
@@ -92,7 +92,7 @@ export default function Hero() {
             ].map((s) => (
               <div key={s.label} className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 text-center">
                 <div className="text-2xl font-extrabold text-white">{s.value}</div>
-                <div className="text-blue-200 text-xs font-medium mt-0.5">{s.label}</div>
+                <div className="text-gold-200/90 text-xs font-medium mt-0.5">{s.label}</div>
               </div>
             ))}
           </div>
