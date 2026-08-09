@@ -2,6 +2,60 @@
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
+    extend: {
+      colors: {
+        royal: {
+          50: '#F1EEFA',
+          100: '#E2D9F3',
+          200: '#C4B3E6',
+          300: '#9C82D0',
+          400: '#6F4FB0',
+          500: '#4C2F8C',
+          600: '#3A2170',
+          700: '#2B1856',
+          800: '#1E1040',
+          900: '#150B2E',
+          950: '#0D0620',
+        },
+        gold: {
+          50: '#FBF6E7',
+          100: '#F5E9C2',
+          200: '#EBD48A',
+          300: '#DDBB56',
+          400: '#D4AF37',
+          500: '#C9A227',
+          600: '#A9841A',
+          700: '#846614',
+          800: '#5F4A0F',
+          900: '#3D2F0A',
+        },
+        ivory: {
+          DEFAULT: '#FAF6EC',
+          dark: '#F2EBDA',
+        },
+        wine: {
+          50: '#FBEDEF',
+          100: '#F3D2D8',
+          200: '#E4A3AF',
+          300: '#CE6E82',
+          400: '#A83E56',
+          500: '#7F2740',
+          600: '#661D33',
+          700: '#4F1627',
+          800: '#39101C',
+          900: '#240A12',
+        },
+      },
+      fontFamily: {
+        display: ['"Playfair Display"', 'serif'],
+      },
+    },
+  },
+  plugins: [],
+};/** @type {import('tailwindcss').Config} */
+export default {
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  theme: {
     extend: {},
   },
   plugins: [],
