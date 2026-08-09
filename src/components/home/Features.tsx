@@ -5,56 +5,56 @@ const features = [
     icon: ShieldCheck,
     title: 'Verified Technicians',
     description: 'All our technicians are background-verified, trained, and certified.',
-    gradient: 'from-blue-500 to-blue-700',
+    gradient: 'from-gold-500 to-gold-700',
   },
   {
     icon: BadgeCheck,
     title: 'Transparent Pricing',
     description: 'No hidden charges. Get clear pricing before work begins.',
-    gradient: 'from-emerald-500 to-teal-600',
+    gradient: 'from-gold-400 to-gold-600',
   },
   {
     icon: Clock,
     title: 'Same Day Service',
     description: 'Book now and get service on the same day in most cities.',
-    gradient: 'from-amber-500 to-orange-500',
+    gradient: 'from-gold-500 to-gold-700',
   },
   {
     icon: Package,
     title: 'Genuine Spare Parts',
     description: 'We use only OEM-grade spare parts for all repairs.',
-    gradient: 'from-purple-500 to-indigo-600',
+    gradient: 'from-gold-400 to-gold-600',
   },
   {
     icon: Star,
     title: 'Service Warranty',
     description: '30-day service warranty on all repairs and installations.',
-    gradient: 'from-rose-500 to-pink-600',
+    gradient: 'from-gold-500 to-gold-700',
   },
   {
     icon: Radio,
     title: 'Live Booking Status',
     description: 'Track your booking status in real-time from your phone.',
-    gradient: 'from-cyan-500 to-sky-600',
+    gradient: 'from-gold-400 to-gold-600',
   },
 ];
 
 export default function Features() {
   return (
-    <section className="py-20 bg-gradient-to-br from-blue-950 via-blue-900 to-indigo-900 relative overflow-hidden">
+    <section className="py-20 bg-gradient-to-br from-royal-950 via-royal-900 to-royal-800 relative overflow-hidden">
       {/* Background decoration */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(59,130,246,0.2),transparent_50%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(99,102,241,0.15),transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(212,175,55,0.15),transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(156,130,208,0.12),transparent_50%)]" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-14">
-          <div className="inline-flex items-center gap-2 bg-white/10 text-blue-200 rounded-full px-4 py-1.5 text-sm font-semibold mb-4">
+          <div className="inline-flex items-center gap-2 bg-white/10 text-gold-300 rounded-full px-4 py-1.5 text-sm font-semibold mb-4">
             Why Choose Us
           </div>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-white mb-4">
             The VATTAMS Advantage
           </h2>
-          <p className="text-blue-200 max-w-xl mx-auto text-base md:text-lg">
+          <p className="text-royal-100 max-w-xl mx-auto text-base md:text-lg">
             We go beyond repairs — we deliver peace of mind with every service.
           </p>
         </div>
@@ -71,7 +71,7 @@ export default function Features() {
                   <Icon size={22} className="text-white" />
                 </div>
                 <h3 className="text-white font-bold text-base mb-2">{f.title}</h3>
-                <p className="text-blue-200/80 text-sm leading-relaxed">{f.description}</p>
+                <p className="text-royal-100/80 text-sm leading-relaxed">{f.description}</p>
               </div>
             );
           })}
