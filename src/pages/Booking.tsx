@@ -114,9 +114,10 @@ export default function Booking() {
 
     setSubmitting(false);
     if (error) {
-      alert('Booking failed. Please try again or call us.');
-      return;
-    }
+  console.error('BOOKING ERROR:', error);
+  alert(`Booking failed: ${error.message}`);
+  return;
+}
     setSuccess({ number: data.booking_number, id: data.id });
 
     if (couponResult?.valid && couponResult.coupon) {
