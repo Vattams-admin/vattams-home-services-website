@@ -19,13 +19,13 @@ export default function Contact() {
   return (
     <div className="pt-20 md:pt-24">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-blue-950 via-blue-900 to-indigo-900 py-16 md:py-20">
+      <section className="bg-gradient-to-br from-royal-950 via-royal-900 to-royal-800 py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 text-blue-200 rounded-full px-4 py-1.5 text-sm font-semibold mb-4">
+          <div className="inline-flex items-center gap-2 bg-white/10 text-gold-300 rounded-full px-4 py-1.5 text-sm font-semibold mb-4">
             Get in Touch
           </div>
-          <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-4">Contact Us</h1>
-          <p className="text-blue-200 max-w-xl mx-auto text-base md:text-lg">
+          <h1 className="font-display text-3xl md:text-5xl font-bold text-white mb-4">Contact Us</h1>
+          <p className="text-royal-100 max-w-xl mx-auto text-base md:text-lg">
             Have a question? We're here to help. Reach out and we'll respond within 24 hours.
           </p>
         </div>
@@ -36,13 +36,13 @@ export default function Contact() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Contact Info */}
             <div>
-              <h2 className="text-2xl font-extrabold text-gray-900 mb-6">Contact Information</h2>
+              <h2 className="font-display text-2xl font-bold text-royal-900 mb-6">Contact Information</h2>
               <div className="space-y-4">
                 {[
-                  { icon: Phone, label: 'Call Us', value: '+91 81898 00757', href: 'tel:+918189800757', color: 'bg-blue-600' },
+                  { icon: Phone, label: 'Call Us', value: '+91 81898 00757', href: 'tel:+918189800757', color: 'bg-royal-800' },
                   { icon: MessageCircle, label: 'WhatsApp', value: 'Chat with us', href: 'https://wa.me/918189800757', color: 'bg-green-500' },
-                  { icon: Mail, label: 'Email', value: 'admin@vattams.net', href: 'mailto:admin@vattams.net', color: 'bg-amber-500' },
-                  { icon: MapPin, label: 'Service Area', value: 'Across India', href: '#', color: 'bg-rose-500' },
+                  { icon: Mail, label: 'Email', value: 'admin@vattams.net', href: 'mailto:admin@vattams.net', color: 'bg-gold-600' },
+                  { icon: MapPin, label: 'Service Area', value: 'Across India', href: '#', color: 'bg-wine-600' },
                 ].map((c) => {
                   const Icon = c.icon;
                   return (
@@ -70,7 +70,7 @@ export default function Contact() {
                 <SocialLinks variant="contact" />
               </div>
 
-              <div className="mt-8 bg-blue-50 rounded-2xl p-6">
+              <div className="mt-8 bg-gold-50 rounded-2xl p-6">
                 <h3 className="font-bold text-gray-900 mb-2">Business Hours</h3>
                 <div className="space-y-1 text-sm text-gray-600">
                   <div className="flex justify-between"><span>Monday - Saturday</span><span className="font-medium">7:00 AM - 9:00 PM</span></div>
@@ -95,14 +95,14 @@ export default function Contact() {
 
             {/* Contact Form */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
-              <h2 className="text-2xl font-extrabold text-gray-900 mb-6">Send a Message</h2>
+              <h2 className="font-display text-2xl font-bold text-royal-900 mb-6">Send a Message</h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Your Name</label>
                   <input
                     type="text" required value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all"
                     placeholder="Enter your name"
                   />
                 </div>
@@ -112,7 +112,7 @@ export default function Contact() {
                     <input
                       type="email" required value={form.email}
                       onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all"
                       placeholder="you@example.com"
                     />
                   </div>
@@ -121,7 +121,7 @@ export default function Contact() {
                     <input
                       type="tel" required value={form.phone}
                       onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all"
                       placeholder="+91 81898 00757"
                     />
                   </div>
@@ -131,13 +131,13 @@ export default function Contact() {
                   <textarea
                     required rows={5} value={form.message}
                     onChange={(e) => setForm({ ...form, message: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all resize-none"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all resize-none"
                     placeholder="How can we help you?"
                   />
                 </div>
                 <button
                   type="submit" disabled={status === 'sending'}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold rounded-xl transition-colors shadow-lg shadow-blue-200"
+                  className="w-full flex items-center justify-center gap-2 py-3.5 bg-royal-800 hover:bg-royal-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors shadow-lg shadow-royal-200"
                 >
                   {status === 'sending' ? (
                     <><Loader size={18} className="animate-spin" /> Sending...</>
@@ -161,8 +161,8 @@ export default function Contact() {
       {/* MSME Trust Badge */}
       <section className="py-12 bg-gray-50">
         <div className="max-w-3xl mx-auto px-4 text-center">
-          <div className="inline-flex flex-col items-center gap-2 bg-white rounded-2xl border border-amber-200 shadow-sm px-8 py-6">
-            <div className="inline-flex items-center gap-2 text-amber-600">
+          <div className="inline-flex flex-col items-center gap-2 bg-white rounded-2xl border border-gold-200 shadow-sm px-8 py-6">
+            <div className="inline-flex items-center gap-2 text-gold-700">
               <ShieldCheck size={20} />
               <span className="font-bold text-sm uppercase tracking-wider">Government of India MSME Registered</span>
             </div>
