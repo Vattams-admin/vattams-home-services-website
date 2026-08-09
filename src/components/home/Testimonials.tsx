@@ -56,10 +56,10 @@ export default function Testimonials() {
     <section className="py-20 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-14">
-          <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 rounded-full px-4 py-1.5 text-sm font-semibold mb-4">
+          <div className="inline-flex items-center gap-2 bg-gold-50 text-gold-700 rounded-full px-4 py-1.5 text-sm font-semibold mb-4">
             Customer Reviews
           </div>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-royal-900 mb-4">
             What Our Customers Say
           </h2>
           <p className="text-gray-500 max-w-xl mx-auto">
@@ -73,7 +73,7 @@ export default function Testimonials() {
               key={t.name}
               className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md p-6 transition-all duration-300 hover:-translate-y-0.5 relative"
             >
-              <Quote className="absolute top-4 right-4 text-blue-100" size={32} />
+              <Quote className="absolute top-4 right-4 text-gold-100" size={32} />
               <div className="flex items-center gap-3 mb-4">
                 <img
                   src={t.avatar}
@@ -87,11 +87,11 @@ export default function Testimonials() {
               </div>
               <div className="flex gap-0.5 mb-3">
                 {[...Array(t.rating)].map((_, i) => (
-                  <Star key={i} size={13} className="text-amber-400 fill-amber-400" />
+                  <Star key={i} size={13} className="text-gold-500 fill-gold-500" />
                 ))}
               </div>
               <p className="text-gray-600 text-sm leading-relaxed mb-3">"{t.text}"</p>
-              <span className="inline-block bg-blue-50 text-blue-600 text-xs font-medium px-2.5 py-1 rounded-full">
+              <span className="inline-block bg-royal-50 text-royal-700 text-xs font-medium px-2.5 py-1 rounded-full">
                 {t.service}
               </span>
             </div>
