@@ -33,7 +33,7 @@ export default function About() {
   return (
     <div className="pt-20 md:pt-24">
       {/* Hero */}
-      <section className="relative bg-gradient-to-br from-blue-950 via-blue-900 to-indigo-900 py-16 md:py-20 overflow-hidden">
+      <section className="relative bg-gradient-to-br from-royal-950 via-royal-900 to-royal-800 py-16 md:py-20 overflow-hidden">
         <div className="absolute inset-0 opacity-20">
           <img
             src="https://images.pexels.com/photos/8961065/pexels-photo-8961065.jpeg?auto=compress&cs=tinysrgb&w=1600&q=80"
@@ -42,13 +42,13 @@ export default function About() {
           />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 text-blue-200 rounded-full px-4 py-1.5 text-sm font-semibold mb-4">
+          <div className="inline-flex items-center gap-2 bg-white/10 text-gold-300 rounded-full px-4 py-1.5 text-sm font-semibold mb-4">
             About Us
           </div>
-          <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-4">
+          <h1 className="font-display text-3xl md:text-5xl font-bold text-white mb-4">
             Service With Care
           </h1>
-          <p className="text-blue-200 max-w-xl mx-auto text-base md:text-lg">
+          <p className="text-royal-100 max-w-xl mx-auto text-base md:text-lg">
             VATTAMS Home Services is India's trusted home appliance repair and maintenance platform.
           </p>
         </div>
@@ -59,7 +59,7 @@ export default function About() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
             <div>
-              <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-4">Our Story</h2>
+              <h2 className="font-display text-2xl md:text-3xl font-bold text-royal-900 mb-4">Our Story</h2>
               <p className="text-gray-600 leading-relaxed mb-4">
                 Founded with a mission to bring reliable home services to every household in India,
                 VATTAMS Home Services has grown into a trusted platform connecting customers with
@@ -75,7 +75,7 @@ export default function About() {
               </p>
               <button
                 onClick={() => navigate('founder')}
-                className="mt-4 inline-flex items-center gap-2 text-blue-700 font-semibold hover:text-blue-800"
+                className="mt-4 inline-flex items-center gap-2 text-gold-700 font-semibold hover:text-gold-800"
               >
                 Meet Our Founder →
               </button>
@@ -86,9 +86,9 @@ export default function About() {
                 alt="Technician at work"
                 className="rounded-2xl shadow-xl w-full object-cover aspect-[4/3]"
               />
-              <div className="absolute -bottom-4 -left-4 bg-blue-600 text-white rounded-xl p-4 shadow-lg hidden sm:block">
+              <div className="absolute -bottom-4 -left-4 bg-royal-800 text-white rounded-xl p-4 shadow-lg hidden sm:block border border-gold-500/30">
                 <div className="text-2xl font-extrabold">10,000+</div>
-                <div className="text-xs text-blue-100">Services Completed</div>
+                <div className="text-xs text-gold-200">Services Completed</div>
               </div>
             </div>
           </div>
@@ -98,7 +98,7 @@ export default function About() {
       {/* What We Fix — image gallery */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 text-center mb-3">What We Fix</h2>
+          <h2 className="font-display text-2xl md:text-3xl font-bold text-royal-900 text-center mb-3">What We Fix</h2>
           <p className="text-gray-500 text-center mb-10 max-w-xl mx-auto">
             A glimpse of our certified technicians at work across homes in India
           </p>
@@ -125,9 +125,9 @@ export default function About() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { icon: Target, title: 'Our Mission', text: 'To make home services accessible, affordable, and reliable for every household in India.', gradient: 'from-blue-500 to-blue-700' },
-              { icon: Eye, title: 'Our Vision', text: 'To be India\'s most trusted home service platform, known for quality and care.', gradient: 'from-amber-500 to-orange-500' },
-              { icon: Heart, title: 'Our Values', text: 'Trust, transparency, and customer-first thinking in everything we do.', gradient: 'from-emerald-500 to-teal-600' },
+              { icon: Target, title: 'Our Mission', text: 'To make home services accessible, affordable, and reliable for every household in India.', gradient: 'from-royal-700 to-royal-900' },
+              { icon: Eye, title: 'Our Vision', text: 'To be India\'s most trusted home service platform, known for quality and care.', gradient: 'from-gold-500 to-gold-700' },
+              { icon: Heart, title: 'Our Values', text: 'Trust, transparency, and customer-first thinking in everything we do.', gradient: 'from-royal-600 to-royal-800' },
             ].map((v) => {
               const Icon = v.icon;
               return (
@@ -135,7 +135,7 @@ export default function About() {
                   <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${v.gradient} flex items-center justify-center mx-auto mb-4 shadow-lg`}>
                     <Icon size={26} className="text-white" />
                   </div>
-                  <h3 className="font-extrabold text-gray-900 text-lg mb-2">{v.title}</h3>
+                  <h3 className="font-display font-bold text-royal-900 text-lg mb-2">{v.title}</h3>
                   <p className="text-gray-500 text-sm leading-relaxed">{v.text}</p>
                 </div>
               );
@@ -145,7 +145,7 @@ export default function About() {
       </section>
 
       {/* Stats */}
-      <section className="py-16 bg-gradient-to-br from-blue-950 via-blue-900 to-indigo-900">
+      <section className="py-16 bg-gradient-to-br from-royal-950 via-royal-900 to-royal-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
@@ -158,10 +158,10 @@ export default function About() {
               return (
                 <div key={s.label} className="text-center">
                   <div className="w-14 h-14 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center mx-auto mb-3">
-                    <Icon size={24} className="text-blue-200" />
+                    <Icon size={24} className="text-gold-300" />
                   </div>
                   <div className="text-3xl font-extrabold text-white">{s.value}</div>
-                  <div className="text-blue-200 text-sm mt-1">{s.label}</div>
+                  <div className="text-gold-200/90 text-sm mt-1">{s.label}</div>
                 </div>
               );
             })}
@@ -172,7 +172,7 @@ export default function About() {
       {/* Why Trust Us */}
       <section className="py-16 bg-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 text-center mb-10">
+          <h2 className="font-display text-2xl md:text-3xl font-bold text-royal-900 text-center mb-10">
             Why Customers Trust Us
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -184,8 +184,8 @@ export default function About() {
             ].map((item) => {
               const Icon = item.icon;
               return (
-                <div key={item.title} className="flex gap-4 p-6 bg-blue-50 rounded-2xl">
-                  <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center shrink-0">
+                <div key={item.title} className="flex gap-4 p-6 bg-gold-50 rounded-2xl">
+                  <div className="w-12 h-12 rounded-xl bg-royal-800 flex items-center justify-center shrink-0">
                     <Icon size={22} className="text-white" />
                   </div>
                   <div>
@@ -202,7 +202,7 @@ export default function About() {
       {/* Cities We Serve — full directory linking to every city page */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 text-center mb-3">Cities We Serve</h2>
+          <h2 className="font-display text-2xl md:text-3xl font-bold text-royal-900 text-center mb-3">Cities We Serve</h2>
           <p className="text-gray-500 text-center mb-10 max-w-xl mx-auto">
             VATTAMS operates in {cities.length}+ cities across India — tap a city to see local services
           </p>
@@ -215,9 +215,9 @@ export default function About() {
                     <button
                       key={c.slug}
                       onClick={() => goToCity(c.slug)}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-white rounded-full border border-gray-200 text-sm text-gray-700 shadow-sm hover:border-blue-300 hover:text-blue-700 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-white rounded-full border border-gray-200 text-sm text-gray-700 shadow-sm hover:border-gold-300 hover:text-gold-700 transition-colors"
                     >
-                      <MapPin size={12} className="text-blue-500" /> {c.name}
+                      <MapPin size={12} className="text-gold-600" /> {c.name}
                     </button>
                   ))}
                 </div>
@@ -230,8 +230,8 @@ export default function About() {
       {/* MSME Trust Badge */}
       <section className="py-12 bg-white">
         <div className="max-w-3xl mx-auto px-4 text-center">
-          <div className="inline-flex flex-col items-center gap-2 bg-gray-50 rounded-2xl border border-amber-200 shadow-sm px-8 py-6">
-            <div className="inline-flex items-center gap-2 text-amber-600">
+          <div className="inline-flex flex-col items-center gap-2 bg-gray-50 rounded-2xl border border-gold-200 shadow-sm px-8 py-6">
+            <div className="inline-flex items-center gap-2 text-gold-700">
               <ShieldCheck size={20} />
               <span className="font-bold text-sm uppercase tracking-wider">Government of India MSME Registered</span>
             </div>
