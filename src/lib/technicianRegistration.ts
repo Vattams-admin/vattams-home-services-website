@@ -335,14 +335,42 @@ export async function uploadDocument(
 
     const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
     const fileName =`${technicianMobile}/${docType}.${ext}`;
-    const { error } = await supabase.storage
-      .from('technician-docs')
-      .upload(fileName, file, { upsert: true });
-
-    if (error) {
-      console.error(error);
-      throw error;
+    const { error } = await supabase
+  .from('technicians')
+  .insert([
+    {
+      full_name: form.full_name,
+      mobile: form.mobile,
+      whatsapp_number: form.whatsapp_number,
+      email: form.email || null,
+      city: form.city,
+      area: form.area,
+      pincode: form.pincode,
+      service_categories: form.service_categories,
+      experience_years: Number(form.experience_years),
+      available_days: form.available_days,
+      working_time: form.working_time,
+      has_vehicle: form.has_vehicle,
+      has_tools: form.has_tools,
+      aadhaar_url: form.aadhaar_url,
+      pan_url: form.pan_url,
+      dl_url: form.dl_url || null,
+      profile_photo_url: form.profile_photo_url,
+      bank_name: form.bank_name,
+      bank_holder_name: form.bank_holder_name,
+      bank_account_number: form.bank_account_number,
+      bank_ifsc: form.bank_ifsc,
+      upi_id: form.upi_id || null,
+      profile_score: score,
+      status: 'pending'
     }
+  ]);
+
+if (error) {
+  throw new Error(error.message);
+}
+
+return { success: true };
 
     const { data } = supabase.storage
       .from('technician-docs')
