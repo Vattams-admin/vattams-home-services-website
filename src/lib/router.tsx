@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from './supabase';
 
 export type Page =
   | 'home'
@@ -44,56 +43,87 @@ interface RouteInfo {
   citySlug: string | null;
 }
 
-function getRouteFromHash(): RouteInfo {
-  const hash = window.location.hash.replace('#', '');
+const VALID_PAGES: Page[] = [
+  'home',
+  'services',
+  'about',
+  'founder',
+  'contact',
+  'booking',
+  'ai-assistant',
 
-  if (hash.startsWith('city-')) {
-    const slug = hash.replace('city-', '');
-    return { page: 'city-landing', citySlug: slug };
+  'customer-login',
+  'customer-register',
+  'customer-forgot',
+  'customer-profile',
+  'customer-bookings',
+  'customer-dashboard',
+  'customer-payments',
+  'customer-reviews',
+  'customer-support',
+
+  'admin-login',
+  'admin-dashboard',
+
+  'technician-register',
+  'technician-login',
+  'technician-dashboard',
+
+  'join-technician',
+  'not-found',
+];
+
+function getRouteFromHash(): RouteInfo {
+  const hash = window.location.hash.replace(/^#/, '').trim();
+
+  /*
+   * IMPORTANT:
+   * vattams.net/ MUST always open the public HOME page.
+   *
+   * Previously this was returning admin-login for the root URL.
+   * That caused:
+   *
+   * https://vattams.net/
+   *        ↓
+   * Admin Login
+   *
+   * Now:
+   *
+   * https://vattams.net/
+   *        ↓
+   * Home
+   */
+
+  if (!hash) {
+    return {
+      page: 'home',
+      citySlug: null,
+    };
   }
 
-  const valid: Page[] = [
-    'home','services','about','founder','contact','booking','ai-assistant',
-    'customer-login','customer-register','customer-forgot','customer-profile','customer-bookings',
-    'customer-dashboard','customer-payments','customer-reviews','customer-support',
-    'admin-login','admin-dashboard',
-    'technician-register','technician-login','technician-dashboard',
-    'join-technician','not-found',
-  ];
-  return { page: valid.includes(hash as Page) ? (hash as Page) : 'home', citySlug: null };
-}
+  /*
+   * City landing pages
+   *
+   * Example:
+   * #city-chennai
+   */
+  if (hash.startsWith('city-')) {
+    const slug = hash.replace(/^city-/, '');
 
-export function RouterProvider({ children }: { children: ReactNode }) {
-  const [route, setRoute] = useState<RouteInfo>(getRouteFromHash);
+    if (slug) {
+      return {
+        page: 'city-landing',
+        citySlug: slug,
+      };
+    }
 
-  useEffect(() => {
-    const onHashChange = () => setRoute(getRouteFromHash());
-    window.addEventListener('hashchange', onHashChange);
-    return () => window.removeEventListener('hashchange', onHashChange);
-  }, []);
+    return {
+      page: 'home',
+      citySlug: null,
+    };
+  }
 
-  const navigate = (p: Page) => {
-    window.location.hash = p;
-    setRoute({ page: p, citySlug: null });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        sessionStorage.setItem('vattams_admin', 'logged_in');
-        navigate('admin-dashboard');
-      }
-    });
-  }, []);
-
-  return (
-    <RouterContext.Provider value={{ page: route.page, navigate, citySlug: route.citySlug }}>
-      {children}
-    </RouterContext.Provider>
-  );
-}
-
-export function useRouter() {
-  return useContext(RouterContext);
-}
+  /*
+   * Normal hash routes
+   */
+ 
