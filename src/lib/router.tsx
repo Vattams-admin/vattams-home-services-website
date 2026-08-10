@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
 export type Page =
   | 'home'
@@ -51,7 +51,6 @@ const VALID_PAGES: Page[] = [
   'contact',
   'booking',
   'ai-assistant',
-
   'customer-login',
   'customer-register',
   'customer-forgot',
@@ -61,14 +60,11 @@ const VALID_PAGES: Page[] = [
   'customer-payments',
   'customer-reviews',
   'customer-support',
-
   'admin-login',
   'admin-dashboard',
-
   'technician-register',
   'technician-login',
   'technician-dashboard',
-
   'join-technician',
   'not-found',
 ];
@@ -76,24 +72,9 @@ const VALID_PAGES: Page[] = [
 function getRouteFromHash(): RouteInfo {
   const hash = window.location.hash.replace(/^#/, '').trim();
 
-  /*
-   * IMPORTANT:
-   * vattams.net/ MUST always open the public HOME page.
-   *
-   * Previously this was returning admin-login for the root URL.
-   * That caused:
-   *
-   * https://vattams.net/
-   *        ↓
-   * Admin Login
-   *
-   * Now:
-   *
-   * https://vattams.net/
-   *        ↓
-   * Home
-   */
-
+  // ROOT WEBSITE
+  // https://vattams.net/
+  // Always opens HOME.
   if (!hash) {
     return {
       page: 'home',
@@ -101,12 +82,8 @@ function getRouteFromHash(): RouteInfo {
     };
   }
 
-  /*
-   * City landing pages
-   *
-   * Example:
-   * #city-chennai
-   */
+  // CITY LANDING PAGE
+  // Example: #city-chennai
   if (hash.startsWith('city-')) {
     const slug = hash.replace(/^city-/, '');
 
@@ -123,9 +100,7 @@ function getRouteFromHash(): RouteInfo {
     };
   }
 
-  /*
-   * Normal hash routes
-   */
+  // NORMAL HASH ROUTES
   if (VALID_PAGES.includes(hash as Page)) {
     return {
       page: hash as Page,
@@ -133,9 +108,7 @@ function getRouteFromHash(): RouteInfo {
     };
   }
 
-  /*
-   * Unknown route
-   */
+  // UNKNOWN ROUTE
   return {
     page: 'not-found',
     citySlug: null,
@@ -151,12 +124,11 @@ export function RouterProvider({
     return getRouteFromHash();
   });
 
-  /*
-   * Listen for browser hash changes.
-   */
   useEffect(() => {
-    const onHashChange = () => {
-      setRoute(getRouteFromHash());
+    const handleHashChange = () => {
+      const nextRoute = getRouteFromHash();
+
+      setRoute(nextRoute);
 
       window.scrollTo({
         top: 0,
@@ -164,43 +136,14 @@ export function RouterProvider({
       });
     };
 
-    window.addEventListener('hashchange', onHashChange);
+    window.addEventListener('hashchange', handleHashChange);
 
     return () => {
-      window.removeEventListener('hashchange', onHashChange);
+      window.removeEventListener('hashchange', handleHashChange);
     };
   }, []);
 
-  /*
-   * IMPORTANT:
-   *
-   * Do NOT automatically redirect every Supabase session
-   * to admin-dashboard.
-   *
-   * A logged-in customer is NOT an admin.
-   * A logged-in technician is NOT an admin.
-   *
-   * Admin authentication should be handled by AdminLogin /
-   * AdminDashboard itself.
-   *
-   * Therefore there is intentionally NO:
-   *
-   * supabase.auth.getSession()
-   * navigate('admin-dashboard')
-   *
-   * here.
-   */
-
   const navigate = (page: Page) => {
-    /*
-     * Home
-     *
-     * navigate('home')
-     * results in:
-     * #home
-     *
-     * The root domain without a hash also resolves to Home.
-     */
     window.location.hash = page;
 
     setRoute({
