@@ -166,9 +166,14 @@ export default function CityLanding({ city }: { city: CityData }) {
       <section className="bg-gradient-to-br from-royal-950 via-royal-900 to-royal-800 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 bg-white/10 border border-gold-400/30 rounded-full px-4 py-1.5 mb-6">
-              <MapPin size={14} className="text-gold-400" />
-              <span className="text-sm font-medium text-gold-100">Serving {city.name}, {city.state}</span>
+            <div className="flex flex-wrap items-center gap-2 mb-6">
+              <div className="inline-flex items-center gap-2 bg-white/10 border border-gold-400/30 rounded-full px-4 py-1.5">
+                <MapPin size={14} className="text-gold-400" />
+                <span className="text-sm font-medium text-gold-100">Serving {city.name}, {city.state}</span>
+              </div>
+              <span className="inline-flex items-center bg-gold-500/20 border border-gold-400/30 rounded-full px-3 py-1.5 text-xs font-semibold text-gold-200 capitalize">
+                {city.tier} city
+              </span>
             </div>
             <h1 className="font-display text-3xl md:text-5xl font-bold leading-tight mb-4">{city.h1}</h1>
             <p className="text-lg text-royal-100 mb-8 leading-relaxed">{city.intro}</p>
