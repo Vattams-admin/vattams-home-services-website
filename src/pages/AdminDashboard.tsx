@@ -66,7 +66,7 @@ const statusOptions: BookingStatus[] = [
   'job_started',
   'job_completed',
   'completed',
-  'cancelled'
+  'cancelled',
 ];
 
 type Tab =
@@ -111,19 +111,27 @@ export default function AdminDashboard() {
   const [selectedTech, setSelectedTech] =
     useState<Technician | null>(null);
 
-  const [assignTechId, setAssignTechId] = useState('');
-  const [updating, setUpdating] = useState(false);
-  const [techUpdating, setTechUpdating] = useState(false);
+  const [assignTechId, setAssignTechId] =
+    useState('');
+
+  const [updating, setUpdating] =
+    useState(false);
+
+  const [techUpdating, setTechUpdating] =
+    useState(false);
 
   const [walletTxns, setWalletTxns] =
     useState<WalletTransaction[]>([]);
 
   const [recharges, setRecharges] =
     useState<
-      (WalletRecharge & { technician_name?: string })[]
+      (WalletRecharge & {
+        technician_name?: string;
+      })[]
     >([]);
 
-  const [walletUpdating, setWalletUpdating] = useState(false);
+  const [walletUpdating, setWalletUpdating] =
+    useState(false);
 
   const [selectedWalletTech, setSelectedWalletTech] =
     useState<Technician | null>(null);
@@ -178,7 +186,11 @@ export default function AdminDashboard() {
     useState<NotificationRow[]>([]);
 
   const [notifFilter, setNotifFilter] =
-    useState<'all' | 'unread' | 'read'>('all');
+    useState<
+      'all' |
+      'unread' |
+      'read'
+    >('all');
 
   const [announcementModal, setAnnouncementModal] =
     useState(false);
@@ -237,30 +249,15 @@ export default function AdminDashboard() {
       text: string;
     } | null>(null);
 
-  /*
-   * ============================================================
-   * ADMIN SESSION VERIFICATION
-   * ============================================================
-   *
-   * IMPORTANT:
-   * This project uses the custom admin-auth session system.
-   *
-   * Do NOT use:
-   * supabase.auth.getSession()
-   *
-   * AdminLogin stores:
-   * - vattams_admin
-   * - vattams_admin_email
-   * - vattams_admin_expires
-   */
-
   useEffect(() => {
     let mounted = true;
 
     const verifyAdmin = async () => {
       try {
         const adminToken =
-          sessionStorage.getItem('vattams_admin');
+          sessionStorage.getItem(
+            'vattams_admin'
+          );
 
         const expiresAt =
           sessionStorage.getItem(
@@ -269,8 +266,10 @@ export default function AdminDashboard() {
 
         if (
           !adminToken ||
-          (expiresAt &&
-            new Date(expiresAt) < new Date())
+          (
+            expiresAt &&
+            new Date(expiresAt) < new Date()
+          )
         ) {
           sessionStorage.removeItem(
             'vattams_admin'
@@ -280,16 +279,18 @@ export default function AdminDashboard() {
             'vattams_admin_expires'
           );
 
-          sessionStorage.removeItem(
-            'vattams_admin_email'
-          );
-
           if (mounted) {
             navigate('admin-login');
           }
 
           return;
         }
+
+        // AdminLogin uses the project's custom
+        // admin-auth session system.
+        // Do NOT use supabase.auth.getSession()
+        // here because admin login does not create
+        // a normal Supabase Auth session.
 
         if (mounted) {
           await loadData();
@@ -302,10 +303,6 @@ export default function AdminDashboard() {
 
         sessionStorage.removeItem(
           'vattams_admin'
-        );
-
-        sessionStorage.removeItem(
-          'vattams_admin_email'
         );
 
         sessionStorage.removeItem(
@@ -333,16 +330,18 @@ export default function AdminDashboard() {
       supabase
         .from('bookings')
         .select('*')
-        .order('created_at', {
-          ascending: false
-        }),
+        .order(
+          'created_at',
+          { ascending: false }
+        ),
 
       supabase
         .from('technicians')
         .select('*')
-        .order('created_at', {
-          ascending: false
-        }),
+        .order(
+          'created_at',
+          { ascending: false }
+        ),
     ]);
 
     if (bookingsRes.error) {
@@ -391,9 +390,10 @@ export default function AdminDashboard() {
       supabase
         .from('wallet_transactions')
         .select('*')
-        .order('created_at', {
-          ascending: false
-        })
+        .order(
+          'created_at',
+          { ascending: false }
+        )
         .limit(100),
 
       supabase
@@ -401,9 +401,10 @@ export default function AdminDashboard() {
         .select(
           '*, technician:technicians(full_name)'
         )
-        .order('created_at', {
-          ascending: false
-        })
+        .order(
+          'created_at',
+          { ascending: false }
+        )
         .limit(50),
     ]);
 
@@ -438,7 +439,7 @@ export default function AdminDashboard() {
                     { full_name: string }
                   >).technician
                 ).full_name
-              : undefined
+              : undefined,
         })
       )
     );
@@ -454,15 +455,18 @@ export default function AdminDashboard() {
       supabase
         .from('customers')
         .select('*')
-        .order('created_at', {
-          ascending: false
-        }),
+        .order(
+          'created_at',
+          { ascending: false }
+        ),
     ]);
 
     setPayments(allPay);
 
     if (custRes.data) {
-      setCustomers(custRes.data);
+      setCustomers(
+        custRes.data
+      );
     }
 
     if (custRes.error) {
@@ -498,23 +502,20 @@ export default function AdminDashboard() {
 
     prices.forEach((p) => {
       edits[p.id] = {
-        base_price: String(
-          p.base_price
-        ),
+        base_price:
+          String(p.base_price),
 
-        gst_rate: String(
-          p.gst_rate
-        ),
+        gst_rate:
+          String(p.gst_rate),
 
-        platform_fee: String(
-          p.platform_fee
-        ),
+        platform_fee:
+          String(p.platform_fee),
 
-        commission_rate: String(
-          p.commission_rate
-        ),
+        commission_rate:
+          String(p.commission_rate),
 
-        is_active: p.is_active,
+        is_active:
+          p.is_active,
       };
     });
 
@@ -579,7 +580,7 @@ export default function AdminDashboard() {
       setSocialMsg({
         type: 'error',
         text:
-          'Please fix the validation errors before saving.'
+          'Please fix the validation errors before saving.',
       });
 
       setSocialSaving(false);
@@ -596,7 +597,7 @@ export default function AdminDashboard() {
       setSocialMsg({
         type: 'success',
         text:
-          'Social media links saved successfully!'
+          'Social media links saved successfully!',
       });
 
       refreshSocialLinksCache();
@@ -607,7 +608,7 @@ export default function AdminDashboard() {
         type: 'error',
         text:
           result.error ??
-          'Failed to save settings.'
+          'Failed to save settings.',
       });
     }
 
@@ -620,7 +621,8 @@ export default function AdminDashboard() {
     }
 
     return bookings.filter(
-      (b) => b.status === filter
+      (b) =>
+        b.status === filter
     );
   }, [bookings, filter]);
 
@@ -630,9 +632,13 @@ export default function AdminDashboard() {
     }
 
     return technicians.filter(
-      (t) => t.status === techFilter
+      (t) =>
+        t.status === techFilter
     );
-  }, [technicians, techFilter]);
+  }, [
+    technicians,
+    techFilter
+  ]);
 
   const stats = useMemo(() => {
     const completedBookings =
@@ -646,9 +652,11 @@ export default function AdminDashboard() {
       completedBookings.reduce(
         (sum, b) =>
           sum +
-          (b.total_amount ??
+          (
+            b.total_amount ??
             b.amount ??
-            0),
+            0
+          ),
         0
       );
 
@@ -664,8 +672,10 @@ export default function AdminDashboard() {
       completedBookings.reduce(
         (sum, b) =>
           sum +
-          (b.commission_amount ??
-            0),
+          (
+            b.commission_amount ??
+            0
+          ),
         0
       );
 
@@ -673,7 +683,10 @@ export default function AdminDashboard() {
       completedBookings.reduce(
         (sum, b) =>
           sum +
-          (b.platform_fee ?? 0),
+          (
+            b.platform_fee ??
+            0
+          ),
         0
       );
 
@@ -685,14 +698,17 @@ export default function AdminDashboard() {
             (b.base_price ??
               b.amount ??
               0) -
-            (b.commission_amount ??
-              0)
+            (
+              b.commission_amount ??
+              0
+            )
           ),
         0
       );
 
     return {
-      total: bookings.length,
+      total:
+        bookings.length,
 
       pending:
         bookings.filter(
@@ -706,7 +722,9 @@ export default function AdminDashboard() {
             [
               'assigned',
               'accepted'
-            ].includes(b.status)
+            ].includes(
+              b.status
+            )
         ).length,
 
       inProgress:
@@ -716,7 +734,9 @@ export default function AdminDashboard() {
               'on_the_way',
               'in_progress',
               'job_started'
-            ].includes(b.status)
+            ].includes(
+              b.status
+            )
         ).length,
 
       completed:
@@ -725,7 +745,8 @@ export default function AdminDashboard() {
       cancelled:
         bookings.filter(
           (b) =>
-            b.status === 'cancelled'
+            b.status ===
+            'cancelled'
         ).length,
 
       revenue,
@@ -737,16 +758,21 @@ export default function AdminDashboard() {
       technicians:
         technicians.filter(
           (t) =>
-            t.status === 'active'
+            t.status ===
+            'active'
         ).length,
 
       pendingTechs:
         technicians.filter(
           (t) =>
-            t.status === 'pending'
+            t.status ===
+            'pending'
         ).length,
     };
-  }, [bookings, technicians]);
+  }, [
+    bookings,
+    technicians
+  ]);
 
   const updateStatus = async (
     id: string,
@@ -759,9 +785,12 @@ export default function AdminDashboard() {
       .update({
         status,
         updated_at:
-          new Date().toISOString()
+          new Date().toISOString(),
       })
-      .eq('id', id);
+      .eq(
+        'id',
+        id
+      );
 
     setBookings(
       (prev) =>
@@ -770,7 +799,7 @@ export default function AdminDashboard() {
             b.id === id
               ? {
                   ...b,
-                  status
+                  status,
                 }
               : b
         )
@@ -784,12 +813,13 @@ export default function AdminDashboard() {
           prev
             ? {
                 ...prev,
-                status
+                status,
               }
             : prev
       );
     }
 
+    // Send customer notification based on status
     const booking =
       bookings.find(
         (b) => b.id === id
@@ -797,7 +827,8 @@ export default function AdminDashboard() {
 
     if (booking) {
       if (
-        status === 'in_progress'
+        status ===
+        'in_progress'
       ) {
         await notifyCustomer.serviceStarted(
           booking.mobile_number,
@@ -805,7 +836,8 @@ export default function AdminDashboard() {
           booking.id
         );
       } else if (
-        status === 'completed'
+        status ===
+        'completed'
       ) {
         await notifyCustomer.serviceCompleted(
           booking.mobile_number,
@@ -813,7 +845,8 @@ export default function AdminDashboard() {
           booking.id
         );
       } else if (
-        status === 'cancelled'
+        status ===
+        'cancelled'
       ) {
         await Promise.all([
           notifyCustomer.bookingCancelled(
@@ -853,10 +886,11 @@ export default function AdminDashboard() {
         assigned_technician_id:
           assignTechId,
 
-        status: 'confirmed',
+        status:
+          'confirmed',
 
         updated_at:
-          new Date().toISOString()
+          new Date().toISOString(),
       })
       .eq(
         'id',
@@ -874,7 +908,9 @@ export default function AdminDashboard() {
       data: jobData,
       error: jobErr
     } = await supabase
-      .from('technician_jobs')
+      .from(
+        'technician_jobs'
+      )
       .insert({
         booking_id:
           selectedBooking.id,
@@ -882,7 +918,8 @@ export default function AdminDashboard() {
         technician_id:
           assignTechId,
 
-        status: 'assigned',
+        status:
+          'assigned',
       })
       .select()
       .single();
@@ -897,9 +934,11 @@ export default function AdminDashboard() {
     const assignedTech =
       technicians.find(
         (t) =>
-          t.id === assignTechId
+          t.id ===
+          assignTechId
       );
 
+    // Send notifications
     await Promise.all([
       notifyCustomer.technicianAssigned(
         selectedBooking.mobile_number,
@@ -929,7 +968,7 @@ export default function AdminDashboard() {
                   assigned_technician_id:
                     assignTechId,
                   status:
-                    'confirmed'
+                    'confirmed',
                 }
               : b
         )
@@ -951,48 +990,82 @@ export default function AdminDashboard() {
   ) => {
     setTechUpdating(true);
 
-    const updateData:
-      Record<string, unknown> = {
-      status
-    };
+    try {
+      const updateData:
+        Record<
+          string,
+          unknown
+        > = {
+        status,
+      };
 
-    if (
-      status === 'rejected' &&
-      reason
-    ) {
-      updateData.rejection_reason =
-        reason;
-    }
+      if (
+        status === 'active'
+      ) {
+        updateData.rejection_reason =
+          null;
 
-    if (
-      status === 'suspended' &&
-      reason
-    ) {
-      updateData.suspend_reason =
-        reason;
-    }
+        updateData.suspend_reason =
+          null;
+      } else if (
+        status === 'rejected' ||
+        status === 'inactive'
+      ) {
+        updateData.rejection_reason =
+          reason || null;
+      } else if (
+        status === 'suspended'
+      ) {
+        updateData.suspend_reason =
+          reason || null;
+      }
 
-    const { error } =
-      await supabase
+      // IMPORTANT: wait for the real database response.
+      const {
+        data: updatedTech,
+        error,
+      } = await supabase
         .from('technicians')
-        .update(updateData)
-        .eq('id', id);
+        .update(
+          updateData
+        )
+        .eq(
+          'id',
+          id
+        )
+        .select('*')
+        .single();
 
-    if (!error) {
-      const tech =
-        technicians.find(
-          (t) => t.id === id
+      if (error) {
+        console.error(
+          '[AdminDashboard] technician status update error:',
+          error
         );
 
+        throw new Error(
+          error.message
+        );
+      }
+
+      if (!updatedTech) {
+        throw new Error(
+          'Technician was not updated in the database.'
+        );
+      }
+
+      console.log(
+        '[AdminDashboard] technician status saved:',
+        updatedTech.id,
+        updatedTech.status
+      );
+
+      // Replace the local row with the exact row returned by Supabase.
       setTechnicians(
         (prev) =>
           prev.map(
             (t) =>
               t.id === id
-                ? {
-                    ...t,
-                    status
-                  }
+                ? updatedTech
                 : t
           )
       );
@@ -1001,34 +1074,82 @@ export default function AdminDashboard() {
         selectedTech?.id === id
       ) {
         setSelectedTech(
-          (prev) =>
-            prev
-              ? {
-                  ...prev,
-                  status
-                }
-              : prev
+          updatedTech
         );
       }
 
-      if (tech) {
+      // Notification happens only after the database update succeeds.
+      if (
+        status === 'active'
+      ) {
+        await notifyTechnician.registrationApproved(
+          id,
+          updatedTech.full_name
+        );
+      } else if (
+        status === 'inactive' ||
+        status === 'rejected'
+      ) {
+        await notifyTechnician.registrationRejected(
+          id,
+          updatedTech.full_name
+        );
+      }
+
+      // Final database read: this guarantees the dashboard is showing
+      // the persisted value, not just React state.
+      const {
+        data: freshTech,
+        error: refreshError,
+      } = await supabase
+        .from('technicians')
+        .select('*')
+        .eq(
+          'id',
+          id
+        )
+        .single();
+
+      if (refreshError) {
+        console.error(
+          '[AdminDashboard] technician refresh error:',
+          refreshError
+        );
+      } else if (
+        freshTech
+      ) {
+        setTechnicians(
+          (prev) =>
+            prev.map(
+              (t) =>
+                t.id === id
+                  ? freshTech
+                  : t
+            )
+        );
+
         if (
-          status === 'active'
+          selectedTech?.id === id
         ) {
-          await notifyTechnician.registrationApproved(
-            id,
-            tech.full_name
-          );
-        } else {
-          await notifyTechnician.registrationRejected(
-            id,
-            tech.full_name
+          setSelectedTech(
+            freshTech
           );
         }
       }
-    }
+    } catch (error) {
+      console.error(
+        '[AdminDashboard] updateTechStatus failed:',
+        error
+      );
 
-    setTechUpdating(false);
+      alert(
+        error instanceof Error
+          ? error.message
+          : 'Failed to update technician status.'
+      );
+    } finally {
+      setTechUpdating(false);
+    }
   };
 
   const approveRecharge = async (
@@ -1036,19 +1157,26 @@ export default function AdminDashboard() {
   ) => {
     setWalletUpdating(true);
 
-    const { error } =
-      await supabase
-        .from('wallet_recharges')
-        .update({
-          status: 'approved',
-          approved_at:
-            new Date().toISOString(),
-          approved_by: 'admin',
-        })
-        .eq(
-          'id',
-          rechargeId
-        );
+    const {
+      error
+    } = await supabase
+      .from(
+        'wallet_recharges'
+      )
+      .update({
+        status:
+          'approved',
+
+        approved_at:
+          new Date().toISOString(),
+
+        approved_by:
+          'admin',
+      })
+      .eq(
+        'id',
+        rechargeId
+      );
 
     if (error) {
       console.error(
@@ -1060,13 +1188,15 @@ export default function AdminDashboard() {
         (prev) =>
           prev.map(
             (r) =>
-              r.id === rechargeId
+              r.id ===
+              rechargeId
                 ? {
                     ...r,
                     status:
                       'approved',
+
                     approved_at:
-                      new Date().toISOString()
+                      new Date().toISOString(),
                   }
                 : r
           )
@@ -1075,19 +1205,25 @@ export default function AdminDashboard() {
       const r =
         recharges.find(
           (x) =>
-            x.id === rechargeId
+            x.id ===
+            rechargeId
         );
 
       if (r) {
         await notifyTechnician.walletRechargeApproved(
           r.technician_id,
-          Number(r.amount)
+          Number(
+            r.amount
+          )
         );
 
         const {
-          data: updatedTech
+          data:
+            updatedTech
         } = await supabase
-          .from('technicians')
+          .from(
+            'technicians'
+          )
           .select('*')
           .eq(
             'id',
@@ -1095,7 +1231,9 @@ export default function AdminDashboard() {
           )
           .maybeSingle();
 
-        if (updatedTech) {
+        if (
+          updatedTech
+        ) {
           setTechnicians(
             (prev) =>
               prev.map(
@@ -1109,7 +1247,8 @@ export default function AdminDashboard() {
         }
 
         const {
-          data: newTxns
+          data:
+            newTxns
         } = await supabase
           .from(
             'wallet_transactions'
@@ -1118,12 +1257,15 @@ export default function AdminDashboard() {
           .order(
             'created_at',
             {
-              ascending: false
+              ascending:
+                false
             }
           )
           .limit(100);
 
-        if (newTxns) {
+        if (
+          newTxns
+        ) {
           setWalletTxns(
             newTxns
           );
@@ -1131,1817 +1273,940 @@ export default function AdminDashboard() {
       }
     }
 
-    setWalletUpdating(false);
-  };
-
-  const rejectRecharge = async (
-    rechargeId: string
-  ) => {
-    setWalletUpdating(true);
-
-    const { error } =
-      await supabase
-        .from('wallet_recharges')
-        .update({
-          status: 'rejected',
-          approved_at:
-            new Date().toISOString(),
-          approved_by: 'admin',
-        })
-        .eq(
-          'id',
-          rechargeId
-        );
-
-    if (error) {
-      console.error(
-        '[AdminDashboard] recharge reject error:',
-        error
-      );
-    } else {
-      setRecharges(
-        (prev) =>
-          prev.map(
-            (r) =>
-              r.id === rechargeId
-                ? {
-                    ...r,
-                    status:
-                      'rejected'
-                  }
-                : r
-          )
-      );
-
-      const r =
-        recharges.find(
-          (x) =>
-            x.id === rechargeId
-        );
-
-      if (r) {
-        await notifyTechnician.walletRechargeRejected(
-          r.technician_id,
-          Number(r.amount)
-        );
-      }
-    }
-
-    setWalletUpdating(false);
-  };
-
-  const toggleWalletLock = async (
-    techId: string,
-    lock: boolean
-  ) => {
-    setWalletUpdating(true);
-
-    const { error } =
-      await supabase
-        .from('technicians')
-        .update({
-          wallet_locked:
-            lock
-        })
-        .eq(
-          'id',
-          techId
-        );
-
-    if (error) {
-      console.error(
-        '[AdminDashboard] wallet lock toggle error:',
-        error
-      );
-    } else {
-      setTechnicians(
-        (prev) =>
-          prev.map(
-            (t) =>
-              t.id === techId
-                ? {
-                    ...t,
-                    wallet_locked:
-                      lock
-                  }
-                : t
-          )
-      );
-
-      if (
-        selectedWalletTech?.id ===
-        techId
-      ) {
-        setSelectedWalletTech(
-          (prev) =>
-            prev
-              ? {
-                  ...prev,
-                  wallet_locked:
-                    lock
-                }
-              : prev
-        );
-      }
-
-      if (lock) {
-        await notifyTechnician.accountLocked(
-          techId
-        );
-      } else {
-        await notifyTechnician.accountUnlocked(
-          techId
-        );
-      }
-    }
-
-    setWalletUpdating(false);
-  };
-
-  const deleteTechnician = async (
-    id: string
-  ) => {
-    if (
-      !confirm(
-        'Are you sure you want to delete this technician? This cannot be undone.'
-      )
-    ) {
-      return;
-    }
-
-    setTechUpdating(true);
-
-    const { error } =
-      await supabase
-        .from('technicians')
-        .delete()
-        .eq(
-          'id',
-          id
-        );
-
-    if (!error) {
-      setTechnicians(
-        (prev) =>
-          prev.filter(
-            (t) => t.id !== id
-          )
-      );
-
-      if (
-        selectedTech?.id === id
-      ) {
-        setSelectedTech(null);
-      }
-    }
-
-    setTechUpdating(false);
-  };
-
-  const verifyPayment = async (
-    paymentId: string,
-    status:
-      | 'success'
-      | 'failed'
-  ) => {
-    setPaymentUpdating(true);
-
-    const updated =
-      await updatePaymentStatus(
-        paymentId,
-        status,
-        undefined,
-        'admin'
-      );
-
-    if (updated) {
-      setPayments(
-        (prev) =>
-          prev.map(
-            (p) =>
-              p.payment_id ===
-              paymentId
-                ? updated
-                : p
-          )
-      );
-
-      if (
-        status === 'success'
-      ) {
-        await notifyAdmin.paymentReceived(
-          updated.payee_name ||
-            'Unknown',
-          Number(
-            updated.amount
-          ),
-          paymentId
-        );
-      } else {
-        await notifyAdmin.failedPayment(
-          updated.payee_name ||
-            'Unknown',
-          Number(
-            updated.amount
-          ),
-          paymentId
-        );
-      }
-
-      if (
-        status === 'success' &&
-        updated.purpose ===
-          'wallet_recharge' &&
-        updated.reference_id
-      ) {
-        const {
-          data: recharge
-        } = await supabase
-          .from(
-            'wallet_recharges'
-          )
-          .select('*')
-          .eq(
-            'technician_id',
-            updated.reference_id
-          )
-          .eq(
-            'status',
-            'pending'
-          )
-          .order(
-            'created_at',
-            {
-              ascending: false
-            }
-          )
-          .limit(1)
-          .maybeSingle();
-
-        if (recharge) {
-          await supabase
-            .from(
-              'wallet_recharges'
-            )
-            .update({
-              status:
-                'approved',
-              approved_at:
-                new Date().toISOString(),
-              approved_by:
-                'admin',
-            })
-            .eq(
-              'id',
-              recharge.id
-            );
-
-          await notifyTechnician.walletRechargeApproved(
-            recharge.technician_id,
-            Number(
-              recharge.amount
-            )
-          );
-        }
-      }
-    }
-
-    setPaymentUpdating(false);
-  };
-
-  const logout = () => {
-    sessionStorage.removeItem(
-      'vattams_admin'
+    setWalletUpdating(
+      false
     );
-
-    sessionStorage.removeItem(
-      'vattams_admin_email'
-    );
-
-    sessionStorage.removeItem(
-      'vattams_admin_expires'
-    );
-
-    navigate('home');
   };
-
-  if (loading) {
-    return (
-      <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-gray-50">
-        <Loader
-          className="animate-spin text-blue-600"
-          size={32}
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="pt-20 md:pt-24 min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <img
-              src="/logo.svg"
-              alt="VATTAMS"
-              className="h-14 w-auto rounded-xl"
-            />
-
-            <div>
-              <h1 className="text-xl md:text-2xl font-extrabold text-gray-900 flex items-center gap-2">
-                <LayoutDashboard
-                  size={22}
-                  className="text-blue-600"
-                />
-                Admin Dashboard
-              </h1>
-
-              <p className="text-gray-500 text-sm mt-0.5">
-                Manage bookings, technicians, and revenue.
-              </p>
+            <div className="text-2xl font-extrabold text-amber-600">
+              {payments.filter((p) => p.status === 'pending').length}
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <NotificationCenter
-              recipientType="admin"
-              recipientId="admin"
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+            <div className="text-xs text-green-500 font-semibold uppercase">
+              Successful
+            </div>
+            <div className="text-2xl font-extrabold text-green-600">
+              {payments.filter((p) => p.status === 'success').length}
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* ===================== CUSTOMERS TAB ===================== */}
+    {tab === 'customers' && (
+      <div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+          <h2 className="text-lg font-extrabold text-gray-900">
+            Customers
+          </h2>
+
+          <div className="relative w-full sm:w-72">
+            <Search
+              size={16}
+              className="absolute left-3 top-3 text-gray-400"
             />
 
-            <button
-              onClick={logout}
-              className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold rounded-xl transition-colors"
+            <input
+              value={customerFilter}
+              onChange={(e) =>
+                setCustomerFilter(e.target.value)
+              }
+              placeholder="Search customers..."
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm"
+            />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
+                    Name
+                  </th>
+
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
+                    Mobile
+                  </th>
+
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">
+                    Email
+                  </th>
+
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">
+                    City
+                  </th>
+
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden xl:table-cell">
+                    Joined
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-gray-50">
+                {customers
+                  .filter((c) => {
+                    const q =
+                      customerFilter
+                        .trim()
+                        .toLowerCase();
+
+                    if (!q) return true;
+
+                    return (
+                      String(c.full_name ?? '')
+                        .toLowerCase()
+                        .includes(q) ||
+                      String(c.mobile ?? '')
+                        .toLowerCase()
+                        .includes(q) ||
+                      String(c.email ?? '')
+                        .toLowerCase()
+                        .includes(q) ||
+                      String(c.city ?? '')
+                        .toLowerCase()
+                        .includes(q)
+                    );
+                  })
+                  .map((c) => (
+                    <tr
+                      key={c.id}
+                      className="hover:bg-gray-50"
+                    >
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                            <User
+                              size={14}
+                              className="text-blue-600"
+                            />
+                          </div>
+
+                          <span className="text-sm font-semibold text-gray-800">
+                            {c.full_name || '—'}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {c.mobile || '—'}
+                      </td>
+
+                      <td className="px-4 py-3 text-sm text-gray-600 hidden md:table-cell">
+                        {c.email || '—'}
+                      </td>
+
+                      <td className="px-4 py-3 text-sm text-gray-600 hidden lg:table-cell">
+                        {c.city || '—'}
+                      </td>
+
+                      <td className="px-4 py-3 text-xs text-gray-400 hidden xl:table-cell">
+                        {c.created_at
+                          ? new Date(
+                              c.created_at
+                            ).toLocaleDateString(
+                              'en-IN'
+                            )
+                          : '—'}
+                      </td>
+                    </tr>
+                  ))}
+
+                {customers.filter((c) => {
+                  const q =
+                    customerFilter
+                      .trim()
+                      .toLowerCase();
+
+                  if (!q) return true;
+
+                  return (
+                    String(c.full_name ?? '')
+                      .toLowerCase()
+                      .includes(q) ||
+                    String(c.mobile ?? '')
+                      .toLowerCase()
+                      .includes(q) ||
+                    String(c.email ?? '')
+                      .toLowerCase()
+                      .includes(q) ||
+                    String(c.city ?? '')
+                      .toLowerCase()
+                      .includes(q)
+                  );
+                }).length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="text-center py-12 text-gray-400 text-sm"
+                    >
+                      No customers found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* ===================== REPORTS TAB ===================== */}
+    {tab === 'reports' && (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-lg font-extrabold text-gray-900">
+            Reports & Analytics
+          </h2>
+
+          <p className="text-sm text-gray-500 mt-1">
+            Overview of booking performance and revenue.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <ReportCard
+            icon={Briefcase}
+            label="Total Bookings"
+            value={stats.total}
+          />
+
+          <ReportCard
+            icon={CheckCircle}
+            label="Completed"
+            value={stats.completed}
+          />
+
+          <ReportCard
+            icon={TrendingUp}
+            label="In Progress"
+            value={stats.inProgress}
+          />
+
+          <ReportCard
+            icon={XCircle}
+            label="Cancelled"
+            value={stats.cancelled}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <ReportMoneyCard
+            icon={DollarSign}
+            label="Total Revenue"
+            value={stats.revenue}
+          />
+
+          <ReportMoneyCard
+            icon={TrendingUp}
+            label="GST Collected"
+            value={stats.totalGST}
+          />
+
+          <ReportMoneyCard
+            icon={Wallet}
+            label="Commission"
+            value={stats.totalCommission}
+          />
+
+          <ReportMoneyCard
+            icon={Briefcase}
+            label="Technician Earnings"
+            value={stats.techEarnings}
+          />
+        </div>
+
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <h3 className="font-bold text-gray-900 mb-4">
+            Booking Status Breakdown
+          </h3>
+
+          <div className="space-y-3">
+            {statusOptions.map((status) => {
+              const count =
+                bookings.filter(
+                  (b) => b.status === status
+                ).length;
+
+              const percentage =
+                stats.total > 0
+                  ? Math.round(
+                      (count / stats.total) * 100
+                    )
+                  : 0;
+
+              return (
+                <div key={status}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-medium text-gray-700 capitalize">
+                      {status.replace('_', ' ')}
+                    </span>
+
+                    <span className="text-xs text-gray-400">
+                      {count} ({percentage}%)
+                    </span>
+                  </div>
+
+                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-blue-500 rounded-full"
+                      style={{
+                        width: `${percentage}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                <Users
+                  size={18}
+                  className="text-blue-600"
+                />
+              </div>
+
+              <div>
+                <div className="text-xs text-gray-400 font-medium">
+                  Active Technicians
+                </div>
+
+                <div className="text-xl font-extrabold text-gray-900">
+                  {stats.technicians}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                <Clock
+                  size={18}
+                  className="text-amber-600"
+                />
+              </div>
+
+              <div>
+                <div className="text-xs text-gray-400 font-medium">
+                  Pending Technicians
+                </div>
+
+                <div className="text-xl font-extrabold text-gray-900">
+                  {stats.pendingTechs}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center">
+                <CheckCircle
+                  size={18}
+                  className="text-green-600"
+                />
+              </div>
+
+              <div>
+                <div className="text-xs text-gray-400 font-medium">
+                  Completion Rate
+                </div>
+
+                <div className="text-xl font-extrabold text-gray-900">
+                  {stats.total > 0
+                    ? `${Math.round(
+                        (stats.completed /
+                          stats.total) *
+                          100
+                      )}%`
+                    : '0%'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* ===================== SOCIAL TAB ===================== */}
+    {tab === 'social' && (
+      <div className="max-w-3xl">
+        <div className="mb-6">
+          <h2 className="text-lg font-extrabold text-gray-900">
+            Social Media & Website
+          </h2>
+
+          <p className="text-sm text-gray-500 mt-1">
+            Manage the social links displayed across the website.
+          </p>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          {socialMsg && (
+            <div
+              className={`mb-5 p-3 rounded-xl text-sm font-medium ${
+                socialMsg.type === 'success'
+                  ? 'bg-green-50 text-green-700 border border-green-100'
+                  : 'bg-red-50 text-red-700 border border-red-100'
+              }`}
             >
-              <LogOut size={16} />
-              Logout
+              {socialMsg.text}
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <SocialInput
+              icon={Globe}
+              label="Google Business URL"
+              value={socialForm.google_business_url ?? ''}
+              onChange={(value) =>
+                setSocialForm((prev) => ({
+                  ...prev,
+                  google_business_url:
+                    value,
+                }))
+              }
+              error={
+                socialErrors.google_business_url
+              }
+            />
+
+            <SocialInput
+              icon={Facebook}
+              label="Facebook URL"
+              value={socialForm.facebook_url ?? ''}
+              onChange={(value) =>
+                setSocialForm((prev) => ({
+                  ...prev,
+                  facebook_url:
+                    value,
+                }))
+              }
+              error={
+                socialErrors.facebook_url
+              }
+            />
+
+            <SocialInput
+              icon={Instagram}
+              label="Instagram URL"
+              value={socialForm.instagram_url ?? ''}
+              onChange={(value) =>
+                setSocialForm((prev) => ({
+                  ...prev,
+                  instagram_url:
+                    value,
+                }))
+              }
+              error={
+                socialErrors.instagram_url
+              }
+            />
+
+            <SocialInput
+              icon={Twitter}
+              label="Twitter / X URL"
+              value={socialForm.twitter_url ?? ''}
+              onChange={(value) =>
+                setSocialForm((prev) => ({
+                  ...prev,
+                  twitter_url:
+                    value,
+                }))
+              }
+              error={
+                socialErrors.twitter_url
+              }
+            />
+
+            <SocialInput
+              icon={Youtube}
+              label="YouTube URL"
+              value={socialForm.youtube_url ?? ''}
+              onChange={(value) =>
+                setSocialForm((prev) => ({
+                  ...prev,
+                  youtube_url:
+                    value,
+                }))
+              }
+              error={
+                socialErrors.youtube_url
+              }
+            />
+
+            <SocialInput
+              icon={MessageCircle}
+              label="WhatsApp Number"
+              value={socialForm.whatsapp_number ?? ''}
+              onChange={(value) =>
+                setSocialForm((prev) => ({
+                  ...prev,
+                  whatsapp_number:
+                    value,
+                }))
+              }
+              error={
+                socialErrors.whatsapp_number
+              }
+            />
+
+            <SocialInput
+              icon={Globe}
+              label="Website URL"
+              value={socialForm.website_url ?? ''}
+              onChange={(value) =>
+                setSocialForm((prev) => ({
+                  ...prev,
+                  website_url:
+                    value,
+                }))
+              }
+              error={
+                socialErrors.website_url
+              }
+            />
+          </div>
+
+          <div className="flex justify-end mt-6">
+            <button
+              onClick={handleSocialSave}
+              disabled={socialSaving}
+              className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
+            >
+              {socialSaving ? (
+                <Loader
+                  size={16}
+                  className="animate-spin"
+                />
+              ) : (
+                <Save size={16} />
+              )}
+
+              {socialSaving
+                ? 'Saving...'
+                : 'Save Changes'}
             </button>
           </div>
         </div>
+      </div>
+    )}
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-          {[
-            {
-              icon: Briefcase,
-              label: 'Total Bookings',
-              value: stats.total,
-              color: 'bg-blue-600'
-            },
-            {
-              icon: Clock,
-              label: 'Pending',
-              value: stats.pending,
-              color: 'bg-amber-500'
-            },
-            {
-              icon: CheckCircle,
-              label: 'Assigned',
-              value: stats.assigned,
-              color: 'bg-cyan-500'
-            },
-            {
-              icon: TrendingUp,
-              label: 'In Progress',
-              value: stats.inProgress,
-              color: 'bg-purple-500'
-            },
-            {
-              icon: CheckCircle,
-              label: 'Completed',
-              value: stats.completed,
-              color: 'bg-green-500'
-            },
-            {
-              icon: XCircle,
-              label: 'Cancelled',
-              value: stats.cancelled,
-              color: 'bg-red-500'
-            },
-          ].map((s) => {
-            const Icon = s.icon;
+    {/* ===================== PRICING TAB ===================== */}
+    {tab === 'pricing' && (
+      <div>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+          <div>
+            <h2 className="text-lg font-extrabold text-gray-900">
+              Service Pricing
+            </h2>
 
-            return (
-              <div
-                key={s.label}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4"
-              >
-                <div
-                  className={`w-10 h-10 rounded-lg ${s.color} flex items-center justify-center mb-3`}
-                >
-                  <Icon
-                    size={18}
-                    className="text-white"
-                  />
-                </div>
+            <p className="text-sm text-gray-500 mt-1">
+              Manage base prices, GST, platform fee and commission.
+            </p>
+          </div>
 
-                <div className="text-2xl font-extrabold text-gray-900">
-                  {s.value}
-                </div>
+          <div className="relative w-full md:w-72">
+            <Search
+              size={16}
+              className="absolute left-3 top-3 text-gray-400"
+            />
 
-                <div className="text-xs text-gray-400 font-medium">
-                  {s.label}
-                </div>
-              </div>
-            );
-          })}
+            <input
+              value={priceSearch}
+              onChange={(e) =>
+                setPriceSearch(e.target.value)
+              }
+              placeholder="Search services..."
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm"
+            />
+          </div>
         </div>
 
-        {/* Revenue Breakdown */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {[
-            {
-              icon: DollarSign,
-              label: 'Total Revenue',
-              value: `₹${stats.revenue.toLocaleString('en-IN')}`,
-              color: 'bg-emerald-600'
-            },
-            {
-              icon: TrendingUp,
-              label: 'GST Collected',
-              value: `₹${stats.totalGST.toLocaleString('en-IN')}`,
-              color: 'bg-orange-500'
-            },
-            {
-              icon: Wallet,
-              label: 'Commission',
-              value: `₹${stats.totalCommission.toLocaleString('en-IN')}`,
-              color: 'bg-blue-500'
-            },
-            {
-              icon: Briefcase,
-              label: 'Tech Earnings',
-              value: `₹${stats.techEarnings.toLocaleString('en-IN')}`,
-              color: 'bg-indigo-500'
-            },
-          ].map((s) => {
-            const Icon = s.icon;
-
-            return (
-              <div
-                key={s.label}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4"
-              >
-                <div
-                  className={`w-10 h-10 rounded-lg ${s.color} flex items-center justify-center mb-3`}
-                >
-                  <Icon
-                    size={18}
-                    className="text-white"
-                  />
-                </div>
-
-                <div className="text-2xl font-extrabold text-gray-900">
-                  {s.value}
-                </div>
-
-                <div className="text-xs text-gray-400 font-medium">
-                  {s.label}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Tab Navigation */}
-        <div className="flex gap-2 mb-6 flex-wrap">
-
-          <button
-            onClick={() =>
-              setTab('bookings')
-            }
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
-              tab === 'bookings'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
+        {priceMsg && (
+          <div
+            className={`mb-5 p-3 rounded-xl text-sm font-medium ${
+              priceMsg.type === 'success'
+                ? 'bg-green-50 text-green-700'
+                : 'bg-red-50 text-red-700'
             }`}
           >
-            <Briefcase size={16} />
-            Bookings
-
-            <span
-              className={`ml-1 px-2 py-0.5 rounded-full text-xs ${
-                tab === 'bookings'
-                  ? 'bg-white/20'
-                  : 'bg-gray-100'
-              }`}
-            >
-              {stats.total}
-            </span>
-          </button>
-
-          <button
-            onClick={() =>
-              setTab('technicians')
-            }
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
-              tab === 'technicians'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
-            }`}
-          >
-            <Users size={16} />
-            Technicians
-
-            <span
-              className={`ml-1 px-2 py-0.5 rounded-full text-xs ${
-                tab === 'technicians'
-                  ? 'bg-white/20'
-                  : 'bg-gray-100'
-              }`}
-            >
-              {technicians.length}
-            </span>
-
-            {stats.pendingTechs > 0 && (
-              <span className="px-2 py-0.5 rounded-full text-xs bg-amber-500 text-white">
-                {stats.pendingTechs} new
-              </span>
-            )}
-          </button>
-
-          <button
-            onClick={() =>
-              setTab('wallet')
-            }
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
-              tab === 'wallet'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
-            }`}
-          >
-            <Wallet size={16} />
-            Wallet
-
-            {recharges.filter(
-              (r) =>
-                r.status ===
-                'pending'
-            ).length > 0 && (
-              <span className="px-2 py-0.5 rounded-full text-xs bg-amber-500 text-white">
-                {
-                  recharges.filter(
-                    (r) =>
-                      r.status ===
-                      'pending'
-                  ).length
-                }
-              </span>
-            )}
-          </button>
-
-          <button
-            onClick={() =>
-              setTab('payments')
-            }
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
-              tab === 'payments'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
-            }`}
-          >
-            <CreditCard size={16} />
-            Payments
-
-            {payments.filter(
-              (p) =>
-                p.status ===
-                'pending'
-            ).length > 0 && (
-              <span className="px-2 py-0.5 rounded-full text-xs bg-amber-500 text-white">
-                {
-                  payments.filter(
-                    (p) =>
-                      p.status ===
-                      'pending'
-                  ).length
-                }
-              </span>
-            )}
-          </button>
-
-          <button
-            onClick={() =>
-              setTab('customers')
-            }
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
-              tab === 'customers'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
-            }`}
-          >
-            <User size={16} />
-            Customers
-
-            <span
-              className={`ml-1 px-2 py-0.5 rounded-full text-xs ${
-                tab === 'customers'
-                  ? 'bg-white/20'
-                  : 'bg-gray-100'
-              }`}
-            >
-              {customers.length}
-            </span>
-          </button>
-
-          <button
-            onClick={() =>
-              setTab('reports')
-            }
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
-              tab === 'reports'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
-            }`}
-          >
-            <TrendingUp size={16} />
-            Reports
-          </button>
-
-          <button
-            onClick={() =>
-              setTab('social')
-            }
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
-              tab === 'social'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
-            }`}
-          >
-            <Globe size={16} />
-            Social Media
-          </button>
-
-          <button
-            onClick={() =>
-              setTab('pricing')
-            }
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
-              tab === 'pricing'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
-            }`}
-          >
-            <Wrench size={16} />
-            Service Pricing
-          </button>
-
-          <button
-            onClick={() =>
-              setTab('notifications')
-            }
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
-              tab === 'notifications'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
-            }`}
-          >
-            <Bell size={16} />
-            Notifications
-          </button>
-
-          <button
-            onClick={() =>
-              setTab('ai-dashboard')
-            }
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
-              tab === 'ai-dashboard'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
-            }`}
-          >
-            <TrendingUp size={16} />
-            AI Dashboard
-          </button>
-
-          <button
-            onClick={() =>
-              setTab('crm')
-            }
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
-              tab === 'crm'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
-            }`}
-          >
-            <Calendar size={16} />
-            AI CRM
-          </button>
-
-          <button
-            onClick={() =>
-              setTab('content')
-            }
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
-              tab === 'content'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
-            }`}
-          >
-            <FileText size={16} />
-            AI Content
-          </button>
-
-          <button
-            onClick={() =>
-              setTab('coupons')
-            }
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${
-              tab === 'coupons'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
-            }`}
-          >
-            <Tag size={16} />
-            Coupons
-          </button>
-        </div>
-
-        {/* ===================== BOOKINGS TAB ===================== */}
-
-        {tab === 'bookings' && (
-          <>
-            <div className="flex flex-wrap gap-2 mb-6">
-              {(
-                ['all', ...statusOptions]
-              ).map((s) => (
-                <button
-                  key={s}
-                  onClick={() =>
-                    setFilter(s as
-                      | 'all'
-                      | BookingStatus)
-                  }
-                  className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
-                    filter === s
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
-                  }`}
-                >
-                  {s === 'all'
-                    ? 'All'
-                    : s.replace(
-                        '_',
-                        ' '
-                      )}
-                </button>
-              ))}
-            </div>
-
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-100">
-                    <tr>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                        Booking #
-                      </th>
-
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                        Customer
-                      </th>
-
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                        Service
-                      </th>
-
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">
-                        City
-                      </th>
-
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-
-                      <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                        Action
-                      </th>
-                    </tr>
-                  </thead>
-
-                  <tbody className="divide-y divide-gray-50">
-                    {filteredBookings.length ===
-                    0 ? (
-                      <tr>
-                        <td
-                          colSpan={6}
-                          className="text-center py-12 text-gray-400 text-sm"
-                        >
-                          No bookings found.
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredBookings.map(
-                        (b) => (
-                          <tr
-                            key={b.id}
-                            className="hover:bg-gray-50 transition-colors"
-                          >
-                            <td className="px-4 py-3 text-sm font-bold text-blue-700">
-                              {b.booking_number}
-                            </td>
-
-                            <td className="px-4 py-3 text-sm text-gray-700 hidden sm:table-cell">
-                              {b.customer_name}
-                            </td>
-
-                            <td className="px-4 py-3 text-sm text-gray-600 hidden md:table-cell">
-                              {b.service_category}
-                            </td>
-
-                            <td className="px-4 py-3 text-sm text-gray-600 hidden lg:table-cell">
-                              {b.city}
-                            </td>
-
-                            <td className="px-4 py-3">
-                              <span
-                                className={`px-2.5 py-1 rounded-full text-xs font-semibold capitalize border ${
-                                  statusColors[
-                                    b.status
-                                  ]
-                                }`}
-                              >
-                                {b.status.replace(
-                                  '_',
-                                  ' '
-                                )}
-                              </span>
-                            </td>
-
-                            <td className="px-4 py-3 text-right">
-                              <button
-                                onClick={() => {
-                                  setSelectedBooking(
-                                    b
-                                  );
-
-                                  setAssignTechId(
-                                    b.assigned_technician_id ??
-                                      ''
-                                  );
-                                }}
-                                className="text-blue-600 hover:text-blue-700 text-sm font-semibold"
-                              >
-                                Manage
-                              </button>
-                            </td>
-                          </tr>
-                        )
-                      )
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* ===================== TECHNICIANS TAB ===================== */}
-
-        {tab === 'technicians' && (
-          <>
-            <div className="flex flex-wrap gap-2 mb-6">
-              {[
-                {
-                  key: 'all',
-                  label: 'All'
-                },
-                {
-                  key: 'pending',
-                  label: 'Pending'
-                },
-                {
-                  key: 'active',
-                  label: 'Approved'
-                },
-                {
-                  key: 'inactive',
-                  label: 'Rejected'
-                },
-                {
-                  key: 'rejected',
-                  label: 'Rejected'
-                },
-                {
-                  key: 'suspended',
-                  label: 'Suspended'
-                },
-              ].map((s) => (
-                <button
-                  key={s.key}
-                  onClick={() =>
-                    setTechFilter(
-                      s.key as
-                        | 'all'
-                        | 'pending'
-                        | 'active'
-                        | 'inactive'
-                        | 'rejected'
-                        | 'suspended'
-                    )
-                  }
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    techFilter === s.key
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
-                  }`}
-                >
-                  {s.label}
-
-                  <span className="ml-1.5 text-xs opacity-70">
-                    {s.key === 'all'
-                      ? technicians.length
-                      : technicians.filter(
-                          (t) =>
-                            t.status ===
-                            s.key
-                        ).length}
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-100">
-                    <tr>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                        Name
-                      </th>
-
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                        Mobile
-                      </th>
-
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                        Service Category
-                      </th>
-
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">
-                        City
-                      </th>
-
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden xl:table-cell">
-                        Experience
-                      </th>
-
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-
-                      <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-
-                  <tbody className="divide-y divide-gray-50">
-                    {filteredTechnicians.length ===
-                    0 ? (
-                      <tr>
-                        <td
-                          colSpan={7}
-                          className="text-center py-12 text-gray-400 text-sm"
-                        >
-                          No technicians found.
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredTechnicians.map(
-                        (t) => (
-                          <tr
-                            key={t.id}
-                            className="hover:bg-gray-50 transition-colors"
-                          >
-                            <td className="px-4 py-3">
-                              <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                                  <User
-                                    size={14}
-                                    className="text-blue-600"
-                                  />
-                                </div>
-
-                                <div>
-                                  <div className="text-sm font-bold text-gray-800">
-                                    {t.full_name}
-                                  </div>
-
-                                  <div className="text-xs text-gray-400 sm:hidden">
-                                    {t.mobile}
-                                  </div>
-                                </div>
-                              </div>
-                            </td>
-
-                            <td className="px-4 py-3 text-sm text-gray-600 hidden sm:table-cell">
-                              {t.mobile}
-                            </td>
-
-                            <td className="px-4 py-3 text-sm text-gray-600 hidden md:table-cell">
-                              {t.service_categories.length >
-                              0 ? (
-                                <span className="line-clamp-1 max-w-[180px]">
-                                  {t.service_categories.join(
-                                    ', '
-                                  )}
-                                </span>
-                              ) : (
-                                <span className="text-gray-300">
-                                  —
-                                </span>
-                              )}
-                            </td>
-
-                            <td className="px-4 py-3 text-sm text-gray-600 hidden lg:table-cell">
-                              {t.city}
-                            </td>
-
-                            <td className="px-4 py-3 text-sm text-gray-600 hidden xl:table-cell">
-                              {t.experience_years}{' '}
-                              yrs
-                            </td>
-
-                            <td className="px-4 py-3">
-                              <span
-                                className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${
-                                  techStatusColors[
-                                    t.status
-                                  ]
-                                }`}
-                              >
-                                {
-                                  techStatusLabel[
-                                    t.status
-                                  ]
-                                }
-                              </span>
-                            </td>
-
-                            <td className="px-4 py-3">
-                              <div className="flex items-center justify-end gap-1.5">
-
-                                <button
-                                  onClick={() =>
-                                    setSelectedTech(
-                                      t
-                                    )
-                                  }
-                                  title="View"
-                                  className="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
-                                >
-                                  <Eye
-                                    size={15}
-                                  />
-                                </button>
-
-                                {t.status !==
-                                  'active' && (
-                                  <button
-                                    onClick={() =>
-                                      updateTechStatus(
-                                        t.id,
-                                        'active'
-                                      )
-                                    }
-                                    title="Approve"
-                                    disabled={
-                                      techUpdating
-                                    }
-                                    className="p-1.5 rounded-lg bg-green-50 hover:bg-green-100 text-green-600 transition-colors disabled:opacity-50"
-                                  >
-                                    <CheckCircle
-                                      size={15}
-                                    />
-                                  </button>
-                                )}
-
-                                {t.status !==
-                                  'inactive' && (
-                                  <button
-                                    onClick={() =>
-                                      updateTechStatus(
-                                        t.id,
-                                        'inactive'
-                                      )
-                                    }
-                                    title="Reject"
-                                    disabled={
-                                      techUpdating
-                                    }
-                                    className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-colors disabled:opacity-50"
-                                  >
-                                    <XCircle
-                                      size={15}
-                                    />
-                                  </button>
-                                )}
-
-                                <button
-                                  onClick={() =>
-                                    deleteTechnician(
-                                      t.id
-                                    )
-                                  }
-                                  title="Delete"
-                                  disabled={
-                                    techUpdating
-                                  }
-                                  className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition-colors disabled:opacity-50"
-                                >
-                                  <Trash2
-                                    size={15}
-                                  />
-                                </button>
-
-                              </div>
-                            </td>
-                          </tr>
-                        )
-                      )
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* ===================== WALLET TAB ===================== */}
-
-        {tab === 'wallet' && (
-          <div className="space-y-6">
-
-            <div>
-              <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
-                <Wallet
-                  size={16}
-                  className="text-blue-600"
-                />
-                Technician Wallets
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-
-                {technicians.map((t) => (
-                  <div
-                    key={t.id}
-                    className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5"
-                  >
-
-                    <div className="flex items-center justify-between mb-3">
-
-                      <div>
-                        <div className="font-bold text-gray-900 text-sm">
-                          {t.full_name}
-                        </div>
-
-                        <div className="text-xs text-gray-400">
-                          {t.city} · {t.mobile}
-                        </div>
-                      </div>
-
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1 ${
-                          t.wallet_locked
-                            ? 'bg-red-100 text-red-700'
-                            : 'bg-green-100 text-green-700'
-                        }`}
-                      >
-                        {t.wallet_locked ? (
-                          <>
-                            <Lock
-                              size={10}
-                            />
-                            Locked
-                          </>
-                        ) : (
-                          <>
-                            <Unlock
-                              size={10}
-                            />
-                            Active
-                          </>
-                        )}
-                      </span>
-
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-
-                      <div className="bg-blue-50 rounded-lg p-2">
-                        <div className="text-xs text-blue-500 font-medium">
-                          Balance
-                        </div>
-
-                        <div className="font-bold text-blue-700">
-                          ₹
-                          {Number(
-                            t.wallet_balance
-                          ).toLocaleString(
-                            'en-IN'
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="bg-amber-50 rounded-lg p-2">
-                        <div className="text-xs text-amber-500 font-medium">
-                          Locked Deposit
-                        </div>
-
-                        <div className="font-bold text-amber-700">
-                          ₹
-                          {Number(
-                            t.locked_deposit
-                          ).toLocaleString(
-                            'en-IN'
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="bg-emerald-50 rounded-lg p-2">
-                        <div className="text-xs text-emerald-500 font-medium">
-                          Available
-                        </div>
-
-                        <div className="font-bold text-emerald-700">
-                          ₹
-                          {Number(
-                            t.available_balance
-                          ).toLocaleString(
-                            'en-IN'
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="bg-red-50 rounded-lg p-2">
-                        <div className="text-xs text-red-500 font-medium">
-                          Commission Due
-                        </div>
-
-                        <div className="font-bold text-red-700">
-                          ₹
-                          {Number(
-                            t.commission_due
-                          ).toLocaleString(
-                            'en-IN'
-                          )}
-                        </div>
-                      </div>
-
-                    </div>
-
-                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-
-                      <div className="text-xs text-gray-500 flex items-center gap-1">
-                        <ShieldCheck
-                          size={12}
-                          className="text-blue-500"
-                        />
-
-                        {t.deposit_released
-                          ? 'Deposit released'
-                          : `${t.completed_jobs_count}/3 jobs to release`}
-                      </div>
-
-                      <button
-                        onClick={() =>
-                          setSelectedWalletTech(
-                            t
-                          )
-                        }
-                        className="text-xs text-blue-600 font-semibold hover:text-blue-700"
-                      >
-                        View Details
-                      </button>
-
-                    </div>
-
-                    <div className="flex gap-2 mt-2">
-
-                      {t.wallet_locked ? (
-                        <button
-                          onClick={() =>
-                            toggleWalletLock(
-                              t.id,
-                              false
-                            )
-                          }
-                          disabled={
-                            walletUpdating
-                          }
-                          className="flex-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors"
-                        >
-                          Unlock
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() =>
-                            toggleWalletLock(
-                              t.id,
-                              true
-                            )
-                          }
-                          disabled={
-                            walletUpdating
-                          }
-                          className="flex-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors"
-                        >
-                          Lock
-                        </button>
-                      )}
-
-                    </div>
-
-                  </div>
-                ))}
-
-                {technicians.length ===
-                  0 && (
-                  <div className="col-span-full text-center py-8 text-gray-400 text-sm">
-                    No technicians found.
-                  </div>
-                )}
-
-              </div>
-            </div>
-              )}
-            {/* Pending Wallet Recharges */}
-            <div>
-              <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
-                <CreditCard
-                  size={16}
-                  className="text-amber-600"
-                />
-                Pending Wallet Recharges
-              </h3>
-
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50 border-b border-gray-100">
-                      <tr>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                          Technician
-                        </th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                          Amount
-                        </th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden sm:table-cell">
-                          Reference
-                        </th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                          Status
-                        </th>
-                        <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                          Action
-                        </th>
-                      </tr>
-                    </thead>
-
-                    <tbody className="divide-y divide-gray-50">
-                      {recharges.filter(
-                        (r) => r.status === 'pending'
-                      ).length === 0 ? (
-                        <tr>
-                          <td
-                            colSpan={5}
-                            className="text-center py-10 text-gray-400 text-sm"
-                          >
-                            No pending recharge requests.
-                          </td>
-                        </tr>
-                      ) : (
-                        recharges
-                          .filter(
-                            (r) =>
-                              r.status ===
-                              'pending'
-                          )
-                          .map((r) => (
-                            <tr
-                              key={r.id}
-                              className="hover:bg-gray-50"
-                            >
-                              <td className="px-4 py-3">
-                                <div className="font-semibold text-sm text-gray-800">
-                                  {r.technician_name ??
-                                    'Unknown'}
-                                </div>
-                              </td>
-
-                              <td className="px-4 py-3">
-                                <span className="font-bold text-emerald-600">
-                                  ₹
-                                  {Number(
-                                    r.amount
-                                  ).toLocaleString(
-                                    'en-IN'
-                                  )}
-                                </span>
-                              </td>
-
-                              <td className="px-4 py-3 text-xs text-gray-500 hidden sm:table-cell">
-                                {r.reference_number ??
-                                  r.id}
-                              </td>
-
-                              <td className="px-4 py-3">
-                                <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold">
-                                  Pending
-                                </span>
-                              </td>
-
-                              <td className="px-4 py-3">
-                                <div className="flex items-center justify-end gap-2">
-                                  <button
-                                    onClick={() =>
-                                      approveRecharge(
-                                        r.id
-                                      )
-                                    }
-                                    disabled={
-                                      walletUpdating
-                                    }
-                                    className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-semibold disabled:opacity-50"
-                                  >
-                                    Approve
-                                  </button>
-
-                                  <button
-                                    onClick={() =>
-                                      rejectRecharge(
-                                        r.id
-                                      )
-                                    }
-                                    disabled={
-                                      walletUpdating
-                                    }
-                                    className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-semibold disabled:opacity-50"
-                                  >
-                                    Reject
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-            {/* Wallet Transactions */}
-            <div>
-              <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wider mb-3 flex items-center gap-2">
-                <History
-                  size={16}
-                  className="text-blue-600"
-                />
-                Recent Wallet Transactions
-              </h3>
-
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50 border-b border-gray-100">
-                      <tr>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                          Type
-                        </th>
-
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                          Amount
-                        </th>
-
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden sm:table-cell">
-                          Description
-                        </th>
-
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">
-                          Date
-                        </th>
-                      </tr>
-                    </thead>
-
-                    <tbody className="divide-y divide-gray-50">
-                      {walletTxns.length === 0 ? (
-                        <tr>
-                          <td
-                            colSpan={4}
-                            className="text-center py-10 text-gray-400 text-sm"
-                          >
-                            No wallet transactions found.
-                          </td>
-                        </tr>
-                      ) : (
-                        walletTxns
-                          .slice(0, 50)
-                          .map((txn) => (
-                            <tr
-                              key={txn.id}
-                              className="hover:bg-gray-50"
-                            >
-                              <td className="px-4 py-3">
-                                <span
-                                  className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-                                    Number(
-                                      txn.amount
-                                    ) >= 0
-                                      ? 'bg-green-100 text-green-700'
-                                      : 'bg-red-100 text-red-700'
-                                  }`}
-                                >
-                                  {txn.transaction_type ??
-                                    'Transaction'}
-                                </span>
-                              </td>
-
-                              <td className="px-4 py-3 font-bold text-sm">
-                                <span
-                                  className={
-                                    Number(
-                                      txn.amount
-                                    ) >= 0
-                                      ? 'text-green-600'
-                                      : 'text-red-600'
-                                  }
-                                >
-                                  {Number(
-                                    txn.amount
-                                  ) >= 0
-                                    ? '+'
-                                    : ''}
-                                  ₹
-                                  {Math.abs(
-                                    Number(
-                                      txn.amount
-                                    )
-                                  ).toLocaleString(
-                                    'en-IN'
-                                  )}
-                                </span>
-                              </td>
-
-                              <td className="px-4 py-3 text-sm text-gray-600 hidden sm:table-cell">
-                                {txn.description ??
-                                  '—'}
-                              </td>
-
-                              <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell">
-                                {txn.created_at
-                                  ? new Date(
-                                      txn.created_at
-                                    ).toLocaleString(
-                                      'en-IN'
-                                    )
-                                  : '—'}
-                              </td>
-                            </tr>
-                          ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
+            {priceMsg.text}
           </div>
         )}
 
-        {/* ===================== PAYMENTS TAB ===================== */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                    Service
+                  </th>
 
-        {tab === 'payments' && (
-          <>
-            <div className="flex flex-wrap gap-2 mb-6">
-              {[
-                'all',
-                'pending',
-                'success',
-                'failed'
-              ].map((s) => (
-                <button
-                  key={s}
-                  onClick={() =>
-                    setPaymentFilter(
-                      s as
-                        | 'all'
-                        | 'pending'
-                        | 'success'
-                        | 'failed'
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
+                    Base Price
+                  </th>
+
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
+                    GST %
+                  </th>
+
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
+                    Platform Fee
+                  </th>
+
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
+                    Commission %
+                  </th>
+
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">
+                    Active
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-gray-50">
+                {servicePrices
+                  .filter((p) =>
+                    String(
+                      p.service_name ??
+                        p.service_category ??
+                        ''
                     )
-                  }
-                  className={`px-4 py-2 rounded-lg text-sm font-medium capitalize ${
-                    paymentFilter === s
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-blue-50'
-                  }`}
-                >
-                  {s}
-                </button>
-              ))}
+                      .toLowerCase()
+                      .includes(
+                        priceSearch
+                          .trim()
+                          .toLowerCase()
+                      )
+                  )
+                  .map((p) => {
+                    const edit =
+                      price
+      {tab === 'pricing' && (
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-2xl font-extrabold text-gray-900 mb-1">
+              Service Pricing
+            </h2>
+            <p className="text-gray-500 text-sm">
+              Edit base price, GST, platform fee, and commission for each service.
+              Changes take effect immediately for new bookings.
+            </p>
+          </div>
+
+          {priceMsg && (
+            <div
+              className={
+                'rounded-xl p-3 text-sm ' +
+                (priceMsg.type === 'success'
+                  ? 'bg-green-50 text-green-700 border border-green-200'
+                  : 'bg-red-50 text-red-700 border border-red-200')
+              }
+            >
+              {priceMsg.text}
             </div>
+          )}
 
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-100">
-                    <tr>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                        Payment ID
-                      </th>
+          <div className="relative max-w-md">
+            <Search
+              size={18}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            />
 
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                        Customer
-                      </th>
+            <input
+              type="text"
+              value={priceSearch}
+              onChange={(e) => setPriceSearch(e.target.value)}
+              placeholder="Search service..."
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm"
+            />
+          </div>
 
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                        Amount
-                      </th>
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-100">
+                    <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase">
+                      Service
+                    </th>
+                    <th className="text-right px-4 py-3 text-xs font-bold text-gray-500 uppercase">
+                      Base Price
+                    </th>
+                    <th className="text-right px-4 py-3 text-xs font-bold text-gray-500 uppercase">
+                      GST %
+                    </th>
+                    <th className="text-right px-4 py-3 text-xs font-bold text-gray-500 uppercase">
+                      Platform Fee
+                    </th>
+                    <th className="text-right px-4 py-3 text-xs font-bold text-gray-500 uppercase">
+                      Commission %
+                    </th>
+                    <th className="text-center px-4 py-3 text-xs font-bold text-gray-500 uppercase">
+                      Active
+                    </th>
+                    <th className="text-right px-4 py-3 text-xs font-bold text-gray-500 uppercase">
+                      Total
+                    </th>
+                  </tr>
+                </thead>
 
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">
-                        Purpose
-                      </th>
+                <tbody>
+                  {servicePrices
+                    .filter((p) =>
+                      p.service_name
+                        .toLowerCase()
+                        .includes(priceSearch.toLowerCase())
+                    )
+                    .map((p) => {
+                      const edit =
+                        priceEdits[p.id] ?? {
+                          base_price: String(p.base_price),
+                          gst_rate: String(p.gst_rate),
+                          platform_fee: String(p.platform_fee),
+                          commission_rate: String(p.commission_rate),
+                          is_active: p.is_active,
+                        };
 
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                        Status
-                      </th>
+                      const breakdown: PricingBreakdown =
+                        getPricingFromServicePrice({
+                          ...p,
+                          base_price:
+                            Number(edit.base_price) || 0,
+                          gst_rate:
+                            Number(edit.gst_rate) || 0,
+                          platform_fee:
+                            Number(edit.platform_fee) || 0,
+                          commission_rate:
+                            Number(edit.commission_rate) || 0,
+                        });
 
-                      <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                        Action
-                      </th>
-                    </tr>
-                  </thead>
-
-                  <tbody className="divide-y divide-gray-50">
-                    {payments.filter(
-                      (p) =>
-                        paymentFilter ===
-                          'all' ||
-                        p.status ===
-                          paymentFilter
-                    ).length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={6}
-                          className="text-center py-12 text-gray-400 text-sm"
+                      return (
+                        <tr
+                          key={p.id}
+                          className="border-b border-gray-50 hover:bg-gray-50/50"
                         >
-                          No payments found.
-                        </td>
-                      </tr>
-                    ) : (
-                      payments
-                        .filter(
-                          (p) =>
-                            paymentFilter ===
-                              'all' ||
-                            p.status ===
-                              paymentFilter
-                        )
-                        .map((p) => (
-                          <tr
-                            key={p.payment_id}
-                            className="hover:bg-gray-50"
-                          >
-                            <td className="px-4 py-3 text-xs font-semibold text-gray-700">
-                              {p.payment_id}
-                            </td>
+                          <td className="px-4 py-3 font-semibold text-gray-900 text-sm">
+                            {p.service_name}
+                          </td>
 
-                            <td className="px-4 py-3">
-                              <div className="text-sm font-semibold text-gray-800">
-                                {p.payee_name ??
-                                  p.customer_name ??
-                                  '—'}
-                              </div>
+                          <td className="px-4 py-3">
+                            <input
+                              type="number"
+                              value={edit.base_price}
+                              onChange={(e) =>
+                                setPriceEdits((prev) => ({
+                                  ...prev,
+                                  [p.id]: {
+                                    ...edit,
+                                    base_price: e.target.value,
+                                  },
+                                }))
+                              }
+                              className="w-24 px-2 py-1.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-100 outline-none text-sm text-right"
+                            />
+                          </td>
 
-                              <div className="text-xs text-gray-400">
-                                {p.payee_mobile ??
-                                  p.customer_mobile ??
-                                  ''}
-                              </div>
-                            </td>
+                          <td className="px-4 py-3">
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={edit.gst_rate}
+                              onChange={(e) =>
+                                setPriceEdits((prev) => ({
+                                  ...prev,
+                                  [p.id]: {
+                                    ...edit,
+                                    gst_rate: e.target.value,
+                                  },
+                                }))
+                              }
+                              className="w-20 px-2 py-1.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-100 outline-none text-sm text-right"
+                            />
+                          </td>
 
-                            <td className="px-4 py-3 font-bold text-gray-800">
-                              ₹
-                              {Number(
-                                p.amount
-                              ).toLocaleString(
-                                'en-IN'
-                              )}
-                            </td>
+                          <td className="px-4 py-3">
+                            <input
+                              type="number"
+                              value={edit.platform_fee}
+                              onChange={(e) =>
+                                setPriceEdits((prev) => ({
+                                  ...prev,
+                                  [p.id]: {
+                                    ...edit,
+                                    platform_fee: e.target.value,
+                                  },
+                                }))
+                              }
+                              className="w-24 px-2 py-1.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-100 outline-none text-sm text-right"
+                            />
+                          </td>
 
-                            <td className="px-4 py-3 text-sm text-gray-600 hidden md:table-cell">
-                              {p.purpose ??
-                                '—'}
-                            </td>
+                          <td className="px-4 py-3">
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={edit.commission_rate}
+                              onChange={(e) =>
+                                setPriceEdits((prev) => ({
+                                  ...prev,
+                                  [p.id]: {
+                                    ...edit,
+                                    commission_rate:
+                                      e.target.value,
+                                  },
+                                }))
+                              }
+                              className="w-20 px-2 py-1.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-100 outline-none text-sm text-right"
+                            />
+                          </td>
 
-                            <td className="px-4 py-3">
+                          <td className="px-4 py-3 text-center">
+                            <button
+                              onClick={() =>
+                                setPriceEdits((prev) => ({
+                                  ...prev,
+                                  [p.id]: {
+                                    ...edit,
+                                    is_active: !edit.is_active,
+                                  },
+                                }))
+                              }
+                              className={
+                                'w-10 h-6 rounded-full transition-colors ' +
+                                (edit.is_active
+                                  ? 'bg-green-500'
+                                  : 'bg-gray-300')
+                              }
+                            >
                               <span
-                                className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-                                  p.status ===
-                                  'success'
-                                    ? 'bg-green-100 text-green-700'
-                                    : p.status ===
-                                      'failed'
-                                    ? 'bg-red-100 text-red-700'
-                                    : 'bg-amber-100 text-amber-700'
-                                }`}
-                              >
-                                {p.status}
-                              </span>
-                            </td>
+                                className={
+                                  'block w-4 h-4 bg-white rounded-full transition-transform ' +
+                                  (edit.is_active
+                                    ? 'translate-x-5'
+                                    : 'translate-x-1')
+                                }
+                              />
+                            </button>
+                          </td>
 
-                            <td className="px-4 py-3">
-                              {p.status ===
-                              'pending' ? (
-                                <div className="flex items-center justify-end gap-2">
-                                  <button
-                                    onClick={() =>
-                                      verifyPayment(
-                                        p.payment_id,
-                                        'success'
-                                      )
-                                    }
-                                    disabled={
-                                      paymentUpdating
-                                    }
-                                    className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-semibold disabled:opacity-50"
-                                  >
-                                    Verify
-                                  </button>
-
-                                  <button
-                                    onClick={() =>
-                                      verifyPayment(
-                                        p.payment_id,
-                                        'failed'
-                                      )
-                                    }
-                                    disabled={
-                                      paymentUpdating
-                                    }
-                                    className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-semibold disabled:opacity-50"
-                                  >
-                                    Reject
-                                  </button>
-                                </div>
-                              ) : (
-                                <span className="text-xs text-gray-400">
-                                  —
-                                </span>
-                              )}
-                            </td>
-                          </tr>
-                        ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                          <td className="px-4 py-3 text-right font-bold text-blue-700 text-sm">
+                            {formatINR(
+                              breakdown.totalAmount
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
             </div>
-          </>
-        )}
+          </div>
 
-        {/* ===================== CUSTOMERS TAB ===================== */}
+          <button
+            onClick={async () => {
+              setPriceSaving(true);
+              setPriceMsg(null);
 
-        {tab === 'customers' && (
-          <>
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-6">
-              <div className="relative">
-                <Search
-                  size={18}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                />
+              try {
+                const updates = Object.entries(
+                  priceEdits
+                ).map(([id, edit]) =>
+                  supabase
+                    .from('service_prices')
+                    .update({
+                      base_price:
+                        Number(edit.base_price) || 0,
+                      gst_rate:
+                        Number(edit.gst_rate) || 0,
+                      platform_fee:
+                        Number(edit.platform_fee) || 0,
+                      commission_rate:
+                        Number(edit.commission_rate) || 0,
+                      is_active: edit.is_active,
+                      updated_at:
+                        new Date().toISOString(),
+                    })
+                    .eq('id', id)
+                );
 
-                <input
-                  type="text"
-                  value={customerFilter}
-                  onChange={(e) =>
-                    setCustomerFilter(
-                      e.target.value
-                    )
-                  }
-                  placeholder="Search customers by name, mobile, email..."
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                />
-              </div>
-            </div>
+                const results =
+                  await Promise.all(updates);
 
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-100">
-                    <tr>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">
-                        Customer
-                      </th>
+                const failed =
+                  results.filter(
+                    (r) => r.error
+                  );
 
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">      {tab === 'ai-dashboard' && <AdminAIDashboard />}
-      {tab === 'crm' && <AdminCRM />}
-      {tab === 'content' && <AdminContent />}
-      {tab === 'coupons' && <AdminCoupons />}
+                if (failed.length > 0) {
+                  setPriceMsg({
+                    type: 'error',
+                    text: `${failed.length} service(s) failed to save.`,
+                  });
+                } else {
+                  setPriceMsg({
+                    type: 'success',
+                    text: 'All service prices updated successfully!',
+                  });
+
+                  await loadServicePrices();
+                }
+              } catch {
+                setPriceMsg({
+                  type: 'error',
+                  text: 'Failed to save prices. Please try again.',
+                });
+              }
+
+              setPriceSaving(false);
+            }}
+            disabled={priceSaving}
+            className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-xl transition-colors"
+          >
+            {priceSaving ? (
+              <Loader
+                size={16}
+                className="animate-spin"
+              />
+            ) : (
+              <Save size={16} />
+            )}
+
+            Save Changes
+          </button>
+        </div>
+      )}
+
+      {/* ===================== AI DASHBOARD ===================== */}
+      {tab === 'ai-dashboard' && (
+        <AdminAIDashboard />
+      )}
+
+      {/* ===================== CRM ===================== */}
+      {tab === 'crm' && (
+        <AdminCRM />
+      )}
+
+      {/* ===================== AI CONTENT ===================== */}
+      {tab === 'content' && (
+        <AdminContent />
+      )}
+
+      {/* ===================== COUPONS ===================== */}
+      {tab === 'coupons' && (
+        <AdminCoupons />
+      )}
     </div>
   );
 }
@@ -2966,7 +2231,6 @@ function InfoRow({
           size={14}
           className="text-gray-400 shrink-0"
         />
-
         {value}
       </div>
     </div>
@@ -2982,7 +2246,11 @@ function MetricCard({
   icon: LucideIcon;
   label: string;
   value: string;
-  color: 'blue' | 'green' | 'purple' | 'amber';
+  color:
+    | 'blue'
+    | 'green'
+    | 'purple'
+    | 'amber';
 }) {
   const colorMap = {
     blue: 'bg-blue-100 text-blue-600',
