@@ -106,16 +106,110 @@ export default function AdminDashboard() {
   const [priceMsg, setPriceMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
-    const adminToken = sessionStorage.getItem('vattams_admin');
-    const expiresAt = sessionStorage.getItem('vattams_admin_expires');
-    if (!adminToken || (expiresAt && new Date(expiresAt) < new Date())) {
+  let mounted = true;
+
+  const verifyAdmin = async () => {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.user?.email) {
+        sessionStorage.removeItem('vattams_admin');
+        sessionStorage.removeItem('vattams_admin_email');
+        sessionStorage.removeItem('vattams_admin_expires');
+
+        if (mounted) {
+          navigate('admin-login');
+        }
+
+        return;
+      }
+
+      const email = session.user.email.toLowerCase();
+
+      const { data: admin, error } = await supabase
+        .from('admins')
+        .select('id, email, name, role, is_active')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (error) {
+        console.error(
+          '[AdminDashboard] Admin verification failed:',
+          error
+        );
+
+        await supabase.auth.signOut();
+
+        sessionStorage.removeItem('vattams_admin');
+        sessionStorage.removeItem('vattams_admin_email');
+
+        if (mounted) {
+          navigate('admin-login');
+        }
+
+        return;
+      }
+
+      if (!admin) {
+        await supabase.auth.signOut();
+
+        sessionStorage.removeItem('vattams_admin');
+        sessionStorage.removeItem('vattams_admin_email');
+
+        if (mounted) {
+          navigate('admin-login');
+        }
+
+        return;
+      }
+
+      if (
+        Object.prototype.hasOwnProperty.call(admin, 'is_active') &&
+        admin.is_active === false
+      ) {
+        await supabase.auth.signOut();
+
+        sessionStorage.removeItem('vattams_admin');
+        sessionStorage.removeItem('vattams_admin_email');
+
+        if (mounted) {
+          navigate('admin-login');
+        }
+
+        return;
+      }
+
+      sessionStorage.setItem('vattams_admin', 'logged_in');
+      sessionStorage.setItem('vattams_admin_email', email);
+
+      if (mounted) {
+        await loadData();
+      }
+    } catch (error) {
+      console.error(
+        '[AdminDashboard] Admin session verification error:',
+        error
+      );
+
+      await supabase.auth.signOut();
+
       sessionStorage.removeItem('vattams_admin');
-      sessionStorage.removeItem('vattams_admin_expires');
-      navigate('admin-login');
-      return;
+      sessionStorage.removeItem('vattams_admin_email');
+
+      if (mounted) {
+        navigate('admin-login');
+      }
     }
-    loadData();
-  }, []);
+  };
+
+  verifyAdmin();
+
+  return () => {
+    mounted = false;
+  };
+}, []);
 
   const loadData = async () => {
     const [bookingsRes, techRes] = await Promise.all([
