@@ -159,8 +159,13 @@ export default function Header() {
           </div>
 
           {/* Mobile hamburger */}
-          <button className="md:hidden p-2 rounded-lg text-gray-700 hover:bg-blue-50" onClick={() => setMobileOpen(!mobileOpen)}>
-            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+          <button
+            className="md:hidden p-2 rounded-lg text-gray-700 hover:bg-blue-50"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={mobileOpen}
+          >
+            {mobileOpen ? <X size={22} aria-hidden="true" /> : <Menu size={22} aria-hidden="true" />}
           </button>
         </div>
       </div>
