@@ -72,17 +72,17 @@ export default function SocialLinks({ variant = 'footer' }: SocialLinksProps) {
     return (
       <div className="flex flex-wrap gap-2 justify-center pt-2">
         {showWhatsapp && (
-          <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noreferrer"
+          <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noreferrer" aria-label="WhatsApp"
             className={`${sizeClass} rounded-full bg-green-500 ${'hover:bg-green-400'} flex items-center justify-center transition-colors`}>
-            <MessageCircle size={iconSize} className="text-white" />
+            <MessageCircle size={iconSize} className="text-white" aria-hidden="true" />
           </a>
         )}
         {items.map((item) => {
           const Icon = item.icon;
           return (
-            <a key={item.key} href={settings[item.key] as string} target="_blank" rel="noreferrer"
+            <a key={item.key} href={settings[item.key] as string} target="_blank" rel="noreferrer" aria-label={item.label}
               className={`${sizeClass} rounded-full ${item.bgClass} ${item.hoverClass} flex items-center justify-center transition-colors`}>
-              <Icon size={iconSize} className="text-white" />
+              <Icon size={iconSize} className="text-white" aria-hidden="true" />
             </a>
           );
         })}
@@ -94,17 +94,17 @@ export default function SocialLinks({ variant = 'footer' }: SocialLinksProps) {
     return (
       <div className="flex flex-wrap gap-3 mt-6">
         {showWhatsapp && (
-          <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noreferrer" title="WhatsApp"
+          <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noreferrer" title="WhatsApp" aria-label="WhatsApp"
             className={`${sizeClass} rounded-full bg-green-500 hover:bg-green-400 flex items-center justify-center transition-colors shadow-sm`}>
-            <MessageCircle size={iconSize} className="text-white" />
+            <MessageCircle size={iconSize} className="text-white" aria-hidden="true" />
           </a>
         )}
         {items.map((item) => {
           const Icon = item.icon;
           return (
-            <a key={item.key} href={settings[item.key] as string} target="_blank" rel="noreferrer" title={item.label}
+            <a key={item.key} href={settings[item.key] as string} target="_blank" rel="noreferrer" title={item.label} aria-label={item.label}
               className={`${sizeClass} rounded-full ${item.bgClass} ${item.hoverClass} flex items-center justify-center transition-colors shadow-sm`}>
-              <Icon size={iconSize} className="text-white" />
+              <Icon size={iconSize} className="text-white" aria-hidden="true" />
             </a>
           );
         })}
@@ -116,17 +116,17 @@ export default function SocialLinks({ variant = 'footer' }: SocialLinksProps) {
     return (
       <div className="flex flex-wrap gap-3 mt-6">
         {showWhatsapp && (
-          <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noreferrer" title="WhatsApp"
+          <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noreferrer" title="WhatsApp" aria-label="WhatsApp"
             className={`${sizeClass} rounded-full bg-green-500 hover:bg-green-400 flex items-center justify-center transition-colors`}>
-            <MessageCircle size={iconSize} className="text-white" />
+            <MessageCircle size={iconSize} className="text-white" aria-hidden="true" />
           </a>
         )}
         {items.map((item) => {
           const Icon = item.icon;
           return (
-            <a key={item.key} href={settings[item.key] as string} target="_blank" rel="noreferrer" title={item.label}
+            <a key={item.key} href={settings[item.key] as string} target="_blank" rel="noreferrer" title={item.label} aria-label={item.label}
               className={`${sizeClass} rounded-full ${item.bgClass} ${item.hoverClass} flex items-center justify-center transition-colors`}>
-              <Icon size={iconSize} className="text-white" />
+              <Icon size={iconSize} className="text-white" aria-hidden="true" />
             </a>
           );
         })}
@@ -140,7 +140,7 @@ export default function SocialLinks({ variant = 'footer' }: SocialLinksProps) {
       {showWhatsapp && (
         <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noreferrer" title="WhatsApp"
           className={`${sizeClass} rounded-full bg-green-500 hover:bg-green-400 flex items-center justify-center transition-colors`}>
-          <MessageCircle size={iconSize} className="text-white" />
+          <MessageCircle size={iconSize} className="text-white" aria-hidden="true" />
         </a>
       )}
       {items.map((item) => {
@@ -148,7 +148,7 @@ export default function SocialLinks({ variant = 'footer' }: SocialLinksProps) {
         return (
           <a key={item.key} href={settings[item.key] as string} target="_blank" rel="noreferrer" title={item.label}
             className={`${sizeClass} rounded-full ${item.bgClass} ${item.hoverClass} flex items-center justify-center transition-colors`}>
-            <Icon size={iconSize} className="text-white" />
+            <Icon size={iconSize} className="text-white" aria-hidden="true" />
           </a>
         );
       })}
