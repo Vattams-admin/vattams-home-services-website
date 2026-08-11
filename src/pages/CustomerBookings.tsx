@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Loader, CheckCircle, Calendar, User, Phone, MapPin, Wrench, FileText, Clock, ArrowRight, LogIn, Receipt, LucideIcon, Tag, Briefcase, Sparkles } from 'lucide-react';
+import { Loader, CheckCircle, XCircle, Calendar, User, Phone, MapPin, Wrench, FileText, Clock, ArrowRight, LogIn, Receipt, LucideIcon, Tag, Briefcase, Sparkles } from 'lucide-react';
 import { supabase, ServiceCategory, Customer, ServicePrice } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { notifyCustomer, notifyAdmin } from '@/lib/notifications';
@@ -298,10 +298,14 @@ export default function Booking() {
                       </button>
                     </div>
                     {couponResult?.valid && (
-                      <p className="text-xs text-green-600 mt-2 font-semibold">✓ Coupon applied! You save {formatINR(couponResult.discountAmount)}</p>
+                      <p className="flex items-center gap-1.5 text-xs text-green-600 mt-2 font-semibold">
+                        <CheckCircle size={14} aria-hidden="true" /> Coupon applied! You save {formatINR(couponResult.discountAmount)}
+                      </p>
                     )}
                     {couponResult && !couponResult.valid && (
-                      <p className="text-xs text-red-600 mt-2 font-semibold">✗ {couponResult.error}</p>
+                      <p className="flex items-center gap-1.5 text-xs text-red-600 mt-2 font-semibold">
+                        <XCircle size={14} aria-hidden="true" /> {couponResult.error}
+                      </p>
                     )}
                   </div>
                 )}
