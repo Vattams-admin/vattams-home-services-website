@@ -16,9 +16,9 @@ const iconMap: Record<string, LucideIcon> = {
 };
 
 const colorPalette = [
-  'from-royal-700 to-royal-900',
+  'from-navy-800 to-navy-950',
   'from-gold-500 to-gold-700',
-  'from-royal-600 to-royal-800',
+  'from-navy-700 to-navy-900',
 ];
 
 export default function ServicesGrid() {
@@ -34,14 +34,14 @@ export default function ServicesGrid() {
   }, []);
 
   return (
-    <section className="py-20 bg-white">
+    <section className="py-20 md:py-28 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-14">
-          <div className="inline-flex items-center gap-2 bg-gold-50 text-gold-700 rounded-full px-4 py-1.5 text-sm font-semibold mb-4">
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 bg-gold-50 text-gold-700 rounded-full px-4 py-1.5 text-xs sm:text-sm font-semibold mb-4 tracking-wide uppercase">
             What We Offer
           </div>
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-royal-900 mb-4">
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-navy-900 mb-4">
             Our Expert Services
           </h2>
           <p className="text-gray-500 max-w-xl mx-auto text-base md:text-lg">
@@ -51,7 +51,7 @@ export default function ServicesGrid() {
 
         {loading ? (
           <div className="flex justify-center py-16">
-            <Loader className="animate-spin text-royal-700" size={32} />
+            <Loader className="animate-spin text-navy-700" size={32} />
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
@@ -62,7 +62,7 @@ export default function ServicesGrid() {
                 <button
                   key={svc.id}
                   onClick={() => navigate('booking')}
-                  className="group relative bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl p-6 text-left transition-all duration-300 hover:-translate-y-1 overflow-hidden"
+                  className="group relative bg-white rounded-2xl border border-gold-100 shadow-sm hover:shadow-xl hover:border-gold-300 p-6 text-left transition-all duration-300 hover:-translate-y-1 overflow-hidden"
                 >
                   {/* Gradient orb */}
                   <div className={`absolute -top-4 -right-4 w-20 h-20 rounded-full bg-gradient-to-br ${gradient} opacity-10 group-hover:opacity-20 transition-opacity`} />
@@ -86,10 +86,10 @@ export default function ServicesGrid() {
           </div>
         )}
 
-        <div className="text-center mt-10">
+        <div className="text-center mt-12">
           <button
             onClick={() => navigate('services')}
-            className="inline-flex items-center gap-2 px-8 py-3 bg-royal-700 hover:bg-royal-800 text-white font-semibold rounded-xl transition-colors shadow-lg shadow-royal-200"
+            className="inline-flex items-center gap-2 px-8 py-3.5 bg-navy-900 hover:bg-navy-950 text-white font-semibold rounded-lg transition-colors shadow-lg shadow-navy-900/20 border border-gold-500/20"
           >
             View All Services <ArrowRight size={16} />
           </button>
