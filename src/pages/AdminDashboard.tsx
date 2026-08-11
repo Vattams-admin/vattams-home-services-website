@@ -3150,4 +3150,49 @@ function ReportMoneyCard({
   value: number;
 }) {
   return (
-    <div className="bg-white rounded-2xl b
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+      <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center mb-3">
+        <Icon size={18} className="text-green-600" />
+      </div>
+
+      <div className="text-2xl font-extrabold text-gray-900">{formatINR(value)}</div>
+
+      <div className="text-xs text-gray-400 font-medium">{label}</div>
+    </div>
+  );
+}
+
+function SocialInput({
+  icon: Icon,
+  label,
+  value,
+  onChange,
+  error,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  error?: string;
+}) {
+  return (
+    <div>
+      <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
+        <Icon size={14} className="text-gray-400" />
+        {label}
+      </label>
+
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`w-full px-4 py-2.5 rounded-xl border text-sm outline-none focus:ring-2 ${
+          error
+            ? 'border-red-300 focus:border-red-500 focus:ring-red-100'
+            : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
+        }`}
+      />
+
+      {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+    </div>
+  );
+}
