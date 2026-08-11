@@ -27,93 +27,65 @@ export default function AdminLogin() {
       }
 
       /*
-       * Login using Supabase Auth.
-       */
-      const { data, error: authError } =
-        await supabase.auth.signInWithPassword({
-          email: cleanEmail,
-          password,
-        });
-
-      if (authError) {
-        console.error('Admin login error:', authError);
-        setError(authError.message || 'Invalid email or password.');
-        return;
-      }
-
-      if (!data.user) {
-        setError('Unable to verify your admin account.');
-        return;
-      }
-
-      /*
-       * Verify that this authenticated user is actually
-       * registered as an admin in the admins table.
+       * Verify the admin's credentials via the Supabase RPC.
        *
-       * This prevents any normal customer/technician account
-       * from directly accessing the admin dashboard.
-       */
-      const { data: admin, error: adminError } = await supabase
-        .from('admins')
-        .select('id, email, name, role, is_active')
-        .eq('email', cleanEmail)
-        .maybeSingle();
-
-      if (adminError) {
-        console.error('Admin verification error:', adminError);
-
-        await supabase.auth.signOut();
-
-        setError(
-          'Unable to verify admin account. Please try again.'
-        );
-
-        return;
-      }
-
-      if (!admin) {
-        await supabase.auth.signOut();
-
-        setError(
-          'This account is not registered as an administrator.'
-        );
-
-        return;
-      }
-
-      /*
-       * If your admins table has is_active, make sure
-       * disabled admins cannot enter the dashboard.
-       */
-      if (
-        Object.prototype.hasOwnProperty.call(admin, 'is_active') &&
-        admin.is_active === false
-      ) {
-        await supabase.auth.signOut();
-
-        setError(
-          'Your admin account is currently disabled.'
-        );
-
-        return;
-      }
-
-      /*
-       * Store only a simple UI flag.
+       * verify_admin_login() checks the password hash with pgcrypto's
+       * crypt() server-side and only returns a row when
+       * role = 'super_admin' AND is_active = true.
        *
-       * IMPORTANT:
-       * The actual authentication is Supabase Auth.
-       * sessionStorage is NOT the source of truth.
+       * The admin_users table (including password_hash) is never
+       * queried directly from the frontend.
        */
-      sessionStorage.setItem('vattams_admin', 'logged_in');
-      sessionStorage.setItem(
-        'vattams_admin_email',
-        cleanEmail
+      const { data: admin, error: rpcError } = await supabase.rpc(
+        'verify_admin_login',
+        {
+          p_email: cleanEmail,
+          p_password: password,
+        }
       );
 
+      if (rpcError) {
+        console.error('Admin login RPC error:', rpcError);
+        setError('Unable to verify admin account. Please try again.');
+        return;
+      }
+
       /*
-       * Go to admin dashboard only after
-       * successful authentication + admin verification.
+       * The RPC returns either an empty result or a single row,
+       * depending on how it's defined (row-returning function).
+       * Normalize both shapes safely.
+       */
+      const adminRow = Array.isArray(admin) ? admin[0] : admin;
+
+      if (!adminRow || !adminRow.id) {
+        setError('Invalid admin email or password.');
+        return;
+      }
+
+      if (adminRow.role !== 'super_admin') {
+        setError('This account is not authorized for admin access.');
+        return;
+      }
+
+      /*
+       * Store the custom admin session.
+       * This project uses its own sessionStorage-based admin
+       * session — NOT supabase.auth — so no Supabase Auth call
+       * is made here.
+       */
+      const expiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000); // 8-hour session
+
+      sessionStorage.setItem('vattams_admin', adminRow.id);
+      sessionStorage.setItem('vattams_admin_email', adminRow.email ?? cleanEmail);
+      sessionStorage.setItem('vattams_admin_expires', expiresAt.toISOString());
+      sessionStorage.setItem('vattams_admin_role', adminRow.role);
+      if (adminRow.full_name) {
+        sessionStorage.setItem('vattams_admin_name', adminRow.full_name);
+      }
+
+      /*
+       * Go to admin dashboard only after successful RPC
+       * verification.
        */
       navigate('admin-dashboard');
     } catch (err) {
