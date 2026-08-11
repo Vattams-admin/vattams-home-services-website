@@ -3,6 +3,8 @@ import {
   Sparkles,
   Send,
   CheckCircle,
+  XCircle,
+  Check,
   Loader,
   ArrowRight,
   ArrowLeft,
@@ -580,7 +582,7 @@ export default function TechnicianRegister() {
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
                         }
                       >
-                        {selected ? '✓ ' : ''}
+                        {selected && <Check size={14} className="inline-block mr-1 -mt-0.5" aria-hidden="true" />}
                         {option}
                       </button>
                     );
@@ -605,16 +607,16 @@ export default function TechnicianRegister() {
 
                 <button
                   onClick={() => handleBoolean(true)}
-                  className="flex-1 py-3 bg-green-50 hover:bg-green-100 text-green-700 font-bold rounded-xl transition-colors text-sm"
+                  className="flex-1 py-3 bg-green-50 hover:bg-green-100 text-green-700 font-bold rounded-xl transition-colors text-sm flex items-center justify-center gap-1.5"
                 >
-                  ✓ Yes
+                  <CheckCircle size={16} aria-hidden="true" /> Yes
                 </button>
 
                 <button
                   onClick={() => handleBoolean(false)}
-                  className="flex-1 py-3 bg-red-50 hover:bg-red-100 text-red-700 font-bold rounded-xl transition-colors text-sm"
+                  className="flex-1 py-3 bg-red-50 hover:bg-red-100 text-red-700 font-bold rounded-xl transition-colors text-sm flex items-center justify-center gap-1.5"
                 >
-                  ✗ No
+                  <XCircle size={16} aria-hidden="true" /> No
                 </button>
 
               </div>
