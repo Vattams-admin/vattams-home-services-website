@@ -1,17 +1,21 @@
 import { useState, useEffect } from 'react';
-import { Menu, X, Phone, MessageCircle, ChevronDown, User, Briefcase, LogOut, LogIn, ShieldCheck, LayoutDashboard, CreditCard, Star } from 'lucide-react';
+import {
+  Menu, X, Phone, MessageCircle, ChevronDown, User, Briefcase, LogOut, LogIn,
+  ShieldCheck, LayoutDashboard, CreditCard, Star, Home as HomeIcon, Wrench,
+  Sparkles, Info, UserPlus, UserCircle2, CalendarCheck, LucideIcon,
+} from 'lucide-react';
 import { useRouter, Page } from '@/lib/router';
 import SocialLinks from '@/components/SocialLinks';
 import NotificationCenter from '@/components/NotificationCenter';
 import JoinTechnicianButton from '@/components/JoinTechnicianButton';
 import { Customer } from '@/lib/supabase';
 
-const navLinks: { label: string; page: Page }[] = [
-  { label: 'Home', page: 'home' },
-  { label: 'Services', page: 'services' },
-  { label: 'AI Assistant', page: 'ai-assistant' },
-  { label: 'About', page: 'about' },
-  { label: 'Contact', page: 'contact' },
+const navLinks: { label: string; page: Page; icon: LucideIcon }[] = [
+  { label: 'Home', page: 'home', icon: HomeIcon },
+  { label: 'Services', page: 'services', icon: Wrench },
+  { label: 'AI Assistant', page: 'ai-assistant', icon: Sparkles },
+  { label: 'About', page: 'about', icon: Info },
+  { label: 'Contact', page: 'contact', icon: Phone },
 ];
 
 export default function Header() {
@@ -25,10 +29,15 @@ export default function Header() {
       const raw = sessionStorage.getItem('vattams_customer');
       if (raw) setCustomer(JSON.parse(raw));
       else setCustomer(null);
-    } catch { setCustomer(null); }
+    } catch {
+      setCustomer(null);
+    }
   }, [page]);
 
-  const close = () => { setMobileOpen(false); setAccountOpen(false); };
+  const close = () => {
+    setMobileOpen(false);
+    setAccountOpen(false);
+  };
 
   const handleLogout = () => {
     sessionStorage.removeItem('vattams_customer');
@@ -41,22 +50,45 @@ export default function Header() {
     <header className="fixed top-0 inset-x-0 z-50 bg-white/90 backdrop-blur-lg border-b border-blue-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">
+
           {/* Logo */}
-          <button onClick={() => { navigate('home'); close(); }} className="flex items-center gap-3 group">
-            <img src="/logo.svg" alt="VATTAMS HOME SERVICES" className="h-10 md:h-12 w-auto object-contain" />
+          <button
+            onClick={() => {
+              navigate('home');
+              close();
+            }}
+            className="flex items-center gap-3 group"
+          >
+            <img
+              src="/logo.svg"
+              alt="VATTAMS HOME SERVICES"
+              className="h-10 md:h-12 w-auto object-contain"
+            />
+
             <div className="hidden sm:block text-left">
-              <div className="text-base md:text-lg font-extrabold text-blue-900 leading-tight tracking-wide">VATTAMS</div>
-              <div className="text-xs text-amber-600 font-semibold tracking-widest uppercase">Home Services</div>
+              <div className="text-base md:text-lg font-extrabold text-blue-900 leading-tight tracking-wide">
+                VATTAMS
+              </div>
+
+              <div className="text-xs text-amber-600 font-semibold tracking-widest uppercase">
+                Home Services
+              </div>
             </div>
           </button>
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-1">
             {navLinks.map((l) => (
-              <button key={l.page} onClick={() => navigate(l.page)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  page === l.page ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
-                }`}>
+              <button
+                key={l.page}
+                onClick={() => navigate(l.page)}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  page === l.page
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
+                    : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                }`}
+              >
+                <l.icon size={15} aria-hidden="true" />
                 {l.label}
               </button>
             ))}
@@ -65,89 +97,226 @@ export default function Header() {
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-2">
             <JoinTechnicianButton size="sm" variant="solid" />
-            <a href="tel:+918189800757" className="flex items-center gap-2 px-4 py-2 rounded-lg border border-blue-200 text-blue-700 text-sm font-medium hover:bg-blue-50 transition-colors">
-              <Phone size={15} /> Call
-            </a>
-            <a href="https://wa.me/918189800757" target="_blank" rel="noreferrer"
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500 text-white text-sm font-medium hover:bg-green-600 transition-colors">
-              <MessageCircle size={15} /> WhatsApp
+
+            <a
+              href="tel:+918189800757"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-blue-200 text-blue-700 text-sm font-medium hover:bg-blue-50 transition-colors"
+            >
+              <Phone size={15} />
+              Call
             </a>
 
-            {customer && <NotificationCenter recipientType="customer" recipientId={customer.mobile} />}
+            <a
+              href="https://wa.me/918189800757"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500 text-white text-sm font-medium hover:bg-green-600 transition-colors"
+            >
+              <MessageCircle size={15} />
+              WhatsApp
+            </a>
+
+            {customer && (
+              <NotificationCenter
+                recipientType="customer"
+                recipientId={customer.mobile}
+              />
+            )}
 
             {/* Account Dropdown */}
             <div className="relative">
               {customer ? (
-                <button onClick={() => setAccountOpen(!accountOpen)}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors">
-                  <User size={14} /> {customer.full_name.split(' ')[0]} <ChevronDown size={14} />
+                <button
+                  onClick={() => setAccountOpen(!accountOpen)}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+                >
+                  <User size={14} />
+                  {customer.full_name.split(' ')[0]}
+                  <ChevronDown size={14} />
                 </button>
               ) : (
-                <button onClick={() => setAccountOpen(!accountOpen)}
-                  className="flex items-center gap-1 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors">
-                  Account <ChevronDown size={14} />
+                <button
+                  onClick={() => setAccountOpen(!accountOpen)}
+                  className="flex items-center gap-1 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+                >
+                  Account
+                  <ChevronDown size={14} />
                 </button>
               )}
+
               {accountOpen && (
                 <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-blue-100 py-1 z-50">
+
                   {customer ? (
                     <>
                       <div className="px-4 py-2 border-b border-gray-100">
-                        <div className="font-bold text-gray-900 text-sm">{customer.full_name}</div>
-                        <div className="text-xs text-gray-400">{customer.mobile}</div>
+                        <div className="font-bold text-gray-900 text-sm">
+                          {customer.full_name}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {customer.mobile}
+                        </div>
                       </div>
-                      <button onClick={() => { navigate('customer-dashboard'); close(); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700">
-                        <LayoutDashboard size={15} /> Dashboard
+
+                      <button
+                        onClick={() => {
+                          navigate('customer-dashboard');
+                          close();
+                        }}
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                      >
+                        <LayoutDashboard size={15} />
+                        Dashboard
                       </button>
-                      <button onClick={() => { navigate('customer-bookings'); close(); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700">
-                        <Briefcase size={15} /> My Bookings
+
+                      <button
+                        onClick={() => {
+                          navigate('customer-bookings');
+                          close();
+                        }}
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                      >
+                        <Briefcase size={15} />
+                        My Bookings
                       </button>
-                      <button onClick={() => { navigate('customer-payments'); close(); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700">
-                        <CreditCard size={15} /> Payments
+
+                      <button
+                        onClick={() => {
+                          navigate('customer-payments');
+                          close();
+                        }}
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                      >
+                        <CreditCard size={15} />
+                        Payments
                       </button>
-                      <button onClick={() => { navigate('customer-reviews'); close(); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700">
-                        <Star size={15} /> Reviews
+
+                      <button
+                        onClick={() => {
+                          navigate('customer-reviews');
+                          close();
+                        }}
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                      >
+                        <Star size={15} />
+                        Reviews
                       </button>
-                      <button onClick={() => { navigate('customer-support'); close(); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700">
-                        <Phone size={15} /> Support
+
+                      <button
+                        onClick={() => {
+                          navigate('customer-support');
+                          close();
+                        }}
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                      >
+                        <Phone size={15} />
+                        Support
                       </button>
-                      <button onClick={() => { navigate('customer-profile'); close(); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700">
-                        <User size={15} /> My Profile
+
+                      <button
+                        onClick={() => {
+                          navigate('customer-profile');
+                          close();
+                        }}
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                      >
+                        <User size={15} />
+                        My Profile
                       </button>
+
                       <div className="border-t border-gray-100 mt-1 pt-1">
-                        <button onClick={() => { navigate('booking'); close(); }} className="w-full text-left px-4 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-50">
+                        <button
+                          onClick={() => {
+                            navigate('booking');
+                            close();
+                          }}
+                          className="w-full flex items-center gap-2 text-left px-4 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-50"
+                        >
+                          <CalendarCheck size={15} />
                           Book a Service
                         </button>
                       </div>
+
                       <div className="border-t border-gray-100 mt-1 pt-1">
-                        <button onClick={handleLogout} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">
-                          <LogOut size={15} /> Logout
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50"
+                        >
+                          <LogOut size={15} />
+                          Logout
                         </button>
                       </div>
                     </>
                   ) : (
                     <>
-                      <button onClick={() => { navigate('customer-login'); close(); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700">
-                        <LogIn size={15} /> Customer Login
+                      <button
+                        onClick={() => {
+                          navigate('customer-login');
+                          close();
+                        }}
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                      >
+                        <LogIn size={15} />
+                        Customer Login
                       </button>
-                      <button onClick={() => { navigate('customer-register'); close(); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700">
-                        <User size={15} /> Customer Registration
+
+                      <button
+                        onClick={() => {
+                          navigate('customer-register');
+                          close();
+                        }}
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                      >
+                        <User size={15} />
+                        Customer Registration
                       </button>
+
                       <div className="border-t border-gray-100 mt-1 pt-1">
-                        <button onClick={() => { navigate('admin-login'); close(); }} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700">
-                          <ShieldCheck size={15} /> Admin Login
+                        <button
+                          onClick={() => {
+                            navigate('admin-login');
+                            close();
+                          }}
+                          className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                        >
+                          <ShieldCheck size={15} />
+                          Admin Login
                         </button>
                       </div>
+
                       <div className="border-t border-gray-100 mt-1 pt-1">
-                        <button onClick={() => { navigate('technician-register'); close(); }} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50">
+                        <button
+                          onClick={() => {
+                            navigate('technician-register');
+                            close();
+                          }}
+                          className="w-full flex items-center gap-2 text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50"
+                        >
+                          <UserPlus size={15} />
                           Technician Registration
                         </button>
-                        <button onClick={() => { navigate('technician-login'); close(); }} className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50">
+
+                        <button
+                          onClick={() => {
+                            navigate('technician-login');
+                            close();
+                          }}
+                          className="w-full flex items-center gap-2 text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50"
+                        >
+                          <LogIn size={15} />
                           Technician Login
                         </button>
                       </div>
+
                       <div className="border-t border-gray-100 mt-1 pt-1">
-                        <button onClick={() => { navigate('booking'); close(); }} className="w-full text-left px-4 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-50">
+                        <button
+                          onClick={() => {
+                            navigate('booking');
+                            close();
+                          }}
+                          className="w-full flex items-center gap-2 text-left px-4 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-50"
+                        >
+                          <CalendarCheck size={15} />
                           Book a Service
                         </button>
                       </div>
@@ -165,7 +334,11 @@ export default function Header() {
             aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={mobileOpen}
           >
-            {mobileOpen ? <X size={22} aria-hidden="true" /> : <Menu size={22} aria-hidden="true" />}
+            {mobileOpen ? (
+              <X size={22} aria-hidden="true" />
+            ) : (
+              <Menu size={22} aria-hidden="true" />
+            )}
           </button>
         </div>
       </div>
@@ -174,81 +347,218 @@ export default function Header() {
       {mobileOpen && (
         <div className="md:hidden bg-white border-t border-blue-100 pb-4">
           <nav className="px-4 pt-2 space-y-1">
+
             {navLinks.map((l) => (
-              <button key={l.page} onClick={() => { navigate(l.page); close(); }}
-                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                  page === l.page ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-blue-50'
-                }`}>
+              <button
+                key={l.page}
+                onClick={() => {
+                  navigate(l.page);
+                  close();
+                }}
+                className={`w-full flex items-center gap-2.5 text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                  page === l.page
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-700 hover:bg-blue-50'
+                }`}
+              >
+                <l.icon size={16} aria-hidden="true" />
                 {l.label}
               </button>
             ))}
+
             <div className="border-t border-gray-100 pt-2 space-y-1">
+
               {customer && (
                 <div className="flex items-center justify-between px-4 py-2">
-                  <span className="text-sm text-gray-500">Notifications</span>
-                  <NotificationCenter recipientType="customer" recipientId={customer.mobile} />
+                  <span className="text-sm text-gray-500">
+                    Notifications
+                  </span>
+
+                  <NotificationCenter
+                    recipientType="customer"
+                    recipientId={customer.mobile}
+                  />
                 </div>
               )}
-              <button onClick={() => { navigate('booking'); close(); }}
-                className="w-full text-left px-4 py-3 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700">
+
+              <button
+                onClick={() => {
+                  navigate('booking');
+                  close();
+                }}
+                className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700"
+              >
+                <CalendarCheck size={16} />
                 Book a Service
               </button>
-              <button onClick={() => { navigate('join-technician'); close(); }}
-                className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600">
-                <Briefcase size={15} /> Join as a Technician
+
+              <button
+                onClick={() => {
+                  navigate('join-technician');
+                  close();
+                }}
+                className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600"
+              >
+                <Briefcase size={15} />
+                Join as a Technician
               </button>
+
               {customer ? (
                 <>
-                  <button onClick={() => { navigate('customer-dashboard'); close(); }} className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50">
-                    <LayoutDashboard size={15} /> Dashboard
+                  <button
+                    onClick={() => {
+                      navigate('customer-dashboard');
+                      close();
+                    }}
+                    className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50"
+                  >
+                    <LayoutDashboard size={15} />
+                    Dashboard
                   </button>
-                  <button onClick={() => { navigate('customer-bookings'); close(); }} className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50">
-                    <Briefcase size={15} /> My Bookings
+
+                  <button
+                    onClick={() => {
+                      navigate('customer-bookings');
+                      close();
+                    }}
+                    className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50"
+                  >
+                    <Briefcase size={15} />
+                    My Bookings
                   </button>
-                  <button onClick={() => { navigate('customer-payments'); close(); }} className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50">
-                    <CreditCard size={15} /> Payments
+
+                  <button
+                    onClick={() => {
+                      navigate('customer-payments');
+                      close();
+                    }}
+                    className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50"
+                  >
+                    <CreditCard size={15} />
+                    Payments
                   </button>
-                  <button onClick={() => { navigate('customer-reviews'); close(); }} className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50">
-                    <Star size={15} /> Reviews
+
+                  <button
+                    onClick={() => {
+                      navigate('customer-reviews');
+                      close();
+                    }}
+                    className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50"
+                  >
+                    <Star size={15} />
+                    Reviews
                   </button>
-                  <button onClick={() => { navigate('customer-support'); close(); }} className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50">
-                    <Phone size={15} /> Support
+
+                  <button
+                    onClick={() => {
+                      navigate('customer-support');
+                      close();
+                    }}
+                    className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50"
+                  >
+                    <Phone size={15} />
+                    Support
                   </button>
-                  <button onClick={() => { navigate('customer-profile'); close(); }} className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50">
-                    <User size={15} /> My Profile
+
+                  <button
+                    onClick={() => {
+                      navigate('customer-profile');
+                      close();
+                    }}
+                    className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50"
+                  >
+                    <User size={15} />
+                    My Profile
                   </button>
-                  <button onClick={handleLogout} className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm text-red-600 hover:bg-red-50">
-                    <LogOut size={15} /> Logout
+
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-2 text-left px-4 py-3 rounded-lg text-sm text-red-600 hover:bg-red-50"
+                  >
+                    <LogOut size={15} />
+                    Logout
                   </button>
                 </>
               ) : (
                 <>
-                  <button onClick={() => { navigate('customer-login'); close(); }} className="w-full text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50">
+                  <button
+                    onClick={() => {
+                      navigate('customer-login');
+                      close();
+                    }}
+                    className="w-full flex items-center gap-2.5 text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50"
+                  >
+                    <LogIn size={16} />
                     Customer Login
                   </button>
-                  <button onClick={() => { navigate('customer-register'); close(); }} className="w-full text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50">
+
+                  <button
+                    onClick={() => {
+                      navigate('customer-register');
+                      close();
+                    }}
+                    className="w-full flex items-center gap-2.5 text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50"
+                  >
+                    <UserCircle2 size={16} />
                     Customer Registration
                   </button>
-                  <button onClick={() => { navigate('admin-login'); close(); }} className="w-full text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50">
+
+                  <button
+                    onClick={() => {
+                      navigate('admin-login');
+                      close();
+                    }}
+                    className="w-full flex items-center gap-2.5 text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50"
+                  >
+                    <ShieldCheck size={16} />
                     Admin Login
                   </button>
-                  <button onClick={() => { navigate('technician-register'); close(); }} className="w-full text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50">
+
+                  <button
+                    onClick={() => {
+                      navigate('technician-register');
+                      close();
+                    }}
+                    className="w-full flex items-center gap-2.5 text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50"
+                  >
+                    <UserPlus size={16} />
                     Technician Registration
                   </button>
-                  <button onClick={() => { navigate('technician-login'); close(); }} className="w-full text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50">
+
+                  <button
+                    onClick={() => {
+                      navigate('technician-login');
+                      close();
+                    }}
+                    className="w-full flex items-center gap-2.5 text-left px-4 py-3 rounded-lg text-sm text-gray-700 hover:bg-blue-50"
+                  >
+                    <LogIn size={16} />
                     Technician Login
                   </button>
                 </>
               )}
             </div>
+
             <div className="flex gap-2 pt-2">
-              <a href="tel:+918189800757" className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border border-blue-200 text-blue-700 text-sm font-medium">
-                <Phone size={15} /> Call
+              <a
+                href="tel:+918189800757"
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border border-blue-200 text-blue-700 text-sm font-medium"
+              >
+                <Phone size={15} />
+                Call
               </a>
-              <a href="https://wa.me/918189800757" target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-green-500 text-white text-sm font-medium">
-                <MessageCircle size={15} /> WhatsApp
+
+              <a
+                href="https://wa.me/918189800757"
+                target="_blank"
+                rel="noreferrer"
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-green-500 text-white text-sm font-medium"
+              >
+                <MessageCircle size={15} />
+                WhatsApp
               </a>
             </div>
+
             <SocialLinks variant="mobile" />
           </nav>
         </div>
