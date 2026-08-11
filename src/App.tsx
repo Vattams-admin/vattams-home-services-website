@@ -27,6 +27,7 @@ import TechnicianRegister from '@/pages/TechnicianRegister';
 import TechnicianLogin from '@/pages/TechnicianLogin';
 import TechnicianDashboard from '@/pages/TechnicianDashboard';
 import JoinTechnician from '@/pages/JoinTechnician';
+import NotFound from '@/pages/NotFound';
 
 function Schema() {
   const schema = {
@@ -112,9 +113,11 @@ function Pages() {
         return <TechnicianLogin />;
       case 'technician-dashboard':
         return <TechnicianDashboard />;
+      case 'join-technician':
+        return <JoinTechnician />;
+      case 'not-found':
+        return <NotFound />;
       default:
-       case 'join-technician':
-  return <JoinTechnician />;
         return <Home />;
     }
   };
