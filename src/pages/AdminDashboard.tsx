@@ -264,6 +264,19 @@ export default function AdminDashboard() {
             'vattams_admin_expires'
           );
 
+        const adminRole =
+          sessionStorage.getItem(
+            'vattams_admin_role'
+          );
+
+        const clearAdminSession = () => {
+          sessionStorage.removeItem('vattams_admin');
+          sessionStorage.removeItem('vattams_admin_email');
+          sessionStorage.removeItem('vattams_admin_expires');
+          sessionStorage.removeItem('vattams_admin_role');
+          sessionStorage.removeItem('vattams_admin_name');
+        };
+
         if (
           !adminToken ||
           (
@@ -271,13 +284,22 @@ export default function AdminDashboard() {
             new Date(expiresAt) < new Date()
           )
         ) {
-          sessionStorage.removeItem(
-            'vattams_admin'
-          );
+          clearAdminSession();
 
-          sessionStorage.removeItem(
-            'vattams_admin_expires'
-          );
+          if (mounted) {
+            navigate('admin-login');
+          }
+
+          return;
+        }
+
+        // Only role === 'super_admin' may access the admin
+        // dashboard. AdminLogin only ever stores this key for
+        // super_admin accounts (verify_admin_login only returns
+        // active super_admin rows), but this check keeps the
+        // dashboard from trusting a stale/tampered session too.
+        if (adminRole !== 'super_admin') {
+          clearAdminSession();
 
           if (mounted) {
             navigate('admin-login');
@@ -301,13 +323,11 @@ export default function AdminDashboard() {
           error
         );
 
-        sessionStorage.removeItem(
-          'vattams_admin'
-        );
-
-        sessionStorage.removeItem(
-          'vattams_admin_expires'
-        );
+        sessionStorage.removeItem('vattams_admin');
+        sessionStorage.removeItem('vattams_admin_email');
+        sessionStorage.removeItem('vattams_admin_expires');
+        sessionStorage.removeItem('vattams_admin_role');
+        sessionStorage.removeItem('vattams_admin_name');
 
         if (mounted) {
           navigate('admin-login');
@@ -1317,6 +1337,8 @@ export default function AdminDashboard() {
     sessionStorage.removeItem('vattams_admin');
     sessionStorage.removeItem('vattams_admin_email');
     sessionStorage.removeItem('vattams_admin_expires');
+    sessionStorage.removeItem('vattams_admin_role');
+    sessionStorage.removeItem('vattams_admin_name');
 
     navigate('admin-login');
   };
