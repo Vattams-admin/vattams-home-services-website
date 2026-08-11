@@ -1,5 +1,52 @@
 import React from "react";
 import { useRouter } from "@/lib/router";
+import {
+  Briefcase,
+  Lightbulb,
+  Cpu,
+  CheckCircle,
+  Rocket,
+  Eye,
+  Heart,
+  BookOpen,
+  Award,
+  Trophy,
+  ShieldCheck,
+  Phone,
+  Mail,
+  Globe,
+  MapPin,
+  Linkedin,
+  Calendar,
+} from "lucide-react";
+import IconBadge from "@/components/IconBadge";
+
+const timeline = [
+  { title: "Vision", icon: Lightbulb, text: "Started with an idea to transform home services using technology." },
+  { title: "Development", icon: Cpu, text: "Learned React, TypeScript, Tailwind CSS, Supabase, Cloudflare and AI tools." },
+  { title: "Testing", icon: CheckCircle, text: "Improved every feature, solved deployment issues and optimized performance." },
+  { title: "Launch", icon: Rocket, text: "Successfully launched VATTAMS HOME SERVICES." },
+];
+
+const principles = [
+  { label: "Customer First", icon: Heart },
+  { label: "Innovation", icon: Lightbulb },
+  { label: "Transparency", icon: Eye },
+  { label: "Quality Service", icon: Award },
+  { label: "Continuous Learning", icon: BookOpen },
+  { label: "Technology Driven", icon: Cpu },
+];
+
+const achievements = [
+  "Built VATTAMS HOME SERVICES",
+  "Developed in Nearly 3 Months",
+  "Built Primarily Using a Mobile Phone",
+  "Cloudflare Production Deployment",
+  "React + TypeScript Platform",
+  "Supabase Backend Integration",
+  "Customer & Technician Portals",
+  "AI-Assisted Development",
+];
 
 const Founder = () => {
   const { navigate } = useRouter();
@@ -16,7 +63,8 @@ const Founder = () => {
 
             <div>
 
-              <span className="inline-block bg-orange-500 text-white px-4 py-2 rounded-full text-sm font-semibold">
+              <span className="inline-flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-full text-sm font-semibold">
+                <Briefcase size={16} aria-hidden="true" />
                 Founder & CEO
               </span>
 
@@ -68,10 +116,9 @@ const Founder = () => {
 
         <div className="max-w-6xl mx-auto px-6">
 
-          <h2 className="text-4xl font-bold text-center mb-12">
-
+          <h2 className="text-4xl font-bold text-center mb-12 flex items-center justify-center gap-3">
+            <BookOpen size={32} className="text-orange-500" aria-hidden="true" />
             My Journey
-
           </h2>
 
           <div className="space-y-8 text-lg leading-9">
@@ -150,77 +197,25 @@ const Founder = () => {
 
           <div className="grid md:grid-cols-4 gap-6">
 
-            <div className="bg-white rounded-2xl shadow-lg p-6">
+            {timeline.map((step) => (
+              <div key={step.title} className="bg-white rounded-2xl shadow-lg p-6">
 
-              <h3 className="font-bold text-orange-500">
+                <IconBadge icon={step.icon} size="md" variant="amber" className="mb-4" />
 
-                Vision
+                <h3 className="font-bold text-orange-500">
 
-              </h3>
+                  {step.title}
 
-              <p className="mt-4">
+                </h3>
 
-                Started with an idea to transform
-                home services using technology.
+                <p className="mt-4">
 
-              </p>
+                  {step.text}
 
-            </div>
+                </p>
 
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-
-              <h3 className="font-bold text-orange-500">
-
-                Development
-
-              </h3>
-
-              <p className="mt-4">
-
-                Learned React,
-                TypeScript,
-                Tailwind CSS,
-                Supabase,
-                Cloudflare and AI tools.
-
-              </p>
-
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-
-              <h3 className="font-bold text-orange-500">
-
-                Testing
-
-              </h3>
-
-              <p className="mt-4">
-
-                Improved every feature,
-                solved deployment issues
-                and optimized performance.
-
-              </p>
-
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-
-              <h3 className="font-bold text-orange-500">
-
-                Launch
-
-              </h3>
-
-              <p className="mt-4">
-
-                Successfully launched
-                VATTAMS HOME SERVICES.
-
-              </p>
-
-            </div>
+              </div>
+            ))}
 
           </div>
 
@@ -233,6 +228,10 @@ const Founder = () => {
       <section className="py-20">
 
         <div className="max-w-5xl mx-auto px-6 text-center">
+
+          <div className="flex justify-center mb-4">
+            <IconBadge icon={Rocket} size="lg" variant="blue" />
+          </div>
 
           <h2 className="text-4xl font-bold">
 
@@ -259,6 +258,10 @@ const Founder = () => {
       <section className="bg-slate-100 py-20">
 
         <div className="max-w-5xl mx-auto px-6 text-center">
+
+          <div className="flex justify-center mb-4">
+            <IconBadge icon={Eye} size="lg" variant="blue" />
+          </div>
 
           <h2 className="text-4xl font-bold">
 
@@ -291,19 +294,15 @@ const Founder = () => {
 
           <div className="grid md:grid-cols-3 gap-6">
 
-            {[
-              "Customer First",
-              "Innovation",
-              "Transparency",
-              "Quality Service",
-              "Continuous Learning",
-              "Technology Driven",
-            ].map((item) => (
+            {principles.map((item) => (
               <div
-                key={item}
+                key={item.label}
                 className="bg-white rounded-2xl shadow-lg p-8 text-center hover:shadow-xl transition"
               >
-                <h3 className="text-xl font-bold text-orange-500">{item}</h3>
+                <div className="flex justify-center mb-4">
+                  <IconBadge icon={item.icon} size="md" variant="amber" />
+                </div>
+                <h3 className="text-xl font-bold text-orange-500">{item.label}</h3>
               </div>
             ))}
 
@@ -319,26 +318,19 @@ const Founder = () => {
 
         <div className="max-w-6xl mx-auto px-6">
 
-          <h2 className="text-4xl font-bold text-center mb-12">
+          <h2 className="text-4xl font-bold text-center mb-12 flex items-center justify-center gap-3">
+            <Trophy size={32} className="text-orange-500" aria-hidden="true" />
             Achievements
           </h2>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
 
-            {[
-              "Built VATTAMS HOME SERVICES",
-              "Developed in Nearly 3 Months",
-              "Built Primarily Using a Mobile Phone",
-              "Cloudflare Production Deployment",
-              "React + TypeScript Platform",
-              "Supabase Backend Integration",
-              "Customer & Technician Portals",
-              "AI-Assisted Development",
-            ].map((item) => (
+            {achievements.map((item) => (
               <div
                 key={item}
                 className="bg-white rounded-xl shadow p-6 text-center font-semibold"
               >
+                <Award size={22} className="mx-auto mb-3 text-orange-500" aria-hidden="true" />
                 {item}
               </div>
             ))}
@@ -355,7 +347,8 @@ const Founder = () => {
 
         <div className="max-w-6xl mx-auto px-6">
 
-          <h2 className="text-4xl font-bold text-center mb-12">
+          <h2 className="text-4xl font-bold text-center mb-12 flex items-center justify-center gap-3">
+            <Cpu size={32} className="text-blue-900" aria-hidden="true" />
             Technology Stack
           </h2>
 
@@ -425,9 +418,12 @@ const Founder = () => {
           <div className="grid md:grid-cols-2 gap-8">
 
             <div className="bg-white rounded-2xl shadow-lg p-8">
-              <h3 className="text-xl font-bold text-orange-500 mb-2">
-                MSME (Udyam) Registered Enterprise
-              </h3>
+              <div className="flex items-center gap-2 mb-2">
+                <ShieldCheck size={24} className="text-orange-500" aria-hidden="true" />
+                <h3 className="text-xl font-bold text-orange-500">
+                  MSME (Udyam) Registered Enterprise
+                </h3>
+              </div>
               <p className="text-gray-600">
                 Government of India — Udyam Registered Enterprise
               </p>
@@ -440,10 +436,18 @@ const Founder = () => {
               <h3 className="text-xl font-bold text-orange-500 mb-4">
                 Contact
               </h3>
-              <p className="text-gray-600">Phone: +91 63828 39861</p>
-              <p className="text-gray-600">Email: info@vattams.net</p>
-              <p className="text-gray-600">Website: www.vattams.net</p>
-              <p className="text-gray-600">Location: Chennai, Tamil Nadu, India</p>
+              <p className="text-gray-600 flex items-center gap-2">
+                <Phone size={16} className="text-gray-400" aria-hidden="true" /> +91 63828 39861
+              </p>
+              <p className="text-gray-600 flex items-center gap-2 mt-2">
+                <Mail size={16} className="text-gray-400" aria-hidden="true" /> info@vattams.net
+              </p>
+              <p className="text-gray-600 flex items-center gap-2 mt-2">
+                <Globe size={16} className="text-gray-400" aria-hidden="true" /> www.vattams.net
+              </p>
+              <p className="text-gray-600 flex items-center gap-2 mt-2">
+                <MapPin size={16} className="text-gray-400" aria-hidden="true" /> Chennai, Tamil Nadu, India
+              </p>
             </div>
 
           </div>
@@ -468,8 +472,9 @@ const Founder = () => {
               href="https://vattams.net"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-semibold transition"
+              className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-semibold transition"
             >
+              <Globe size={18} aria-hidden="true" />
               Visit Website
             </a>
 
@@ -477,8 +482,9 @@ const Founder = () => {
               href="https://www.linkedin.com/in/venkatesan-ponniah-371760427"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-blue-700 hover:bg-blue-800 text-white px-8 py-4 rounded-xl font-semibold transition"
+              className="inline-flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white px-8 py-4 rounded-xl font-semibold transition"
             >
+              <Linkedin size={18} aria-hidden="true" />
               LinkedIn Profile
             </a>
 
@@ -506,22 +512,25 @@ const Founder = () => {
 
             <button
               onClick={() => navigate('booking')}
-              className="bg-white text-orange-500 px-8 py-4 rounded-xl font-bold"
+              className="inline-flex items-center gap-2 bg-white text-orange-500 px-8 py-4 rounded-xl font-bold"
             >
+              <Calendar size={18} aria-hidden="true" />
               Book a Service
             </button>
 
             <button
               onClick={() => navigate('join-technician')}
-              className="bg-black text-white px-8 py-4 rounded-xl font-bold"
+              className="inline-flex items-center gap-2 bg-black text-white px-8 py-4 rounded-xl font-bold"
             >
+              <Briefcase size={18} aria-hidden="true" />
               Join as Technician
             </button>
 
             <button
               onClick={() => navigate('contact')}
-              className="bg-blue-900 text-white px-8 py-4 rounded-xl font-bold"
+              className="inline-flex items-center gap-2 bg-blue-900 text-white px-8 py-4 rounded-xl font-bold"
             >
+              <Phone size={18} aria-hidden="true" />
               Contact Us
             </button>
 
