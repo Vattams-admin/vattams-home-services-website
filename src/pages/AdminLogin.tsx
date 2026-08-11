@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Lock, Loader, AlertCircle } from 'lucide-react';
+import { Lock, Loader, AlertCircle, Mail } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import { supabase } from '@/lib/supabase';
 
@@ -76,11 +76,24 @@ export default function AdminLogin() {
       const expiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000); // 8-hour session
 
       sessionStorage.setItem('vattams_admin', adminRow.id);
-      sessionStorage.setItem('vattams_admin_email', adminRow.email ?? cleanEmail);
-      sessionStorage.setItem('vattams_admin_expires', expiresAt.toISOString());
-      sessionStorage.setItem('vattams_admin_role', adminRow.role);
+      sessionStorage.setItem(
+        'vattams_admin_email',
+        adminRow.email ?? cleanEmail
+      );
+      sessionStorage.setItem(
+        'vattams_admin_expires',
+        expiresAt.toISOString()
+      );
+      sessionStorage.setItem(
+        'vattams_admin_role',
+        adminRow.role
+      );
+
       if (adminRow.full_name) {
-        sessionStorage.setItem('vattams_admin_name', adminRow.full_name);
+        sessionStorage.setItem(
+          'vattams_admin_name',
+          adminRow.full_name
+        );
       }
 
       /*
@@ -136,18 +149,26 @@ export default function AdminLogin() {
                 Admin Email
               </label>
 
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setError('');
-                }}
-                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-blue-200/50 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all"
-                placeholder="admin@vattams.net"
-                autoComplete="username"
-              />
+              <div className="relative">
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setError('');
+                  }}
+                  className="w-full pl-4 pr-10 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-blue-200/50 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all"
+                  placeholder="admin@vattams.net"
+                  autoComplete="username"
+                />
+
+                <Mail
+                  size={16}
+                  className="absolute right-3 top-3.5 text-blue-200/50"
+                  aria-hidden="true"
+                />
+              </div>
             </div>
 
             {/* Password */}
