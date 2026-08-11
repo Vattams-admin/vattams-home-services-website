@@ -1,8 +1,11 @@
-const stats = [
-  { value: '10,000+', label: 'Happy Customers' },
-  { value: '500+', label: 'Verified Technicians' },
-  { value: '30+', label: 'Cities' },
-  { value: '4.9★', label: 'Customer Rating' },
+import { Users, ShieldCheck, MapPin, Star, LucideIcon } from 'lucide-react';
+import IconBadge from '@/components/IconBadge';
+
+const stats: { icon: LucideIcon; value: string; label: string }[] = [
+  { icon: Users, value: '10,000+', label: 'Happy Customers' },
+  { icon: ShieldCheck, value: '500+', label: 'Verified Technicians' },
+  { icon: MapPin, value: '30+', label: 'Cities' },
+  { icon: Star, value: '4.9', label: 'Customer Rating' },
 ];
 
 export default function TrustStrip() {
@@ -13,10 +16,11 @@ export default function TrustStrip() {
           {stats.map((s) => (
             <div
               key={s.label}
-              className="text-center bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-6"
+              className="text-center bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-6 flex flex-col items-center gap-2"
             >
+              <IconBadge icon={s.icon} size="sm" variant="blue" />
               <div className="font-display text-2xl md:text-3xl font-bold text-royal-900">{s.value}</div>
-              <div className="text-gray-500 text-xs md:text-sm font-medium mt-1">{s.label}</div>
+              <div className="text-gray-500 text-xs md:text-sm font-medium">{s.label}</div>
             </div>
           ))}
         </div>
