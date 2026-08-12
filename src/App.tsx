@@ -32,6 +32,7 @@ import NotFound from '@/pages/NotFound';
 import TuitionHome from '@/pages/tuition/TuitionHome';
 import TuitionCourses from '@/pages/tuition/TuitionCourses';
 import TuitionCourseDetail from '@/pages/tuition/TuitionCourseDetail';
+import TuitionBooking from '@/pages/tuition/TuitionBooking';
 
 function Schema() {
   const schema = {
@@ -125,6 +126,8 @@ function Pages() {
         return <TuitionCourses />;
       case 'tuition-course-detail':
         return <TuitionCourseDetail />;
+      case 'tuition-booking':
+        return <TuitionBooking />;
       case 'not-found':
         return <NotFound />;
       default:
