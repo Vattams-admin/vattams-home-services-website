@@ -1,6 +1,6 @@
 import { GraduationCap } from 'lucide-react';
 import { useRouter } from '@/lib/router';
-import { tuitionCourses } from '@/components/tuition/tuitionCoursesData';
+import { tuitionCourses } from './tuitionCoursesData';
 import TuitionCourseCard from '@/components/tuition/TuitionCourseCard';
 
 export default function TuitionCourses() {
