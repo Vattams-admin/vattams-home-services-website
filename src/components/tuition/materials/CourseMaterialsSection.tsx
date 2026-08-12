@@ -81,18 +81,20 @@ export default function CourseMaterialsSection({ materials }: CourseMaterialsSec
               role="tab"
               aria-selected={isActive}
               onClick={() => handleSelectCategory(key)}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold border transition-colors ${
-                isActive
+              className={
+                'flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold border transition-colors ' +
+                (isActive
                   ? 'bg-purple-600 border-purple-600 text-white'
-                  : 'bg-white border-gray-200 text-gray-700 hover:border-purple-300 hover:text-purple-700'
-              }`}
+                  : 'bg-white border-gray-200 text-gray-700 hover:border-purple-300 hover:text-purple-700')
+              }
             >
               <Icon size={15} />
               {label}
               <span
-                className={`ml-0.5 text-xs rounded-full px-1.5 ${
-                  isActive ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
-                }`}
+                className={
+                  'ml-0.5 text-xs rounded-full px-1.5 ' +
+                  (isActive ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500')
+                }
               >
                 {count}
               </span>
@@ -104,7 +106,7 @@ export default function CourseMaterialsSection({ materials }: CourseMaterialsSec
       {/* Active category panel */}
       <div
         role="tabpanel"
-        aria-label={${activeMeta.label} materials}
+        aria-label={activeMeta.label + ' materials'}
         className="rounded-2xl border border-gray-200 bg-gray-50 p-5 md:p-6"
       >
         <div className="flex items-center gap-2 mb-4">
