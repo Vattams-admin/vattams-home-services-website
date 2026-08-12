@@ -182,3 +182,14 @@ export function RouterProvider({
 export function useRouter() {
   return useContext(RouterContext);
 }
+import JoinTechnician from '@/pages/JoinTechnician';
+ import NotFound from '@/pages/NotFound';
++
++import TuitionHome from '@/pages/tuition/TuitionHome';
+@@
+       case 'join-technician':
+         return <JoinTechnician />;
++      case 'tuition-home':
++        return <TuitionHome />;
+       case 'not-found':
+         return <NotFound />;
