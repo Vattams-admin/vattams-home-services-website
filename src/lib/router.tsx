@@ -25,23 +25,28 @@ export type Page =
   | 'join-technician'
   | 'not-found'
   | 'city-landing'
-  | 'tuition-home';
+  | 'tuition-home'
+  | 'tuition-courses'
+  | 'tuition-course-detail';
 
 interface RouterContextType {
   page: Page;
-  navigate: (page: Page) => void;
+  navigate: (page: Page, tuitionCourseSlug?: string) => void;
   citySlug: string | null;
+  tuitionCourseSlug: string | null;
 }
 
 const RouterContext = createContext<RouterContextType>({
   page: 'home',
   navigate: () => {},
   citySlug: null,
+  tuitionCourseSlug: null,
 });
 
 interface RouteInfo {
   page: Page;
   citySlug: string | null;
+  tuitionCourseSlug: string | null;
 }
 
 const VALID_PAGES: Page[] = [
@@ -69,6 +74,8 @@ const VALID_PAGES: Page[] = [
   'join-technician',
   'not-found',
   'tuition-home',
+  'tuition-courses',
+  'tuition-course-detail',
 ];
 
 function getRouteFromHash(): RouteInfo {
@@ -81,6 +88,7 @@ function getRouteFromHash(): RouteInfo {
     return {
       page: 'home',
       citySlug: null,
+      tuitionCourseSlug: null,
     };
   }
 
@@ -93,12 +101,34 @@ function getRouteFromHash(): RouteInfo {
       return {
         page: 'city-landing',
         citySlug: slug,
+        tuitionCourseSlug: null,
       };
     }
 
     return {
       page: 'home',
       citySlug: null,
+      tuitionCourseSlug: null,
+    };
+  }
+
+  // TUITION COURSE DETAIL PAGE
+  // Example: #tuition-course-detail-maths
+  if (hash.startsWith('tuition-course-detail-')) {
+    const slug = hash.replace(/^tuition-course-detail-/, '');
+
+    if (slug) {
+      return {
+        page: 'tuition-course-detail',
+        citySlug: null,
+        tuitionCourseSlug: slug,
+      };
+    }
+
+    return {
+      page: 'tuition-courses',
+      citySlug: null,
+      tuitionCourseSlug: null,
     };
   }
 
@@ -107,6 +137,7 @@ function getRouteFromHash(): RouteInfo {
     return {
       page: hash as Page,
       citySlug: null,
+      tuitionCourseSlug: null,
     };
   }
 
@@ -114,6 +145,7 @@ function getRouteFromHash(): RouteInfo {
   return {
     page: 'not-found',
     citySlug: null,
+    tuitionCourseSlug: null,
   };
 }
 
@@ -145,12 +177,18 @@ export function RouterProvider({
     };
   }, []);
 
-  const navigate = (page: Page) => {
-    window.location.hash = page;
+  const navigate = (page: Page, tuitionCourseSlug?: string) => {
+    const hash =
+      page === 'tuition-course-detail' && tuitionCourseSlug
+        ? `tuition-course-detail-${tuitionCourseSlug}`
+        : page;
+
+    window.location.hash = hash;
 
     setRoute({
       page,
       citySlug: null,
+      tuitionCourseSlug: tuitionCourseSlug ?? null,
     });
 
     window.scrollTo({
@@ -165,6 +203,7 @@ export function RouterProvider({
         page: route.page,
         navigate,
         citySlug: route.citySlug,
+        tuitionCourseSlug: route.tuitionCourseSlug,
       }}
     >
       {children}
