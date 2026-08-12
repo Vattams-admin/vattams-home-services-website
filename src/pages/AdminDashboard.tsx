@@ -3128,7 +3128,6 @@ export default function AdminDashboard() {
 
     {/* ===================== PRICING TAB ===================== */}
     {tab === 'pricing' && (
-          {tab === 'pricing' && (
             <div className="space-y-6">
 
               <div>
