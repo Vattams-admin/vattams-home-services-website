@@ -27,7 +27,8 @@ export type Page =
   | 'city-landing'
   | 'tuition-home'
   | 'tuition-courses'
-  | 'tuition-course-detail';
+  | 'tuition-course-detail'
+  | 'tuition-booking';
 
 interface RouterContextType {
   page: Page;
@@ -76,6 +77,7 @@ const VALID_PAGES: Page[] = [
   'tuition-home',
   'tuition-courses',
   'tuition-course-detail',
+  'tuition-booking',
 ];
 
 function getRouteFromHash(): RouteInfo {
