@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   Menu, X, Phone, MessageCircle, ChevronDown, User, Briefcase, LogOut, LogIn,
   ShieldCheck, LayoutDashboard, CreditCard, Star, Home as HomeIcon, Wrench,
-  Sparkles, Info, UserPlus, UserCircle2, CalendarCheck, LucideIcon,
+  Sparkles, Info, UserPlus, UserCircle2, CalendarCheck, LucideIcon, GraduationCap,
 } from 'lucide-react';
 import { useRouter, Page } from '@/lib/router';
 import SocialLinks from '@/components/SocialLinks';
@@ -92,6 +92,19 @@ export default function Header() {
                 {l.label}
               </button>
             ))}
+
+            {/* Online Tuition - visually distinct, links to existing tuition-home route */}
+            <button
+              onClick={() => navigate('tuition-home')}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ml-1 ${
+                page === 'tuition-home'
+                  ? 'bg-purple-600 text-white shadow-md shadow-purple-200'
+                  : 'text-purple-700 bg-purple-50 hover:bg-purple-100'
+              }`}
+            >
+              <GraduationCap size={15} aria-hidden="true" />
+              Online Tuition
+            </button>
           </nav>
 
           {/* Desktop CTA */}
@@ -365,6 +378,22 @@ export default function Header() {
                 {l.label}
               </button>
             ))}
+
+            {/* Online Tuition - visually distinct, links to existing tuition-home route */}
+            <button
+              onClick={() => {
+                navigate('tuition-home');
+                close();
+              }}
+              className={`w-full flex items-center gap-2.5 text-left px-4 py-3 rounded-lg text-sm font-semibold transition-colors ${
+                page === 'tuition-home'
+                  ? 'bg-purple-600 text-white'
+                  : 'text-purple-700 bg-purple-50 hover:bg-purple-100'
+              }`}
+            >
+              <GraduationCap size={16} aria-hidden="true" />
+              Online Tuition
+            </button>
 
             <div className="border-t border-gray-100 pt-2 space-y-1">
 
