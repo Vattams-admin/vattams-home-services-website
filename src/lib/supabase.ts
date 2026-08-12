@@ -2,6 +2,14 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = 'https://nfcibyprftnowaiwlxxc.supabase.co';
 const supabaseAnonKey ='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mY2lieXByZnRub3dhaXdseHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4ODMzOTgsImV4cCI6MjA5OTQ1OTM5OH0.5ZMjWYOuRBKNKG3ZonXXOBAfBapm54naphNXrHxq16k';
+
+// Exported so other modules (e.g. technicianRegistration.ts) can reuse the
+// same project URL / anon key instead of hardcoding a second copy. This is
+// the public anon key — safe to expose client-side. NEVER add the
+// service_role key here or anywhere in frontend code.
+export const SUPABASE_URL = supabaseUrl;
+export const SUPABASE_ANON_KEY = supabaseAnonKey;
+
   export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
     persistSession: true,
