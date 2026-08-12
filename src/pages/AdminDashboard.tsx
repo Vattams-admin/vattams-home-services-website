@@ -3105,8 +3105,29 @@ export default function AdminDashboard() {
 
                   <button
                     onClick={handleSocialSave}
-                    disabled={social
-          {/* ===================== PRICING TAB ===================== */}
+              disabled={socialSaving}
+              className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
+            >
+              {socialSaving ? (
+                <Loader
+                  size={16}
+                  className="animate-spin"
+                />
+              ) : (
+                <Save size={16} />
+              )}
+
+              {socialSaving
+                ? 'Saving...'
+                : 'Save Changes'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* ===================== PRICING TAB ===================== */}
+    {tab === 'pricing' && (
           {tab === 'pricing' && (
             <div className="space-y-6">
 
