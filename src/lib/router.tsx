@@ -137,7 +137,16 @@ export function RouterProvider({
     };
 
     window.addEventListener('hashchange', handleHashChange);
-
+| 'join-technician'
+   | 'not-found'
+-  | 'city-landing';
++  | 'city-landing'
++  | 'tuition-home';
+@@
+   'join-technician',
+   'not-found',
++  'tuition-home',
+ ];
     return () => {
       window.removeEventListener('hashchange', handleHashChange);
     };
