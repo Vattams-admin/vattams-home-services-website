@@ -12,7 +12,95 @@ export type TuitionCourse = {
   whoItIsFor: string;
   whatYouWillLearn: string[];
   classFormat: string;
+  /**
+   * Optional learning-materials catalog for this course.
+   * Fully optional and backward-compatible: courses without a `materials`
+   * field render an empty/"coming soon" materials section rather than
+   * breaking. No real file URLs are invented here — items either omit
+   * `resourceUrl`/`externalLink` (shown as "coming soon" in the UI) or,
+   * once real files exist, can have them added later.
+   */
+  materials?: CourseMaterials;
 };
+
+/** Indicative difficulty/level tag for a single material item. */
+export type MaterialLevel = 'Beginner' | 'Intermediate' | 'Advanced' | 'All Levels';
+
+/** A single learning-material entry (syllabus doc, worksheet, test paper, etc.). */
+export type CourseMaterialItem = {
+  /** Stable id, unique within its category for a given course. */
+  id: string;
+  title: string;
+  description: string;
+  /** Topic/chapter this material relates to, if applicable. */
+  topic?: string;
+  level?: MaterialLevel;
+  /**
+   * Direct file/document URL, when a real downloadable resource exists.
+   * Leave undefined until an actual file is available — do not fabricate.
+   */
+  resourceUrl?: string;
+  /**
+   * Optional link to an external resource (article, video, tool) related
+   * to this material, distinct from a downloadable file.
+   */
+  externalLink?: string;
+};
+
+/** The 9 learning-material categories supported for every course. */
+export type CourseMaterials = {
+  courseMaterials: CourseMaterialItem[];
+  studyMaterials: CourseMaterialItem[];
+  worksheets: CourseMaterialItem[];
+  questionBanks: CourseMaterialItem[];
+  testPapers: CourseMaterialItem[];
+  mockExams: CourseMaterialItem[];
+  solutions: CourseMaterialItem[];
+  revisionMaterials: CourseMaterialItem[];
+  examPreparation: CourseMaterialItem[];
+};
+
+/** Ordered list of material categories with their display metadata. */
+export const MATERIAL_CATEGORIES: {
+  key: keyof CourseMaterials;
+  label: string;
+  description: string;
+}[] = [
+  { key: 'courseMaterials', label: 'Course Materials', description: 'Syllabus, curriculum, and course roadmap.' },
+  { key: 'studyMaterials', label: 'Study Notes', description: 'Chapter and lesson notes, reference material.' },
+  { key: 'worksheets', label: 'Worksheets', description: 'Practice, topic, and homework worksheets.' },
+  { key: 'questionBanks', label: 'Question Bank', description: 'Practice and topic-wise questions.' },
+  { key: 'testPapers', label: 'Test Papers', description: 'Unit, chapter, monthly, and term tests.' },
+  { key: 'mockExams', label: 'Mock Exams', description: 'Full-length and timed practice exams.' },
+  { key: 'solutions', label: 'Solutions', description: 'Answer keys and step-by-step solutions.' },
+  { key: 'revisionMaterials', label: 'Revision', description: 'Quick revision sheets, formulas, key points.' },
+  { key: 'examPreparation', label: 'Exam Preparation', description: 'Exam pattern, strategy, and sample papers.' },
+];
+
+/** An empty materials catalog — the safe default for any course. */
+export function createEmptyMaterials(): CourseMaterials {
+  return {
+    courseMaterials: [],
+    studyMaterials: [],
+    worksheets: [],
+    questionBanks: [],
+    testPapers: [],
+    mockExams: [],
+    solutions: [],
+    revisionMaterials: [],
+    examPreparation: [],
+  };
+}
+
+/**
+ * Returns a course's materials catalog, defaulting to an empty catalog
+ * (all categories present, all empty) when the course hasn't defined one
+ * yet. This keeps every course's Learning Materials section renderable
+ * and category-complete without requiring every course to define data.
+ */
+export function getCourseMaterials(course: TuitionCourse): CourseMaterials {
+  return course.materials ?? createEmptyMaterials();
+}
 
 export const tuitionCourses: TuitionCourse[] = [
   {
@@ -56,6 +144,41 @@ export const tuitionCourses: TuitionCourse[] = [
     ],
     classFormat:
       'Live small-group online classes with regular speaking practice, role-play, and feedback sessions.',
+    materials: {
+      courseMaterials: [
+        {
+          id: 'spoken-english-curriculum',
+          title: 'Spoken English Curriculum Overview',
+          description: 'An outline of the modules covered, from pronunciation basics to presentation skills.',
+          topic: 'Full Course',
+          level: 'All Levels',
+        },
+      ],
+      studyMaterials: [
+        {
+          id: 'spoken-english-vocab-notes',
+          title: 'Everyday Vocabulary — Notes',
+          description: 'Common words and phrases grouped by everyday situations.',
+          topic: 'Vocabulary',
+          level: 'Beginner',
+        },
+      ],
+      worksheets: [],
+      questionBanks: [],
+      testPapers: [],
+      mockExams: [],
+      solutions: [],
+      revisionMaterials: [
+        {
+          id: 'spoken-english-flashcards',
+          title: 'Vocabulary Flashcards',
+          description: 'Quick-reference flashcards for commonly used conversational vocabulary.',
+          topic: 'Vocabulary',
+          level: 'All Levels',
+        },
+      ],
+      examPreparation: [],
+    },
   },
   {
     slug: 'abacus',
@@ -98,6 +221,96 @@ export const tuitionCourses: TuitionCourse[] = [
     ],
     classFormat:
       'Live 1-on-1 or small-group online classes, with topic-wise practice sheets and doubt-clearing sessions.',
+    materials: {
+      courseMaterials: [
+        {
+          id: 'maths-syllabus',
+          title: 'Mathematics Syllabus & Roadmap',
+          description: 'Chapter-by-chapter breakdown of topics covered across the course, aligned to grade level.',
+          topic: 'Full Course',
+          level: 'All Levels',
+        },
+      ],
+      studyMaterials: [
+        {
+          id: 'maths-algebra-notes',
+          title: 'Algebra — Chapter Notes',
+          description: 'Concept notes covering linear equations, expressions, and word problems.',
+          topic: 'Algebra',
+          level: 'Intermediate',
+        },
+        {
+          id: 'maths-geometry-notes',
+          title: 'Geometry — Chapter Notes',
+          description: 'Notes on angles, triangles, and basic geometric proofs.',
+          topic: 'Geometry',
+          level: 'Intermediate',
+        },
+      ],
+      worksheets: [
+        {
+          id: 'maths-arithmetic-worksheet',
+          title: 'Arithmetic Practice Worksheet',
+          description: 'A set of practice problems covering the four basic operations and fractions.',
+          topic: 'Arithmetic',
+          level: 'Beginner',
+        },
+      ],
+      questionBanks: [
+        {
+          id: 'maths-algebra-question-bank',
+          title: 'Algebra Question Bank',
+          description: 'Topic-wise practice questions ranging from basic to advanced difficulty.',
+          topic: 'Algebra',
+          level: 'Intermediate',
+        },
+      ],
+      testPapers: [
+        {
+          id: 'maths-unit-test-1',
+          title: 'Unit Test 1 — Numbers & Operations',
+          description: 'A short unit test covering the first module of the course.',
+          topic: 'Numbers & Operations',
+          level: 'Beginner',
+        },
+      ],
+      mockExams: [
+        {
+          id: 'maths-mock-exam-1',
+          title: 'Full-Length Mock Exam',
+          description: 'A timed, full-syllabus mock exam to simulate real exam conditions.',
+          topic: 'Full Course',
+          level: 'Advanced',
+        },
+      ],
+      solutions: [
+        {
+          id: 'maths-worksheet-1-solutions',
+          title: 'Arithmetic Practice Worksheet — Solutions',
+          description: 'Step-by-step solutions for the Arithmetic Practice Worksheet.',
+          topic: 'Arithmetic',
+          level: 'Beginner',
+        },
+      ],
+      revisionMaterials: [
+        {
+          id: 'maths-formula-sheet',
+          title: 'Important Formulas — Quick Reference',
+          description: 'A condensed sheet of key formulas for last-minute revision.',
+          topic: 'Full Course',
+          level: 'All Levels',
+        },
+      ],
+      examPreparation: [
+        {
+          id: 'maths-exam-strategy',
+          title: 'Exam Preparation Strategy Guide',
+          description: 'Guidance on exam pattern, time management, and a suggested practice schedule.',
+          topic: 'Full Course',
+          level: 'All Levels',
+        },
+      ],
+    },
   },
   {
     slug: 'science',
