@@ -30,6 +30,8 @@ import JoinTechnician from '@/pages/JoinTechnician';
 import NotFound from '@/pages/NotFound';
 
 import TuitionHome from '@/pages/tuition/TuitionHome';
+import TuitionCourses from '@/pages/tuition/TuitionCourses';
+import TuitionCourseDetail from '@/pages/tuition/TuitionCourseDetail';
 
 function Schema() {
   const schema = {
@@ -119,6 +121,10 @@ function Pages() {
         return <JoinTechnician />;
       case 'tuition-home':
         return <TuitionHome />;
+      case 'tuition-courses':
+        return <TuitionCourses />;
+      case 'tuition-course-detail':
+        return <TuitionCourseDetail />;
       case 'not-found':
         return <NotFound />;
       default:
