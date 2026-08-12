@@ -1,3 +1,4 @@
+import { useRouter } from '@/lib/router';
 import {
   GraduationCap,
   Mic,
@@ -29,6 +30,8 @@ const categories: Category[] = [
 ];
 
 export default function TuitionHome() {
+  const { navigate } = useRouter();
+
   return (
     <main className="min-h-screen bg-white text-gray-900">
       {/* ================= HERO ================= */}
@@ -49,6 +52,7 @@ export default function TuitionHome() {
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               type="button"
+              onClick={() => navigate('tuition-courses')}
               className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors"
             >
               Explore Courses
@@ -108,6 +112,7 @@ export default function TuitionHome() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               type="button"
+              onClick={() => navigate('tuition-courses')}
               className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors"
             >
               Explore Courses
