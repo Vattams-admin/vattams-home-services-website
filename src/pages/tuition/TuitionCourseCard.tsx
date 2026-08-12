@@ -1,5 +1,5 @@
 import { GraduationCap, Users, Monitor, ArrowRight } from 'lucide-react';
-import { TuitionCourse } from './tuitionCoursesData';
+import { TuitionCourse } from '@/pages/tuition/tuitionCoursesData';
 
 interface TuitionCourseCardProps {
   course: TuitionCourse;
