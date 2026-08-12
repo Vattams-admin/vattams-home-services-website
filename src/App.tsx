@@ -29,6 +29,8 @@ import TechnicianDashboard from '@/pages/TechnicianDashboard';
 import JoinTechnician from '@/pages/JoinTechnician';
 import NotFound from '@/pages/NotFound';
 
+import TuitionHome from '@/pages/tuition/TuitionHome';
+
 function Schema() {
   const schema = {
     "@context": "https://schema.org",
@@ -115,6 +117,8 @@ function Pages() {
         return <TechnicianDashboard />;
       case 'join-technician':
         return <JoinTechnician />;
+      case 'tuition-home':
+        return <TuitionHome />;
       case 'not-found':
         return <NotFound />;
       default:
