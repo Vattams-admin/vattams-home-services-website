@@ -3380,3 +3380,30 @@ function SocialInput({
     </div>
   );
 }
+Bell, BellOff, Search, FileText, Tag, Sparkles, Send, BarChart3, Brain,
+-  RefreshCw,
++  RefreshCw, GraduationCap,
+ } from 'lucide-react';
+@@
+ import AdminCoupons from '@/components/admin/AdminCoupons';
++import TuitionAdminPanel from '@/components/tuition/admin/TuitionAdminPanel';
+@@
+   | 'crm'
+   | 'content'
+-  | 'coupons';
++  | 'coupons'
++  | 'tuition';
+@@
+     { id: 'ai-dashboard', label: 'AI Insights', icon: Brain },
++    { id: 'tuition', label: 'Tuition', icon: GraduationCap },
+   ];
+@@
+       {tab === 'coupons' && (
+         <AdminCoupons />
+       )}
++
++      {/* ===================== TUITION ===================== */}
++      {tab === 'tuition' && (
++        <TuitionAdminPanel />
++      )}
+         </div>
