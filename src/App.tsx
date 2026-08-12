@@ -63,14 +63,14 @@ function Schema() {
     ]
   };
 
- return (
-  <script
-    type="application/ld+json"
-    dangerouslySetInnerHTML={{
-      __html: JSON.stringify(schema),
-    }}
-  />
-);
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify(schema),
+      }}
+    />
+  );
 }
 
 function Pages() {
@@ -80,56 +80,82 @@ function Pages() {
     switch (page) {
       case 'home':
         return <Home />;
+
       case 'services':
         return <Services />;
+
       case 'about':
         return <About />;
+
       case 'founder':
         return <Founder />;
+
       case 'contact':
         return <Contact />;
+
       case 'booking':
         return <Booking />;
+
       case 'customer-login':
         return <CustomerLogin />;
+
       case 'customer-register':
         return <CustomerRegister />;
+
       case 'customer-forgot':
         return <CustomerForgot />;
+
       case 'customer-profile':
         return <CustomerProfile />;
+
       case 'customer-bookings':
         return <CustomerBookings />;
+
       case 'customer-dashboard':
         return <CustomerDashboard />;
+
       case 'customer-payments':
         return <CustomerPayments />;
+
       case 'customer-reviews':
         return <CustomerReviews />;
+
       case 'customer-support':
         return <CustomerSupport />;
+
       case 'admin-login':
         return <AdminLogin />;
+
       case 'admin-dashboard':
         return <AdminDashboard />;
+
       case 'technician-register':
         return <TechnicianRegister />;
+
       case 'technician-login':
         return <TechnicianLogin />;
+
       case 'technician-dashboard':
         return <TechnicianDashboard />;
+
       case 'join-technician':
         return <JoinTechnician />;
+
       case 'tuition-home':
         return <TuitionHome />;
+
       case 'tuition-courses':
         return <TuitionCourses />;
+
       case 'tuition-course-detail':
         return <TuitionCourseDetail />;
+
       case 'tuition-booking':
         return <TuitionBooking />;
+
       case 'not-found':
         return <NotFound />;
+
       default:
         return <Home />;
     }
@@ -157,8 +183,13 @@ function Pages() {
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Header />
-      <main className="flex-1">{renderPage()}</main>
+
+      <main className="flex-1">
+        {renderPage()}
+      </main>
+
       {!hideFooter && <Footer />}
+
       {!hideChatWidget && <AIChatWidget />}
     </div>
   );
@@ -168,6 +199,7 @@ function App() {
   return (
     <>
       <Schema />
+
       <RouterProvider>
         <Pages />
       </RouterProvider>
