@@ -24,7 +24,8 @@ export type Page =
   | 'technician-dashboard'
   | 'join-technician'
   | 'not-found'
-  | 'city-landing';
+  | 'city-landing'
+  | 'tuition-home';
 
 interface RouterContextType {
   page: Page;
@@ -67,6 +68,7 @@ const VALID_PAGES: Page[] = [
   'technician-dashboard',
   'join-technician',
   'not-found',
+  'tuition-home',
 ];
 
 function getRouteFromHash(): RouteInfo {
@@ -137,16 +139,7 @@ export function RouterProvider({
     };
 
     window.addEventListener('hashchange', handleHashChange);
-| 'join-technician'
-   | 'not-found'
--  | 'city-landing';
-+  | 'city-landing'
-+  | 'tuition-home';
-@@
-   'join-technician',
-   'not-found',
-+  'tuition-home',
- ];
+
     return () => {
       window.removeEventListener('hashchange', handleHashChange);
     };
@@ -182,14 +175,3 @@ export function RouterProvider({
 export function useRouter() {
   return useContext(RouterContext);
 }
-import JoinTechnician from '@/pages/JoinTechnician';
- import NotFound from '@/pages/NotFound';
-+
-+import TuitionHome from '@/pages/tuition/TuitionHome';
-@@
-       case 'join-technician':
-         return <JoinTechnician />;
-+      case 'tuition-home':
-+        return <TuitionHome />;
-       case 'not-found':
-         return <NotFound />;
