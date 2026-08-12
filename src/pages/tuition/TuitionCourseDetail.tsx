@@ -1,6 +1,7 @@
 import { GraduationCap, Users, Monitor, CheckCircle2, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useRouter } from '@/lib/router';
-import { getTuitionCourseBySlug } from './tuitionCoursesData';
+import { getTuitionCourseBySlug, getCourseMaterials } from './tuitionCoursesData';
+import CourseMaterialsSection from '@/components/tuition/materials/CourseMaterialsSection';
 
 export default function TuitionCourseDetail() {
   const { tuitionCourseSlug, navigate } = useRouter();
@@ -115,6 +116,10 @@ export default function TuitionCourseDetail() {
               <p className="text-gray-600 leading-relaxed">
                 {course.classFormat}
               </p>
+            </div>
+
+            <div>
+              <CourseMaterialsSection materials={getCourseMaterials(course)} />
             </div>
           </div>
 
