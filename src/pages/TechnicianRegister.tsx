@@ -86,10 +86,41 @@ export default function TechnicianRegister() {
     const draft = loadRegistrationDraft();
 
     if (draft && draft.stepIndex > 0 && draft.stepIndex < STEPS.length) {
+      // Password is intentionally never persisted in the draft (see
+      // saveRegistrationDraft). If the saved step is at or past the
+      // password step, resuming straight to that step (e.g. Review)
+      // would silently carry an empty password all the way to submit.
+      // Instead, drop the resumed technician back at the password step
+      // so they re-enter it before continuing — everything else they
+      // already filled in is kept.
+      const passwordStepIndex = STEPS.findIndex(
+        (s) => s.key === 'password'
+      );
+
+      const needsPassword =
+        passwordStepIndex !== -1 &&
+        draft.stepIndex > passwordStepIndex;
+
+      const resumeStepIndex = needsPassword
+        ? passwordStepIndex
+        : draft.stepIndex;
+
+      const resumeHistory = Array.isArray(draft.chatHistory)
+        ? draft.chatHistory
+        : [];
+
       setForm((previous) => ({ ...previous, ...draft.form }));
-      setStepIndex(draft.stepIndex);
+      setStepIndex(resumeStepIndex);
       setChatHistory(
-        Array.isArray(draft.chatHistory) ? draft.chatHistory : []
+        needsPassword
+          ? [
+              ...resumeHistory,
+              {
+                role: 'ai',
+                text: "Welcome back! For your security, your password isn't saved between sessions — please create it again to continue.",
+              },
+            ]
+          : resumeHistory
       );
       setResumedDraft(true);
     }
