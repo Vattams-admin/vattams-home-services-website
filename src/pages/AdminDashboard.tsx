@@ -5,8 +5,9 @@ import {
   Trash2, Eye, XCircle, Star, Award, Wallet, Lock, Unlock, History, ShieldCheck,
   CreditCard, LucideIcon, Globe, Facebook, Instagram, Twitter, Youtube, MessageCircle, Save,
   Bell, BellOff, Search, FileText, Tag, Sparkles, Send, BarChart3, Brain,
+  RefreshCw,
 } from 'lucide-react';
-import { supabase, Booking, Technician, BookingStatus, WalletTransaction, WalletRecharge } from '@/lib/supabase';
+import { supabase, SUPABASE_URL, Booking, Technician, BookingStatus, WalletTransaction, WalletRecharge } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { fetchAllPayments, fetchPendingPayments, updatePaymentStatus, PaymentRecord } from '@/lib/payments';
 import { fetchAllServicePrices, getPricingFromServicePrice, formatINR, type PricingBreakdown } from '@/lib/pricing';
@@ -104,6 +105,19 @@ export default function AdminDashboard() {
       'rejected' |
       'suspended'
     >('all');
+
+  const [refreshing, setRefreshing] =
+    useState(false);
+
+  const handleManualRefresh = async () => {
+    setRefreshing(true);
+
+    try {
+      await loadData();
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const [selectedBooking, setSelectedBooking] =
     useState<Booking | null>(null);
@@ -317,15 +331,42 @@ export default function AdminDashboard() {
 
     verifyAdmin();
 
+    // Previously loadData() only ran once on mount, so a technician who
+    // registered AFTER the admin opened this page never showed up until
+    // a manual full page reload. Poll every 20s so newly-registered
+    // technicians (and new bookings) appear without a hard refresh.
+    const pollInterval = window.setInterval(() => {
+      if (mounted) {
+        loadData();
+      }
+    }, 20000);
+
     return () => {
       mounted = false;
+      window.clearInterval(pollInterval);
     };
   }, []);
 
   const loadData = async () => {
+    // ---- TEMP DIAGNOSTICS (remove once root cause is confirmed) ----
+    // NOTE: this project's Supabase client (src/lib/supabase.ts) does NOT
+    // read import.meta.env.VITE_SUPABASE_URL — the URL/anon key are
+    // hardcoded constants. We log both here so a mismatch between what
+    // Vite injected at build time and what the client actually uses is
+    // impossible to miss.
+    console.log(
+      '[ADMIN DEBUG] SUPABASE_URL (actually used by client):',
+      SUPABASE_URL
+    );
+    console.log(
+      '[ADMIN DEBUG] import.meta.env.VITE_SUPABASE_URL (NOT used by client, informational only):',
+      import.meta.env.VITE_SUPABASE_URL
+    );
+
     const [
       bookingsRes,
-      techRes
+      techRes,
+      techMinimalRes,
     ] = await Promise.all([
       supabase
         .from('bookings')
@@ -342,6 +383,13 @@ export default function AdminDashboard() {
           'created_at',
           { ascending: false }
         ),
+
+      // TEMP: minimal-column query to compare against select('*') and
+      // isolate whether a specific column is the problem.
+      supabase
+        .from('technicians')
+        .select('id, full_name, mobile, status, created_at', { count: 'exact' })
+        .order('created_at', { ascending: false }),
     ]);
 
     if (bookingsRes.error) {
@@ -355,6 +403,28 @@ export default function AdminDashboard() {
       console.error(
         '[AdminDashboard] technicians query error:',
         techRes.error
+      );
+    }
+
+    // ---- TEMP DIAGNOSTICS (remove once root cause is confirmed) ----
+    console.log('[ADMIN DEBUG] technicians data (select *):', techRes.data);
+    console.log('[ADMIN DEBUG] technicians error (select *):', techRes.error);
+    console.log('[ADMIN DEBUG] technicians count (select *):', techRes.data?.length);
+    console.log(
+      '[ADMIN DEBUG] pending technicians (select *):',
+      (techRes.data ?? []).filter((t) => t.status === 'pending')
+    );
+
+    console.log('[ADMIN DEBUG] technicians data (minimal select):', techMinimalRes.data);
+    console.log('[ADMIN DEBUG] technicians error (minimal select):', techMinimalRes.error);
+    console.log('[ADMIN DEBUG] technicians count (minimal select, exact):', techMinimalRes.count);
+    if (
+      !techRes.error &&
+      !techMinimalRes.error &&
+      (techRes.data?.length ?? 0) !== (techMinimalRes.data?.length ?? 0)
+    ) {
+      console.warn(
+        '[ADMIN DEBUG] MISMATCH: select(*) returned a different row count than the minimal select — a specific column is likely the problem.'
       );
     }
 
@@ -380,6 +450,15 @@ export default function AdminDashboard() {
     );
 
     setTechnicians(
+      techRes.data ?? []
+    );
+
+    // TEMP: this logs the array we just PASSED to setTechnicians, not the
+    // committed state (React state updates are async, so `technicians` in
+    // this closure is still the OLD value here). See the useEffect below
+    // for the actual post-commit state.
+    console.log(
+      '[ADMIN DEBUG] value passed to setTechnicians():',
       techRes.data ?? []
     );
 
@@ -639,6 +718,21 @@ export default function AdminDashboard() {
     technicians,
     techFilter
   ]);
+
+  // TEMP DIAGNOSTICS (remove once root cause is confirmed): this is the
+  // only reliable place to see the ACTUAL committed `technicians` state
+  // and the resulting `filteredTechnicians` — logging right after
+  // setTechnicians() inside loadData() only shows the value that was
+  // passed in, not the committed state (React state updates are
+  // asynchronous).
+  useEffect(() => {
+    console.log('[ADMIN DEBUG] current tab:', tab);
+    console.log('[ADMIN DEBUG] techFilter:', techFilter);
+    console.log('[ADMIN DEBUG] technicians state (committed), count:', technicians.length);
+    console.log('[ADMIN DEBUG] technicians state (committed):', technicians);
+    console.log('[ADMIN DEBUG] filteredTechnicians, count:', filteredTechnicians.length);
+    console.log('[ADMIN DEBUG] filteredTechnicians:', filteredTechnicians);
+  }, [tab, techFilter, technicians, filteredTechnicians]);
 
   const stats = useMemo(() => {
     const completedBookings =
@@ -1495,6 +1589,16 @@ export default function AdminDashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <h2 className="text-lg font-extrabold text-gray-900">Technicians</h2>
 
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleManualRefresh}
+              disabled={refreshing}
+              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-gray-200 hover:bg-gray-50 disabled:opacity-50 text-gray-600 text-sm font-semibold transition-colors"
+            >
+              <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
+              Refresh
+            </button>
+
           <select
             value={techFilter}
             onChange={(e) =>
@@ -1516,6 +1620,7 @@ export default function AdminDashboard() {
             <option value="inactive">Rejected</option>
             <option value="suspended">Suspended</option>
           </select>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
