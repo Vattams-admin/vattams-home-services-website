@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase';
 
 export const TECHNICIAN_SERVICES = [
   'Electrician',
@@ -263,7 +263,7 @@ export const STEPS: StepDef[] = [
     field: 'bank_account_number',
     type: 'text',
     placeholder: 'Account number',
-    validate: (v) => v.trim().length < 8 ? 'Enter a valid account number' : null,
+    validate: (v) => !/^\d{9,18}$/.test(v.trim()) ? 'Enter a valid bank account number (9-18 digits, numbers only)' : null,
   },
   {
     key: 'bank_ifsc',
@@ -280,6 +280,7 @@ export const STEPS: StepDef[] = [
     type: 'text',
     placeholder: 'e.g. yourname@paytm',
     optional: true,
+    validate: (v) => v.trim() && !/^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z][a-zA-Z0-9]{1,64}$/.test(v.trim()) ? 'Enter a valid UPI ID (e.g. yourname@paytm) or type "skip"' : null,
   },
   {
     key: 'password',
@@ -329,38 +330,163 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 
 export function validateFile(file: File): string | null {
+  if (!file) return 'Please choose a file';
+  if (file.size === 0) return 'This file appears to be empty. Please choose another file';
   if (file.size > MAX_FILE_SIZE) return 'File size must be under 10MB';
   if (!ALLOWED_MIME_TYPES.includes(file.type)) return 'Only JPG, PNG, WebP, and PDF files are allowed';
   return null;
 }
-export async function uploadDocument(
+
+// Documents split across two buckets:
+// - `technician-docs`   → PRIVATE (Aadhaar, PAN, Driving Licence). Never
+//   exposed via public URL. We store the object PATH in the technician
+//   record, not a URL. Only the service_role (used by edge functions /
+//   admin tooling) can read these back, via a signed URL.
+// - `technician-photos` → PUBLIC (profile photo only). This is displayed
+//   directly as <img src> in the technician dashboard/admin, so it stays
+//   on a public bucket and we store the full public URL for it.
+export type DocType = 'aadhaar' | 'pan' | 'dl' | 'profile_photo';
+
+const PRIVATE_DOC_TYPES: DocType[] = ['aadhaar', 'pan', 'dl'];
+
+function bucketForDocType(docType: DocType): string {
+  return docType === 'profile_photo' ? 'technician-photos' : 'technician-docs';
+}
+
+/**
+ * Uploads a document/photo directly to Supabase Storage using a raw XHR
+ * request so we can report real upload progress (the supabase-js client
+ * does not expose progress events). Uses only the public anon key — the
+ * upload is permitted by a scoped Storage RLS policy (see migrations),
+ * never a service_role key.
+ *
+ * Returns:
+ *  - the storage object PATH for private docs (aadhaar/pan/dl)
+ *  - the public URL for the profile photo
+ */
+export function uploadDocumentWithProgress(
   file: File,
   technicianMobile: string,
-  docType: string
+  docType: DocType,
+  onProgress?: (percent: number) => void
 ): Promise<string> {
-  try {
+  return new Promise((resolve, reject) => {
     const validationError = validateFile(file);
-    if (validationError) throw new Error(validationError);
-
-    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-    const fileName =`${technicianMobile}/${docType}.${ext}`;
-    const { error } = await supabase.storage
-      .from('technician-docs')
-      .upload(fileName, file, { upsert: true });
-
-    if (error) {
-      console.error(error);
-      throw error;
+    if (validationError) {
+      reject(new Error(validationError));
+      return;
     }
 
-    const { data } = supabase.storage
-      .from('technician-docs')
-      .getPublicUrl(fileName);
+    const mobile = (technicianMobile || '').trim();
+    if (!/^[6-9]\d{9}$/.test(mobile)) {
+      reject(new Error('We need your mobile number before uploading documents. Please go back and complete that step first.'));
+      return;
+    }
 
-    return data.publicUrl;
-  } catch (err: any) {
-    console.error(err);
-    throw err;
+    const ext = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+    const bucket = bucketForDocType(docType);
+    const path = `${mobile}/${docType}.${ext}`;
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${SUPABASE_URL}/storage/v1/object/${bucket}/${encodeURIComponent(path).replace(/%2F/g, '/')}`);
+    xhr.setRequestHeader('Authorization', `Bearer ${SUPABASE_ANON_KEY}`);
+    xhr.setRequestHeader('apikey', SUPABASE_ANON_KEY);
+    xhr.setRequestHeader('x-upsert', 'true');
+    xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable && onProgress) {
+        onProgress(Math.round((event.loaded / event.total) * 100));
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        onProgress?.(100);
+
+        if (PRIVATE_DOC_TYPES.includes(docType)) {
+          resolve(path);
+        } else {
+          const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+          resolve(data.publicUrl);
+        }
+      } else {
+        let message = `Upload failed (${xhr.status}). Please try again.`;
+        try {
+          const parsed = JSON.parse(xhr.responseText);
+          message = parsed.message || parsed.error || message;
+        } catch {
+          // ignore parse errors, keep default message
+        }
+        reject(new Error(message));
+      }
+    };
+
+    xhr.onerror = () => {
+      reject(new Error('Network error during upload. Check your connection and try again.'));
+    };
+
+    xhr.send(file);
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Registration draft persistence — lets a technician resume registration
+// after closing the tab or refreshing the page. Stored in localStorage on
+// the same device/browser (there is no authenticated session yet at this
+// point in the flow, so a server-side session isn't available). The
+// password is intentionally never persisted.
+// ---------------------------------------------------------------------------
+
+const DRAFT_KEY = 'vattams_technician_registration_draft_v1';
+
+export interface RegistrationDraft {
+  stepIndex: number;
+  form: Omit<TechnicianFormData, 'password'>;
+  chatHistory: { role: 'ai' | 'user'; text: string }[];
+  savedAt: number;
+}
+
+export function saveRegistrationDraft(
+  stepIndex: number,
+  form: TechnicianFormData,
+  chatHistory: { role: 'ai' | 'user'; text: string }[]
+): void {
+  try {
+    const { password: _password, ...rest } = form;
+    const payload: RegistrationDraft = {
+      stepIndex,
+      form: rest,
+      chatHistory,
+      savedAt: Date.now(),
+    };
+    window.localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
+  } catch {
+    // localStorage may be unavailable (private browsing, quota, etc.) —
+    // registration should still work without resume support.
+  }
+}
+
+export function loadRegistrationDraft(): RegistrationDraft | null {
+  try {
+    const raw = window.localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw);
+
+    if (typeof parsed?.stepIndex !== 'number' || !parsed?.form) return null;
+
+    return parsed as RegistrationDraft;
+  } catch {
+    return null;
+  }
+}
+
+export function clearRegistrationDraft(): void {
+  try {
+    window.localStorage.removeItem(DRAFT_KEY);
+  } catch {
+    // ignore
   }
 }
 export async function submitTechnicianApplication(
