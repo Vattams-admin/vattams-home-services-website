@@ -1,191 +1,137 @@
-import { useState } from 'react';
+import { FormEvent, useState } from 'react';
 import {
-  GraduationCap,
   ArrowLeft,
+  CalendarDays,
   CheckCircle2,
-  User,
-  Users,
-  Phone,
+  Clock3,
+  GraduationCap,
   Mail,
   MapPin,
-  BookOpen,
-  Monitor,
-  Calendar,
-  Clock,
-  MessageSquare,
+  Phone,
+  User,
 } from 'lucide-react';
 import { useRouter } from '@/lib/router';
-import { tuitionCourses, getTuitionCourseBySlug } from '@/pages/tuition/tuitionCoursesData';
+import { getTuitionCourseBySlug } from './tuitionCoursesData';
 
-interface TuitionBookingFormData {
+type FormData = {
   studentName: string;
   parentName: string;
   phone: string;
   email: string;
   city: string;
-  courseSlug: string;
-  preferredMode: string;
-  preferredDate: string;
-  preferredTime: string;
+  course: string;
+  mode: string;
+  date: string;
+  time: string;
   message: string;
-}
+};
 
-const PREFERRED_MODE_OPTIONS = [
-  '1-on-1',
-  'Small Group',
-  'Either is fine',
-];
-
-const emptyFormData: TuitionBookingFormData = {
+const initialForm: FormData = {
   studentName: '',
   parentName: '',
   phone: '',
   email: '',
   city: '',
-  courseSlug: '',
-  preferredMode: '',
-  preferredDate: '',
-  preferredTime: '',
+  course: '',
+  mode: 'Online One-to-One',
+  date: '',
+  time: '',
   message: '',
 };
 
 export default function TuitionBooking() {
-  const { navigate, tuitionCourseSlug } = useRouter();
+  const { tuitionCourseSlug, navigate } = useRouter();
 
-  const resolvedCourse = getTuitionCourseBySlug(tuitionCourseSlug);
+  const resolvedCourse = tuitionCourseSlug
+    ? getTuitionCourseBySlug(tuitionCourseSlug)
+    : null;
 
-  const [formData, setFormData] = useState<TuitionBookingFormData>({
-    ...emptyFormData,
-    courseSlug: resolvedCourse ? resolvedCourse.slug : '',
+  const [form, setForm] = useState<FormData>({
+    ...initialForm,
+    course: resolvedCourse?.name ?? '',
   });
-  const [errors, setErrors] = useState<Partial<Record<keyof TuitionBookingFormData, string>>>({});
+
   const [submitted, setSubmitted] = useState(false);
 
-  const handleChange = (
-    field: keyof TuitionBookingFormData,
+  const updateField = (
+    field: keyof FormData,
     value: string
   ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-
-    if (errors[field]) {
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next[field];
-        return next;
-      });
-    }
+    setForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
   };
 
-  const validate = (): boolean => {
-    const nextErrors: Partial<Record<keyof TuitionBookingFormData, string>> = {};
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
 
-    if (!formData.studentName.trim()) {
-      nextErrors.studentName = 'Student name is required.';
-    }
-    if (!formData.parentName.trim()) {
-      nextErrors.parentName = 'Parent/Guardian name is required.';
-    }
-    if (!formData.phone.trim()) {
-      nextErrors.phone = 'Phone number is required.';
-    } else if (!/^[0-9+\-\s()]{7,}$/.test(formData.phone.trim())) {
-      nextErrors.phone = 'Enter a valid phone number.';
-    }
-    if (!formData.email.trim()) {
-      nextErrors.email = 'Email is required.';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
-      nextErrors.email = 'Enter a valid email address.';
-    }
-    if (!formData.city.trim()) {
-      nextErrors.city = 'City is required.';
-    }
-    if (!formData.courseSlug.trim()) {
-      nextErrors.courseSlug = 'Please select a course.';
-    }
-    if (!formData.preferredMode.trim()) {
-      nextErrors.preferredMode = 'Please select a preferred class mode.';
-    }
-    if (!formData.preferredDate.trim()) {
-      nextErrors.preferredDate = 'Preferred date is required.';
-    }
-    if (!formData.preferredTime.trim()) {
-      nextErrors.preferredTime = 'Preferred time is required.';
-    }
-
-    setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validate()) {
-      return;
-    }
-
-    // NOTE: This is a UI-only submission for now.
-    // No Supabase, payment, WhatsApp, or Home Services booking integration
-    // has been connected in this step, by design.
     setSubmitted(true);
-  };
 
-  const handleBookAnother = () => {
-    setSubmitted(false);
-    setFormData({
-      ...emptyFormData,
-      courseSlug: resolvedCourse ? resolvedCourse.slug : '',
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
     });
-    setErrors({});
   };
 
   if (submitted) {
     return (
-      <main className="min-h-screen bg-white text-gray-900">
-        <section className="bg-gradient-to-r from-slate-900 via-purple-900 to-black text-white">
-          <div className="max-w-3xl mx-auto px-6 py-16 text-center">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/10 mb-5">
-              <GraduationCap size={28} />
+      <main className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-white text-gray-900">
+        <section className="max-w-3xl mx-auto px-6 py-20">
+          <div className="bg-white border border-purple-100 rounded-3xl shadow-sm p-8 md:p-12 text-center">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+              <CheckCircle2
+                size={34}
+                className="text-green-600"
+              />
             </div>
-            <p className="text-purple-200 text-sm font-semibold uppercase tracking-wide mb-2">
-              Vattams Online Tuition
-            </p>
-            <h1 className="text-3xl md:text-4xl font-bold mb-3">
-              Booking Request Received
+
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              Tuition Request Submitted
             </h1>
-          </div>
-        </section>
 
-        <section className="max-w-2xl mx-auto px-6 py-16 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-50 text-purple-600 mb-6">
-            <CheckCircle2 size={32} />
-          </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-3">
-            Thank you, {formData.studentName || 'there'}!
-          </h2>
-          <p className="text-gray-600 mb-8 leading-relaxed">
-            We've received your tuition booking request. Our team will reach
-            out to {formData.parentName || 'you'} at{' '}
-            <span className="font-medium text-gray-800">{formData.phone}</span>{' '}
-            or{' '}
-            <span className="font-medium text-gray-800">{formData.email}</span>{' '}
-            shortly to confirm your session.
-          </p>
+            <p className="text-gray-600 leading-relaxed max-w-xl mx-auto mb-8">
+              Thank you for your interest in Vattams Online Tuition.
+              Our team will review your request and contact you to
+              confirm the class schedule.
+            </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <button
-              type="button"
-              onClick={handleBookAnother}
-              className="px-5 py-2.5 rounded-xl border border-gray-200 hover:border-purple-300 text-gray-700 text-sm font-semibold transition-colors"
-            >
-              Book Another Session
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('tuition-courses')}
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold transition-colors"
-            >
-              <ArrowLeft size={16} />
-              Back to Course Catalog
-            </button>
+            {resolvedCourse && (
+              <div className="rounded-2xl bg-purple-50 border border-purple-100 p-5 mb-8">
+                <p className="text-sm text-purple-700 mb-1">
+                  Selected Course
+                </p>
+
+                <p className="text-lg font-bold text-purple-900">
+                  {resolvedCourse.name}
+                </p>
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                type="button"
+                onClick={() => navigate('tuition-courses')}
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold transition-colors"
+              >
+                <ArrowLeft size={17} />
+                Back to Courses
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setForm({
+                    ...initialForm,
+                    course: resolvedCourse?.name ?? '',
+                  });
+                  setSubmitted(false);
+                }}
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 font-semibold transition-colors"
+              >
+                Submit Another Request
+              </button>
+            </div>
           </div>
         </section>
       </main>
@@ -194,286 +140,477 @@ export default function TuitionBooking() {
 
   return (
     <main className="min-h-screen bg-white text-gray-900">
-      {/* ================= HERO ================= */}
-      <section className="bg-gradient-to-r from-slate-900 via-purple-900 to-black text-white">
-        <div className="max-w-3xl mx-auto px-6 py-16">
+      {/* HERO */}
+      <section className="bg-gradient-to-r from-slate-950 via-purple-950 to-black text-white">
+        <div className="max-w-5xl mx-auto px-6 py-14 md:py-16">
           <button
             type="button"
             onClick={() => navigate('tuition-courses')}
-            className="inline-flex items-center gap-2 text-purple-200 hover:text-white text-sm font-medium mb-6 transition-colors"
+            className="inline-flex items-center gap-2 text-purple-200 hover:text-white text-sm font-medium mb-7 transition-colors"
           >
             <ArrowLeft size={16} />
             Back to Course Catalog
           </button>
 
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/10 mb-5">
-            <GraduationCap size={28} />
+            <GraduationCap size={29} />
           </div>
 
-          <p className="text-purple-200 text-sm font-semibold uppercase tracking-wide mb-2">
+          <p className="text-purple-300 text-sm font-semibold uppercase tracking-wider mb-2">
             Vattams Online Tuition
           </p>
 
-          <h1 className="text-3xl md:text-4xl font-bold mb-3">
-            Book a Tuition Session
+          <h1 className="text-3xl md:text-4xl font-bold mb-4">
+            Book an Online Tuition Session
           </h1>
 
           <p className="text-purple-100 text-base max-w-2xl">
             {resolvedCourse
-              ? Fill in the details below to book a session for ${resolvedCourse.name}.
+              ? `Fill in the details below to book a session for ${resolvedCourse.name}.`
               : 'Fill in the details below and our team will get in touch to schedule your session.'}
           </p>
         </div>
       </section>
 
-      {/* ================= FORM ================= */}
-      <section className="max-w-3xl mx-auto px-6 py-14">
-        <form onSubmit={handleSubmit} noValidate className="space-y-8">
-          {/* Student & Parent Details */}
-          <div className="p-6 rounded-2xl border border-gray-200 bg-white">
-            <h2 className="text-lg font-bold text-gray-900 mb-5">
-              Student &amp; Parent Details
-            </h2>
+      {/* FORM */}
+      <section className="max-w-5xl mx-auto px-6 py-12 md:py-14">
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+        >
+          {/* MAIN FORM */}
+          <div className="lg:col-span-2">
+            <div className="bg-white border border-gray-200 rounded-3xl shadow-sm p-6 md:p-8">
+              <div className="mb-8">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Student & Parent Details
+                </h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div>
-                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1.5">
-                  <User size={15} className="text-purple-600" />
-                  Student Name
-                </label>
-                <input
-                  type="text"
-                  value={formData.studentName}
-                  onChange={(e) => handleChange('studentName', e.target.value)}
-                  placeholder="e.g. Aarav Menon"
-                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 transition-colors ${
-                    errors.studentName
-                      ? 'border-red-400'
-                      : 'border-gray-200 focus:border-purple-400'
-                  }`}
-                />
-                {errors.studentName && (
-                  <p className="text-xs text-red-500 mt-1">{errors.studentName}</p>
-                )}
+                <p className="text-sm text-gray-500 mt-1">
+                  Please provide accurate contact details so our team
+                  can reach you.
+                </p>
               </div>
 
-              <div>
-                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1.5">
-                  <Users size={15} className="text-purple-600" />
-                  Parent/Guardian Name
-                </label>
-                <input
-                  type="text"
-                  value={formData.parentName}
-                  onChange={(e) => handleChange('parentName', e.target.value)}
-                  placeholder="e.g. Priya Menon"
-                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 transition-colors ${
-                    errors.parentName
-                      ? 'border-red-400'
-                      : 'border-gray-200 focus:border-purple-400'
-                  }`}
-                />
-                {errors.parentName && (
-                  <p className="text-xs text-red-500 mt-1">{errors.parentName}</p>
-                )}
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Student Name */}
+                <div>
+                  <label
+                    htmlFor="studentName"
+                    className="block text-sm font-semibold text-gray-700 mb-2"
+                  >
+                    Student Name *
+                  </label>
 
-              <div>
-                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1.5">
-                  <Phone size={15} className="text-purple-600" />
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => handleChange('phone', e.target.value)}
-                  placeholder="e.g. +91 98765 43210"
-                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 transition-colors ${
-                    errors.phone
-                      ? 'border-red-400'
-                      : 'border-gray-200 focus:border-purple-400'
-                  }`}
-                />
-                {errors.phone && (
-                  <p className="text-xs text-red-500 mt-1">{errors.phone}</p>
-                )}
-              </div>
+                  <div className="relative">
+                    <User
+                      size={17}
+                      className="absolute left-3 top-3.5 text-gray-400"
+                    />
 
-              <div>
-                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1.5">
-                  <Mail size={15} className="text-purple-600" />
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleChange('email', e.target.value)}
-                  placeholder="e.g. priya@example.com"
-                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 transition-colors ${
-                    errors.email
-                      ? 'border-red-400'
-                      : 'border-gray-200 focus:border-purple-400'
-                  }`}
-                />
-                {errors.email && (
-                  <p className="text-xs text-red-500 mt-1">{errors.email}</p>
-                )}
-              </div>
-
-              <div className="sm:col-span-2">
-                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1.5">
-                  <MapPin size={15} className="text-purple-600" />
-                  City
-                </label>
-                <input
-                  type="text"
-                  value={formData.city}
-                  onChange={(e) => handleChange('city', e.target.value)}
-                  placeholder="e.g. Chennai"
-                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 transition-colors ${
-                    errors.city
-                      ? 'border-red-400'
-                      : 'border-gray-200 focus:border-purple-400'
-                  }`}
-                />
-                {errors.city && (
-                  <p className="text-xs text-red-500 mt-1">{errors.city}</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Course & Schedule */}
-          <div className="p-6 rounded-2xl border border-gray-200 bg-white">
-            <h2 className="text-lg font-bold text-gray-900 mb-5">
-              Course &amp; Schedule
-            </h2>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div className="sm:col-span-2">
-                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1.5">
-                  <BookOpen size={15} className="text-purple-600" />
-                  Selected Course
-                </label>
-
-                {resolvedCourse ? (
-                  <div className="w-full px-3.5 py-2.5 rounded-xl border border-purple-200 bg-purple-50 text-sm text-gray-800 font-medium">
-                    {resolvedCourse.name}
+                    <input
+                      id="studentName"
+                      type="text"
+                      required
+                      value={form.studentName}
+                      onChange={(e) =>
+                        updateField(
+                          'studentName',
+                          e.target.value
+                        )
+                      }
+                      placeholder="Enter student name"
+                      className="w-full rounded-xl border border-gray-300 bg-white pl-10 pr-4 py-3 text-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                    />
                   </div>
-                ) : (
-                  <>
-                    <select
-                      value={formData.courseSlug}
-                      onChange={(e) => handleChange('courseSlug', e.target.value)}
-                      className={`w-full px-3.5 py-2.5 rounded-xl border text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-200 transition-colors ${
-                        errors.courseSlug
-                          ? 'border-red-400'
-                          : 'border-gray-200 focus:border-purple-400'
-                      }`}
-                    >
-                      <option value="">Select a course</option>
-                      {tuitionCourses.map((course) => (
-                        <option key={course.slug} value={course.slug}>
-                          {course.name}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.courseSlug && (
-                      <p className="text-xs text-red-500 mt-1">{errors.courseSlug}</p>
-                    )}
-                  </>
-                )}
-              </div>
+                </div>
 
-              <div>
-                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1.5">
-                  <Monitor size={15} className="text-purple-600" />
-                  Preferred Class Mode
-                </label>
-                <select
-                  value={formData.preferredMode}
-                  onChange={(e) => handleChange('preferredMode', e.target.value)}
-                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-200 transition-colors ${
-                    errors.preferredMode
-                      ? 'border-red-400'
-                      : 'border-gray-200 focus:border-purple-400'
-                  }`}
-                >
-                  <option value="">Select a mode</option>
-                  {PREFERRED_MODE_OPTIONS.map((mode) => (
-                    <option key={mode} value={mode}>
-                      {mode}
+                {/* Parent Name */}
+                <div>
+                  <label
+                    htmlFor="parentName"
+                    className="block text-sm font-semibold text-gray-700 mb-2"
+                  >
+                    Parent / Guardian Name *
+                  </label>
+
+                  <div className="relative">
+                    <User
+                      size={17}
+                      className="absolute left-3 top-3.5 text-gray-400"
+                    />
+
+                    <input
+                      id="parentName"
+                      type="text"
+                      required
+                      value={form.parentName}
+                      onChange={(e) =>
+                        updateField(
+                          'parentName',
+                          e.target.value
+                        )
+                      }
+                      placeholder="Enter parent or guardian name"
+                      className="w-full rounded-xl border border-gray-300 bg-white pl-10 pr-4 py-3 text-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                    />
+                  </div>
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label
+                    htmlFor="phone"
+                    className="block text-sm font-semibold text-gray-700 mb-2"
+                  >
+                    Phone Number *
+                  </label>
+
+                  <div className="relative">
+                    <Phone
+                      size={17}
+                      className="absolute left-3 top-3.5 text-gray-400"
+                    />
+
+                    <input
+                      id="phone"
+                      type="tel"
+                      required
+                      value={form.phone}
+                      onChange={(e) =>
+                        updateField(
+                          'phone',
+                          e.target.value
+                        )
+                      }
+                      placeholder="Enter phone number"
+                      className="w-full rounded-xl border border-gray-300 bg-white pl-10 pr-4 py-3 text-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                    />
+                  </div>
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-semibold text-gray-700 mb-2"
+                  >
+                    Email Address *
+                  </label>
+
+                  <div className="relative">
+                    <Mail
+                      size={17}
+                      className="absolute left-3 top-3.5 text-gray-400"
+                    />
+
+                    <input
+                      id="email"
+                      type="email"
+                      required
+                      value={form.email}
+                      onChange={(e) =>
+                        updateField(
+                          'email',
+                          e.target.value
+                        )
+                      }
+                      placeholder="Enter email address"
+                      className="w-full rounded-xl border border-gray-300 bg-white pl-10 pr-4 py-3 text-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                    />
+                  </div>
+                </div>
+
+                {/* City */}
+                <div>
+                  <label
+                    htmlFor="city"
+                    className="block text-sm font-semibold text-gray-700 mb-2"
+                  >
+                    City *
+                  </label>
+
+                  <div className="relative">
+                    <MapPin
+                      size={17}
+                      className="absolute left-3 top-3.5 text-gray-400"
+                    />
+
+                    <input
+                      id="city"
+                      type="text"
+                      required
+                      value={form.city}
+                      onChange={(e) =>
+                        updateField(
+                          'city',
+                          e.target.value
+                        )
+                      }
+                      placeholder="Enter your city"
+                      className="w-full rounded-xl border border-gray-300 bg-white pl-10 pr-4 py-3 text-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                    />
+                  </div>
+                </div>
+
+                {/* Course */}
+                <div>
+                  <label
+                    htmlFor="course"
+                    className="block text-sm font-semibold text-gray-700 mb-2"
+                  >
+                    Course *
+                  </label>
+
+                  <select
+                    id="course"
+                    required
+                    value={form.course}
+                    onChange={(e) =>
+                      updateField(
+                        'course',
+                        e.target.value
+                      )
+                    }
+                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                  >
+                    <option value="">
+                      Select a course
                     </option>
-                  ))}
-                </select>
-                {errors.preferredMode && (
-                  <p className="text-xs text-red-500 mt-1">{errors.preferredMode}</p>
-                )}
+
+                    {resolvedCourse && (
+                      <option value={resolvedCourse.name}>
+                        {resolvedCourse.name}
+                      </option>
+                    )}
+
+                    {!resolvedCourse && (
+                      <>
+                        <option value="Spoken English">
+                          Spoken English
+                        </option>
+                        <option value="Abacus">
+                          Abacus
+                        </option>
+                        <option value="Mathematics">
+                          Mathematics
+                        </option>
+                        <option value="Science">
+                          Science
+                        </option>
+                        <option value="English">
+                          English
+                        </option>
+                        <option value="School Tuition">
+                          School Tuition
+                        </option>
+                        <option value="Exam Preparation">
+                          Exam Preparation
+                        </option>
+                      </>
+                    )}
+                  </select>
+                </div>
+
+                {/* Mode */}
+                <div>
+                  <label
+                    htmlFor="mode"
+                    className="block text-sm font-semibold text-gray-700 mb-2"
+                  >
+                    Class Mode *
+                  </label>
+
+                  <select
+                    id="mode"
+                    required
+                    value={form.mode}
+                    onChange={(e) =>
+                      updateField(
+                        'mode',
+                        e.target.value
+                      )
+                    }
+                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                  >
+                    <option value="Online One-to-One">
+                      Online One-to-One
+                    </option>
+                    <option value="Online Group Class">
+                      Online Group Class
+                    </option>
+                  </select>
+                </div>
+
+                {/* Date */}
+                <div>
+                  <label
+                    htmlFor="date"
+                    className="block text-sm font-semibold text-gray-700 mb-2"
+                  >
+                    Preferred Date *
+                  </label>
+
+                  <div className="relative">
+                    <CalendarDays
+                      size={17}
+                      className="absolute left-3 top-3.5 text-gray-400 pointer-events-none"
+                    />
+
+                    <input
+                      id="date"
+                      type="date"
+                      required
+                      value={form.date}
+                      onChange={(e) =>
+                        updateField(
+                          'date',
+                          e.target.value
+                        )
+                      }
+                      className="w-full rounded-xl border border-gray-300 bg-white pl-10 pr-4 py-3 text-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                    />
+                  </div>
+                </div>
+
+                {/* Time */}
+                <div>
+                  <label
+                    htmlFor="time"
+                    className="block text-sm font-semibold text-gray-700 mb-2"
+                  >
+                    Preferred Time *
+                  </label>
+
+                  <div className="relative">
+                    <Clock3
+                      size={17}
+                      className="absolute left-3 top-3.5 text-gray-400 pointer-events-none"
+                    />
+
+                    <input
+                      id="time"
+                      type="time"
+                      required
+                      value={form.time}
+                      onChange={(e) =>
+                        updateField(
+                          'time',
+                          e.target.value
+                        )
+                      }
+                      className="w-full rounded-xl border border-gray-300 bg-white pl-10 pr-4 py-3 text-sm outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1.5">
-                  <Calendar size={15} className="text-purple-600" />
-                  Preferred Date
+              {/* Message */}
+              <div className="mt-5">
+                <label
+                  htmlFor="message"
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                >
+                  Additional Message
                 </label>
-                <input
-                  type="date"
-                  value={formData.preferredDate}
-                  onChange={(e) => handleChange('preferredDate', e.target.value)}
-                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 transition-colors ${
-                    errors.preferredDate
-                      ? 'border-red-400'
-                      : 'border-gray-200 focus:border-purple-400'
-                  }`}
-                />
-                {errors.preferredDate && (
-                  <p className="text-xs text-red-500 mt-1">{errors.preferredDate}</p>
-                )}
-              </div>
 
-              <div>
-                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1.5">
-                  <Clock size={15} className="text-purple-600" />
-                  Preferred Time
-                </label>
-                <input
-                  type="time"
-                  value={formData.preferredTime}
-                  onChange={(e) => handleChange('preferredTime', e.target.value)}
-                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 transition-colors ${
-                    errors.preferredTime
-                      ? 'border-red-400'
-                      : 'border-gray-200 focus:border-purple-400'
-                  }`}
-                />
-                {errors.preferredTime && (
-                  <p className="text-xs text-red-500 mt-1">{errors.preferredTime}</p>
-                )}
-              </div>
-
-              <div className="sm:col-span-2">
-                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1.5">
-                  <MessageSquare size={15} className="text-purple-600" />
-                  Additional Message{' '}
-                  <span className="text-gray-400 font-normal">(optional)</span>
-                </label>
                 <textarea
-                  value={formData.message}
-                  onChange={(e) => handleChange('message', e.target.value)}
-                  rows={4}
-                  placeholder="Anything specific you'd like us to know?"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:border-purple-400 text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 transition-colors resize-none"
+                  id="message"
+                  rows={5}
+                  value={form.message}
+                  onChange={(e) =>
+                    updateField(
+                      'message',
+                      e.target.value
+                    )
+                  }
+                  placeholder="Tell us anything important about the student's learning requirements..."
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm outline-none resize-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
                 />
               </div>
+
+              {/* Submit */}
+              <div className="mt-7">
+                <button
+                  type="submit"
+                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold transition-colors shadow-sm"
+                >
+                  <GraduationCap size={18} />
+                  Book Tuition Session
+                </button>
+              </div>
+
+              <p className="text-xs text-gray-500 text-center mt-4">
+                Our team will contact you to confirm availability
+                and class timing.
+              </p>
             </div>
           </div>
 
-          <button
-            type="submit"
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold transition-colors"
-          >
-            Book Tuition Session
-          </button>
+          {/* SIDEBAR */}
+          <aside>
+            <div className="lg:sticky lg:top-24 space-y-5">
+              {resolvedCourse && (
+                <div className="rounded-3xl border border-purple-100 bg-purple-50 p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-600 text-white">
+                      <GraduationCap size={22} />
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-purple-600">
+                        Selected Course
+                      </p>
+
+                      <h3 className="font-bold text-purple-950">
+                        {resolvedCourse.name}
+                      </h3>
+                    </div>
+                  </div>
+
+                  <p className="text-sm text-purple-900/70 leading-relaxed">
+                    {resolvedCourse.shortDescription}
+                  </p>
+                </div>
+              )}
+
+              <div className="rounded-3xl border border-gray-200 bg-gray-50 p-6">
+                <h3 className="font-bold text-gray-900 mb-4">
+                  Why Vattams Online Tuition?
+                </h3>
+
+                <ul className="space-y-3">
+                  {[
+                    'Live online learning',
+                    'Flexible class scheduling',
+                    'Personalised learning support',
+                    'Experienced tutors',
+                    'School and exam preparation',
+                  ].map((item) => (
+                    <li
+                      key={item}
+                      className="flex items-start gap-2.5 text-sm text-gray-600"
+                    >
+                      <CheckCircle2
+                        size={17}
+                        className="text-purple-600 mt-0.5 flex-shrink-0"
+                      />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => navigate('tuition-courses')}
+                className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 text-sm font-semibold transition-colors"
+              >
+                <ArrowLeft size={16} />
+                Back to Course Catalog
+              </button>
+            </div>
+          </aside>
         </form>
       </section>
     </main>
