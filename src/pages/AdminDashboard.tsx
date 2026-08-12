@@ -106,17 +106,65 @@ export default function AdminDashboard() {
       'suspended'
     >('all');
 
-  const [refreshing, setRefreshing] =
-    useState(false);
+  type TechDebugState = {
+    queryStatus: 'idle' | 'loading' | 'success' | 'error';
+    rowsReturned: number | null;
+    errorMessage: string | null;
+    lastRefresh: string | null;
+  };
 
-  const handleManualRefresh = async () => {
-    setRefreshing(true);
+  const [techDebug, setTechDebug] =
+    useState<TechDebugState>({
+      queryStatus: 'idle',
+      rowsReturned: null,
+      errorMessage: null,
+      lastRefresh: null,
+    });
 
-    try {
-      await loadData();
-    } finally {
-      setRefreshing(false);
+  // Runs ONLY the technicians query — isolated from bookings/wallet/etc so
+  // this button's result can never be masked by an unrelated query failing.
+  // This is the "Force Refresh" action requested for on-device debugging
+  // (no DevTools access on mobile).
+  const fetchTechniciansOnly = async () => {
+    setTechDebug((prev) => ({
+      ...prev,
+      queryStatus: 'loading',
+    }));
+
+    const {
+      data,
+      error,
+      count,
+    } = await supabase
+      .from('technicians')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false });
+
+    console.log('[TECHNICIAN DEBUG] Supabase URL:', SUPABASE_URL);
+    console.log('[TECHNICIAN DEBUG] data:', data);
+    console.log('[TECHNICIAN DEBUG] error:', error);
+    console.log('[TECHNICIAN DEBUG] count:', count);
+    console.log('[TECHNICIAN DEBUG] data.length:', data?.length);
+
+    if (error) {
+      setTechDebug({
+        queryStatus: 'error',
+        rowsReturned: null,
+        errorMessage: error.message,
+        lastRefresh: new Date().toLocaleTimeString(),
+      });
+      return;
     }
+
+    // This is the ONLY line that updates the technicians the UI renders.
+    setTechnicians(data ?? []);
+
+    setTechDebug({
+      queryStatus: 'success',
+      rowsReturned: data?.length ?? 0,
+      errorMessage: null,
+      lastRefresh: new Date().toLocaleTimeString(),
+    });
   };
 
   const [selectedBooking, setSelectedBooking] =
@@ -1591,12 +1639,15 @@ export default function AdminDashboard() {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={handleManualRefresh}
-              disabled={refreshing}
-              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-gray-200 hover:bg-gray-50 disabled:opacity-50 text-gray-600 text-sm font-semibold transition-colors"
+              onClick={fetchTechniciansOnly}
+              disabled={techDebug.queryStatus === 'loading'}
+              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 disabled:opacity-50 text-amber-700 text-sm font-semibold transition-colors"
             >
-              <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
-              Refresh
+              <RefreshCw
+                size={14}
+                className={techDebug.queryStatus === 'loading' ? 'animate-spin' : ''}
+              />
+              Force Refresh
             </button>
 
           <select
@@ -1621,6 +1672,26 @@ export default function AdminDashboard() {
             <option value="suspended">Suspended</option>
           </select>
           </div>
+        </div>
+
+        {/* TEMP: on-screen diagnostic panel — remove once the root cause
+            is confirmed. Exists because DevTools isn't available on
+            mobile browsers. */}
+        <div className="mb-4 rounded-xl border-2 border-dashed border-amber-400 bg-amber-50 p-4 font-mono text-xs text-amber-900 space-y-1">
+          <div className="font-bold text-amber-800 mb-1">[TECHNICIAN DEBUG]</div>
+          <div>Supabase URL: {SUPABASE_URL}</div>
+          <div>
+            Query status:{' '}
+            {techDebug.queryStatus === 'idle' && 'Not run yet — tap Force Refresh'}
+            {techDebug.queryStatus === 'loading' && 'Loading...'}
+            {techDebug.queryStatus === 'success' && `Loaded ${techDebug.rowsReturned} technicians`}
+            {techDebug.queryStatus === 'error' && `ERROR: ${techDebug.errorMessage}`}
+          </div>
+          <div>Rows returned (last query): {techDebug.rowsReturned ?? '—'}</div>
+          <div>Rows in React state (technicians): {technicians.length}</div>
+          <div>Rows after filtering (filteredTechnicians): {filteredTechnicians.length}</div>
+          <div>Current filter (techFilter): {techFilter}</div>
+          <div>Last refresh: {techDebug.lastRefresh ?? 'never'}</div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
