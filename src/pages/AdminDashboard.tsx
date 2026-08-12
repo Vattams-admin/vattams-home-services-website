@@ -5,7 +5,7 @@ import {
   Trash2, Eye, XCircle, Star, Award, Wallet, Lock, Unlock, History, ShieldCheck,
   CreditCard, LucideIcon, Globe, Facebook, Instagram, Twitter, Youtube, MessageCircle, Save,
   Bell, BellOff, Search, FileText, Tag, Sparkles, Send, BarChart3, Brain,
-  RefreshCw,
+  RefreshCw, GraduationCap,
 } from 'lucide-react';
 import { supabase, SUPABASE_URL, Booking, Technician, BookingStatus, WalletTransaction, WalletRecharge } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
@@ -29,6 +29,7 @@ import AdminAIDashboard from '@/components/admin/AdminAIDashboard';
 import AdminCRM from '@/components/admin/AdminCRM';
 import AdminContent from '@/components/admin/AdminContent';
 import AdminCoupons from '@/components/admin/AdminCoupons';
+import TuitionAdminPanel from '@/components/tuition/admin/TuitionAdminPanel';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -83,7 +84,8 @@ type Tab =
   | 'ai-dashboard'
   | 'crm'
   | 'content'
-  | 'coupons';
+  | 'coupons'
+  | 'tuition';
 
 export default function AdminDashboard() {
   const { navigate } = useRouter();
@@ -1477,6 +1479,7 @@ export default function AdminDashboard() {
     { id: 'content', label: 'AI Content', icon: Sparkles },
     { id: 'crm', label: 'CRM', icon: FileText },
     { id: 'ai-dashboard', label: 'AI Insights', icon: Brain },
+    { id: 'tuition', label: 'Tuition', icon: GraduationCap },
   ];
 
   if (loading) {
@@ -3221,6 +3224,11 @@ export default function AdminDashboard() {
       {/* ===================== COUPONS ===================== */}
       {tab === 'coupons' && (
         <AdminCoupons />
+      )}
+
+      {/* ===================== TUITION ===================== */}
+      {tab === 'tuition' && (
+        <TuitionAdminPanel />
       )}
         </div>
       </div>
