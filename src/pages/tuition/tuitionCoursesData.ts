@@ -14,10 +14,10 @@ export type TuitionCourse = {
   classFormat: string;
   /**
    * Optional learning-materials catalog for this course.
-   * Fully optional and backward-compatible: courses without a `materials`
+   * Fully optional and backward-compatible: courses without a "materials"
    * field render an empty/"coming soon" materials section rather than
    * breaking. No real file URLs are invented here — items either omit
-   * `resourceUrl`/`externalLink` (shown as "coming soon" in the UI) or,
+   * "resourceUrl"/"externalLink" (shown as "coming soon" in the UI) or,
    * once real files exist, can have them added later.
    */
   materials?: CourseMaterials;
