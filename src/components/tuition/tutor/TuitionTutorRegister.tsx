@@ -228,20 +228,17 @@ export default function TuitionTutorRegister() {
             </div>
 
             <h1 className="text-3xl font-bold text-gray-900 mb-4">
-              Application Received
+              Application Submitted Successfully
             </h1>
 
             <p className="text-gray-600 leading-relaxed max-w-xl mx-auto mb-4">
-              Thank you for applying to teach with Vattams Online
-              Tuition. Your tutor application has been received for
-              review.
+              Our team will review your application and contact
+              you.
             </p>
 
             <p className="text-gray-500 text-sm leading-relaxed max-w-xl mx-auto mb-8">
-              Our team will verify the details you provided and get
-              in touch with you regarding next steps. This
-              submission does not create a tutor account, and no
-              verification has taken place yet.
+              This submission does not create a tutor account, and
+              no verification has taken place yet.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
