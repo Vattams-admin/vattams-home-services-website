@@ -1,3 +1,4 @@
+import TuitionCourseCard from '@/components/tuition/TuitionCourseCard';
 import { GraduationCap } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import { tuitionCourses } from './tuitionCoursesData';
