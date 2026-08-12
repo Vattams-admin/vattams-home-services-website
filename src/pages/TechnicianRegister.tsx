@@ -10,6 +10,10 @@ import {
   ArrowLeft,
   X,
   AlertCircle,
+  Upload,
+  RefreshCw,
+  FileText,
+  RotateCcw,
 } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 
@@ -18,8 +22,28 @@ import {
   EMPTY_FORM,
   calculateProfileScore,
   submitTechnicianApplication,
+  validateFile,
+  uploadDocumentWithProgress,
+  saveRegistrationDraft,
+  loadRegistrationDraft,
+  clearRegistrationDraft,
   type TechnicianFormData,
+  type DocType,
 } from '@/lib/technicianRegistration';
+
+type UploadState = {
+  status: 'idle' | 'uploading' | 'success' | 'error';
+  progress: number;
+  fileName: string;
+  error: string;
+};
+
+const DOC_LABELS: Record<string, string> = {
+  aadhaar: 'Aadhaar Card',
+  pan: 'PAN Card',
+  dl: 'Driving License',
+  profile_photo: 'Profile Photo',
+};
 
 export default function TechnicianRegister() {
   const { navigate } = useRouter();
@@ -35,7 +59,16 @@ export default function TechnicianRegister() {
     { role: 'ai' | 'user'; text: string }[]
   >([]);
 
+  const [uploadStates, setUploadStates] = useState<
+    Record<string, UploadState>
+  >({});
+
+  const [hydrated, setHydrated] = useState(false);
+  const [resumedDraft, setResumedDraft] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const submittingRef = useRef(false);
 
   const currentStep = STEPS[stepIndex];
 
@@ -46,7 +79,28 @@ export default function TechnicianRegister() {
     Math.round((stepIndex / Math.max(STEPS.length - 1, 1)) * 100)
   );
 
+  // Resume-in-progress registration (survives refresh / closed tab, same
+  // device). Runs once on mount, before the default-first-question effect
+  // below, so we don't flash the "Welcome" question if a draft exists.
   useEffect(() => {
+    const draft = loadRegistrationDraft();
+
+    if (draft && draft.stepIndex > 0 && draft.stepIndex < STEPS.length) {
+      setForm((previous) => ({ ...previous, ...draft.form }));
+      setStepIndex(draft.stepIndex);
+      setChatHistory(
+        Array.isArray(draft.chatHistory) ? draft.chatHistory : []
+      );
+      setResumedDraft(true);
+    }
+
+    setHydrated(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+
     if (stepIndex === 0 && chatHistory.length === 0) {
       setChatHistory([
         {
@@ -59,7 +113,16 @@ export default function TechnicianRegister() {
     messagesEndRef.current?.scrollIntoView({
       behavior: 'smooth',
     });
-  }, [chatHistory, stepIndex]);
+  }, [chatHistory, stepIndex, hydrated]);
+
+  // Persist progress on every change so a refresh never loses the
+  // technician's place. Profile score / completion is always recalculated
+  // from the actual saved form fields, never from stepIndex alone.
+  useEffect(() => {
+    if (!hydrated || success) return;
+
+    saveRegistrationDraft(stepIndex, form, chatHistory);
+  }, [hydrated, success, stepIndex, form, chatHistory]);
 
   const advance = () => {
     setTimeout(() => {
@@ -118,6 +181,39 @@ export default function TechnicianRegister() {
 
     if (step.type === 'boolean') {
       handleBoolean(inputValue === 'yes');
+      return;
+    }
+
+    if (step.type === 'upload') {
+      // Completion is judged strictly from the saved form field (set only
+      // after a real, successful upload) — never from merely reaching or
+      // clicking through this step.
+      if (step.validate) {
+        const validationError = step.validate('', form);
+
+        if (validationError) {
+          setError(validationError);
+          return;
+        }
+      }
+
+      const uploaded = step.field
+        ? !!form[step.field as keyof TechnicianFormData]
+        : false;
+
+      const label = DOC_LABELS[step.key] || 'Document';
+
+      setChatHistory((history) => [
+        ...history,
+        {
+          role: 'user',
+          text: uploaded ? `${label} uploaded ✓` : 'Skipped',
+        },
+      ]);
+
+      setInputValue('');
+
+      advance();
       return;
     }
 
@@ -240,13 +336,135 @@ export default function TechnicianRegister() {
     }));
   };
 
+  const handleFileSelected = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+
+    // Always reset the input value so selecting the exact same file again
+    // (e.g. after an error) still fires onChange.
+    event.target.value = '';
+
+    if (!file) return;
+
+    const step = currentStep;
+    const key = step.key;
+    const fieldName = step.field as keyof TechnicianFormData;
+
+    // Guard against duplicate/overlapping uploads for this step.
+    if (uploadStates[key]?.status === 'uploading') return;
+
+    const clientError = validateFile(file);
+
+    if (clientError) {
+      setUploadStates((previous) => ({
+        ...previous,
+        [key]: {
+          status: 'error',
+          progress: 0,
+          fileName: file.name,
+          error: clientError,
+        },
+      }));
+      return;
+    }
+
+    setUploadStates((previous) => ({
+      ...previous,
+      [key]: {
+        status: 'uploading',
+        progress: 0,
+        fileName: file.name,
+        error: '',
+      },
+    }));
+
+    setError('');
+
+    try {
+      const result = await uploadDocumentWithProgress(
+        file,
+        form.mobile,
+        key as DocType,
+        (percent) => {
+          setUploadStates((previous) => ({
+            ...previous,
+            [key]: {
+              ...(previous[key] || {
+                status: 'uploading',
+                fileName: file.name,
+                error: '',
+              }),
+              status: 'uploading',
+              progress: percent,
+            },
+          }));
+        }
+      );
+
+      setForm((previous) => ({
+        ...previous,
+        [fieldName]: result,
+      }));
+
+      setUploadStates((previous) => ({
+        ...previous,
+        [key]: {
+          status: 'success',
+          progress: 100,
+          fileName: file.name,
+          error: '',
+        },
+      }));
+    } catch (err: any) {
+      setUploadStates((previous) => ({
+        ...previous,
+        [key]: {
+          status: 'error',
+          progress: 0,
+          fileName: file.name,
+          error: err?.message || 'Upload failed. Please try again.',
+        },
+      }));
+    }
+  };
+
+  const handleStartOver = () => {
+    clearRegistrationDraft();
+    setForm(EMPTY_FORM);
+    setStepIndex(0);
+    setChatHistory([]);
+    setUploadStates({});
+    setError('');
+    setInputValue('');
+    setResumedDraft(false);
+  };
+
+  const handleSkipUpload = () => {
+    setError('');
+
+    setChatHistory((history) => [
+      ...history,
+      {
+        role: 'user',
+        text: 'Skipped',
+      },
+    ]);
+
+    advance();
+  };
+
   const handleSubmit = async () => {
+    if (submittingRef.current) return;
+
+    submittingRef.current = true;
     setSubmitting(true);
     setError('');
 
     try {
       await submitTechnicianApplication(form);
 
+      clearRegistrationDraft();
       setSuccess(true);
     } catch (err: any) {
       console.error('Registration Error:', err);
@@ -256,6 +474,7 @@ export default function TechnicianRegister() {
           JSON.stringify(err) ||
           'Registration failed.'
       );
+      submittingRef.current = false;
     } finally {
       setSubmitting(false);
     }
@@ -356,6 +575,22 @@ export default function TechnicianRegister() {
       </section>
 
       <div className="max-w-2xl mx-auto px-4 py-8">
+
+        {resumedDraft && (
+          <div className="mb-4 flex items-center justify-between gap-3 bg-blue-50 border border-blue-100 text-blue-700 text-xs font-semibold rounded-xl px-4 py-2.5">
+            <span>
+              Welcome back — we picked up where you left off.
+            </span>
+
+            <button
+              onClick={handleStartOver}
+              className="flex items-center gap-1 text-blue-700 hover:text-blue-900 underline shrink-0"
+            >
+              <RotateCcw size={12} />
+              Start Over
+            </button>
+          </div>
+        )}
 
         {/* Progress */}
         <div className="mb-6">
@@ -621,6 +856,154 @@ export default function TechnicianRegister() {
 
               </div>
             )}
+
+            {/* File / Photo Upload */}
+            {currentStep.type === 'upload' && (() => {
+              const key = currentStep.key;
+              const fieldName = currentStep.field as keyof TechnicianFormData;
+              const savedValue = fieldName
+                ? (form[fieldName] as string)
+                : '';
+              const state: UploadState = uploadStates[key] || {
+                status: savedValue ? 'success' : 'idle',
+                progress: savedValue ? 100 : 0,
+                fileName: savedValue
+                  ? savedValue.split('/').pop() || 'Uploaded file'
+                  : '',
+                error: '',
+              };
+              const label = DOC_LABELS[key] || 'Document';
+
+              return (
+                <div className="space-y-3">
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,application/pdf"
+                    capture="environment"
+                    className="hidden"
+                    onChange={handleFileSelected}
+                  />
+
+                  {/* Idle — nothing uploaded yet */}
+                  {state.status === 'idle' && (
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full flex items-center justify-center gap-2 py-4 border-2 border-dashed border-orange-300 hover:border-orange-500 bg-orange-50/50 hover:bg-orange-50 text-orange-600 font-bold rounded-xl transition-colors text-sm"
+                    >
+                      <Upload size={18} />
+                      Upload {label}
+                    </button>
+                  )}
+
+                  {/* Uploading */}
+                  {state.status === 'uploading' && (
+                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Loader
+                          size={16}
+                          className="animate-spin text-orange-500"
+                        />
+                        <span className="text-sm font-semibold text-gray-700 truncate">
+                          Uploading {state.fileName}...
+                        </span>
+                      </div>
+
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-orange-500 rounded-full transition-all duration-200"
+                          style={{ width: `${state.progress}%` }}
+                        />
+                      </div>
+
+                      <div className="text-xs text-gray-400 mt-1 text-right">
+                        {state.progress}%
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Success */}
+                  {state.status === 'success' && (
+                    <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center shrink-0">
+                          <CheckCircle size={16} />
+                        </div>
+
+                        <div className="min-w-0">
+                          <div className="text-sm font-bold text-green-700">
+                            {label} uploaded ✓
+                          </div>
+
+                          <div className="text-xs text-green-600 truncate flex items-center gap-1">
+                            <FileText size={11} />
+                            {state.fileName}
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="shrink-0 flex items-center gap-1 text-xs font-bold text-orange-600 hover:text-orange-700 bg-white border border-orange-200 rounded-lg px-3 py-1.5"
+                      >
+                        <RefreshCw size={12} />
+                        Replace
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Error */}
+                  {state.status === 'error' && (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                      <div className="flex items-center gap-2 text-red-600 text-sm font-semibold mb-2">
+                        <AlertCircle size={15} />
+                        Upload failed
+                      </div>
+
+                      <div className="text-xs text-red-500 mb-3">
+                        {state.error}
+                      </div>
+
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex items-center gap-1.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg px-3 py-2"
+                      >
+                        <RefreshCw size={12} />
+                        Retry Upload
+                      </button>
+                    </div>
+                  )}
+
+                  <p className="text-xs text-gray-400">
+                    Accepted: JPG, PNG, WebP, or PDF — up to 10MB.
+                  </p>
+
+                  <button
+                    onClick={handleNext}
+                    disabled={
+                      state.status === 'uploading' ||
+                      (!savedValue && !currentStep.optional)
+                    }
+                    className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2"
+                  >
+                    Continue
+                    <ArrowRight size={16} />
+                  </button>
+
+                  {currentStep.optional && !savedValue && (
+                    <button
+                      onClick={handleSkipUpload}
+                      disabled={state.status === 'uploading'}
+                      className="w-full text-xs text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                    >
+                      Skip this step
+                    </button>
+                  )}
+
+                </div>
+              );
+            })()}
 
             {/* Review */}
             {currentStep.type === 'review' && (
