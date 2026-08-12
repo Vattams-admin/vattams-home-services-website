@@ -43,13 +43,24 @@
 5. Seed Data
    - Inserts a small starter set of courses matching the existing static
      category list (Spoken English, Abacus, School Tuition, Competitive Exam
-     Preparation), only if the table is empty.
+     Preparation). Each row is inserted with ON CONFLICT (slug) DO NOTHING,
+     so this migration is safe to run multiple times without erroring or
+     duplicating rows.
 
 6. Scope / Non-goals for this migration
    - Does not modify any existing table, migration, trigger, or RLS policy.
    - Does not touch Home Services, auth, payments, technician, customer, or
      admin schema/logic in any way.
    - Does not modify any React/TypeScript source files.
+
+7. Note
+   - This schema was already applied manually in the production Supabase
+     SQL Editor. This file exists to bring the repository's migration
+     history in sync with what is already live in production. Every
+     statement below (CREATE TABLE IF NOT EXISTS, CREATE INDEX IF NOT
+     EXISTS, CREATE OR REPLACE FUNCTION, DROP ... IF EXISTS + CREATE
+     TRIGGER, and ON CONFLICT DO NOTHING inserts) is idempotent and safe
+     to re-run against a database where this schema already exists.
 */
 
 CREATE TABLE IF NOT EXISTS tuition_courses (
@@ -106,13 +117,14 @@ CREATE TRIGGER tuition_courses_updated_at
   BEFORE UPDATE ON tuition_courses
   FOR EACH ROW EXECUTE FUNCTION update_tuition_courses_updated_at();
 
--- Seed initial courses (only if table is empty)
+-- Seed initial courses (idempotent — safe to run again; skips rows whose
+-- slug already exists instead of relying on the table being empty)
 INSERT INTO tuition_courses (
   title, slug, short_description, description, category, level, mode,
   course_type, duration_minutes, classes_per_week, monthly_price,
   trial_available, is_active, display_order
 )
-SELECT * FROM (VALUES
+VALUES
   (
     'Spoken English',
     'spoken-english',
@@ -177,9 +189,4 @@ SELECT * FROM (VALUES
     true,
     4
   )
-) AS seed(
-  title, slug, short_description, description, category, level, mode,
-  course_type, duration_minutes, classes_per_week, monthly_price,
-  trial_available, is_active, display_order
-)
-WHERE NOT EXISTS (SELECT 1 FROM tuition_courses LIMIT 1);
+ON CONFLICT (slug) DO NOTHING;
