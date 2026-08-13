@@ -1,67 +1,598 @@
-2026-08-13T17:36:34.840495Z	Cloning repository...
-2026-08-13T17:36:35.748169Z	From https://github.com/Vattams-admin/vattams-home-services-website
-2026-08-13T17:36:35.748463Z	 * branch            c8f5b7a1e75bf0041251fef736959278d2450fe1 -> FETCH_HEAD
-2026-08-13T17:36:35.748549Z	
-2026-08-13T17:36:35.807036Z	HEAD is now at c8f5b7a Create TuitionTutorRegister.tsx
-2026-08-13T17:36:35.807421Z	
-2026-08-13T17:36:35.859537Z	
-2026-08-13T17:36:35.85983Z	Using v2 root directory strategy
-2026-08-13T17:36:35.875717Z	Success: Finished cloning repository files
-2026-08-13T17:36:37.812446Z	Checking for configuration in a Wrangler configuration file (BETA)
-2026-08-13T17:36:37.812841Z	
-2026-08-13T17:36:37.94675Z	No Wrangler configuration file found. Continuing.
-2026-08-13T17:36:38.256319Z	Detected the following tools from environment: npm@10.9.2, nodejs@22.16.0
-2026-08-13T17:36:38.2568Z	Installing project dependencies: npm clean-install --progress=false
-2026-08-13T17:38:09.922221Z	
-2026-08-13T17:38:09.92293Z	added 401 packages, and audited 402 packages in 2m
-2026-08-13T17:38:09.923089Z	
-2026-08-13T17:38:09.92317Z	67 packages are looking for funding
-2026-08-13T17:38:09.923222Z	  run `npm fund` for details
-2026-08-13T17:38:10.902241Z	
-2026-08-13T17:38:10.902646Z	28 vulnerabilities (2 low, 13 moderate, 13 high)
-2026-08-13T17:38:10.902739Z	
-2026-08-13T17:38:10.902829Z	To address issues that do not require attention, run:
-2026-08-13T17:38:10.902892Z	  npm audit fix
-2026-08-13T17:38:10.902925Z	
-2026-08-13T17:38:10.902957Z	To address all issues (including breaking changes), run:
-2026-08-13T17:38:10.902989Z	  npm audit fix --force
-2026-08-13T17:38:10.903018Z	
-2026-08-13T17:38:10.903049Z	Run `npm audit` for details.
-2026-08-13T17:38:11.010496Z	Executing user command: npm run build
-2026-08-13T17:38:11.266284Z	
-2026-08-13T17:38:11.266722Z	> vite-react-typescript-starter@0.0.0 build
-2026-08-13T17:38:11.26686Z	> vite build
-2026-08-13T17:38:11.266931Z	
-2026-08-13T17:38:11.636409Z	[36mvite v5.4.8 [32mbuilding for production...[36m[39m
-2026-08-13T17:38:11.686672Z	transforming...
-2026-08-13T17:38:11.920477Z	Browserslist: caniuse-lite is outdated. Please run:
-2026-08-13T17:38:11.921422Z	  npx update-browserslist-db@latest
-2026-08-13T17:38:11.921638Z	  Why you should do it regularly: https://github.com/browserslist/update-db#readme
-2026-08-13T17:38:12.711877Z	[32m✓[39m 43 modules transformed.
-2026-08-13T17:38:12.713683Z	[31mx[39m Build failed in 1.05s
-2026-08-13T17:38:12.714133Z	[31merror during build:
-2026-08-13T17:38:12.714531Z	[31m[vite:esbuild] Transform failed with 1 error:
-2026-08-13T17:38:12.714642Z	/opt/buildhome/repo/src/pages/tuition/student/TuitionStudentClasses.tsx:158:53: ERROR: Expected "}" but found "{"[31m
-2026-08-13T17:38:12.714739Z	file: [36m/opt/buildhome/repo/src/pages/tuition/student/TuitionStudentClasses.tsx:158:53[31m
-2026-08-13T17:38:12.714893Z	[33m
-2026-08-13T17:38:12.714966Z	[33mExpected "}" but found "{"[33m
-2026-08-13T17:38:12.715036Z	156|            <div className="space-y-8">
-2026-08-13T17:38:12.715251Z	157|              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-2026-08-13T17:38:12.715343Z	158|                <StatCard label="Attendance %" value={${summary.attendancePercentage}%} icon={TrendingUp} tone="purple" />
-2026-08-13T17:38:12.715418Z	   |                                                       ^
-2026-08-13T17:38:12.715497Z	159|                <StatCard label="Present" value={summary.present} icon={CheckCircle2} tone="emerald" />
-2026-08-13T17:38:12.715567Z	160|                <StatCard label="Absent" value={summary.absent} icon={XCircle} tone="red" />
-2026-08-13T17:38:12.71563Z	[31m
-2026-08-13T17:38:12.715689Z	    at failureErrorWithLog (/opt/buildhome/repo/node_modules/esbuild/lib/main.js:1472:15)
-2026-08-13T17:38:12.71575Z	    at /opt/buildhome/repo/node_modules/esbuild/lib/main.js:755:50
-2026-08-13T17:38:12.715816Z	    at responseCallbacks.<computed> (/opt/buildhome/repo/node_modules/esbuild/lib/main.js:622:9)
-2026-08-13T17:38:12.715876Z	    at handleIncomingPacket (/opt/buildhome/repo/node_modules/esbuild/lib/main.js:677:12)
-2026-08-13T17:38:12.715933Z	    at Socket.readFromStdout (/opt/buildhome/repo/node_modules/esbuild/lib/main.js:600:7)
-2026-08-13T17:38:12.715993Z	    at Socket.emit (node:events:518:28)
-2026-08-13T17:38:12.716051Z	    at addChunk (node:internal/streams/readable:561:12)
-2026-08-13T17:38:12.716109Z	    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
-2026-08-13T17:38:12.7162Z	    at Readable.push (node:internal/streams/readable:392:5)
-2026-08-13T17:38:12.716312Z	    at Pipe.onStreamRead (node:internal/stream_base_commons:189:23)[39m
-2026-08-13T17:38:12.915287Z	Failed: Error while executing user command. Exited with error code: 1
-2026-08-13T17:38:12.922781Z	Failed: build command exited with code: 1
-2026-08-13T17:38:13.604744Z	Failed: error occurred while running build command
+import { useMemo, useState } from 'react';
+import {
+  GraduationCap,
+  CalendarDays,
+  ClipboardCheck,
+  CheckCircle2,
+  XCircle,
+  Clock3,
+  TrendingUp,
+} from 'lucide-react';
+
+import {
+  DEMO_CURRENT_STUDENT_ID,
+  DEMO_STUDENTS,
+  getClassesForStudent,
+  splitClassesByTime,
+  getStudentAttendanceSummary,
+  getAttendanceRecordsForStudent,
+} from '../tuitionClassesData';
+
+import {
+  TuitionClass,
+  TuitionAttendanceStatus,
+} from '../tuitionClassTypes';
+
+import ClassCard from '@/components/tuition/classes/ClassCard';
+import ClassDetail from '@/components/tuition/classes/ClassDetail';
+
+type StudentTab = 'classes' | 'schedule' | 'attendance';
+type ScheduleFilter = 'today' | 'tomorrow' | 'week';
+
+function isoDateOffset(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+export default function TuitionStudentClasses() {
+  const [tab, setTab] = useState<StudentTab>('classes');
+
+  const [scheduleFilter, setScheduleFilter] =
+    useState<ScheduleFilter>('today');
+
+  const [selectedClass, setSelectedClass] =
+    useState<TuitionClass | null>(null);
+
+  const student = DEMO_STUDENTS.find(
+    (s) => s.id === DEMO_CURRENT_STUDENT_ID
+  );
+
+  const allClasses = useMemo(
+    () => getClassesForStudent(DEMO_CURRENT_STUDENT_ID),
+    []
+  );
+
+  const {
+    today,
+    upcoming,
+    completed,
+  } = useMemo(
+    () => splitClassesByTime(allClasses),
+    [allClasses]
+  );
+
+  const summary = useMemo(
+    () =>
+      getStudentAttendanceSummary(
+        DEMO_CURRENT_STUDENT_ID
+      ),
+    []
+  );
+
+  const attendanceRecords = useMemo(
+    () =>
+      getAttendanceRecordsForStudent(
+        DEMO_CURRENT_STUDENT_ID
+      ),
+    []
+  );
+
+  const scheduleClasses = useMemo(() => {
+    if (scheduleFilter === 'today') {
+      return allClasses.filter(
+        (c) => c.date === isoDateOffset(0)
+      );
+    }
+
+    if (scheduleFilter === 'tomorrow') {
+      return allClasses.filter(
+        (c) => c.date === isoDateOffset(1)
+      );
+    }
+
+    const weekStart = isoDateOffset(0);
+    const weekEnd = isoDateOffset(6);
+
+    return allClasses
+      .filter(
+        (c) =>
+          c.date >= weekStart &&
+          c.date <= weekEnd
+      )
+      .sort((a, b) =>
+        a.date === b.date
+          ? a.startTime.localeCompare(b.startTime)
+          : a.date.localeCompare(b.date)
+      );
+  }, [allClasses, scheduleFilter]);
+
+  const handleJoin = (cls: TuitionClass) => {
+    if (cls.meetingUrl) {
+      window.open(
+        cls.meetingUrl,
+        '_blank',
+        'noopener,noreferrer'
+      );
+    }
+  };
+
+  const tabs: {
+    id: StudentTab;
+    label: string;
+    icon: typeof CalendarDays;
+  }[] = [
+    {
+      id: 'classes',
+      label: 'Classes',
+      icon: GraduationCap,
+    },
+    {
+      id: 'schedule',
+      label: 'Schedule',
+      icon: CalendarDays,
+    },
+    {
+      id: 'attendance',
+      label: 'Attendance',
+      icon: ClipboardCheck,
+    },
+  ];
+
+  return (
+    <main className="min-h-screen bg-gray-50 text-gray-900">
+
+      <section className="bg-gradient-to-r from-slate-900 via-purple-900 to-black text-white">
+        <div className="max-w-5xl mx-auto px-6 py-10">
+
+          <p className="text-purple-200 text-xs font-semibold uppercase tracking-wide mb-1">
+            Vattams Online Tuition
+          </p>
+
+          <h1 className="text-2xl md:text-3xl font-bold">
+            My Classes
+            {student
+              ? ` — ${student.name}`
+              : ''}
+          </h1>
+
+          <p className="text-purple-100 text-sm mt-1">
+            Demo student view · classes, schedule, and attendance.
+          </p>
+
+        </div>
+      </section>
+
+      <div className="max-w-5xl mx-auto px-6 -mt-5">
+
+        <div className="flex gap-2 p-1.5 bg-white rounded-2xl border border-gray-200 shadow-sm w-fit">
+
+          {tabs.map((t) => {
+            const Icon = t.icon;
+            const active = tab === t.id;
+
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setTab(t.id)}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                  active
+                    ? 'bg-purple-600 text-white'
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <Icon size={14} />
+                {t.label}
+              </button>
+            );
+          })}
+
+        </div>
+
+      </div>
+
+      <section className="max-w-5xl mx-auto px-6 py-8">
+
+        {tab === 'classes' && (
+          <div className="space-y-10">
+
+            <ClassGroup
+              title="Today's Classes"
+              classes={today}
+              onView={setSelectedClass}
+              onJoin={handleJoin}
+            />
+
+            <ClassGroup
+              title="Upcoming Classes"
+              classes={upcoming}
+              onView={setSelectedClass}
+              onJoin={handleJoin}
+            />
+
+            <ClassGroup
+              title="Completed Classes"
+              classes={completed}
+              onView={setSelectedClass}
+              onJoin={handleJoin}
+            />
+
+          </div>
+        )}
+
+        {tab === 'schedule' && (
+          <div>
+
+            <div className="flex gap-2 mb-6">
+
+              {(
+                [
+                  'today',
+                  'tomorrow',
+                  'week',
+                ] as ScheduleFilter[]
+              ).map((f) => (
+
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() =>
+                    setScheduleFilter(f)
+                  }
+                  className={`px-3.5 py-1.5 rounded-lg text-sm font-semibold border transition-colors ${
+                    scheduleFilter === f
+                      ? 'bg-purple-600 text-white border-purple-600'
+                      : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  {f === 'today'
+                    ? 'Today'
+                    : f === 'tomorrow'
+                      ? 'Tomorrow'
+                      : 'This Week'}
+                </button>
+
+              ))}
+
+            </div>
+
+            {scheduleClasses.length === 0 ? (
+
+              <EmptyState
+                message="No classes scheduled for this period."
+              />
+
+            ) : (
+
+              <div className="space-y-3">
+
+                {scheduleClasses.map((cls) => (
+
+                  <div
+                    key={cls.id}
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-4 rounded-xl border border-gray-200 bg-white"
+                  >
+
+                    <div>
+
+                      <p className="font-semibold text-gray-900">
+                        {cls.subject}
+                      </p>
+
+                      <p className="text-xs text-gray-500">
+                        {cls.courseName} · {cls.tutorName}
+                      </p>
+
+                    </div>
+
+                    <div className="text-sm text-gray-600">
+                      {cls.date} · {cls.startTime}–{cls.endTime}
+                    </div>
+
+                  </div>
+
+                ))}
+
+              </div>
+
+            )}
+
+          </div>
+        )}
+
+        {tab === 'attendance' && (
+
+          <div className="space-y-8">
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+              <StatCard
+                label="Attendance %"
+                value={`${summary.attendancePercentage}%`}
+                icon={TrendingUp}
+                tone="purple"
+              />
+
+              <StatCard
+                label="Present"
+                value={summary.present}
+                icon={CheckCircle2}
+                tone="emerald"
+              />
+
+              <StatCard
+                label="Absent"
+                value={summary.absent}
+                icon={XCircle}
+                tone="red"
+              />
+
+              <StatCard
+                label="Late"
+                value={summary.late}
+                icon={Clock3}
+                tone="amber"
+              />
+
+            </div>
+
+            <div>
+
+              <h2 className="text-sm font-semibold text-gray-900 mb-3">
+                Per-Class Attendance
+              </h2>
+
+              {attendanceRecords.length === 0 ? (
+
+                <EmptyState
+                  message="No attendance records yet."
+                />
+
+              ) : (
+
+                <div className="divide-y divide-gray-100 rounded-2xl border border-gray-200 overflow-hidden bg-white">
+
+                  {attendanceRecords.map((record) => {
+
+                    const cls =
+                      completed.find(
+                        (c) =>
+                          c.id === record.classId
+                      ) ??
+                      allClasses.find(
+                        (c) =>
+                          c.id === record.classId
+                      );
+
+                    return (
+
+                      <div
+                        key={record.id}
+                        className="flex items-center justify-between gap-3 px-4 py-3"
+                      >
+
+                        <div className="min-w-0">
+
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {cls?.subject ?? 'Class'}
+                          </p>
+
+                          <p className="text-xs text-gray-400">
+                            {cls?.date ??
+                              record.markedAt}
+                          </p>
+
+                        </div>
+
+                        <AttendanceStatusPill
+                          status={record.status}
+                        />
+
+                      </div>
+
+                    );
+                  })}
+
+                </div>
+
+              )}
+
+            </div>
+
+            <p className="text-xs text-gray-400">
+              Demo data — attendance will sync live once Supabase is connected.
+            </p>
+
+          </div>
+
+        )}
+
+      </section>
+
+      {selectedClass && (
+
+        <ClassDetail
+          tuitionClass={selectedClass}
+          viewerRole="student"
+          onClose={() =>
+            setSelectedClass(null)
+          }
+          onJoin={handleJoin}
+        />
+
+      )}
+
+    </main>
+  );
+}
+
+function ClassGroup({
+  title,
+  classes,
+  onView,
+  onJoin,
+}: {
+  title: string;
+  classes: TuitionClass[];
+  onView: (cls: TuitionClass) => void;
+  onJoin: (cls: TuitionClass) => void;
+}) {
+
+  return (
+
+    <div>
+
+      <h2 className="text-lg font-bold text-gray-900 mb-4">
+        {title}
+      </h2>
+
+      {classes.length === 0 ? (
+
+        <EmptyState
+          message="Nothing here yet."
+        />
+
+      ) : (
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          {classes.map((cls) => (
+
+            <ClassCard
+              key={cls.id}
+              tuitionClass={cls}
+              viewerRole="student"
+              onView={onView}
+              onJoin={onJoin}
+            />
+
+          ))}
+
+        </div>
+
+      )}
+
+    </div>
+
+  );
+}
+
+const ATTENDANCE_PILL_CLASSES: Record<
+  TuitionAttendanceStatus,
+  string
+> = {
+
+  present:
+    'bg-emerald-50 text-emerald-700 border-emerald-200',
+
+  absent:
+    'bg-red-50 text-red-600 border-red-200',
+
+  late:
+    'bg-amber-50 text-amber-700 border-amber-200',
+
+  'not-marked':
+    'bg-gray-100 text-gray-500 border-gray-200',
+
+};
+
+function AttendanceStatusPill({
+  status,
+}: {
+  status: TuitionAttendanceStatus;
+}) {
+
+  const label =
+    status === 'not-marked'
+      ? 'Not Marked'
+      : status.charAt(0).toUpperCase() +
+        status.slice(1);
+
+  return (
+
+    <span
+      className={`px-2.5 py-1 rounded-full border text-xs font-semibold shrink-0 ${
+        ATTENDANCE_PILL_CLASSES[status]
+      }`}
+    >
+      {label}
+    </span>
+
+  );
+}
+
+function EmptyState({
+  message,
+}: {
+  message: string;
+}) {
+
+  return (
+
+    <div className="p-6 rounded-2xl border border-dashed border-gray-200 text-center text-sm text-gray-400">
+      {message}
+    </div>
+
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+  tone,
+}: {
+  label: string;
+  value: string | number;
+  icon: typeof TrendingUp;
+  tone:
+    | 'purple'
+    | 'emerald'
+    | 'red'
+    | 'amber';
+}) {
+
+  const toneClasses: Record<
+    typeof tone,
+    string
+  > = {
+
+    purple:
+      'bg-purple-50 text-purple-600',
+
+    emerald:
+      'bg-emerald-50 text-emerald-600',
+
+    red:
+      'bg-red-50 text-red-600',
+
+    amber:
+      'bg-amber-50 text-amber-600',
+
+  };
+
+  return (
+
+    <div className="p-5 rounded-2xl border border-gray-200 bg-white">
+
+      <div
+        className={`flex items-center justify-center w-9 h-9 rounded-lg mb-3 ${
+          toneClasses[tone]
+        }`}
+      >
+        <Icon size={18} />
+      </div>
+
+      <div className="text-2xl font-bold text-gray-900">
+        {value}
+      </div>
+
+      <div className="text-sm text-gray-500">
+        {label}
+      </div>
+
+    </div>
+
+  );
+}
