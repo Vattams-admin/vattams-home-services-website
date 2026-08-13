@@ -38,6 +38,8 @@ import TuitionCourses from '@/pages/tuition/TuitionCourses';
 import TuitionCourseDetail from '@/pages/tuition/TuitionCourseDetail';
 import TuitionBooking from '@/pages/tuition/TuitionBooking';
 import TuitionTutorRegister from '@/pages/tuition/tutor/TuitionTutorRegister';
+import TuitionStudentClasses from '@/pages/tuition/student/TuitionStudentClasses';
+import TuitionTutorClasses from '@/pages/tuition/tutor/TuitionTutorClasses';
 
 function PageContent() {
   const { page, citySlug } = useRouter();
@@ -108,6 +110,10 @@ function PageContent() {
       return <TuitionBooking />;
     case 'tuition-tutor-register':
       return <TuitionTutorRegister />;
+    case 'tuition-student-classes':
+      return <TuitionStudentClasses />;
+    case 'tuition-tutor-classes':
+      return <TuitionTutorClasses />;
 
     case 'not-found':
       return <NotFound />;
