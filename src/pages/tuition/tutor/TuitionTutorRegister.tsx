@@ -24,7 +24,7 @@ import {
 } from '../tuitionClassTypes';
 
 import ClassCard from '@/components/tuition/classes/ClassCard';
-import ClassDetail from '@/components/tuition/classes/ClassDetail';
+import ClassDetail from '@/components/tuition/classes/ClassDetail';';
 
 type StudentTab = 'classes' | 'schedule' | 'attendance';
 type ScheduleFilter = 'today' | 'tomorrow' | 'week';
