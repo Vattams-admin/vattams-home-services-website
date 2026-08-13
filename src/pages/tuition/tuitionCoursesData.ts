@@ -123,6 +123,81 @@ export const tuitionCourses: TuitionCourse[] = [
     ],
     classFormat:
       'Live 1-on-1 or small-group online classes, 2–5 sessions per week, with regular progress updates for parents.',
+    materials: {
+      courseMaterials: [
+        {
+          id: 'school-tuition-syllabus-map',
+          title: 'School Tuition — Subject Coverage Map',
+          description: 'An overview of how sessions are structured across core subjects for each class level.',
+          topic: 'Full Course',
+          level: 'All Levels',
+        },
+      ],
+      studyMaterials: [
+        {
+          id: 'school-tuition-homework-notes',
+          title: 'Homework Support — Concept Notes',
+          description: 'Short concept refreshers used alongside homework help sessions.',
+          topic: 'Core Subjects',
+          level: 'All Levels',
+        },
+      ],
+      worksheets: [
+        {
+          id: 'school-tuition-daily-practice',
+          title: 'Daily Practice Worksheet Set',
+          description: 'A rotating set of short practice sheets to reinforce classroom learning.',
+          topic: 'Core Subjects',
+          level: 'Beginner',
+        },
+      ],
+      questionBanks: [
+        {
+          id: 'school-tuition-doubt-bank',
+          title: 'Common Doubts Question Bank',
+          description: 'Frequently asked questions gathered from past sessions, organized by subject.',
+          topic: 'Core Subjects',
+          level: 'All Levels',
+        },
+      ],
+      testPapers: [
+        {
+          id: 'school-tuition-progress-check',
+          title: 'Monthly Progress Check',
+          description: 'A short assessment used to track improvement across core subjects.',
+          topic: 'Core Subjects',
+          level: 'All Levels',
+        },
+      ],
+      mockExams: [],
+      solutions: [
+        {
+          id: 'school-tuition-worksheet-solutions',
+          title: 'Daily Practice Worksheet — Solutions',
+          description: 'Worked solutions for the Daily Practice Worksheet Set.',
+          topic: 'Core Subjects',
+          level: 'Beginner',
+        },
+      ],
+      revisionMaterials: [
+        {
+          id: 'school-tuition-quick-recap',
+          title: 'Quick Recap Sheet',
+          description: 'A condensed summary of key points covered in recent sessions.',
+          topic: 'Core Subjects',
+          level: 'All Levels',
+        },
+      ],
+      examPreparation: [
+        {
+          id: 'school-tuition-exam-readiness',
+          title: 'School Exam Readiness Guide',
+          description: 'Tips on structuring revision time ahead of school exams.',
+          topic: 'Full Course',
+          level: 'All Levels',
+        },
+      ],
+    },
   },
   {
     slug: 'spoken-english',
@@ -200,6 +275,65 @@ export const tuitionCourses: TuitionCourse[] = [
     ],
     classFormat:
       'Live small-group online classes, once or twice a week, with regular practice worksheets.',
+    materials: {
+      courseMaterials: [
+        {
+          id: 'abacus-level-roadmap',
+          title: 'Abacus Level Roadmap',
+          description: 'An outline of the level-based progression from beginner to advanced abacus skills.',
+          topic: 'Full Course',
+          level: 'All Levels',
+        },
+      ],
+      studyMaterials: [
+        {
+          id: 'abacus-technique-notes',
+          title: 'Bead Technique — Reference Notes',
+          description: 'Notes explaining core abacus finger and bead movement techniques.',
+          topic: 'Fundamentals',
+          level: 'Beginner',
+        },
+      ],
+      worksheets: [
+        {
+          id: 'abacus-practice-sheet-1',
+          title: 'Beginner Practice Sheet — Addition & Subtraction',
+          description: 'Practice problems for single and double-digit addition and subtraction on the abacus.',
+          topic: 'Addition & Subtraction',
+          level: 'Beginner',
+        },
+      ],
+      questionBanks: [],
+      testPapers: [
+        {
+          id: 'abacus-level-1-test',
+          title: 'Level 1 Assessment',
+          description: 'A short timed assessment to check readiness to progress to the next level.',
+          topic: 'Level 1',
+          level: 'Beginner',
+        },
+      ],
+      mockExams: [],
+      solutions: [
+        {
+          id: 'abacus-practice-sheet-1-solutions',
+          title: 'Beginner Practice Sheet — Solutions',
+          description: 'Answer key for the Beginner Practice Sheet.',
+          topic: 'Addition & Subtraction',
+          level: 'Beginner',
+        },
+      ],
+      revisionMaterials: [
+        {
+          id: 'abacus-quick-reference',
+          title: 'Bead Positions — Quick Reference',
+          description: 'A one-page visual reference for common bead positions and movements.',
+          topic: 'Fundamentals',
+          level: 'All Levels',
+        },
+      ],
+      examPreparation: [],
+    },
   },
   {
     slug: 'maths',
@@ -332,6 +466,88 @@ export const tuitionCourses: TuitionCourse[] = [
     ],
     classFormat:
       'Live 1-on-1 or small-group online classes with visual aids and regular concept check-ins.',
+    materials: {
+      courseMaterials: [
+        {
+          id: 'science-syllabus-overview',
+          title: 'Science Syllabus Overview',
+          description: 'A breakdown of Physics, Chemistry, and Biology topics covered by class level.',
+          topic: 'Full Course',
+          level: 'All Levels',
+        },
+      ],
+      studyMaterials: [
+        {
+          id: 'science-physics-notes',
+          title: 'Physics — Core Concepts Notes',
+          description: 'Concept notes on motion, force, and energy with real-world examples.',
+          topic: 'Physics',
+          level: 'Intermediate',
+        },
+        {
+          id: 'science-biology-notes',
+          title: 'Biology — Cell Structure Notes',
+          description: 'Diagram-supported notes on cell structure and basic life processes.',
+          topic: 'Biology',
+          level: 'Intermediate',
+        },
+      ],
+      worksheets: [
+        {
+          id: 'science-chemistry-worksheet',
+          title: 'Chemistry Practice Worksheet',
+          description: 'Practice questions on elements, compounds, and basic chemical reactions.',
+          topic: 'Chemistry',
+          level: 'Beginner',
+        },
+      ],
+      questionBanks: [
+        {
+          id: 'science-physics-question-bank',
+          title: 'Physics Question Bank',
+          description: 'Topic-wise questions covering motion, force, and energy.',
+          topic: 'Physics',
+          level: 'Intermediate',
+        },
+      ],
+      testPapers: [
+        {
+          id: 'science-unit-test-biology',
+          title: 'Unit Test — Cell Structure',
+          description: 'A short unit test on cell structure and basic life processes.',
+          topic: 'Biology',
+          level: 'Intermediate',
+        },
+      ],
+      mockExams: [],
+      solutions: [
+        {
+          id: 'science-chemistry-worksheet-solutions',
+          title: 'Chemistry Practice Worksheet — Solutions',
+          description: 'Step-by-step solutions for the Chemistry Practice Worksheet.',
+          topic: 'Chemistry',
+          level: 'Beginner',
+        },
+      ],
+      revisionMaterials: [
+        {
+          id: 'science-key-diagrams',
+          title: 'Key Diagrams — Quick Revision',
+          description: 'A collection of commonly tested diagrams for quick last-minute review.',
+          topic: 'Full Course',
+          level: 'All Levels',
+        },
+      ],
+      examPreparation: [
+        {
+          id: 'science-exam-focus-topics',
+          title: 'High-Priority Topics Guide',
+          description: 'Guidance on which topics typically carry the most exam weight.',
+          topic: 'Full Course',
+          level: 'All Levels',
+        },
+      ],
+    },
   },
   {
     slug: 'cbse-icse-state-board',
@@ -353,6 +569,73 @@ export const tuitionCourses: TuitionCourse[] = [
     ],
     classFormat:
       'Live 1-on-1 or small-group online classes, with board-specific study material and mock tests.',
+    materials: {
+      courseMaterials: [
+        {
+          id: 'board-syllabus-map',
+          title: 'Board-wise Syllabus Map',
+          description: 'A comparison of how content is organized across CBSE, ICSE, and State Board syllabi.',
+          topic: 'Full Course',
+          level: 'All Levels',
+        },
+      ],
+      studyMaterials: [
+        {
+          id: 'board-marking-scheme-notes',
+          title: 'Marking Scheme — Reference Notes',
+          description: 'Notes explaining how marks are typically distributed for each board.',
+          topic: 'Exam Pattern',
+          level: 'All Levels',
+        },
+      ],
+      worksheets: [],
+      questionBanks: [
+        {
+          id: 'board-previous-years-questions',
+          title: 'Previous Years\' Question Set',
+          description: 'A curated set of practice questions in the style of previous board exams.',
+          topic: 'Full Course',
+          level: 'Advanced',
+        },
+      ],
+      testPapers: [
+        {
+          id: 'board-term-test-1',
+          title: 'Term Test 1',
+          description: 'A board-aligned term test covering the first portion of the syllabus.',
+          topic: 'Full Course',
+          level: 'Intermediate',
+        },
+      ],
+      mockExams: [
+        {
+          id: 'board-mock-exam-1',
+          title: 'Board-Pattern Mock Exam',
+          description: 'A full-length mock exam following the structure of actual board papers.',
+          topic: 'Full Course',
+          level: 'Advanced',
+        },
+      ],
+      solutions: [],
+      revisionMaterials: [
+        {
+          id: 'board-last-minute-revision',
+          title: 'Last-Minute Revision Checklist',
+          description: 'A checklist of high-priority topics to review just before the exam.',
+          topic: 'Full Course',
+          level: 'All Levels',
+        },
+      ],
+      examPreparation: [
+        {
+          id: 'board-exam-strategy-guide',
+          title: 'Board Exam Strategy Guide',
+          description: 'Guidance on answer presentation, time allocation, and common mistakes to avoid.',
+          topic: 'Full Course',
+          level: 'All Levels',
+        },
+      ],
+    },
   },
   {
     slug: 'competitive-exam-preparation',
@@ -374,6 +657,89 @@ export const tuitionCourses: TuitionCourse[] = [
     ],
     classFormat:
       'Live small-group online classes with scheduled mock tests and strategy review sessions.',
+    materials: {
+      courseMaterials: [
+        {
+          id: 'competitive-exam-topic-roadmap',
+          title: 'Exam-Wise Topic Roadmap',
+          description: 'A structured roadmap of topics typically covered for competitive and scholarship exams.',
+          topic: 'Full Course',
+          level: 'All Levels',
+        },
+      ],
+      studyMaterials: [
+        {
+          id: 'competitive-exam-shortcut-notes',
+          title: 'Quick-Solving Techniques — Notes',
+          description: 'Notes on faster problem-solving approaches useful under timed conditions.',
+          topic: 'Problem Solving',
+          level: 'Advanced',
+        },
+      ],
+      worksheets: [
+        {
+          id: 'competitive-exam-speed-drill',
+          title: 'Speed Drill Worksheet',
+          description: 'A set of timed practice problems to build calculation and reasoning speed.',
+          topic: 'Speed & Accuracy',
+          level: 'Advanced',
+        },
+      ],
+      questionBanks: [
+        {
+          id: 'competitive-exam-question-bank',
+          title: 'Competitive Exam Question Bank',
+          description: 'Topic-wise questions in the style of common competitive and olympiad exams.',
+          topic: 'Full Course',
+          level: 'Advanced',
+        },
+      ],
+      testPapers: [
+        {
+          id: 'competitive-exam-timed-test-1',
+          title: 'Timed Practice Test 1',
+          description: 'A timed test simulating exam-day conditions for an early practice checkpoint.',
+          topic: 'Full Course',
+          level: 'Advanced',
+        },
+      ],
+      mockExams: [
+        {
+          id: 'competitive-exam-full-mock',
+          title: 'Full-Length Mock Exam',
+          description: 'A complete, timed mock exam covering the full syllabus scope.',
+          topic: 'Full Course',
+          level: 'Advanced',
+        },
+      ],
+      solutions: [
+        {
+          id: 'competitive-exam-speed-drill-solutions',
+          title: 'Speed Drill Worksheet — Solutions',
+          description: 'Worked solutions and shortcut explanations for the Speed Drill Worksheet.',
+          topic: 'Speed & Accuracy',
+          level: 'Advanced',
+        },
+      ],
+      revisionMaterials: [
+        {
+          id: 'competitive-exam-formula-sheet',
+          title: 'Key Formulas & Shortcuts',
+          description: 'A condensed reference sheet of frequently used formulas and shortcuts.',
+          topic: 'Full Course',
+          level: 'All Levels',
+        },
+      ],
+      examPreparation: [
+        {
+          id: 'competitive-exam-strategy-plan',
+          title: 'Preparation Strategy & Practice Schedule',
+          description: 'A suggested week-by-week practice schedule leading up to the exam.',
+          topic: 'Full Course',
+          level: 'All Levels',
+        },
+      ],
+    },
   },
   {
     slug: 'other-online-tuition',
@@ -394,6 +760,25 @@ export const tuitionCourses: TuitionCourse[] = [
     ],
     classFormat:
       'Live online classes with a format and schedule customized to the learner\'s needs.',
+    materials: {
+      courseMaterials: [
+        {
+          id: 'other-tuition-getting-started',
+          title: 'Getting Started — What to Expect',
+          description: 'An overview of how a custom learning plan is put together for this tuition option.',
+          topic: 'Full Course',
+          level: 'All Levels',
+        },
+      ],
+      studyMaterials: [],
+      worksheets: [],
+      questionBanks: [],
+      testPapers: [],
+      mockExams: [],
+      solutions: [],
+      revisionMaterials: [],
+      examPreparation: [],
+    },
   },
 ];
 
