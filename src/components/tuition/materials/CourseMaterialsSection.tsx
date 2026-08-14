@@ -29,9 +29,15 @@ import {
   createEmptyMaterials,
 } from '@/pages/tuition/tuitionCoursesData';
 
-import { fetchCourseMaterials } from '@/lib/tuitionMaterials';
+import {
+  fetchCourseMaterials,
+  getSignedMaterialUrl,
+} from '@/lib/tuitionMaterials';
 
-const CATEGORY_ICONS: Record<keyof CourseMaterials, LucideIcon> = {
+const CATEGORY_ICONS: Record<
+  keyof CourseMaterials,
+  LucideIcon
+> = {
   courseMaterials: BookOpen,
   studyMaterials: StickyNote,
   worksheets: FileText,
@@ -47,25 +53,38 @@ interface CourseMaterialsSectionProps {
   courseSlug: string;
 }
 
-type LoadState = 'loading' | 'ready' | 'error';
+type LoadState =
+  | 'loading'
+  | 'ready'
+  | 'error';
 
 export default function CourseMaterialsSection({
   courseSlug,
 }: CourseMaterialsSectionProps) {
-  const [status, setStatus] = useState<LoadState>('loading');
-  const [materials, setMaterials] = useState<CourseMaterials>(
-    createEmptyMaterials()
-  );
-  const [totalCount, setTotalCount] = useState(0);
+  const [status, setStatus] =
+    useState<LoadState>('loading');
+
+  const [materials, setMaterials] =
+    useState<CourseMaterials>(
+      createEmptyMaterials()
+    );
+
+  const [totalCount, setTotalCount] =
+    useState(0);
 
   const [activeCategory, setActiveCategory] =
     useState<keyof CourseMaterials>(
       MATERIAL_CATEGORIES[0].key
     );
 
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [reloadToken, setReloadToken] = useState(0);
-  const [errorDetail, setErrorDetail] = useState<string | null>(null);
+  const [expandedId, setExpandedId] =
+    useState<string | null>(null);
+
+  const [reloadToken, setReloadToken] =
+    useState(0);
+
+  const [errorDetail, setErrorDetail] =
+    useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -80,14 +99,19 @@ export default function CourseMaterialsSection({
         setMaterials(result.materials);
         setTotalCount(result.totalCount);
 
-        setActiveCategory(MATERIAL_CATEGORIES[0].key);
+        setActiveCategory(
+          MATERIAL_CATEGORIES[0].key
+        );
+
         setExpandedId(null);
         setStatus('ready');
       })
       .catch((err) => {
         if (cancelled) return;
 
-        const code = (err as { code?: string })?.code;
+        const code =
+          (err as { code?: string })?.code;
+
         const message =
           (err as { message?: string })?.message ??
           String(err);
@@ -125,11 +149,14 @@ export default function CourseMaterialsSection({
     };
   }, [courseSlug, reloadToken]);
 
-  const activeMeta = MATERIAL_CATEGORIES.find(
-    (category) => category.key === activeCategory
-  )!;
+  const activeMeta =
+    MATERIAL_CATEGORIES.find(
+      (category) =>
+        category.key === activeCategory
+    )!;
 
-  const activeItems = materials[activeCategory];
+  const activeItems =
+    materials[activeCategory];
 
   const handleSelectCategory = (
     key: keyof CourseMaterials
@@ -148,17 +175,21 @@ export default function CourseMaterialsSection({
           Learning Materials
         </h2>
 
-        {status === 'ready' && totalCount > 0 && (
-          <span className="text-xs font-semibold rounded-full px-2 py-0.5 bg-purple-100 text-purple-700">
-            {totalCount}{' '}
-            {totalCount === 1 ? 'item' : 'items'}
-          </span>
-        )}
+        {status === 'ready' &&
+          totalCount > 0 && (
+            <span className="text-xs font-semibold rounded-full px-2 py-0.5 bg-purple-100 text-purple-700">
+              {totalCount}{' '}
+              {totalCount === 1
+                ? 'item'
+                : 'items'}
+            </span>
+          )}
       </div>
 
       <p className="text-sm text-gray-600 mb-6">
-        Browse course materials by category. Items marked
-        as coming soon will be added as they become available.
+        Browse course materials by category.
+        Items marked as coming soon will be
+        added as they become available.
       </p>
 
       {status === 'loading' && (
@@ -169,123 +200,144 @@ export default function CourseMaterialsSection({
         <MaterialsErrorState
           detail={errorDetail}
           onRetry={() =>
-            setReloadToken((token) => token + 1)
+            setReloadToken(
+              (token) => token + 1
+            )
           }
         />
       )}
 
-      {status === 'ready' && totalCount === 0 && (
-        <NoMaterialsState />
-      )}
+      {status === 'ready' &&
+        totalCount === 0 && (
+          <NoMaterialsState />
+        )}
 
-      {status === 'ready' && totalCount > 0 && (
-        <>
-          <div
-            role="tablist"
-            aria-label="Learning material categories"
-            className="flex flex-wrap gap-2 mb-6"
-          >
-            {MATERIAL_CATEGORIES.map(
-              ({ key, label }) => {
-                const Icon = CATEGORY_ICONS[key];
-                const isActive =
-                  key === activeCategory;
+      {status === 'ready' &&
+        totalCount > 0 && (
+          <>
+            <div
+              role="tablist"
+              aria-label="Learning material categories"
+              className="flex flex-wrap gap-2 mb-6"
+            >
+              {MATERIAL_CATEGORIES.map(
+                ({ key, label }) => {
+                  const Icon =
+                    CATEGORY_ICONS[key];
 
-                const count =
-                  materials[key].length;
+                  const isActive =
+                    key === activeCategory;
 
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    role="tab"
-                    aria-selected={isActive}
-                    onClick={() =>
-                      handleSelectCategory(key)
-                    }
-                    className={
-                      'flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold border transition-colors ' +
-                      (isActive
-                        ? 'bg-purple-600 border-purple-600 text-white'
-                        : 'bg-white border-gray-200 text-gray-700 hover:border-purple-300 hover:text-purple-700')
-                    }
-                  >
-                    <Icon size={15} />
+                  const count =
+                    materials[key].length;
 
-                    {label}
-
-                    <span
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      role="tab"
+                      aria-selected={
+                        isActive
+                      }
+                      onClick={() =>
+                        handleSelectCategory(
+                          key
+                        )
+                      }
                       className={
-                        'ml-0.5 text-xs rounded-full px-1.5 ' +
+                        'flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold border transition-colors ' +
                         (isActive
-                          ? 'bg-white/20 text-white'
-                          : 'bg-gray-100 text-gray-500')
+                          ? 'bg-purple-600 border-purple-600 text-white'
+                          : 'bg-white border-gray-200 text-gray-700 hover:border-purple-300 hover:text-purple-700')
                       }
                     >
-                      {count}
-                    </span>
-                  </button>
-                );
-              }
-            )}
-          </div>
+                      <Icon size={15} />
 
-          <div
-            role="tabpanel"
-            aria-label={`${activeMeta.label} materials`}
-            className="rounded-2xl border border-gray-200 bg-gray-50 p-5 md:p-6"
-          >
-            <div className="flex items-center gap-2 mb-4">
-              {(() => {
-                const Icon =
-                  CATEGORY_ICONS[activeCategory];
+                      {label}
 
-                return (
-                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-purple-100 text-purple-600">
-                    <Icon size={16} />
-                  </div>
-                );
-              })()}
-
-              <div>
-                <h3 className="text-sm font-bold text-gray-900">
-                  {activeMeta.label}
-                </h3>
-
-                <p className="text-xs text-gray-500">
-                  {activeMeta.description}
-                </p>
-              </div>
+                      <span
+                        className={
+                          'ml-0.5 text-xs rounded-full px-1.5 ' +
+                          (isActive
+                            ? 'bg-white/20 text-white'
+                            : 'bg-gray-100 text-gray-500')
+                        }
+                      >
+                        {count}
+                      </span>
+                    </button>
+                  );
+                }
+              )}
             </div>
 
-            {activeItems.length === 0 ? (
-              <EmptyCategoryState
-                label={activeMeta.label}
-              />
-            ) : (
-              <ul className="space-y-3">
-                {activeItems.map((item) => (
-                  <MaterialListItem
-                    key={item.id}
-                    item={item}
-                    categoryLabel={activeMeta.label}
-                    expanded={
-                      expandedId === item.id
+            <div
+              role="tabpanel"
+              aria-label={`${activeMeta.label} materials`}
+              className="rounded-2xl border border-gray-200 bg-gray-50 p-5 md:p-6"
+            >
+              <div className="flex items-center gap-2 mb-4">
+                {(() => {
+                  const Icon =
+                    CATEGORY_ICONS[
+                      activeCategory
+                    ];
+
+                  return (
+                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-purple-100 text-purple-600">
+                      <Icon size={16} />
+                    </div>
+                  );
+                })()}
+
+                <div>
+                  <h3 className="text-sm font-bold text-gray-900">
+                    {activeMeta.label}
+                  </h3>
+
+                  <p className="text-xs text-gray-500">
+                    {
+                      activeMeta.description
                     }
-                    onToggle={() =>
-                      setExpandedId((current) =>
-                        current === item.id
-                          ? null
-                          : item.id
-                      )
-                    }
-                  />
-                ))}
-              </ul>
-            )}
-          </div>
-        </>
-      )}
+                  </p>
+                </div>
+              </div>
+
+              {activeItems.length === 0 ? (
+                <EmptyCategoryState
+                  label={activeMeta.label}
+                />
+              ) : (
+                <ul className="space-y-3">
+                  {activeItems.map(
+                    (item) => (
+                      <MaterialListItem
+                        key={item.id}
+                        item={item}
+                        categoryLabel={
+                          activeMeta.label
+                        }
+                        expanded={
+                          expandedId ===
+                          item.id
+                        }
+                        onToggle={() =>
+                          setExpandedId(
+                            (current) =>
+                              current ===
+                              item.id
+                                ? null
+                                : item.id
+                          )
+                        }
+                      />
+                    )
+                  )}
+                </ul>
+              )}
+            </div>
+          </>
+        )}
     </section>
   );
 }
@@ -298,25 +350,25 @@ function MaterialsLoadingState() {
       aria-label="Loading learning materials"
     >
       <div className="flex flex-wrap gap-2 mb-2">
-        {Array.from({ length: 4 }).map(
-          (_, index) => (
-            <div
-              key={index}
-              className="h-9 w-28 rounded-xl bg-gray-100 animate-pulse"
-            />
-          )
-        )}
+        {Array.from({
+          length: 4,
+        }).map((_, index) => (
+          <div
+            key={index}
+            className="h-9 w-28 rounded-xl bg-gray-100 animate-pulse"
+          />
+        ))}
       </div>
 
       <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5 md:p-6 space-y-3">
-        {Array.from({ length: 3 }).map(
-          (_, index) => (
-            <div
-              key={index}
-              className="h-14 rounded-xl bg-white border border-gray-200 animate-pulse"
-            />
-          )
-        )}
+        {Array.from({
+          length: 3,
+        }).map((_, index) => (
+          <div
+            key={index}
+            className="h-14 rounded-xl bg-white border border-gray-200 animate-pulse"
+          />
+        ))}
       </div>
     </div>
   );
@@ -341,8 +393,9 @@ function MaterialsErrorState({
       </p>
 
       <p className="text-xs text-red-500 mt-1 max-w-xs">
-        Something went wrong while fetching materials
-        for this course. Please try again.
+        Something went wrong while
+        fetching materials for this
+        course. Please try again.
       </p>
 
       {detail && (
@@ -376,8 +429,9 @@ function NoMaterialsState() {
       </p>
 
       <p className="text-xs text-gray-500 mt-1 max-w-xs">
-        We're preparing learning materials for this
-        course. Check back later for updates.
+        We're preparing learning materials
+        for this course. Check back later
+        for updates.
       </p>
     </div>
   );
@@ -400,8 +454,8 @@ function EmptyCategoryState({
       </p>
 
       <p className="text-xs text-gray-500 mt-1 max-w-xs">
-        We're preparing this content. Check back later
-        for updates.
+        We're preparing this content.
+        Check back later for updates.
       </p>
     </div>
   );
@@ -410,9 +464,16 @@ function EmptyCategoryState({
 function formatFileSize(
   bytes?: number
 ): string | null {
-  if (!bytes || bytes <= 0) return null;
+  if (!bytes || bytes <= 0) {
+    return null;
+  }
 
-  const units = ['B', 'KB', 'MB', 'GB'];
+  const units = [
+    'B',
+    'KB',
+    'MB',
+    'GB',
+  ];
 
   let value = bytes;
   let unitIndex = 0;
@@ -443,6 +504,17 @@ function MaterialListItem({
   expanded,
   onToggle,
 }: MaterialListItemProps) {
+  /*
+   * IMPORTANT:
+   *
+   * resourceUrl is a PRIVATE Supabase Storage
+   * object path.
+   *
+   * Example:
+   * protected-mathematics-basic-practice-notes-WATERMARKED.pdf
+   *
+   * It is NOT a public URL.
+   */
   const hasResource =
     Boolean(item.resourceUrl);
 
@@ -450,20 +522,23 @@ function MaterialListItem({
     Boolean(item.externalLink);
 
   /*
-   * IMPORTANT:
-   * A material is Available only when:
-   * 1. It is published
-   * 2. It has a protected resource path
+   * A material is available only when:
+   *
+   * 1. It is published.
+   * 2. A protected storage path exists.
    */
   const isAvailable =
     item.isPublished === true &&
     hasResource;
 
   const hasAnyResource =
-    isAvailable || hasExternalLink;
+    isAvailable ||
+    hasExternalLink;
 
   const fileSizeLabel =
-    formatFileSize(item.fileSizeBytes);
+    formatFileSize(
+      item.fileSizeBytes
+    );
 
   return (
     <li className="rounded-xl border border-gray-200 bg-white overflow-hidden">
@@ -480,16 +555,22 @@ function MaterialListItem({
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-gray-500">
             {item.subject && (
-              <span>{item.subject}</span>
+              <span>
+                {item.subject}
+              </span>
             )}
 
             {item.topic && (
-              <span>{item.topic}</span>
+              <span>
+                {item.topic}
+              </span>
             )}
 
-            {(item.grade || item.level) && (
+            {(item.grade ||
+              item.level) && (
               <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-600 font-medium">
-                {item.grade ?? item.level}
+                {item.grade ??
+                  item.level}
               </span>
             )}
 
@@ -501,13 +582,17 @@ function MaterialListItem({
 
             {isAvailable ? (
               <span className="inline-flex items-center gap-1 text-emerald-600 font-medium">
-                <CheckCircle2 size={11} />
+                <CheckCircle2
+                  size={11}
+                />
                 Available
               </span>
             ) : (
               !hasAnyResource && (
                 <span className="inline-flex items-center gap-1 text-amber-600 font-medium">
-                  <Clock size={11} />
+                  <Clock
+                    size={11}
+                  />
                   Coming soon
                 </span>
               )
@@ -540,7 +625,8 @@ function MaterialListItem({
 
           {fileSizeLabel && (
             <p className="text-xs text-gray-400 mb-3">
-              File size: {fileSizeLabel}
+              File size:{' '}
+              {fileSizeLabel}
             </p>
           )}
 
@@ -552,18 +638,25 @@ function MaterialListItem({
                     resourcePath={
                       item.resourceUrl
                     }
-                    fileName={`${item.title}.pdf`}
+                    fileName={buildFileName(
+                      item.title,
+                      item.fileType
+                    )}
                   />
                 )}
 
               {hasExternalLink && (
                 <a
-                  href={item.externalLink}
+                  href={
+                    item.externalLink
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-gray-300 text-gray-700 hover:border-purple-300 hover:text-purple-700 text-xs font-semibold"
                 >
-                  <ExternalLink size={14} />
+                  <ExternalLink
+                    size={14}
+                  />
                   View Resource
                 </a>
               )}
@@ -571,7 +664,8 @@ function MaterialListItem({
           ) : (
             <div className="flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 w-fit">
               <Clock size={13} />
-              Material will be available soon
+              Material will be available
+              soon
             </div>
           )}
         </div>
@@ -580,13 +674,71 @@ function MaterialListItem({
   );
 }
 
+function buildFileName(
+  title: string,
+  fileType?: string
+): string {
+  const safeTitle =
+    title
+      .trim()
+      .replace(
+        /[<>:"/\\|?*\x00-\x1F]/g,
+        '-'
+      )
+      .replace(/\s+/g, ' ')
+      .slice(0, 180);
+
+  const normalizedType =
+    (fileType ?? 'application/pdf')
+      .toLowerCase();
+
+  let extension = 'pdf';
+
+  if (
+    normalizedType.includes('png')
+  ) {
+    extension = 'png';
+  } else if (
+    normalizedType.includes('jpeg') ||
+    normalizedType.includes('jpg')
+  ) {
+    extension = 'jpg';
+  } else if (
+    normalizedType.includes('webp')
+  ) {
+    extension = 'webp';
+  } else if (
+    normalizedType.includes('msword')
+  ) {
+    extension = 'doc';
+  } else if (
+    normalizedType.includes('wordprocessingml')
+  ) {
+    extension = 'docx';
+  } else if (
+    normalizedType.includes('spreadsheetml')
+  ) {
+    extension = 'xlsx';
+  } else if (
+    normalizedType.includes('presentationml')
+  ) {
+    extension = 'pptx';
+  }
+
+  return `${safeTitle || 'VATTAMS-Learning-Material'}.${extension}`;
+}
+
 /*
  * ============================================================
- * VIEW / DOWNLOAD
+ * VIEW / DOWNLOAD — PRIVATE STORAGE
  * ============================================================
  *
- * இதை தனியாக வேறு file-ல் paste செய்ய வேண்டாம்.
- * CourseMaterialsSection.tsx-ன் கீழே இதே function இருக்க வேண்டும்.
+ * resourcePath is a private Supabase Storage path.
+ *
+ * We NEVER expose the original/public URL directly.
+ *
+ * A short-lived signed URL is generated only when
+ * the student clicks View or Download.
  */
 
 type ResourceAction =
@@ -607,24 +759,43 @@ function MaterialResourceActions({
   const [error, setError] =
     useState<string | null>(null);
 
-  // `resourcePath` is already a plain public https URL — the
-  // `tuition-materials-protected` storage bucket is public-read (see
-  // supabase/migrations/20260814020000_create_tuition_materials_watermark_storage.sql)
-  // and tuitionMaterials.ts's sanitizeUrl() guarantees it. No signing step
-  // is needed here; only the tutor/admin upload + watermark pipeline
-  // touches the private `tuition-materials-originals` bucket, and that
-  // happens server-side via the tuition-watermark-pdf Edge Function.
+  const getUrl =
+    async (): Promise<string> => {
+      return await getSignedMaterialUrl(
+        resourcePath
+      );
+    };
 
-  const handleView = () => {
+  const handleView = async () => {
     setError(null);
     setPending('view');
 
     try {
-      window.open(
-        resourcePath,
-        '_blank',
-        'noopener,noreferrer'
-      );
+      /*
+       * Open a blank tab immediately so mobile
+       * browsers are less likely to block it
+       * after the async signed-URL request.
+       */
+      const newWindow =
+        window.open(
+          '',
+          '_blank'
+        );
+
+      const signedUrl =
+        await getUrl();
+
+      if (newWindow) {
+        newWindow.location.href =
+          signedUrl;
+      } else {
+        /*
+         * Fallback if browser blocked
+         * the new window.
+         */
+        window.location.href =
+          signedUrl;
+      }
     } catch (err) {
       console.error(
         '[Material View Error]',
@@ -632,49 +803,82 @@ function MaterialResourceActions({
       );
 
       setError(
-        "Couldn't open this file. Please try again."
+        "Couldn't open this material. Please try again."
       );
     } finally {
       setPending(null);
     }
   };
 
-  const handleDownload = () => {
-    setError(null);
-    setPending('download');
+  const handleDownload =
+    async () => {
+      setError(null);
+      setPending('download');
 
-    try {
-      const link =
-        document.createElement('a');
+      try {
+        const signedUrl =
+          await getUrl();
 
-      link.href = resourcePath;
-      link.download = fileName;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
+        /*
+         * Fetch the protected file using
+         * the short-lived signed URL.
+         */
+        const response =
+          await fetch(signedUrl);
 
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch (err) {
-      console.error(
-        '[Material Download Error]',
-        err
-      );
+        if (!response.ok) {
+          throw new Error(
+            `Download failed: ${response.status}`
+          );
+        }
 
-      setError(
-        "Couldn't download this file. Please try again."
-      );
-    } finally {
-      setPending(null);
-    }
-  };
+        const blob =
+          await response.blob();
+
+        const blobUrl =
+          URL.createObjectURL(blob);
+
+        const link =
+          document.createElement('a');
+
+        link.href = blobUrl;
+        link.download = fileName;
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        /*
+         * Give the browser a moment to
+         * start the download before cleanup.
+         */
+        window.setTimeout(() => {
+          URL.revokeObjectURL(
+            blobUrl
+          );
+        }, 1000);
+      } catch (err) {
+        console.error(
+          '[Material Download Error]',
+          err
+        );
+
+        setError(
+          "Couldn't download this material. Please try again."
+        );
+      } finally {
+        setPending(null);
+      }
+    };
 
   return (
     <div className="flex flex-wrap gap-2">
       <button
         type="button"
         onClick={handleView}
-        disabled={pending !== null}
+        disabled={
+          pending !== null
+        }
         className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-purple-300 text-purple-700 hover:bg-purple-50 text-xs font-semibold transition-colors disabled:opacity-60 disabled:cursor-wait"
       >
         {pending === 'view' ? (
@@ -693,8 +897,12 @@ function MaterialResourceActions({
 
       <button
         type="button"
-        onClick={handleDownload}
-        disabled={pending !== null}
+        onClick={
+          handleDownload
+        }
+        disabled={
+          pending !== null
+        }
         className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold transition-colors disabled:opacity-60 disabled:cursor-wait"
       >
         {pending === 'download' ? (
@@ -703,7 +911,9 @@ function MaterialResourceActions({
             className="animate-spin"
           />
         ) : (
-          <Download size={14} />
+          <Download
+            size={14}
+          />
         )}
 
         {pending === 'download'
