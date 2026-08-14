@@ -45,6 +45,22 @@ export type CourseMaterialItem = {
    * to this material, distinct from a downloadable file.
    */
   externalLink?: string;
+  /**
+   * The following fields are optional and mainly populated for materials
+   * that come from the real tuition_course_materials table (Phase 5.1+).
+   * Static demo entries above may safely omit all of them.
+   */
+  subject?: string;
+  /** Grade/class this material targets, e.g. "Class 6" or "All Levels". */
+  grade?: string;
+  /** Display file type, e.g. "PDF", "DOCX", "Video". */
+  fileType?: string;
+  /** File size in bytes, when known. */
+  fileSizeBytes?: number;
+  /** ISO timestamp of when the material was uploaded/created. */
+  uploadedAt?: string;
+  /** Whether this material is published/visible to students. Defaults to true for static demo items. */
+  isPublished?: boolean;
 };
 
 /** The 9 learning-material categories supported for every course. */
