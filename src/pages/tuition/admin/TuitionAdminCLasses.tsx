@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
-import { getAllClasses, getDisplayStatus, splitClassesByTime, DEMO_TUTORS } from '@/pages/tuition/tuitionClassesData';
-import { tuitionCourses } from '@/pages/tuition/tuitionCoursesData';
-import { TuitionClass } from '@/pages/tuition/tuitionClassTypes';
-import ClassCard from '@/components/tuition/classes/ClassCard';
-import ClassDetail from '@/components/tuition/classes/ClassDetail';
+import { getAllClasses, getDisplayStatus, splitClassesByTime, DEMO_TUTORS } from '@/pages/tuition/tuitionClassData';
+ import { tuitionCourses } from '@/pages/tuition/tuitionCoursesData';
+ import { TuitionClass } from '@/pages/tuition/tuitionClassTypes';
++import ClassCard from '@/pages/tuition/classes/CLassCard';
+import ClassDetail from '@/pages/tuition/classes/ClassDetail';
 
 type AdminClassFilter = 'all' | 'today' | 'upcoming' | 'completed' | 'cancelled';
 
