@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+,import { useMemo, useState } from 'react';
 import { Users, CalendarCheck, TrendingUp, CheckCircle2, XCircle, Clock3 } from 'lucide-react';
-import { getAllClasses, getAllAttendanceRecords, splitClassesByTime, DEMO_TUTORS } from '@/pages/tuition/tuitionClassesData';
+import { getAllClasses, getAllAttendanceRecords, splitClassesByTime, DEMO_TUTORS } from '@/pages/tuition/tuitionClassData';
 import { tuitionCourses } from '@/pages/tuition/tuitionCoursesData';
 
 export default function TuitionAdminAttendanceOverview() {
@@ -45,7 +45,7 @@ export default function TuitionAdminAttendanceOverview() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <StatCard label="Total Classes" value={allClasses.length} icon={Users} tone="blue" />
         <StatCard label="Today's Classes" value={today.length} icon={CalendarCheck} tone="purple" />
-        <StatCard label="Attendance Rate" value={${attendanceRate}%} icon={TrendingUp} tone="emerald" />
+        <StatCard label="Attendance Rate" value={`${attendanceRate}%`} icon={TrendingUp} tone="emerald" />
         <StatCard label="Present / Absent / Late" value={${present} / ${absent} / ${late}} icon={CheckCircle2} tone="amber" />
       </div>
 
