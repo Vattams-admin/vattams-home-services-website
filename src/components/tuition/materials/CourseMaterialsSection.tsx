@@ -29,10 +29,16 @@ import {
   createEmptyMaterials,
 } from '@/pages/tuition/tuitionCoursesData';
 
-import {
-  fetchCourseMaterials,
-  getSignedMaterialUrl,
-} from '@/lib/tuitionMaterials';
+import { fetchCourseMaterials } from '@/lib/tuitionMaterials';
+import { supabase } from '@/lib/supabase';
+
+const TUITION_BUCKET = 'tuition-materials';
+
+/*
+ * Signed URLs are intentionally short-lived.
+ * Students never receive a permanent public storage URL.
+ */
+const SIGNED_URL_SECONDS = 300;
 
 const CATEGORY_ICONS: Record<
   keyof CourseMaterials,
@@ -236,9 +242,7 @@ export default function CourseMaterialsSection({
                       key={key}
                       type="button"
                       role="tab"
-                      aria-selected={
-                        isActive
-                      }
+                      aria-selected={isActive}
                       onClick={() =>
                         handleSelectCategory(
                           key
@@ -296,9 +300,7 @@ export default function CourseMaterialsSection({
                   </h3>
 
                   <p className="text-xs text-gray-500">
-                    {
-                      activeMeta.description
-                    }
+                    {activeMeta.description}
                   </p>
                 </div>
               </div>
@@ -342,6 +344,10 @@ export default function CourseMaterialsSection({
   );
 }
 
+/* ============================================================
+   LOADING STATE
+============================================================ */
+
 function MaterialsLoadingState() {
   return (
     <div
@@ -374,6 +380,10 @@ function MaterialsLoadingState() {
   );
 }
 
+/* ============================================================
+   ERROR STATE
+============================================================ */
+
 function MaterialsErrorState({
   detail,
   onRetry,
@@ -393,9 +403,9 @@ function MaterialsErrorState({
       </p>
 
       <p className="text-xs text-red-500 mt-1 max-w-xs">
-        Something went wrong while
-        fetching materials for this
-        course. Please try again.
+        Something went wrong while fetching
+        materials for this course. Please try
+        again.
       </p>
 
       {detail && (
@@ -416,6 +426,10 @@ function MaterialsErrorState({
   );
 }
 
+/* ============================================================
+   NO MATERIALS
+============================================================ */
+
 function NoMaterialsState() {
   return (
     <div className="flex flex-col items-center justify-center text-center py-12 px-4 rounded-2xl border border-dashed border-gray-300 bg-gray-50">
@@ -429,13 +443,17 @@ function NoMaterialsState() {
       </p>
 
       <p className="text-xs text-gray-500 mt-1 max-w-xs">
-        We're preparing learning materials
-        for this course. Check back later
-        for updates.
+        We're preparing learning materials for
+        this course. Check back later for
+        updates.
       </p>
     </div>
   );
 }
+
+/* ============================================================
+   EMPTY CATEGORY
+============================================================ */
 
 function EmptyCategoryState({
   label,
@@ -454,12 +472,16 @@ function EmptyCategoryState({
       </p>
 
       <p className="text-xs text-gray-500 mt-1 max-w-xs">
-        We're preparing this content.
-        Check back later for updates.
+        We're preparing this content. Check
+        back later for updates.
       </p>
     </div>
   );
 }
+
+/* ============================================================
+   FILE SIZE
+============================================================ */
 
 function formatFileSize(
   bytes?: number
@@ -480,7 +502,8 @@ function formatFileSize(
 
   while (
     value >= 1024 &&
-    unitIndex < units.length - 1
+    unitIndex <
+      units.length - 1
   ) {
     value /= 1024;
     unitIndex++;
@@ -490,6 +513,10 @@ function formatFileSize(
     unitIndex === 0 ? 0 : 1
   )} ${units[unitIndex]}`;
 }
+
+/* ============================================================
+   MATERIAL ITEM
+============================================================ */
 
 interface MaterialListItemProps {
   item: CourseMaterialItem;
@@ -504,17 +531,6 @@ function MaterialListItem({
   expanded,
   onToggle,
 }: MaterialListItemProps) {
-  /*
-   * IMPORTANT:
-   *
-   * resourceUrl is a PRIVATE Supabase Storage
-   * object path.
-   *
-   * Example:
-   * protected-mathematics-basic-practice-notes-WATERMARKED.pdf
-   *
-   * It is NOT a public URL.
-   */
   const hasResource =
     Boolean(item.resourceUrl);
 
@@ -522,10 +538,9 @@ function MaterialListItem({
     Boolean(item.externalLink);
 
   /*
-   * A material is available only when:
-   *
-   * 1. It is published.
-   * 2. A protected storage path exists.
+   * Available only when:
+   * - published
+   * - protected resource path exists
    */
   const isAvailable =
     item.isPublished === true &&
@@ -638,7 +653,7 @@ function MaterialListItem({
                     resourcePath={
                       item.resourceUrl
                     }
-                    fileName={buildFileName(
+                    fileName={createFileName(
                       item.title,
                       item.fileType
                     )}
@@ -664,8 +679,7 @@ function MaterialListItem({
           ) : (
             <div className="flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 w-fit">
               <Clock size={13} />
-              Material will be available
-              soon
+              Material will be available soon
             </div>
           )}
         </div>
@@ -674,7 +688,11 @@ function MaterialListItem({
   );
 }
 
-function buildFileName(
+/* ============================================================
+   FILE NAME
+============================================================ */
+
+function createFileName(
   title: string,
   fileType?: string
 ): string {
@@ -686,60 +704,167 @@ function buildFileName(
         '-'
       )
       .replace(/\s+/g, ' ')
-      .slice(0, 180);
+      .slice(0, 150);
 
-  const normalizedType =
-    (fileType ?? 'application/pdf')
-      .toLowerCase();
+  const extension =
+    fileType
+      ?.toLowerCase()
+      .includes('pdf')
+      ? 'pdf'
+      : 'pdf';
 
-  let extension = 'pdf';
-
-  if (
-    normalizedType.includes('png')
-  ) {
-    extension = 'png';
-  } else if (
-    normalizedType.includes('jpeg') ||
-    normalizedType.includes('jpg')
-  ) {
-    extension = 'jpg';
-  } else if (
-    normalizedType.includes('webp')
-  ) {
-    extension = 'webp';
-  } else if (
-    normalizedType.includes('msword')
-  ) {
-    extension = 'doc';
-  } else if (
-    normalizedType.includes('wordprocessingml')
-  ) {
-    extension = 'docx';
-  } else if (
-    normalizedType.includes('spreadsheetml')
-  ) {
-    extension = 'xlsx';
-  } else if (
-    normalizedType.includes('presentationml')
-  ) {
-    extension = 'pptx';
-  }
-
-  return `${safeTitle || 'VATTAMS-Learning-Material'}.${extension}`;
+  return `${safeTitle}.${extension}`;
 }
 
+/* ============================================================
+   STORAGE PATH NORMALIZER
+============================================================ */
+
 /*
- * ============================================================
- * VIEW / DOWNLOAD — PRIVATE STORAGE
- * ============================================================
+ * Database currently stores:
  *
- * resourcePath is a private Supabase Storage path.
+ * protected-mathematics-basic-practice-notes-WATERMARKED.pdf
  *
- * We NEVER expose the original/public URL directly.
+ * It may also store:
  *
- * A short-lived signed URL is generated only when
- * the student clicks View or Download.
+ * some/folder/file.pdf
+ *
+ * This function extracts the storage path when a Supabase
+ * storage URL was accidentally stored instead.
  */
+function normalizeStoragePath(
+  value: string
+): string {
+  const trimmed =
+    value.trim();
+
+  if (
+    !/^https?:\/\//i.test(
+      trimmed
+    )
+  ) {
+    return trimmed.replace(
+      /^\/+/,
+      ''
+    );
+  }
+
+  try {
+    const url =
+      new URL(trimmed);
+
+    const marker =
+      '/storage/v1/object/';
+
+    const index =
+      url.pathname.indexOf(
+        marker
+      );
+
+    if (index === -1) {
+      return trimmed;
+    }
+
+    let rest =
+      url.pathname.slice(
+        index +
+          marker.length
+      );
+
+    rest = rest.replace(
+      /^sign\//,
+      ''
+    );
+
+    rest = rest.replace(
+      /^authenticated\//,
+      ''
+    );
+
+    rest = rest.replace(
+      /^public\//,
+      ''
+    );
+
+    const bucketPrefix =
+      `${TUITION_BUCKET}/`;
+
+    if (
+      rest.startsWith(
+        bucketPrefix
+      )
+    ) {
+      rest =
+        rest.slice(
+          bucketPrefix.length
+        );
+    }
+
+    return decodeURIComponent(
+      rest
+    );
+  } catch {
+    return trimmed;
+  }
+}
+
+/* ============================================================
+   SIGNED URL
+============================================================ */
+
+async function createProtectedSignedUrl(
+  resourcePath: string
+): Promise<string> {
+  const normalizedPath =
+    normalizeStoragePath(
+      resourcePath
+    );
+
+  if (
+    !normalizedPath ||
+    /^https?:\/\//i.test(
+      normalizedPath
+    )
+  ) {
+    throw new Error(
+      'Invalid tuition material storage path.'
+    );
+  }
+
+  const {
+    data,
+    error,
+  } =
+    await supabase.storage
+      .from(TUITION_BUCKET)
+      .createSignedUrl(
+        normalizedPath,
+        SIGNED_URL_SECONDS
+      );
+
+  if (error) {
+    console.error(
+      '[Tuition Material] Signed URL error',
+      error
+    );
+
+    throw new Error(
+      'Unable to securely access this learning material.'
+    );
+  }
+
+  if (!data?.signedUrl) {
+    throw new Error(
+      'No secure download URL was returned.'
+    );
+  }
+
+  return data.signedUrl;
+}
+
+/* ============================================================
+   VIEW / DOWNLOAD
+============================================================ */
 
 type ResourceAction =
   | 'view'
@@ -754,117 +879,188 @@ function MaterialResourceActions({
   fileName: string;
 }) {
   const [pending, setPending] =
-    useState<ResourceAction>(null);
+    useState<ResourceAction>(
+      null
+    );
 
   const [error, setError] =
-    useState<string | null>(null);
+    useState<string | null>(
+      null
+    );
 
-  const getUrl =
-    async (): Promise<string> => {
-      return await getSignedMaterialUrl(
-        resourcePath
-      );
-    };
-
-  const handleView = async () => {
-    setError(null);
-    setPending('view');
-
-    try {
-      /*
-       * Open a blank tab immediately so mobile
-       * browsers are less likely to block it
-       * after the async signed-URL request.
-       */
-      const newWindow =
-        window.open(
-          '',
-          '_blank'
-        );
-
-      const signedUrl =
-        await getUrl();
-
-      if (newWindow) {
-        newWindow.location.href =
-          signedUrl;
-      } else {
-        /*
-         * Fallback if browser blocked
-         * the new window.
-         */
-        window.location.href =
-          signedUrl;
-      }
-    } catch (err) {
-      console.error(
-        '[Material View Error]',
-        err
-      );
-
-      setError(
-        "Couldn't open this material. Please try again."
-      );
-    } finally {
-      setPending(null);
-    }
-  };
-
-  const handleDownload =
+  /*
+   * VIEW
+   *
+   * Creates a short-lived signed URL.
+   * The private storage object is never made public.
+   */
+  const handleView =
     async () => {
+      if (pending !== null) {
+        return;
+      }
+
       setError(null);
-      setPending('download');
+      setPending('view');
 
       try {
         const signedUrl =
-          await getUrl();
+          await createProtectedSignedUrl(
+            resourcePath
+          );
 
         /*
-         * Fetch the protected file using
-         * the short-lived signed URL.
+         * Use a real URL generated by Supabase.
+         * Android/browser PDF viewers can then
+         * open the protected PDF.
          */
+        const opened =
+          window.open(
+            signedUrl,
+            '_blank',
+            'noopener,noreferrer'
+          );
+
+        /*
+         * Some mobile browsers block window.open.
+         * Fallback to current tab if needed.
+         */
+        if (!opened) {
+          window.location.href =
+            signedUrl;
+        }
+      } catch (err) {
+        console.error(
+          '[Material View Error]',
+          err
+        );
+
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Couldn't open this file. Please try again."
+        );
+      } finally {
+        setPending(null);
+      }
+    };
+
+  /*
+   * DOWNLOAD
+   *
+   * 1. Create short-lived signed URL
+   * 2. Fetch protected PDF
+   * 3. Convert to Blob
+   * 4. Trigger browser download
+   *
+   * This prevents the browser from treating the
+   * storage path itself as a website URL.
+   */
+  const handleDownload =
+    async () => {
+      if (pending !== null) {
+        return;
+      }
+
+      setError(null);
+      setPending('download');
+
+      let objectUrl:
+        | string
+        | null = null;
+
+      try {
+        const signedUrl =
+          await createProtectedSignedUrl(
+            resourcePath
+          );
+
         const response =
-          await fetch(signedUrl);
+          await fetch(
+            signedUrl,
+            {
+              method: 'GET',
+            }
+          );
 
         if (!response.ok) {
           throw new Error(
-            `Download failed: ${response.status}`
+            `Download failed (${response.status}).`
           );
         }
 
         const blob =
           await response.blob();
 
-        const blobUrl =
-          URL.createObjectURL(blob);
+        if (
+          !blob ||
+          blob.size === 0
+        ) {
+          throw new Error(
+            'The downloaded file is empty.'
+          );
+        }
+
+        objectUrl =
+          URL.createObjectURL(
+            blob
+          );
 
         const link =
-          document.createElement('a');
+          document.createElement(
+            'a'
+          );
 
-        link.href = blobUrl;
-        link.download = fileName;
+        link.href =
+          objectUrl;
 
-        document.body.appendChild(link);
+        link.download =
+          fileName;
+
+        link.style.display =
+          'none';
+
+        document.body.appendChild(
+          link
+        );
+
         link.click();
+
         link.remove();
 
         /*
-         * Give the browser a moment to
-         * start the download before cleanup.
+         * Give Android/browser time to
+         * start the download before
+         * revoking the Blob URL.
          */
-        window.setTimeout(() => {
-          URL.revokeObjectURL(
-            blobUrl
-          );
-        }, 1000);
+        window.setTimeout(
+          () => {
+            if (objectUrl) {
+              URL.revokeObjectURL(
+                objectUrl
+              );
+            }
+          },
+          3000
+        );
+
+        objectUrl = null;
       } catch (err) {
+        if (objectUrl) {
+          URL.revokeObjectURL(
+            objectUrl
+          );
+        }
+
         console.error(
           '[Material Download Error]',
           err
         );
 
         setError(
-          "Couldn't download this material. Please try again."
+          err instanceof Error
+            ? err.message
+            : "Couldn't download this file. Please try again."
         );
       } finally {
         setPending(null);
@@ -875,13 +1071,16 @@ function MaterialResourceActions({
     <div className="flex flex-wrap gap-2">
       <button
         type="button"
-        onClick={handleView}
+        onClick={
+          handleView
+        }
         disabled={
           pending !== null
         }
         className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-purple-300 text-purple-700 hover:bg-purple-50 text-xs font-semibold transition-colors disabled:opacity-60 disabled:cursor-wait"
       >
-        {pending === 'view' ? (
+        {pending ===
+        'view' ? (
           <Loader2
             size={14}
             className="animate-spin"
@@ -890,7 +1089,8 @@ function MaterialResourceActions({
           <Eye size={14} />
         )}
 
-        {pending === 'view'
+        {pending ===
+        'view'
           ? 'Opening...'
           : 'View'}
       </button>
@@ -905,7 +1105,8 @@ function MaterialResourceActions({
         }
         className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold transition-colors disabled:opacity-60 disabled:cursor-wait"
       >
-        {pending === 'download' ? (
+        {pending ===
+        'download' ? (
           <Loader2
             size={14}
             className="animate-spin"
@@ -916,7 +1117,8 @@ function MaterialResourceActions({
           />
         )}
 
-        {pending === 'download'
+        {pending ===
+        'download'
           ? 'Downloading...'
           : 'Download'}
       </button>
