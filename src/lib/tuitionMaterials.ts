@@ -1,12 +1,14 @@
-// Data access layer for Vattams Online Tuition — Learning Materials (Phase 5.1).
+// Data access layer for Vattams Online Tuition — Learning Materials.
 
 import { supabase } from '@/lib/supabase';
+
 import {
   CourseMaterialItem,
   CourseMaterials,
   createEmptyMaterials,
 } from '@/pages/tuition/tuitionCoursesData';
 
+/** Valid category keys used by the tuition materials UI. */
 const VALID_CATEGORIES = new Set<keyof CourseMaterials>([
   'courseMaterials',
   'studyMaterials',
@@ -38,40 +40,38 @@ interface TuitionCourseMaterialRow {
 }
 
 /**
- * resource_url stores a PRIVATE Supabase Storage object path,
- * NOT a public URL.
+ * Converts a Storage file path into a public Supabase Storage URL.
  *
- * Examples:
- * protected-mathematics-basic-practice-notes-WATERMARKED.pdf
- * study-materials/mathematics/basic-practice.pdf
+ * Database may contain either:
+ *
+ * 1. A complete https:// URL
+ * 2. A Storage path such as:
+ *    protected-mathematics-basic-practice-notes-WATERMARKED.pdf
  */
-function sanitizeStoragePath(
-  path: string | null
+function getResourceUrl(
+  resourcePath: string | null
 ): string | undefined {
-  if (!path) return undefined;
+  if (!resourcePath) return undefined;
 
-  const trimmed = path.trim();
+  const value = resourcePath.trim();
 
-  if (!trimmed) return undefined;
+  if (!value) return undefined;
 
-  // Never allow a URL here.
-  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)) {
-    return undefined;
+  // Already a complete URL.
+  if (/^https?:\/\//i.test(value)) {
+    return value;
   }
 
-  // Prevent path traversal.
-  if (
-    trimmed.startsWith('/') ||
-    trimmed.includes('..')
-  ) {
-    return undefined;
-  }
+  // Otherwise treat it as a file path inside the public bucket.
+  const { data } = supabase.storage
+    .from('tuition-materials')
+    .getPublicUrl(value);
 
-  return trimmed;
+  return data?.publicUrl || undefined;
 }
 
 /**
- * External URLs are still allowed only as normal HTTP(S) URLs.
+ * Only allow http(s) external URLs.
  */
 function sanitizeExternalUrl(
   url: string | null
@@ -92,63 +92,76 @@ function mapRowToItem(
 ): CourseMaterialItem {
   return {
     id: row.id,
+
     title: row.title,
+
     description: row.description ?? '',
+
     topic: row.topic ?? undefined,
 
-    // IMPORTANT:
-    // This is now a PRIVATE STORAGE PATH.
-    resourceUrl: sanitizeStoragePath(
-      row.resource_url
-    ),
+    /*
+     * IMPORTANT:
+     * resource_url may contain only the Storage filename.
+     * Convert it into the real public Storage URL here.
+     */
+    resourceUrl: getResourceUrl(row.resource_url),
 
     externalLink: sanitizeExternalUrl(
       row.external_url
     ),
 
     subject: row.subject ?? undefined,
+
     grade: row.grade ?? undefined,
+
     fileType: row.file_type ?? undefined,
+
     fileSizeBytes:
       row.file_size ?? undefined,
+
     uploadedAt: row.created_at,
+
     isPublished: row.is_published,
   };
 }
 
 export interface CourseMaterialsResult {
   materials: CourseMaterials;
+
+  /** Total number of published materials. */
   totalCount: number;
 }
 
 /**
- * Fetch published materials for a course.
- *
- * Only published database rows are returned.
+ * Fetch all published learning materials
+ * for a specific course.
  */
 export async function fetchCourseMaterials(
   courseSlug: string
 ): Promise<CourseMaterialsResult> {
-  const { data, error } = await supabase
+  const {
+    data,
+    error,
+  } = await supabase
     .from('tuition_course_materials')
     .select(
-      [
-        'id',
-        'course_slug',
-        'title',
-        'description',
-        'category',
-        'subject',
-        'topic',
-        'grade',
-        'resource_url',
-        'external_url',
-        'file_type',
-        'file_size',
-        'is_published',
-        'created_at',
-        'updated_at',
-      ].join(', ')
+      `
+        id,
+        course_slug,
+        title,
+        description,
+        category,
+        subject,
+        topic,
+        grade,
+        resource_url,
+        external_url,
+        file_type,
+        file_size,
+        is_published,
+        created_at,
+        updated_at
+      `
     )
     .eq('course_slug', courseSlug)
     .eq('is_published', true)
@@ -176,8 +189,10 @@ export async function fetchCourseMaterials(
 
   let totalCount = 0;
 
-  for (const row of (data ??
-    []) as TuitionCourseMaterialRow[]) {
+  for (
+    const row of (data ??
+      []) as TuitionCourseMaterialRow[]
+  ) {
     const category =
       row.category as keyof CourseMaterials;
 
@@ -201,50 +216,4 @@ export async function fetchCourseMaterials(
     materials,
     totalCount,
   };
-}
-
-/**
- * Creates a SHORT-LIVED signed URL for a protected
- * tuition material.
- *
- * The URL expires after 5 minutes.
- */
-export async function getSignedMaterialUrl(
-  storagePath: string
-): Promise<string> {
-  const cleanPath =
-    sanitizeStoragePath(storagePath);
-
-  if (!cleanPath) {
-    throw new Error(
-      'Invalid tuition material storage path.'
-    );
-  }
-
-  const {
-    data,
-    error,
-  } = await supabase.storage
-    .from('tuition-materials')
-    .createSignedUrl(
-      cleanPath,
-      60 * 5
-    );
-
-  if (error) {
-    console.error(
-      '[tuitionMaterials] Failed to create signed URL',
-      error
-    );
-
-    throw error;
-  }
-
-  if (!data?.signedUrl) {
-    throw new Error(
-      'Supabase did not return a signed URL.'
-    );
-  }
-
-  return data.signedUrl;
 }
