@@ -6,13 +6,12 @@ import {
   getClassesForTutor,
   splitClassesByTime,
   buildAttendanceRosterForClass,
-} from '../tuitionClassesData';
+} from '../tuitionClassData';
 import { TuitionClass, TuitionAttendanceRecord, TuitionAttendanceStatus } from '../tuitionClassTypes';
-import ClassCard from '@/components/tuition/classes/ClassCard';
-import ClassDetail from '@/components/tuition/classes/ClassDetail';
-import AttendanceTable from '@/components/tuition/classes/AttendanceTable';
-import TuitionClassForm from '@/components/tuition/tutor/TuitionClassForm';
-
+import ClassCard from '@/pages/tuition/classes/CLassCard';
+import ClassDetail from '@/pages/tuition/classes/ClassDetail';
+import AttendanceTable from '@/pages/tuition/classes/AttendanceTable';
+import TuitionClassForm from '@/pages/tuition/tutor/TuitionCLassForm';
 type TutorTab = 'classes' | 'attendance' | 'manage';
 
 export default function TuitionTutorClasses() {
