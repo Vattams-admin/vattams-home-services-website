@@ -46,8 +46,7 @@ export default function TuitionAdminAttendanceOverview() {
         <StatCard label="Total Classes" value={allClasses.length} icon={Users} tone="blue" />
         <StatCard label="Today's Classes" value={today.length} icon={CalendarCheck} tone="purple" />
         <StatCard label="Attendance Rate" value={`${attendanceRate}%`} icon={TrendingUp} tone="emerald" />
-        <StatCard label="Present / Absent / Late" value={${present} / ${absent} / ${late}} icon={CheckCircle2} tone="amber" />
-      </div>
+        <StatCard label="Present / Absent / Late" value={`${present} / ${absent} / ${late}`} icon={CheckCircle2} tone="amber" />
 
       <div className="flex flex-wrap gap-3 mb-6">
         <select value={courseFilter} onChange={(e) => setCourseFilter(e.target.value)} className="px-3 py-2 rounded-lg border border-gray-200 text-sm">
@@ -131,7 +130,7 @@ function StatCard({
 
   return (
     <div className="p-5 rounded-2xl border border-gray-200 bg-white">
-      <div className={flex items-center justify-center w-9 h-9 rounded-lg mb-3 ${toneClasses[tone]}}>
+      <div className={`flex items-center justify-center w-9 h-9 rounded-lg mb-3 ${toneClasses[tone]}`}>
         <Icon size={18} />
       </div>
       <div className="text-2xl font-bold text-gray-900">{value}</div>
