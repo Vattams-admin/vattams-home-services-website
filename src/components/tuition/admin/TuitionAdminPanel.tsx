@@ -8,12 +8,14 @@ import {
   ClipboardList,
   CalendarDays,
   ClipboardCheck,
+  FileText,
   LucideIcon,
 } from 'lucide-react';
 import TuitionAdminClasses from '@/pages/tuition/admin/TuitionAdminCLasses';
 import TuitionAdminAttendanceOverview from '@/pages/tuition/admin/TuitionAdminAttendanceOverview';
+import TuitionAdminMaterials from '@/components/tuition/admin/TuitionAdminMaterials';
 
-type TuitionAdminTab = 'overview' | 'classes' | 'attendance';
+type TuitionAdminTab = 'overview' | 'classes' | 'attendance' | 'materials';
 
 type StatCard = {
   label: string;
@@ -70,6 +72,7 @@ export default function TuitionAdminPanel() {
     { id: 'overview', label: 'Overview', icon: GraduationCap },
     { id: 'classes', label: 'Classes', icon: CalendarDays },
     { id: 'attendance', label: 'Attendance', icon: ClipboardCheck },
+    { id: 'materials', label: 'Materials', icon: FileText },
   ];
 
   return (
@@ -160,6 +163,7 @@ export default function TuitionAdminPanel() {
 
       {tab === 'classes' && <TuitionAdminClasses />}
       {tab === 'attendance' && <TuitionAdminAttendanceOverview />}
+      {tab === 'materials' && <TuitionAdminMaterials />}
     </div>
   );
 }
