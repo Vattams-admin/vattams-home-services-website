@@ -25,8 +25,8 @@ Deno.serve(async (req: Request) => {
     }
 
     const { data: admin, error } = await supabase
-      .from("admins")
-      .select("id, email, password_hash")
+      .from("admin_users")
+      .select("id, email, password_hash, role, full_name")
       .eq("email", email.trim().toLowerCase())
       .maybeSingle();
 
@@ -37,6 +37,10 @@ Deno.serve(async (req: Request) => {
     const passwordMatch = bcrypt.compareSync(password, admin.password_hash);
     if (!passwordMatch) {
       return errorResponse("Invalid credentials");
+    }
+
+    if (admin.role !== "super_admin") {
+      return errorResponse("This account is not authorized for admin access");
     }
 
     const sessionToken = crypto.randomUUID();
