@@ -59,7 +59,7 @@ export default function AttendanceTable({ records, onChangeStatus }: AttendanceT
               </div>
             ) : (
               <span
-                className={inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-semibold shrink-0 ${meta.className}}
+                className={'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-semibold shrink-0 ${meta.className}'}
               >
                 <Icon size={12} />
                 {meta.label}
