@@ -23,8 +23,8 @@ import {
   TuitionAttendanceStatus,
 } from '../tuitionClassTypes';
 
-+import ClassCard from '@/pages/tuition/classes/CLassCard';
-+import ClassDetail from '@/pages/tuition/classes/ClassDetail';
+import ClassCard from '@/pages/tuition/classes/CLassCard';
+import ClassDetail from '@/pages/tuition/classes/ClassDetail';
 
 type StudentTab = 'classes' | 'schedule' | 'attendance';
 type ScheduleFilter = 'today' | 'tomorrow' | 'week';
