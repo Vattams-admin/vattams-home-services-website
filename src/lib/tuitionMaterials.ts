@@ -102,6 +102,26 @@ export async function fetchCourseMaterials(courseSlug: string): Promise<CourseMa
     .order('created_at', { ascending: false });
 
   if (error) {
+    // Surface the real Supabase/Postgres error to the console so it's
+    // visible during development and in prod browser devtools — never
+    // swallow this behind a generic message. Common causes:
+    //  - 42P01 / "does not exist": the tuition_course_materials migration
+    //    hasn't been run against this Supabase project yet.
+    //  - PGRST205 ("Could not find the table ... in the schema cache"):
+    //    same root cause — table missing, or PostgREST's schema cache is
+    //    stale (Supabase usually refreshes this within a few minutes of
+    //    running a migration; a manual "Reload schema" in the API settings
+    //    forces it immediately).
+    //  - 42501 / permission denied: RLS is blocking the read — check the
+    //    "public_select_published_tuition_materials" policy exists and
+    //    that the rows being requested have is_published = true.
+    console.error('[tuitionMaterials] fetchCourseMaterials failed', {
+      courseSlug,
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
     throw error;
   }
 
