@@ -1,4 +1,4 @@
-,import { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Users, CalendarCheck, TrendingUp, CheckCircle2, XCircle, Clock3 } from 'lucide-react';
 import { getAllClasses, getAllAttendanceRecords, splitClassesByTime, DEMO_TUTORS } from '@/pages/tuition/tuitionClassData';
 import { tuitionCourses } from '@/pages/tuition/tuitionCoursesData';
@@ -47,6 +47,7 @@ export default function TuitionAdminAttendanceOverview() {
         <StatCard label="Today's Classes" value={today.length} icon={CalendarCheck} tone="purple" />
         <StatCard label="Attendance Rate" value={`${attendanceRate}%`} icon={TrendingUp} tone="emerald" />
         <StatCard label="Present / Absent / Late" value={`${present} / ${absent} / ${late}`} icon={CheckCircle2} tone="amber" />
+      </div>
 
       <div className="flex flex-wrap gap-3 mb-6">
         <select value={courseFilter} onChange={(e) => setCourseFilter(e.target.value)} className="px-3 py-2 rounded-lg border border-gray-200 text-sm">
