@@ -54,6 +54,7 @@ export default function CourseMaterialsSection({ courseSlug }: CourseMaterialsSe
   );
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -68,8 +69,24 @@ export default function CourseMaterialsSection({ courseSlug }: CourseMaterialsSe
         setExpandedId(null);
         setStatus('ready');
       })
-      .catch(() => {
+      .catch((err) => {
         if (cancelled) return;
+        // The real error is always logged in fetchCourseMaterials(); here
+        // we only decide what (if anything) to surface in the UI. Full
+        // detail in dev so it's visible while building; a short, non-
+        // sensitive hint in production so it doesn't just say "something
+        // went wrong" with no lead to follow.
+        const code = (err as { code?: string })?.code;
+        const message = (err as { message?: string })?.message ?? String(err);
+        if (import.meta.env.DEV) {
+          setErrorDetail(`${code ? `[${code}] ` : ''}${message}`);
+        } else if (code === '42P01' || code === 'PGRST205') {
+          setErrorDetail('The materials table is not set up yet for this course.');
+        } else if (code === '42501' || code === 'PGRST301') {
+          setErrorDetail('You do not have permission to view these materials.');
+        } else {
+          setErrorDetail(null);
+        }
         setStatus('error');
       });
 
@@ -106,7 +123,7 @@ export default function CourseMaterialsSection({ courseSlug }: CourseMaterialsSe
       {status === 'loading' && <MaterialsLoadingState />}
 
       {status === 'error' && (
-        <MaterialsErrorState onRetry={() => setReloadToken((t) => t + 1)} />
+        <MaterialsErrorState detail={errorDetail} onRetry={() => setReloadToken((t) => t + 1)} />
       )}
 
       {status === 'ready' && totalCount === 0 && <NoMaterialsState />}
@@ -214,7 +231,13 @@ function MaterialsLoadingState() {
   );
 }
 
-function MaterialsErrorState({ onRetry }: { onRetry: () => void }) {
+function MaterialsErrorState({
+  detail,
+  onRetry,
+}: {
+  detail: string | null;
+  onRetry: () => void;
+}) {
   return (
     <div className="flex flex-col items-center justify-center text-center py-10 px-4 rounded-xl border border-dashed border-red-200 bg-red-50">
       <AlertTriangle size={24} className="text-red-500 mb-2" />
@@ -222,6 +245,9 @@ function MaterialsErrorState({ onRetry }: { onRetry: () => void }) {
       <p className="text-xs text-red-500 mt-1 max-w-xs">
         Something went wrong while fetching materials for this course. Please try again.
       </p>
+      {detail && (
+        <p className="text-[11px] font-mono text-red-400 mt-2 max-w-sm break-words">{detail}</p>
+      )}
       <button
         type="button"
         onClick={onRetry}
