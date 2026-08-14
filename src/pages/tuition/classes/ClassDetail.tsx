@@ -1,7 +1,7 @@
 import { X, BookOpen, Users, Monitor, Video, GraduationCap } from 'lucide-react';
 import { TuitionClass } from '@/pages/tuition/tuitionClassTypes';
 import { getDisplayStatus, getStudentsForClass, getAttendanceForClass } from '@/pages/tuition/tuitionClassData';
-+import ClassStatusBadge from './CLassStatusBadge';
+import ClassStatusBadge from './CLassStatusBadge';
 import AttendanceTable from './AttendanceTable';
 
 interface ClassDetailProps {
