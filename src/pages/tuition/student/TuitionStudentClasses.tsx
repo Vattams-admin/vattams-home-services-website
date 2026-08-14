@@ -17,7 +17,7 @@ import {
   getStudentAttendanceSummary,
   getAttendanceRecordsForStudent,
 } from '../tuitionClassData';
-...
+
 import {
   TuitionClass,
   TuitionAttendanceStatus,
