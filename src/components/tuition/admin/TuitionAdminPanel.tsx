@@ -10,8 +10,8 @@ import {
   ClipboardCheck,
   LucideIcon,
 } from 'lucide-react';
-import TuitionAdminClasses from './TuitionAdminClasses';
-import TuitionAdminAttendanceOverview from './TuitionAdminAttendanceOverview';
+import TuitionAdminClasses from '@/pages/tuition/admin/TuitionAdminCLasses';
+import TuitionAdminAttendanceOverview from '@/pages/tuition/admin/TuitionAdminAttendanceOverview';
 
 type TuitionAdminTab = 'overview' | 'classes' | 'attendance';
 
