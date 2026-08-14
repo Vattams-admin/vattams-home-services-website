@@ -1,5 +1,5 @@
 import { Radio, CalendarClock, CheckCircle2, XCircle } from 'lucide-react';
-import { TuitionClassDisplayStatus } from '@/pages/tuition/tuitionClassesData';
+import { TuitionClassDisplayStatus } from '@/pages/tuition/tuitionClassData';
 
 const STATUS_CONFIG: Record<
   TuitionClassDisplayStatus,
@@ -38,7 +38,7 @@ export default function ClassStatusBadge({ status, className = '' }: ClassStatus
 
   return (
     <span
-      className={inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-semibold ${config.className} ${className}}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-semibold ${config.className} ${className}`}
     >
       <Icon size={12} className={status === 'live' ? 'animate-pulse' : ''} />
       {config.label}
