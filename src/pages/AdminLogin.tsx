@@ -1,256 +1,117 @@
-import { useState } from 'react';
-import { Lock, Loader, AlertCircle, Mail } from 'lucide-react';
-import { useRouter } from '@/lib/router';
-import { supabase } from '@/lib/supabase';
+VATTAMS ONLINE TUITION — PHASE 5.2
+STEP 2: FIX EXISTING ADMIN AUTHENTICATION ONLY
 
-export default function AdminLogin() {
-  const { navigate } = useRouter();
+STEP 1 INSPECTION IS COMPLETE.
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+IMPORTANT:
+DO NOT TOUCH PHASE 5.1.
+DO NOT MODIFY CourseMaterialsSection.tsx.
+DO NOT MODIFY student learning-material UI.
+DO NOT START tutor authentication.
+DO NOT START material upload UI.
+DO NOT START watermark processing.
+DO NOT START Phase 5.3.
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+STEP 2 GOAL:
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+Fix the existing Admin login so it uses the already-existing working
+admin-auth Edge Function and the existing admins/admin_sessions schema.
 
-    setError('');
-    setLoading(true);
+INSPECTION FOUND:
 
-    try {
-      const cleanEmail = email.trim().toLowerCase();
+1. Existing working Edge Function:
+   supabase/functions/admin-auth/index.ts
 
-      if (!cleanEmail || !password) {
-        setError('Please enter your email and password.');
-        return;
-      }
+   It:
+   - checks the admins table
+   - verifies password_hash using bcrypt
+   - creates admin_sessions
+   - is the real existing admin authentication implementation
 
-      /*
-       * Verify the admin's credentials via the Supabase RPC.
-       *
-       * verify_admin_login() checks the password hash with pgcrypto's
-       * crypt() server-side and only returns a row when
-       * role = 'super_admin' AND is_active = true.
-       *
-       * The admin_users table (including password_hash) is never
-       * queried directly from the frontend.
-       */
-      const { data: admin, error: rpcError } = await supabase.rpc(
-        'verify_admin_login',
-        {
-          p_email: cleanEmail,
-          p_password: password,
-        }
-      );
+2. Current frontend AdminLogin.tsx is broken/inconsistent:
+   - calls supabase.rpc('verify_admin_login', ...)
+   - expects role = 'super_admin'
+   - expects is_active
+   - those do not match the tracked admins schema
+   - verify_admin_login is not present in tracked migrations
 
-      if (rpcError) {
-        console.error('Admin login RPC error:', rpcError);
-        setError('Unable to verify admin account. Please try again.');
-        return;
-      }
+3. AdminDashboard currently checks:
+   sessionStorage['vattams_admin']
+   and an expiry value.
 
-      /*
-       * The RPC returns either an empty result or a single row,
-       * depending on how it's defined (row-returning function).
-       * Normalize both shapes safely.
-       */
-      const adminRow = Array.isArray(admin) ? admin[0] : admin;
+4. Do not introduce Supabase Auth.
+   Keep the existing custom admin authentication architecture.
 
-      if (!adminRow || !adminRow.id) {
-        setError('Invalid admin email or password.');
-        return;
-      }
+TASK:
 
-      if (adminRow.role !== 'super_admin') {
-        setError('This account is not authorized for admin access.');
-        return;
-      }
+A. Inspect:
+- supabase/functions/admin-auth/index.ts
+- src/pages/AdminLogin.tsx
+- src/pages/AdminDashboard.tsx
+- router/App routing
+- admins table schema
+- admin_sessions table schema
 
-      /*
-       * Store the custom admin session.
-       * This project uses its own sessionStorage-based admin
-       * session — NOT supabase.auth — so no Supabase Auth call
-       * is made here.
-       */
-      const expiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000); // 8-hour session
+B. Update AdminLogin.tsx so it calls the existing
+   admin-auth Edge Function instead of verify_admin_login RPC.
 
-      sessionStorage.setItem('vattams_admin', adminRow.id);
-      sessionStorage.setItem(
-        'vattams_admin_email',
-        adminRow.email ?? cleanEmail
-      );
-      sessionStorage.setItem(
-        'vattams_admin_expires',
-        expiresAt.toISOString()
-      );
-      sessionStorage.setItem(
-        'vattams_admin_role',
-        adminRow.role
-      );
+C. Match the response format of the actual admin-auth Edge Function.
 
-      if (adminRow.full_name) {
-        sessionStorage.setItem(
-          'vattams_admin_name',
-          adminRow.full_name
-        );
-      }
+D. After successful authentication:
+   - store the minimum required admin session information in
+     sessionStorage['vattams_admin']
+   - preserve the existing expiry/session behavior expected by AdminDashboard
+   - do not store password or password_hash
+   - do not expose service_role key
 
-      /*
-       * Go to admin dashboard only after successful RPC
-       * verification.
-       */
-      navigate('admin-dashboard');
-    } catch (err) {
-      console.error('Admin login exception:', err);
+E. Do NOT change AdminDashboard unless absolutely necessary
+   to consume the existing admin-auth response.
 
-      setError(
-        err instanceof Error
-          ? err.message
-          : 'Unable to connect to the server.'
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+F. If AdminDashboard currently expects a specific sessionStorage
+   object shape, inspect it and preserve that exact shape.
 
-  return (
-    <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-950 via-blue-900 to-indigo-900 px-4">
-      <div className="max-w-md w-full">
+G. Handle:
+   - invalid credentials
+   - network error
+   - Edge Function error
+   - expired session
 
-        <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl p-8 shadow-2xl">
+H. Keep the existing AdminLogin visual design unchanged.
+   Only fix authentication logic.
 
-          {/* Logo */}
-          <div className="text-center mb-8">
-            <img
-              src="/logo.svg"
-              alt="VATTAMS HOME SERVICES"
-              className="h-20 w-auto mx-auto mb-4 rounded-xl"
-            />
+I. Do NOT modify:
+- tuition_course_materials
+- tuitionMaterials.ts
+- CourseMaterialsSection.tsx
+- tuition-materials bucket
+- tuition-watermark-pdf
+- student pages
+- technician authentication
+- tutor pages
 
-            <h1 className="text-2xl font-extrabold text-white mb-1">
-              Admin Login
-            </h1>
+J. Do not create migrations.
 
-            <p className="text-blue-200 text-sm">
-              Secure access to VATTAMS Admin Dashboard
-            </p>
-          </div>
+K. Do not create new tables.
 
-          {/* Login Form */}
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-4"
-          >
+L. Do not deploy.
 
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-medium text-blue-100 mb-1.5">
-                Admin Email
-              </label>
+BUILD:
 
-              <div className="relative">
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    setError('');
-                  }}
-                  className="w-full pl-4 pr-10 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-blue-200/50 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all"
-                  placeholder="admin@vattams.net"
-                  autoComplete="username"
-                />
+Run:
 
-                <Mail
-                  size={16}
-                  className="absolute right-3 top-3.5 text-blue-200/50"
-                  aria-hidden="true"
-                />
-              </div>
-            </div>
+npm run build
 
-            {/* Password */}
-            <div>
-              <label className="block text-sm font-medium text-blue-100 mb-1.5">
-                Password
-              </label>
+If build fails, fix ONLY issues caused by this Admin authentication change.
 
-              <div className="relative">
+FINAL REPORT:
 
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setError('');
-                  }}
-                  className="w-full pl-4 pr-10 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-blue-200/50 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all"
-                  placeholder="Enter password"
-                  autoComplete="current-password"
-                />
+1. Files changed
+2. Exact Admin auth flow now used
+3. Edge Function called
+4. SessionStorage object/keys used
+5. Whether AdminDashboard remains compatible
+6. Build result
 
-                <Lock
-                  size={16}
-                  className="absolute right-3 top-3.5 text-blue-200/50"
-                />
+STOP after Step 2.
 
-              </div>
-            </div>
-
-            {/* Error */}
-            {error && (
-              <div className="flex items-start gap-2 bg-red-500/20 border border-red-400/30 text-red-200 text-sm rounded-xl px-4 py-3">
-
-                <AlertCircle
-                  size={16}
-                  className="shrink-0 mt-0.5"
-                />
-
-                <span>{error}</span>
-
-              </div>
-            )}
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-2 py-3.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors"
-            >
-
-              {loading ? (
-                <>
-                  <Loader
-                    size={18}
-                    className="animate-spin"
-                  />
-
-                  Checking account...
-                </>
-              ) : (
-                <>
-                  <Lock size={18} />
-
-                  Sign In
-                </>
-              )}
-
-            </button>
-
-          </form>
-
-          {/* Security note */}
-          <div className="mt-6 text-center">
-            <p className="text-xs text-blue-200/60">
-              Authorized VATTAMS administrators only
-            </p>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  );
-}
+Do not continue to Phase 5.2 Step 3 automatically.
