@@ -16,15 +16,15 @@ import {
   splitClassesByTime,
   getStudentAttendanceSummary,
   getAttendanceRecordsForStudent,
-} from '../tuitionClassesData';
-
+} from '../tuitionClassData';
+...
 import {
   TuitionClass,
   TuitionAttendanceStatus,
 } from '../tuitionClassTypes';
 
-import ClassCard from '@/components/tuition/classes/ClassCard';
-import ClassDetail from '@/components/tuition/classes/ClassDetail';
++import ClassCard from '@/pages/tuition/classes/CLassCard';
++import ClassDetail from '@/pages/tuition/classes/ClassDetail';
 
 type StudentTab = 'classes' | 'schedule' | 'attendance';
 type ScheduleFilter = 'today' | 'tomorrow' | 'week';
