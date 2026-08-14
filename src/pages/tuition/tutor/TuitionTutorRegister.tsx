@@ -1037,4 +1037,3 @@ export default function TuitionTutorRegister() {
       </section>
     </main>
   );
-}
