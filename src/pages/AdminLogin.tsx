@@ -27,53 +27,36 @@ export default function AdminLogin() {
       }
 
       /*
-       * Verify the admin's credentials via the existing admin-auth
-       * Edge Function.
+       * Verify the admin's credentials via the admin-auth Edge Function.
        *
-       * admin-auth:
-       *  - looks up the admins table by email
-       *  - verifies password_hash with bcrypt server-side
-       *  - creates a row in admin_sessions
-       *  - returns { success, message, sessionToken, expiresAt }
-       *    on success, or { error } on failure
+       * The Edge Function looks up the admins table with the
+       * service_role key (never exposed to the frontend), verifies
+       * the bcrypt password hash server-side, and — on success —
+       * inserts a row into admin_sessions and returns a session
+       * token + expiry.
        *
-       * The admins table (including password_hash) is never queried
-       * directly from the frontend, and the service_role key never
-       * leaves the Edge Function.
+       * The admins table (including password_hash) is never
+       * queried directly from the frontend, and no RPC is used.
        */
-      const { data, error: invokeError } = await supabase.functions.invoke(
+      const { data, error: fnError } = await supabase.functions.invoke(
         'admin-auth',
         {
-          body: { email: cleanEmail, password },
+          body: {
+            email: cleanEmail,
+            password,
+          },
         }
       );
 
-      if (invokeError) {
-        // supabase-js throws FunctionsHttpError for non-2xx responses.
-        // The Edge Function's { error: "..." } body is available on
-        // the response context, so surface that message when we can.
-        let message = 'Invalid admin email or password.';
-
-        const context = (invokeError as { context?: Response }).context;
-        if (context && typeof context.json === 'function') {
-          try {
-            const body = await context.json();
-            if (body?.error) {
-              message = body.error;
-            }
-          } catch {
-            // Response body wasn't JSON (or already consumed) — fall
-            // back to the generic message below.
-          }
-        }
-
-        console.error('Admin login Edge Function error:', invokeError);
-        setError(message);
+      if (fnError) {
+        console.error('Admin login function error:', fnError);
+        setError('Invalid admin email or password.');
         return;
       }
 
-      if (!data?.success || !data?.sessionToken) {
-        setError(data?.error || 'Invalid admin email or password.');
+      if (!data || !data.success || !data.sessionToken) {
+        console.error('Admin login failed:', data?.error);
+        setError('Invalid admin email or password.');
         return;
       }
 
@@ -81,9 +64,8 @@ export default function AdminLogin() {
        * Store the custom admin session.
        * This project uses its own sessionStorage-based admin
        * session — NOT supabase.auth — so no Supabase Auth call
-       * is made here. Only the session token and its expiry (and
-       * the email, for display/logout parity) are stored; the
-       * password and password_hash are never persisted.
+       * is made here. AdminDashboard only checks for the presence
+       * and expiry of these two keys.
        */
       sessionStorage.setItem('vattams_admin', data.sessionToken);
       sessionStorage.setItem('vattams_admin_email', cleanEmail);
