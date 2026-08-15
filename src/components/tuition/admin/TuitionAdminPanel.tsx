@@ -62,6 +62,7 @@ const sections: SectionCard[] = [
 export default function TuitionAdminPanel() {
   const [tab, setTab] = useState<TuitionAdminTab>('overview');
   const [totalStudents, setTotalStudents] = useState(0);
+  const [totalTutors, setTotalTutors] = useState(0);
 
   useEffect(() => {
     const adminId = sessionStorage.getItem('vattams_admin');
@@ -80,6 +81,17 @@ export default function TuitionAdminPanel() {
         setTotalStudents((data ?? []).length);
       });
 
+    supabase
+      .rpc('admin_list_tuition_tutors', { p_admin_id: adminId, p_status: null })
+      .then(({ data, error }) => {
+        if (!mounted) return;
+        if (error) {
+          console.error('[TuitionAdminPanel] admin_list_tuition_tutors error:', error);
+          return;
+        }
+        setTotalTutors((data ?? []).length);
+      });
+
     return () => {
       mounted = false;
     };
@@ -87,7 +99,7 @@ export default function TuitionAdminPanel() {
 
   const stats: StatCard[] = [
     { label: 'Total Students', value: totalStudents, icon: Users },
-    { label: 'Total Tutors', value: 0, icon: UserCheck },
+    { label: 'Total Tutors', value: totalTutors, icon: UserCheck },
     { label: 'Active Courses', value: 0, icon: BookOpen },
     { label: 'Trial Classes', value: 0, icon: FlaskConical },
     { label: 'Active Enrollments', value: 0, icon: ClipboardList },
