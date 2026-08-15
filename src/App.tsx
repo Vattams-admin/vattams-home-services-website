@@ -40,7 +40,6 @@ import TuitionBooking from '@/pages/tuition/TuitionBooking';
 import TuitionTutorRegister from '@/pages/tuition/tutor/TuitionTutorRegister';
 import TuitionStudentClasses from '@/pages/tuition/student/TuitionStudentClasses';
 import TuitionTutorClasses from '@/pages/tuition/tutor/TuitionTutorClasses';
-import TuitionTutorRegister from '@/components/tuition/tutor/TuitionTutorRegister';
 
 function PageContent() {
   const { page, citySlug } = useRouter();
