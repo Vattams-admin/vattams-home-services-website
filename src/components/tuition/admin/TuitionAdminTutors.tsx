@@ -4,6 +4,8 @@ import {
   BookOpen,
   Briefcase,
   Check,
+  Download,
+  IdCard,
   Loader,
   Mail,
   MapPin,
@@ -19,6 +21,7 @@ import {
   TuitionTutorRow,
   TutorStatusFilter,
 } from '@/lib/tuitionTutors';
+import { downloadOnboardingLetter } from '@/lib/onboardingLetter';
 
 const FILTERS: { id: TutorStatusFilter; label: string }[] = [
   { id: 'pending', label: 'Pending' },
@@ -153,6 +156,7 @@ export default function TuitionAdminTutors() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 text-left text-gray-500 text-xs uppercase tracking-wide">
+                <th className="px-4 py-3 font-semibold">Employee ID</th>
                 <th className="px-4 py-3 font-semibold">Name</th>
                 <th className="px-4 py-3 font-semibold">Contact</th>
                 <th className="px-4 py-3 font-semibold">City</th>
@@ -169,6 +173,16 @@ export default function TuitionAdminTutors() {
             <tbody className="divide-y divide-gray-100">
               {tutors.map((tutor) => (
                 <tr key={tutor.id} className="hover:bg-gray-50/60">
+                  <td className="px-4 py-3">
+                    {tutor.employee_id ? (
+                      <span className="inline-flex items-center gap-1 text-xs font-extrabold text-blue-700">
+                        <IdCard size={12} />
+                        {tutor.employee_id}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-gray-400">—</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     <button
                       type="button"
@@ -260,7 +274,7 @@ export default function TuitionAdminTutors() {
             className="bg-white rounded-3xl shadow-xl max-w-lg w-full max-h-[85vh] overflow-y-auto p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-1">
               <h3 className="text-lg font-bold text-gray-900">
                 {detailsTutor.full_name}
               </h3>
@@ -272,6 +286,15 @@ export default function TuitionAdminTutors() {
                 <X size={20} />
               </button>
             </div>
+
+            {detailsTutor.employee_id && (
+              <div className="mb-4">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-extrabold">
+                  <IdCard size={12} />
+                  {detailsTutor.employee_id}
+                </span>
+              </div>
+            )}
 
             <div className="space-y-3 text-sm">
               <div className="flex items-center gap-2 text-gray-600">
@@ -369,6 +392,29 @@ export default function TuitionAdminTutors() {
                   </>
                 )}
               </div>
+
+              {detailsTutor.employee_id && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    downloadOnboardingLetter({
+                      role: 'Tutor',
+                      employeeId: detailsTutor.employee_id!,
+                      fullName: detailsTutor.full_name,
+                      city: detailsTutor.city,
+                      contactValue: detailsTutor.phone,
+                      contactLabel: 'Phone',
+                      email: detailsTutor.email,
+                      joinedOn: detailsTutor.created_at,
+                      categoryLabel: 'Subjects',
+                      categoryValue: detailsTutor.subjects?.join(', ') || '—',
+                    })
+                  }
+                  className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-semibold rounded-xl transition-colors"
+                >
+                  <Download size={16} /> Download Onboarding Letter
+                </button>
+              )}
             </div>
           </div>
         </div>
