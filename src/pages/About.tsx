@@ -1,19 +1,23 @@
-import { Target, Eye, Heart, ShieldCheck, Users, Award, TrendingUp, Handshake, MapPin } from 'lucide-react';
+import { Target, Eye, Heart, ShieldCheck, Users, Award, TrendingUp, Handshake, MapPin, AirVent, Zap, Wrench } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import { cities } from '@/lib/cities';
+import SafeImage from '@/components/SafeImage';
 
 const galleryItems = [
   {
     img: 'https://images.pexels.com/photos/33671149/pexels-photo-33671149.jpeg?auto=compress&cs=tinysrgb&w=600&q=80',
     label: 'AC Repair & Service',
+    icon: AirVent,
   },
   {
     img: 'https://images.pexels.com/photos/257736/pexels-photo-257736.jpeg?auto=compress&cs=tinysrgb&w=600&q=80',
     label: 'Electrician Services',
+    icon: Zap,
   },
   {
     img: 'https://images.pexels.com/photos/29226620/pexels-photo-29226620.jpeg?auto=compress&cs=tinysrgb&w=600&q=80',
     label: 'Plumbing Services',
+    icon: Wrench,
   },
 ];
 
@@ -35,10 +39,12 @@ export default function About() {
       {/* Hero */}
       <section className="relative bg-gradient-to-br from-royal-950 via-royal-900 to-royal-800 py-16 md:py-20 overflow-hidden">
         <div className="absolute inset-0 opacity-20">
-          <img
+          <SafeImage
             src="https://images.pexels.com/photos/8961065/pexels-photo-8961065.jpeg?auto=compress&cs=tinysrgb&w=1600&q=80"
             alt=""
             className="w-full h-full object-cover"
+            fallbackIcon={ShieldCheck}
+            fallbackClassName="bg-gradient-to-br from-royal-800 to-royal-950"
           />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -81,10 +87,12 @@ export default function About() {
               </button>
             </div>
             <div className="relative">
-              <img
+              <SafeImage
                 src="https://images.pexels.com/photos/8961065/pexels-photo-8961065.jpeg?auto=compress&cs=tinysrgb&w=800&q=80"
                 alt="Technician at work"
                 className="rounded-2xl shadow-xl w-full object-cover aspect-[4/3]"
+                fallbackIcon={Wrench}
+                fallbackClassName="rounded-2xl shadow-xl aspect-[4/3] bg-gradient-to-br from-royal-700 to-royal-900"
               />
               <div className="absolute -bottom-4 -left-4 bg-royal-800 text-white rounded-xl p-4 shadow-lg hidden sm:block border border-gold-500/30">
                 <div className="text-2xl font-extrabold">10,000+</div>
@@ -105,10 +113,12 @@ export default function About() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {galleryItems.map((g) => (
               <div key={g.label} className="relative rounded-2xl overflow-hidden shadow-sm group aspect-[4/3]">
-                <img
+                <SafeImage
                   src={g.img}
                   alt={g.label}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  fallbackIcon={g.icon}
+                  fallbackClassName="bg-gradient-to-br from-royal-700 to-royal-900"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-4">
