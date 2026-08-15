@@ -89,6 +89,7 @@ export type TutorStatusFilter = TutorStatus | 'all';
 
 export interface TuitionTutorRow {
   id: string;
+  employee_id: string | null;
   full_name: string;
   phone: string;
   whatsapp: string | null;
