@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   GraduationCap,
   Users,
@@ -14,23 +14,16 @@ import {
 import TuitionAdminClasses from '@/pages/tuition/admin/TuitionAdminCLasses';
 import TuitionAdminAttendanceOverview from '@/pages/tuition/admin/TuitionAdminAttendanceOverview';
 import TuitionAdminMaterials from '@/components/tuition/admin/TuitionAdminMaterials';
-import TuitionAdminTutors from '@/components/tuition/admin/TuitionAdminTutors';
+import TuitionAdminStudents from '@/components/tuition/admin/TuitionAdminStudents';
+import { supabase } from '@/lib/supabase';
 
-type TuitionAdminTab = 'overview' | 'classes' | 'attendance' | 'materials' | 'tutors';
+type TuitionAdminTab = 'overview' | 'students' | 'classes' | 'attendance' | 'materials';
 
 type StatCard = {
   label: string;
   value: number;
   icon: LucideIcon;
 };
-
-const stats: StatCard[] = [
-  { label: 'Total Students', value: 0, icon: Users },
-  { label: 'Total Tutors', value: 0, icon: UserCheck },
-  { label: 'Active Courses', value: 0, icon: BookOpen },
-  { label: 'Trial Classes', value: 0, icon: FlaskConical },
-  { label: 'Active Enrollments', value: 0, icon: ClipboardList },
-];
 
 type SectionCard = {
   label: string;
@@ -68,13 +61,44 @@ const sections: SectionCard[] = [
 
 export default function TuitionAdminPanel() {
   const [tab, setTab] = useState<TuitionAdminTab>('overview');
+  const [totalStudents, setTotalStudents] = useState(0);
+
+  useEffect(() => {
+    const adminId = sessionStorage.getItem('vattams_admin');
+    if (!adminId) return;
+
+    let mounted = true;
+
+    supabase
+      .rpc('admin_list_tuition_students', { p_admin_id: adminId, p_status: null })
+      .then(({ data, error }) => {
+        if (!mounted) return;
+        if (error) {
+          console.error('[TuitionAdminPanel] admin_list_tuition_students error:', error);
+          return;
+        }
+        setTotalStudents((data ?? []).length);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [tab]);
+
+  const stats: StatCard[] = [
+    { label: 'Total Students', value: totalStudents, icon: Users },
+    { label: 'Total Tutors', value: 0, icon: UserCheck },
+    { label: 'Active Courses', value: 0, icon: BookOpen },
+    { label: 'Trial Classes', value: 0, icon: FlaskConical },
+    { label: 'Active Enrollments', value: 0, icon: ClipboardList },
+  ];
 
   const tabs: { id: TuitionAdminTab; label: string; icon: LucideIcon }[] = [
     { id: 'overview', label: 'Overview', icon: GraduationCap },
+    { id: 'students', label: 'Students', icon: Users },
     { id: 'classes', label: 'Classes', icon: CalendarDays },
     { id: 'attendance', label: 'Attendance', icon: ClipboardCheck },
     { id: 'materials', label: 'Materials', icon: FileText },
-    { id: 'tutors', label: 'Tutors', icon: UserCheck },
   ];
 
   return (
@@ -139,10 +163,18 @@ export default function TuitionAdminPanel() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {sections.map((section) => {
               const Icon = section.icon;
+              const isStudents = section.label === 'Students';
               return (
-                <div
+                <button
                   key={section.label}
-                  className="p-6 rounded-2xl border border-gray-200 bg-white"
+                  type="button"
+                  disabled={!isStudents}
+                  onClick={() => {
+                    if (isStudents) setTab('students');
+                  }}
+                  className={`text-left p-6 rounded-2xl border border-gray-200 bg-white ${
+                    isStudents ? 'hover:border-purple-200 hover:shadow-sm cursor-pointer' : 'cursor-default'
+                  }`}
                 >
                   <div className="flex items-center gap-3 mb-2">
                     <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-gray-100 text-gray-700">
@@ -154,19 +186,19 @@ export default function TuitionAdminPanel() {
                   </div>
                   <p className="text-sm text-gray-500">{section.description}</p>
                   <p className="text-xs text-gray-400 mt-3">
-                    Coming soon — no data yet.
+                    {isStudents ? `${totalStudents} registration${totalStudents === 1 ? '' : 's'}` : 'Coming soon — no data yet.'}
                   </p>
-                </div>
+                </button>
               );
             })}
           </div>
         </>
       )}
 
+      {tab === 'students' && <TuitionAdminStudents />}
       {tab === 'classes' && <TuitionAdminClasses />}
       {tab === 'attendance' && <TuitionAdminAttendanceOverview />}
       {tab === 'materials' && <TuitionAdminMaterials />}
-      {tab === 'tutors' && <TuitionAdminTutors />}
     </div>
   );
 }
