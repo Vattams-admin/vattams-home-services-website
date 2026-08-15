@@ -12,7 +12,7 @@ import {
   XCircle,
   RefreshCw,
   Users,
-  IdCard,
+  BadgeCheck,
   Download,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -248,7 +248,7 @@ export default function TuitionAdminStudents() {
                   <td className="px-4 py-3">
                     {s.student_id ? (
                       <span className="inline-flex items-center gap-1 text-xs font-extrabold text-purple-700">
-                        <IdCard size={12} />
+                        <BadgeCheck size={12} />
                         {s.student_id}
                       </span>
                     ) : (
@@ -336,7 +336,7 @@ export default function TuitionAdminStudents() {
                 <p className="text-sm text-gray-500">{selected.course}</p>
                 {selected.student_id && (
                   <span className="inline-flex items-center gap-1 mt-2 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 text-xs font-extrabold">
-                    <IdCard size={12} />
+                    <BadgeCheck size={12} />
                     {selected.student_id}
                   </span>
                 )}
