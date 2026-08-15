@@ -7,7 +7,7 @@ import {
   CheckCircle2,
   FileText,
   GraduationCap,
-  IdCard,
+  CreditCard,
   Mail,
   MapPin,
   Phone,
@@ -903,7 +903,7 @@ export default function TuitionTutorRegister() {
                   },
                   {
                     label: 'Identity Proof',
-                    icon: IdCard,
+                    icon: CreditCard,
                   },
                   {
                     label: 'Profile Photo',
