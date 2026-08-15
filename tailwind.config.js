@@ -17,6 +17,19 @@ export default {
           900: '#150B2E',
           950: '#0D0620',
         },
+        navy: {
+          50: '#EFF3FA',
+          100: '#D9E2F3',
+          200: '#B3C5E6',
+          300: '#8098CE',
+          400: '#4D6BAF',
+          500: '#2C4A8C',
+          600: '#1F3670',
+          700: '#172A56',
+          800: '#101D3D',
+          900: '#0A132A',
+          950: '#050A17',
+        },
         gold: {
           50: '#FBF6E7',
           100: '#F5E9C2',
@@ -50,13 +63,6 @@ export default {
         display: ['"Playfair Display"', 'serif'],
       },
     },
-  },
-  plugins: [],
-};/** @type {import('tailwindcss').Config} */
-export default {
-  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
-  theme: {
-    extend: {},
   },
   plugins: [],
 };
