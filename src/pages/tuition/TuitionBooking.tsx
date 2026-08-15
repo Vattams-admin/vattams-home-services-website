@@ -10,8 +10,10 @@ import {
   Phone,
   User,
 } from 'lucide-react';
+
 import { useRouter } from '@/lib/router';
 import { getTuitionCourseBySlug } from './tuitionCoursesData';
+import { submitStudentRegistration } from '@/lib/tuitionStudents';
 
 type FormData = {
   studentName: string;
@@ -52,6 +54,8 @@ export default function TuitionBooking() {
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const updateField = (
     field: keyof FormData,
@@ -63,22 +67,63 @@ export default function TuitionBooking() {
     }));
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  /**
+   * Submit student registration to Supabase
+   */
+  const handleSubmit = async (
+    event: FormEvent<HTMLFormElement>
+  ) => {
     event.preventDefault();
 
-    setSubmitted(true);
+    if (submitting) return;
 
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
+    setSubmitting(true);
+    setSubmitError('');
+
+    try {
+      await submitStudentRegistration({
+        student_name: form.studentName,
+        parent_name: form.parentName,
+        phone: form.phone,
+        email: form.email,
+        city: form.city,
+        course: form.course,
+        class_mode: form.mode,
+        preferred_date: form.date || null,
+        preferred_time: form.time || null,
+        message: form.message || null,
+      });
+
+      // Only show success after successful database insert
+      setSubmitted(true);
+
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      });
+    } catch (error) {
+      console.error(
+        'Student registration failed:',
+        error
+      );
+
+      setSubmitError(
+        'Registration could not be submitted. Please try again.'
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
+  /**
+   * Success screen
+   */
   if (submitted) {
     return (
       <main className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-white text-gray-900">
         <section className="max-w-3xl mx-auto px-6 py-20">
           <div className="bg-white border border-purple-100 rounded-3xl shadow-sm p-8 md:p-12 text-center">
+
             <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
               <CheckCircle2
                 size={34}
@@ -109,9 +154,12 @@ export default function TuitionBooking() {
             )}
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
+
               <button
                 type="button"
-                onClick={() => navigate('tuition-courses')}
+                onClick={() =>
+                  navigate('tuition-courses')
+                }
                 className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold transition-colors"
               >
                 <ArrowLeft size={17} />
@@ -123,14 +171,18 @@ export default function TuitionBooking() {
                 onClick={() => {
                   setForm({
                     ...initialForm,
-                    course: resolvedCourse?.name ?? '',
+                    course:
+                      resolvedCourse?.name ?? '',
                   });
+
+                  setSubmitError('');
                   setSubmitted(false);
                 }}
                 className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 font-semibold transition-colors"
               >
                 Submit Another Request
               </button>
+
             </div>
           </div>
         </section>
@@ -138,14 +190,21 @@ export default function TuitionBooking() {
     );
   }
 
+  /**
+   * Booking form
+   */
   return (
     <main className="min-h-screen bg-white text-gray-900">
+
       {/* HERO */}
       <section className="bg-gradient-to-r from-slate-950 via-purple-950 to-black text-white">
         <div className="max-w-5xl mx-auto px-6 py-14 md:py-16">
+
           <button
             type="button"
-            onClick={() => navigate('tuition-courses')}
+            onClick={() =>
+              navigate('tuition-courses')
+            }
             className="inline-flex items-center gap-2 text-purple-200 hover:text-white text-sm font-medium mb-7 transition-colors"
           >
             <ArrowLeft size={16} />
@@ -169,18 +228,23 @@ export default function TuitionBooking() {
               ? `Fill in the details below to book a session for ${resolvedCourse.name}.`
               : 'Fill in the details below and our team will get in touch to schedule your session.'}
           </p>
+
         </div>
       </section>
 
       {/* FORM */}
       <section className="max-w-5xl mx-auto px-6 py-12 md:py-14">
+
         <form
           onSubmit={handleSubmit}
           className="grid grid-cols-1 lg:grid-cols-3 gap-8"
         >
+
           {/* MAIN FORM */}
           <div className="lg:col-span-2">
+
             <div className="bg-white border border-gray-200 rounded-3xl shadow-sm p-6 md:p-8">
+
               <div className="mb-8">
                 <h2 className="text-xl font-bold text-gray-900">
                   Student & Parent Details
@@ -193,6 +257,7 @@ export default function TuitionBooking() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
                 {/* Student Name */}
                 <div>
                   <label
@@ -379,7 +444,9 @@ export default function TuitionBooking() {
                     </option>
 
                     {resolvedCourse && (
-                      <option value={resolvedCourse.name}>
+                      <option
+                        value={resolvedCourse.name}
+                      >
                         {resolvedCourse.name}
                       </option>
                     )}
@@ -389,21 +456,27 @@ export default function TuitionBooking() {
                         <option value="Spoken English">
                           Spoken English
                         </option>
+
                         <option value="Abacus">
                           Abacus
                         </option>
+
                         <option value="Mathematics">
                           Mathematics
                         </option>
+
                         <option value="Science">
                           Science
                         </option>
+
                         <option value="English">
                           English
                         </option>
+
                         <option value="School Tuition">
                           School Tuition
                         </option>
+
                         <option value="Exam Preparation">
                           Exam Preparation
                         </option>
@@ -436,6 +509,7 @@ export default function TuitionBooking() {
                     <option value="Online One-to-One">
                       Online One-to-One
                     </option>
+
                     <option value="Online Group Class">
                       Online Group Class
                     </option>
@@ -503,6 +577,7 @@ export default function TuitionBooking() {
                     />
                   </div>
                 </div>
+
               </div>
 
               {/* Message */}
@@ -529,14 +604,25 @@ export default function TuitionBooking() {
                 />
               </div>
 
+              {/* Submit Error */}
+              {submitError && (
+                <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                  {submitError}
+                </div>
+              )}
+
               {/* Submit */}
               <div className="mt-7">
                 <button
                   type="submit"
-                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold transition-colors shadow-sm"
+                  disabled={submitting}
+                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed text-white font-semibold transition-colors shadow-sm"
                 >
                   <GraduationCap size={18} />
-                  Book Tuition Session
+
+                  {submitting
+                    ? 'Submitting…'
+                    : 'Book Tuition Session'}
                 </button>
               </div>
 
@@ -544,15 +630,19 @@ export default function TuitionBooking() {
                 Our team will contact you to confirm availability
                 and class timing.
               </p>
+
             </div>
           </div>
 
           {/* SIDEBAR */}
           <aside>
             <div className="lg:sticky lg:top-24 space-y-5">
+
               {resolvedCourse && (
                 <div className="rounded-3xl border border-purple-100 bg-purple-50 p-6">
+
                   <div className="flex items-center gap-3 mb-4">
+
                     <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-600 text-white">
                       <GraduationCap size={22} />
                     </div>
@@ -566,20 +656,24 @@ export default function TuitionBooking() {
                         {resolvedCourse.name}
                       </h3>
                     </div>
+
                   </div>
 
                   <p className="text-sm text-purple-900/70 leading-relaxed">
                     {resolvedCourse.shortDescription}
                   </p>
+
                 </div>
               )}
 
               <div className="rounded-3xl border border-gray-200 bg-gray-50 p-6">
+
                 <h3 className="font-bold text-gray-900 mb-4">
                   Why Vattams Online Tuition?
                 </h3>
 
                 <ul className="space-y-3">
+
                   {[
                     'Live online learning',
                     'Flexible class scheduling',
@@ -595,22 +689,29 @@ export default function TuitionBooking() {
                         size={17}
                         className="text-purple-600 mt-0.5 flex-shrink-0"
                       />
+
                       <span>{item}</span>
                     </li>
                   ))}
+
                 </ul>
+
               </div>
 
               <button
                 type="button"
-                onClick={() => navigate('tuition-courses')}
+                onClick={() =>
+                  navigate('tuition-courses')
+                }
                 className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 text-sm font-semibold transition-colors"
               >
                 <ArrowLeft size={16} />
                 Back to Course Catalog
               </button>
+
             </div>
           </aside>
+
         </form>
       </section>
     </main>
