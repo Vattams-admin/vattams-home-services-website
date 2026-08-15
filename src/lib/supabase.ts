@@ -133,6 +133,7 @@ export interface Technician {
   suspend_reason: string | null;
   mobile_verified: boolean;
   whatsapp_verified: boolean;
+  employee_id: string | null;
 }
 
 export interface TechnicianJob {
