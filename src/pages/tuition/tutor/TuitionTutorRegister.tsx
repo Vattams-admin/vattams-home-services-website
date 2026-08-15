@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react';
 import {
+  AlertCircle,
   ArrowLeft,
   BadgeCheck,
   BookOpen,
@@ -8,6 +9,7 @@ import {
   FileText,
   GraduationCap,
   CreditCard,
+  Loader,
   Mail,
   MapPin,
   Phone,
@@ -16,6 +18,7 @@ import {
   UserSquare2,
 } from 'lucide-react';
 import { useRouter } from '@/lib/router';
+import { submitTutorApplication } from '@/lib/tuitionTutors';
 
 const SUBJECT_OPTIONS = [
   'Mathematics',
@@ -109,6 +112,8 @@ export default function TuitionTutorRegister() {
   const [form, setForm] = useState<TutorFormData>(initialForm);
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const updateField = <K extends keyof TutorFormData>(
     field: K,
@@ -187,7 +192,7 @@ export default function TuitionTutorRegister() {
     return nextErrors;
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const nextErrors = validate();
@@ -200,12 +205,57 @@ export default function TuitionTutorRegister() {
       return;
     }
 
-    setSubmitted(true);
+    setSubmitError(null);
+    setSubmitting(true);
 
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
+    try {
+      await submitTutorApplication({
+        full_name: form.fullName,
+        date_of_birth: form.dateOfBirth,
+        gender: form.gender,
+        phone: form.phone,
+        whatsapp: form.whatsapp,
+        email: form.email,
+        city: form.city,
+        state: form.state,
+
+        highest_qualification: form.highestQualification,
+        institution: form.institution,
+        years_experience: form.yearsExperience,
+        classes_can_teach: form.classesCanTeach,
+        teaching_languages: form.teachingLanguages,
+        teaching_mode: form.teachingMode,
+
+        subjects: form.subjects,
+        exam_prep: form.examPrep,
+
+        introduction: form.introduction,
+        teaching_approach: form.teachingApproach,
+        availability: form.availability,
+      });
+
+      // Only shown once Supabase has confirmed the insert succeeded.
+      setSubmitted(true);
+
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      });
+    } catch (error) {
+      console.error('[TuitionTutorRegister] submission failed:', error);
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : 'Something went wrong while submitting your application. Please try again.'
+      );
+
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const inputClasses =
@@ -311,6 +361,26 @@ export default function TuitionTutorRegister() {
         >
           {/* MAIN FORM */}
           <div className="lg:col-span-2 space-y-6">
+            {submitError && (
+              <div
+                role="alert"
+                className="rounded-2xl bg-red-50 border border-red-200 p-4 flex items-start gap-3"
+              >
+                <AlertCircle
+                  size={18}
+                  className="text-red-600 mt-0.5 flex-shrink-0"
+                />
+                <div>
+                  <p className="text-sm font-semibold text-red-800">
+                    We couldn't submit your application
+                  </p>
+                  <p className="text-sm text-red-700 mt-0.5">
+                    {submitError}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* PERSONAL INFORMATION */}
             <div className="bg-white border border-gray-200 rounded-3xl shadow-sm p-6 md:p-8">
               <div className="mb-6 flex items-center gap-3">
@@ -962,10 +1032,20 @@ export default function TuitionTutorRegister() {
             <div>
               <button
                 type="submit"
-                className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold transition-colors shadow-sm"
+                disabled={submitting}
+                className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-purple-600 hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold transition-colors shadow-sm"
               >
-                <GraduationCap size={18} />
-                Submit Tutor Application
+                {submitting ? (
+                  <>
+                    <Loader size={18} className="animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <GraduationCap size={18} />
+                    Submit Tutor Application
+                  </>
+                )}
               </button>
 
               <p className="text-xs text-gray-500 text-center mt-4">
