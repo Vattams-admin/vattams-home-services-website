@@ -8,11 +8,15 @@ import {
   ClipboardList,
   CalendarDays,
   ClipboardCheck,
+  FileText,
   LucideIcon,
 } from 'lucide-react';
 import TuitionAdminClasses from '@/pages/tuition/admin/TuitionAdminCLasses';
 import TuitionAdminAttendanceOverview from '@/pages/tuition/admin/TuitionAdminAttendanceOverview';
-type TuitionAdminTab = 'overview' | 'classes' | 'attendance';
+import TuitionAdminMaterials from '@/components/tuition/admin/TuitionAdminMaterials';
+import TuitionAdminTutors from '@/components/tuition/admin/TuitionAdminTutors';
+
+type TuitionAdminTab = 'overview' | 'classes' | 'attendance' | 'materials' | 'tutors';
 
 type StatCard = {
   label: string;
@@ -35,11 +39,31 @@ type SectionCard = {
 };
 
 const sections: SectionCard[] = [
-  { label: 'Students', description: 'View and manage tuition student records.', icon: Users },
-  { label: 'Tutors', description: 'View and manage tutor profiles and assignments.', icon: UserCheck },
-  { label: 'Courses', description: 'Manage the list of subjects and course offerings.', icon: BookOpen },
-  { label: 'Trial Classes', description: 'Track free trial class requests and scheduling.', icon: FlaskConical },
-  { label: 'Enrollments', description: 'Manage active and past student enrollments.', icon: ClipboardList },
+  {
+    label: 'Students',
+    description: 'View and manage tuition student records.',
+    icon: Users,
+  },
+  {
+    label: 'Tutors',
+    description: 'View and manage tutor profiles and assignments.',
+    icon: UserCheck,
+  },
+  {
+    label: 'Courses',
+    description: 'Manage the list of subjects and course offerings.',
+    icon: BookOpen,
+  },
+  {
+    label: 'Trial Classes',
+    description: 'Track free trial class requests and scheduling.',
+    icon: FlaskConical,
+  },
+  {
+    label: 'Enrollments',
+    description: 'Manage active and past student enrollments.',
+    icon: ClipboardList,
+  },
 ];
 
 export default function TuitionAdminPanel() {
@@ -49,6 +73,8 @@ export default function TuitionAdminPanel() {
     { id: 'overview', label: 'Overview', icon: GraduationCap },
     { id: 'classes', label: 'Classes', icon: CalendarDays },
     { id: 'attendance', label: 'Attendance', icon: ClipboardCheck },
+    { id: 'materials', label: 'Materials', icon: FileText },
+    { id: 'tutors', label: 'Tutors', icon: UserCheck },
   ];
 
   return (
@@ -65,6 +91,7 @@ export default function TuitionAdminPanel() {
         </div>
       </div>
 
+      {/* ===================== SUB-TABS ===================== */}
       <div className="flex gap-2 p-1.5 bg-gray-50 rounded-2xl border border-gray-200 w-fit mb-6">
         {tabs.map((t) => {
           const Icon = t.icon;
@@ -87,34 +114,48 @@ export default function TuitionAdminPanel() {
 
       {tab === 'overview' && (
         <>
+          {/* ===================== STAT CARDS ===================== */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
             {stats.map((stat) => {
               const Icon = stat.icon;
               return (
-                <div key={stat.label} className="p-5 rounded-2xl border border-gray-200 bg-white">
+                <div
+                  key={stat.label}
+                  className="p-5 rounded-2xl border border-gray-200 bg-white"
+                >
                   <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-blue-50 text-blue-600 mb-3">
                     <Icon size={18} />
                   </div>
-                  <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {stat.value}
+                  </div>
                   <div className="text-sm text-gray-500">{stat.label}</div>
                 </div>
               );
             })}
           </div>
 
+          {/* ===================== SECTIONS ===================== */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {sections.map((section) => {
               const Icon = section.icon;
               return (
-                <div key={section.label} className="p-6 rounded-2xl border border-gray-200 bg-white">
+                <div
+                  key={section.label}
+                  className="p-6 rounded-2xl border border-gray-200 bg-white"
+                >
                   <div className="flex items-center gap-3 mb-2">
                     <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-gray-100 text-gray-700">
                       <Icon size={18} />
                     </div>
-                    <h3 className="font-semibold text-gray-900">{section.label}</h3>
+                    <h3 className="font-semibold text-gray-900">
+                      {section.label}
+                    </h3>
                   </div>
                   <p className="text-sm text-gray-500">{section.description}</p>
-                  <p className="text-xs text-gray-400 mt-3">Coming soon — no data yet.</p>
+                  <p className="text-xs text-gray-400 mt-3">
+                    Coming soon — no data yet.
+                  </p>
                 </div>
               );
             })}
@@ -124,6 +165,8 @@ export default function TuitionAdminPanel() {
 
       {tab === 'classes' && <TuitionAdminClasses />}
       {tab === 'attendance' && <TuitionAdminAttendanceOverview />}
+      {tab === 'materials' && <TuitionAdminMaterials />}
+      {tab === 'tutors' && <TuitionAdminTutors />}
     </div>
   );
 }
