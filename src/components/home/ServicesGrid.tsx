@@ -1,4 +1,4 @@
-import { Wind, Sparkles, Thermometer, Zap, RotateCw, Flame, Droplets, Wrench, ArrowRight, Loader, LucideIcon } from 'lucide-react';
+import { Wind, Sparkles, Thermometer, Zap, RotateCw, Flame, Droplets, Wrench, Refrigerator, Camera, ArrowRight, Loader, LucideIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase, ServiceCategory } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
@@ -12,7 +12,8 @@ const iconMap: Record<string, LucideIcon> = {
   flame: Flame,
   droplets: Droplets,
   wrench: Wrench,
-  refrigerator: Droplets,
+  refrigerator: Refrigerator,
+  camera: Camera,
 };
 
 const colorPalette = [
