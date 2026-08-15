@@ -14,8 +14,9 @@ import {
 import TuitionAdminClasses from '@/pages/tuition/admin/TuitionAdminCLasses';
 import TuitionAdminAttendanceOverview from '@/pages/tuition/admin/TuitionAdminAttendanceOverview';
 import TuitionAdminMaterials from '@/components/tuition/admin/TuitionAdminMaterials';
+import TuitionAdminTutors from '@/components/tuition/admin/TuitionAdminTutors';
 
-type TuitionAdminTab = 'overview' | 'classes' | 'attendance' | 'materials';
+type TuitionAdminTab = 'overview' | 'classes' | 'attendance' | 'materials' | 'tutors';
 
 type StatCard = {
   label: string;
@@ -73,6 +74,7 @@ export default function TuitionAdminPanel() {
     { id: 'classes', label: 'Classes', icon: CalendarDays },
     { id: 'attendance', label: 'Attendance', icon: ClipboardCheck },
     { id: 'materials', label: 'Materials', icon: FileText },
+    { id: 'tutors', label: 'Tutors', icon: UserCheck },
   ];
 
   return (
@@ -164,6 +166,7 @@ export default function TuitionAdminPanel() {
       {tab === 'classes' && <TuitionAdminClasses />}
       {tab === 'attendance' && <TuitionAdminAttendanceOverview />}
       {tab === 'materials' && <TuitionAdminMaterials />}
+      {tab === 'tutors' && <TuitionAdminTutors />}
     </div>
   );
 }
