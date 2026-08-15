@@ -135,10 +135,10 @@ export default function TuitionCourseDetail() {
               </p>
               <button
                 type="button"
-                onClick={() => navigate('booking')}
+                onClick={() => navigate('tuition-booking', course.slug)}
                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold transition-colors"
               >
-                Book Now
+                Register Now
                 <ArrowRight size={15} />
               </button>
             </div>
