@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import {
   AlertCircle,
+  BadgeCheck,
   BookOpen,
   Briefcase,
   Check,
   Download,
-  IdCard,
   Loader,
   Mail,
   MapPin,
@@ -176,7 +176,7 @@ export default function TuitionAdminTutors() {
                   <td className="px-4 py-3">
                     {tutor.employee_id ? (
                       <span className="inline-flex items-center gap-1 text-xs font-extrabold text-blue-700">
-                        <IdCard size={12} />
+                        <BadgeCheck size={12} />
                         {tutor.employee_id}
                       </span>
                     ) : (
@@ -290,7 +290,7 @@ export default function TuitionAdminTutors() {
             {detailsTutor.employee_id && (
               <div className="mb-4">
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-extrabold">
-                  <IdCard size={12} />
+                  <BadgeCheck size={12} />
                   {detailsTutor.employee_id}
                 </span>
               </div>
