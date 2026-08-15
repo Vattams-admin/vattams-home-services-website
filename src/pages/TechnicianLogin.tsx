@@ -38,8 +38,10 @@ export default function TechnicianLogin() {
       }
 
       const technician = data.technician as Technician;
-      sessionStorage.setItem('vattams_tech_id', technician.id);
-      sessionStorage.setItem('vattams_tech_data', JSON.stringify(technician));
+      sessionStorage.setItem('vattams_technician_id', technician.id);
+      if (technician.mobile) {
+        sessionStorage.setItem('vattams_technician_mobile', technician.mobile);
+      }
       void registerServiceWorker();
       void initFCM('technician', technician.id);
       navigate('technician-dashboard');
