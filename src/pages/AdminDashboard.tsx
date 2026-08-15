@@ -5,7 +5,7 @@ import {
   Trash2, Eye, XCircle, Star, Award, Wallet, Lock, Unlock, History, ShieldCheck,
   CreditCard, LucideIcon, Globe, Facebook, Instagram, Twitter, Youtube, MessageCircle, Save,
   Bell, BellOff, Search, FileText, Tag, Sparkles, Send, BarChart3, Brain,
-  GraduationCap, IdCard, Download,
+  GraduationCap, BadgeCheck, Download,
 } from 'lucide-react';
 import { supabase, SUPABASE_URL, Booking, Technician, BookingStatus, WalletTransaction, WalletRecharge } from '@/lib/supabase';
 import { downloadOnboardingLetter } from '@/lib/onboardingLetter';
@@ -2099,7 +2099,7 @@ export default function AdminDashboard() {
           {selectedTech.employee_id && (
             <div className="mb-4">
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-extrabold">
-                <IdCard size={12} />
+                <BadgeCheck size={12} />
                 {selectedTech.employee_id}
               </span>
             </div>
