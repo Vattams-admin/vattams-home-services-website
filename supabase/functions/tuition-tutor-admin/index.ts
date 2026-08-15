@@ -76,7 +76,7 @@ Deno.serve(async (req: Request) => {
       let query = supabase
         .from("tuition_tutors")
         .select(
-          "id, full_name, phone, whatsapp, email, city, state, highest_qualification, institution, years_experience, classes_can_teach, teaching_languages, teaching_mode, subjects, exam_prep, introduction, teaching_approach, availability, status, admin_notes, reviewed_at, reviewed_by_email, created_at, updated_at"
+          "id, employee_id, full_name, phone, whatsapp, email, city, state, highest_qualification, institution, years_experience, classes_can_teach, teaching_languages, teaching_mode, subjects, exam_prep, introduction, teaching_approach, availability, status, admin_notes, reviewed_at, reviewed_by_email, created_at, updated_at"
         )
         .order("created_at", { ascending: false });
 
@@ -115,7 +115,7 @@ Deno.serve(async (req: Request) => {
           reviewed_by_email: admin.email,
         })
         .eq("id", tutorId)
-        .select("id, status")
+        .select("id, status, employee_id")
         .maybeSingle();
 
       if (error || !data) {
