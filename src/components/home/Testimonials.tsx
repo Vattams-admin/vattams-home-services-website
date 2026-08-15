@@ -1,4 +1,37 @@
+import { useState } from 'react';
 import { Star, Quote } from 'lucide-react';
+
+function getInitials(name: string) {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
+}
+
+function Avatar({ name, avatar }: { name: string; avatar: string }) {
+  const [failed, setFailed] = useState(false);
+
+  if (failed) {
+    return (
+      <div className="w-11 h-11 rounded-full ring-2 ring-gold-100 bg-navy-800 text-gold-300 flex items-center justify-center text-sm font-bold shrink-0">
+        {getInitials(name)}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={avatar}
+      alt={name}
+      loading="lazy"
+      className="w-11 h-11 rounded-full object-cover ring-2 ring-gold-100"
+      onError={() => setFailed(true)}
+    />
+  );
+}
 
 const testimonials = [
   { name: 'Priya Rajan', city: 'Chennai', rating: 5, text: 'Excellent service! The AC technician arrived on time and fixed the issue in under an hour. Very professional.', service: 'AC Repair', avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100' },
@@ -33,7 +66,7 @@ export default function Testimonials() {
             >
               <Quote className="absolute top-4 right-4 text-gold-100" size={32} />
               <div className="flex items-center gap-3 mb-4">
-                <img src={t.avatar} alt={t.name} className="w-11 h-11 rounded-full object-cover ring-2 ring-gold-100" />
+                <Avatar name={t.name} avatar={t.avatar} />
                 <div>
                   <div className="font-bold text-navy-900 text-sm">{t.name}</div>
                   <div className="text-gray-400 text-xs">{t.city}</div>
