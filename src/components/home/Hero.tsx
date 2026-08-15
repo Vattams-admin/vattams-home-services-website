@@ -1,6 +1,7 @@
-import { Calendar, Star, ArrowRight, Phone } from 'lucide-react';
+import { Calendar, Star, ArrowRight, Phone, Home } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import SocialLinks from '@/components/SocialLinks';
+import SafeImage from '@/components/SafeImage';
 
 export default function Hero() {
   const { navigate } = useRouter();
@@ -9,10 +10,12 @@ export default function Hero() {
     <section className="relative min-h-screen flex items-center overflow-hidden bg-navy-950">
       {/* Background */}
       <div className="absolute inset-0">
-        <img
+        <SafeImage
           src="https://images.pexels.com/photos/1669799/pexels-photo-1669799.jpeg?auto=compress&cs=tinysrgb&w=1920&q=80"
           alt="Indian Home"
           className="w-full h-full object-cover"
+          fallbackIcon={Home}
+          fallbackIconSize={72}
         />
         {/* Strong dark navy gradient overlay for readability over a bright photo */}
         <div className="absolute inset-0 bg-gradient-to-r from-navy-950 via-navy-950/90 to-navy-950/60" />
