@@ -2354,6 +2354,8 @@ function ProfileSection({
   technician: Technician;
   profileScore: number;
 }) {
+  const [photoFailed, setPhotoFailed] = useState(false);
+
   return (
     <div className="space-y-6">
       <div>
@@ -2369,7 +2371,7 @@ function ProfileSection({
       {/* PROFILE HEADER */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-          {technician.profile_photo_url ? (
+          {technician.profile_photo_url && !photoFailed ? (
             <img
               src={
                 technician.profile_photo_url
@@ -2378,6 +2380,7 @@ function ProfileSection({
                 technician.full_name
               }
               className="w-24 h-24 rounded-2xl object-cover border border-gray-100"
+              onError={() => setPhotoFailed(true)}
             />
           ) : (
             <div className="w-24 h-24 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center text-3xl font-extrabold">
