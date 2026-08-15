@@ -6,14 +6,6 @@ import {
   Mail,
   MapPin,
   BookOpen,
-  import { useEffect, useState, useCallback } from 'react';
-import {
-  X,
-  User,
-  Phone,
-  Mail,
-  MapPin,
-  BookOpen,
   CalendarDays,
   Clock3,
   CheckCircle2,
