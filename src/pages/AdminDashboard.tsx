@@ -5,9 +5,10 @@ import {
   Trash2, Eye, XCircle, Star, Award, Wallet, Lock, Unlock, History, ShieldCheck,
   CreditCard, LucideIcon, Globe, Facebook, Instagram, Twitter, Youtube, MessageCircle, Save,
   Bell, BellOff, Search, FileText, Tag, Sparkles, Send, BarChart3, Brain,
-  GraduationCap,
+  GraduationCap, IdCard, Download,
 } from 'lucide-react';
 import { supabase, SUPABASE_URL, Booking, Technician, BookingStatus, WalletTransaction, WalletRecharge } from '@/lib/supabase';
+import { downloadOnboardingLetter } from '@/lib/onboardingLetter';
 import { useRouter } from '@/lib/router';
 import { fetchAllPayments, fetchPendingPayments, updatePaymentStatus, PaymentRecord } from '@/lib/payments';
 import { fetchAllServicePrices, getPricingFromServicePrice, formatINR, type PricingBreakdown } from '@/lib/pricing';
@@ -1615,6 +1616,9 @@ export default function AdminDashboard() {
                   <div>
                     <div className="font-bold text-gray-900 text-sm">{t.full_name}</div>
                     <div className="text-xs text-gray-400">{t.city}</div>
+                    {t.employee_id && (
+                      <div className="text-[11px] font-bold text-blue-600 mt-0.5">{t.employee_id}</div>
+                    )}
                   </div>
                 </div>
 
@@ -2082,7 +2086,7 @@ export default function AdminDashboard() {
           className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-1">
             <h3 className="text-lg font-extrabold text-gray-900">{selectedTech.full_name}</h3>
             <button
               onClick={() => setSelectedTech(null)}
@@ -2092,6 +2096,15 @@ export default function AdminDashboard() {
             </button>
           </div>
 
+          {selectedTech.employee_id && (
+            <div className="mb-4">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-extrabold">
+                <IdCard size={12} />
+                {selectedTech.employee_id}
+              </span>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4 mb-5">
             <InfoRow icon={Phone} label="Mobile" value={selectedTech.mobile} />
             <InfoRow icon={MapPin} label="City" value={selectedTech.city} />
@@ -2100,6 +2113,28 @@ export default function AdminDashboard() {
             <InfoRow icon={Award} label="Total Jobs" value={String(selectedTech.total_jobs)} />
             <InfoRow icon={Wallet} label="Wallet" value={formatINR(selectedTech.wallet_balance)} />
           </div>
+
+          {selectedTech.employee_id && (
+            <button
+              onClick={() =>
+                downloadOnboardingLetter({
+                  role: 'Technician',
+                  employeeId: selectedTech.employee_id!,
+                  fullName: selectedTech.full_name,
+                  city: selectedTech.city,
+                  contactValue: selectedTech.mobile,
+                  contactLabel: 'Mobile',
+                  email: selectedTech.email,
+                  joinedOn: selectedTech.created_at,
+                  categoryLabel: 'Service Category(ies)',
+                  categoryValue: selectedTech.service_categories?.join(', ') || '—',
+                })
+              }
+              className="w-full mb-3 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-semibold rounded-xl transition-colors"
+            >
+              <Download size={16} /> Download Onboarding Letter
+            </button>
+          )}
 
           {selectedTech.status === 'pending' && (
             <div className="flex gap-2">
