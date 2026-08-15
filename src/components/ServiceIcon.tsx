@@ -11,6 +11,7 @@ import {
   Flame,
   Sparkles,
   Wind,
+  Camera,
   LucideIcon,
 } from 'lucide-react';
 
@@ -38,7 +39,9 @@ const keywordMap: [string, LucideIcon][] = [
   ['geyser', Flame],
   ['electric', Zap],
   ['wiring', Zap],
-  ['plumb', Droplets],
+  ['cctv', Camera],
+  ['camera', Camera],
+  ['plumb', Wrench],
   ['water', Droplets],
   ['leak', Droplets],
   ['carpentry', Hammer],
