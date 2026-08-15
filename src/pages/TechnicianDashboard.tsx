@@ -22,10 +22,13 @@ import {
   IndianRupee,
   Menu,
   X,
+  IdCard,
+  Download,
 } from 'lucide-react';
 
 import { useRouter } from '@/lib/router';
 import { supabase } from '@/lib/supabase';
+import { downloadOnboardingLetter } from '@/lib/onboardingLetter';
 
 import type {
   Technician,
@@ -777,8 +780,13 @@ export default function TechnicianDashboard() {
                   {technician.full_name}
                 </div>
 
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-gray-500 flex items-center gap-1.5">
                   Technician Dashboard
+                  {technician.employee_id && (
+                    <span className="px-1.5 py-0.5 rounded bg-orange-50 text-orange-600 font-bold">
+                      {technician.employee_id}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -969,6 +977,12 @@ export default function TechnicianDashboard() {
                   <h1 className="text-2xl font-extrabold">
                     {technician.full_name}
                   </h1>
+
+                  {technician.employee_id && (
+                    <span className="inline-block mt-1 px-2.5 py-1 rounded-lg bg-white/20 border border-white/30 text-xs font-extrabold tracking-wide">
+                      {technician.employee_id}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -2389,6 +2403,13 @@ function ProfileSection({
             )}
 
             <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-3">
+              {technician.employee_id && (
+                <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-extrabold flex items-center gap-1">
+                  <IdCard size={12} />
+                  {technician.employee_id}
+                </span>
+              )}
+
               <span className="px-3 py-1 rounded-full bg-orange-50 text-orange-600 text-xs font-bold">
                 {technician.status}
               </span>
@@ -2403,6 +2424,30 @@ function ProfileSection({
                 ).toFixed(1)}
               </span>
             </div>
+
+            {technician.employee_id && (
+              <button
+                onClick={() =>
+                  downloadOnboardingLetter({
+                    role: 'Technician',
+                    employeeId: technician.employee_id!,
+                    fullName: technician.full_name,
+                    city: technician.city,
+                    contactValue: technician.mobile,
+                    contactLabel: 'Mobile',
+                    email: technician.email,
+                    joinedOn: technician.created_at,
+                    categoryLabel: 'Service Category(ies)',
+                    categoryValue:
+                      technician.service_categories?.join(', ') || '—',
+                  })
+                }
+                className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors"
+              >
+                <Download size={13} />
+                Download Onboarding Letter
+              </button>
+            )}
           </div>
         </div>
 
@@ -2433,6 +2478,13 @@ function ProfileSection({
 
       {/* PERSONAL DETAILS */}
       <ProfileCard title="Personal Details">
+        <InfoRow
+          label="Employee ID"
+          value={
+            technician.employee_id || 'Not yet assigned'
+          }
+        />
+
         <InfoRow
           label="Full Name"
           value={
