@@ -22,7 +22,7 @@ import {
   IndianRupee,
   Menu,
   X,
-  IdCard,
+  BadgeCheck,
   Download,
 } from 'lucide-react';
 
@@ -2405,7 +2405,7 @@ function ProfileSection({
             <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-3">
               {technician.employee_id && (
                 <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-extrabold flex items-center gap-1">
-                  <IdCard size={12} />
+                  <BadgeCheck size={12} />
                   {technician.employee_id}
                 </span>
               )}
