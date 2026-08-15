@@ -9,15 +9,19 @@ import {
   CalendarDays,
   ClipboardCheck,
   FileText,
+  BadgeCheck,
+  CreditCard,
   LucideIcon,
 } from 'lucide-react';
 import TuitionAdminClasses from '@/pages/tuition/admin/TuitionAdminCLasses';
 import TuitionAdminAttendanceOverview from '@/pages/tuition/admin/TuitionAdminAttendanceOverview';
 import TuitionAdminMaterials from '@/components/tuition/admin/TuitionAdminMaterials';
 import TuitionAdminStudents from '@/components/tuition/admin/TuitionAdminStudents';
+import TuitionAdminTutors from '@/components/tuition/admin/TuitionAdminTutors';
 import { supabase } from '@/lib/supabase';
+import { fetchTuitionTutors } from '@/lib/tuitionTutors';
 
-type TuitionAdminTab = 'overview' | 'students' | 'classes' | 'attendance' | 'materials';
+type TuitionAdminTab = 'overview' | 'students' | 'tutors' | 'classes' | 'attendance' | 'materials';
 
 type StatCard = {
   label: string;
@@ -62,7 +66,12 @@ const sections: SectionCard[] = [
 export default function TuitionAdminPanel() {
   const [tab, setTab] = useState<TuitionAdminTab>('overview');
   const [totalStudents, setTotalStudents] = useState(0);
+  // Total Tutors keeps using the existing, already-working
+  // admin_list_tuition_tutors RPC — untouched, unmodified.
   const [totalTutors, setTotalTutors] = useState(0);
+  const [pendingApprovalTutors, setPendingApprovalTutors] = useState(0);
+  const [approvedTutors, setApprovedTutors] = useState(0);
+  const [paymentPendingTutors, setPaymentPendingTutors] = useState(0);
 
   useEffect(() => {
     const adminId = sessionStorage.getItem('vattams_admin');
@@ -81,6 +90,8 @@ export default function TuitionAdminPanel() {
         setTotalStudents((data ?? []).length);
       });
 
+    // Total Tutors count — existing, working RPC. Not modified, not
+    // replaced. Do not change this call.
     supabase
       .rpc('admin_list_tuition_tutors', { p_admin_id: adminId, p_status: null })
       .then(({ data, error }) => {
@@ -92,6 +103,26 @@ export default function TuitionAdminPanel() {
         setTotalTutors((data ?? []).length);
       });
 
+    // Pending Approval / Approved / Payment Pending breakdown comes from
+    // the tuition-tutor-admin edge function (separate from the RPC
+    // above), which now also returns the new payment/approval columns.
+    fetchTuitionTutors('all')
+      .then((rows) => {
+        if (!mounted) return;
+        setPendingApprovalTutors(
+          rows.filter((r) => r.approval_status === 'PENDING_APPROVAL').length
+        );
+        setApprovedTutors(rows.filter((r) => r.approval_status === 'APPROVED').length);
+        setPaymentPendingTutors(
+          rows.filter(
+            (r) => r.approval_status === 'PAYMENT_PENDING' || r.approval_status === 'REGISTERED'
+          ).length
+        );
+      })
+      .catch((err) => {
+        console.error('[TuitionAdminPanel] fetchTuitionTutors error:', err);
+      });
+
     return () => {
       mounted = false;
     };
@@ -100,14 +131,17 @@ export default function TuitionAdminPanel() {
   const stats: StatCard[] = [
     { label: 'Total Students', value: totalStudents, icon: Users },
     { label: 'Total Tutors', value: totalTutors, icon: UserCheck },
+    { label: 'Pending Approval', value: pendingApprovalTutors, icon: ClipboardCheck },
+    { label: 'Approved Tutors', value: approvedTutors, icon: BadgeCheck },
+    { label: 'Payment Pending', value: paymentPendingTutors, icon: CreditCard },
     { label: 'Active Courses', value: 0, icon: BookOpen },
     { label: 'Trial Classes', value: 0, icon: FlaskConical },
-    { label: 'Active Enrollments', value: 0, icon: ClipboardList },
   ];
 
   const tabs: { id: TuitionAdminTab; label: string; icon: LucideIcon }[] = [
     { id: 'overview', label: 'Overview', icon: GraduationCap },
     { id: 'students', label: 'Students', icon: Users },
+    { id: 'tutors', label: 'Tutors', icon: UserCheck },
     { id: 'classes', label: 'Classes', icon: CalendarDays },
     { id: 'attendance', label: 'Attendance', icon: ClipboardCheck },
     { id: 'materials', label: 'Materials', icon: FileText },
@@ -176,16 +210,19 @@ export default function TuitionAdminPanel() {
             {sections.map((section) => {
               const Icon = section.icon;
               const isStudents = section.label === 'Students';
+              const isTutors = section.label === 'Tutors';
+              const isClickable = isStudents || isTutors;
               return (
                 <button
                   key={section.label}
                   type="button"
-                  disabled={!isStudents}
+                  disabled={!isClickable}
                   onClick={() => {
                     if (isStudents) setTab('students');
+                    if (isTutors) setTab('tutors');
                   }}
                   className={`text-left p-6 rounded-2xl border border-gray-200 bg-white ${
-                    isStudents ? 'hover:border-purple-200 hover:shadow-sm cursor-pointer' : 'cursor-default'
+                    isClickable ? 'hover:border-blue-200 hover:shadow-sm cursor-pointer' : 'cursor-default'
                   }`}
                 >
                   <div className="flex items-center gap-3 mb-2">
@@ -198,7 +235,11 @@ export default function TuitionAdminPanel() {
                   </div>
                   <p className="text-sm text-gray-500">{section.description}</p>
                   <p className="text-xs text-gray-400 mt-3">
-                    {isStudents ? `${totalStudents} registration${totalStudents === 1 ? '' : 's'}` : 'Coming soon — no data yet.'}
+                    {isStudents
+                      ? `${totalStudents} registration${totalStudents === 1 ? '' : 's'}`
+                      : isTutors
+                      ? `${totalTutors} application${totalTutors === 1 ? '' : 's'}`
+                      : 'Coming soon — no data yet.'}
                   </p>
                 </button>
               );
@@ -208,6 +249,7 @@ export default function TuitionAdminPanel() {
       )}
 
       {tab === 'students' && <TuitionAdminStudents />}
+      {tab === 'tutors' && <TuitionAdminTutors />}
       {tab === 'classes' && <TuitionAdminClasses />}
       {tab === 'attendance' && <TuitionAdminAttendanceOverview />}
       {tab === 'materials' && <TuitionAdminMaterials />}
