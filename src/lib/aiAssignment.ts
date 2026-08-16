@@ -26,7 +26,7 @@ export async function findBestTechnician(booking: Booking): Promise<AssignmentSc
   const { data: technicians, error } = await supabase
     .from('technicians')
     .select('*')
-    .eq('status', 'approved')
+    .eq('status', 'active')
     .eq('wallet_locked', false);
 
   if (error || !technicians || technicians.length === 0) {
