@@ -152,7 +152,7 @@ const DEMO_CLASSES: TuitionClass[] = [
   // ---- Upcoming ----
   buildClass({
     courseId: 'spoken-english',
-    courseName: 'Public Speaking',
+    courseName: 'Public Speaking — Foundation',
     subject: 'Conversational Practice',
     classGrade: 'Class 6',
     tutorId: 'tutor-anita-menon',
@@ -242,7 +242,7 @@ const DEMO_CLASSES: TuitionClass[] = [
   }),
   buildClass({
     courseId: 'abacus',
-    courseName: 'Abacus & Mental Arithmetic',
+    courseName: 'Abacus — Beginner',
     subject: 'Bead Techniques — Level 2',
     classGrade: 'Class 6',
     tutorId: 'tutor-suresh-kumar',
