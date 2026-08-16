@@ -1,6 +1,6 @@
 import { Phone, MessageCircle } from 'lucide-react';
 
-export const SUPPORT_PHONE = '+918189800757';
+export const SUPPORT_PHONE = '+916374068296';
 export const SUPPORT_WHATSAPP = '918189800757';
 
 export interface CommunicationCenterProps {
