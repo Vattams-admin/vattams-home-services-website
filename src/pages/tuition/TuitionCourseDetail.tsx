@@ -2,10 +2,21 @@ import { GraduationCap, Users, Monitor, CheckCircle2, ArrowLeft, ArrowRight } fr
 import { useRouter } from '@/lib/router';
 import { getTuitionCourseBySlug } from './tuitionCoursesData';
 import CourseMaterialsSection from '@/components/tuition/materials/CourseMaterialsSection';
+import { useSEO, buildCourseSchema, buildBreadcrumbSchema } from '@/lib/seo';
 
 export default function TuitionCourseDetail() {
   const { tuitionCourseSlug, navigate } = useRouter();
   const course = getTuitionCourseBySlug(tuitionCourseSlug);
+
+  useSEO({
+    title: course
+      ? `${course.name} Classes Online | VATTAMS Online Tuition`
+      : 'Course Not Found | VATTAMS Online Tuition',
+    description: course
+      ? course.shortDescription
+      : "The course you're looking for doesn't exist or may have moved.",
+    path: course ? `/#tuition-course-detail-${course.slug}` : '/#tuition-courses',
+  });
 
   if (!course) {
     return (
@@ -30,8 +41,19 @@ export default function TuitionCourseDetail() {
     );
   }
 
+  const courseSchema = buildCourseSchema(course);
+  const breadcrumbSchema = buildBreadcrumbSchema([
+    { name: 'Home', path: '/#home' },
+    { name: 'Online Tuition', path: '/#tuition-home' },
+    { name: 'Courses', path: '/#tuition-courses' },
+    { name: course.name, path: `/#tuition-course-detail-${course.slug}` },
+  ]);
+
   return (
     <main className="min-h-screen bg-white text-gray-900">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(courseSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+
       {/* ================= HERO ================= */}
       <section className="bg-gradient-to-r from-slate-900 via-purple-900 to-black text-white">
         <div className="max-w-5xl mx-auto px-6 py-16">
