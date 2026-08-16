@@ -184,11 +184,17 @@ export default function About() {
           <h2 className="font-display text-2xl md:text-4xl font-bold text-royal-900 mb-6 tracking-tight">
             About VATTAMS
           </h2>
-          <p className="text-gray-600 text-base sm:text-lg leading-relaxed">
+          <p className="text-gray-600 text-base sm:text-lg leading-relaxed mb-6">
             VATTAMS is designed as a unified platform connecting customers, professionals,
             students, tutors and trusted services through technology — bringing everyday
             home services and structured online learning together in one place.
           </p>
+          <button
+            onClick={() => navigate('founder')}
+            className="inline-flex items-center gap-2 text-gold-700 font-semibold hover:text-gold-800 text-sm"
+          >
+            Meet Our Founder →
+          </button>
         </div>
       </section>
 
