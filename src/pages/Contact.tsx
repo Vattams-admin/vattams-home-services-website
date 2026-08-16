@@ -39,7 +39,7 @@ export default function Contact() {
               <h2 className="font-display text-2xl font-bold text-royal-900 mb-6">Contact Information</h2>
               <div className="space-y-4">
                 {[
-                  { icon: Phone, label: 'Call Us', value: '+91 81898 00757', href: 'tel:+918189800757', color: 'bg-royal-800' },
+                  { icon: Phone, label: 'Call Us', value: '+91 63740 68296', href: 'tel:+916374068296', color: 'bg-royal-800' },
                   { icon: MessageCircle, label: 'WhatsApp', value: 'Chat with us', href: 'https://wa.me/918189800757', color: 'bg-green-500' },
                   { icon: Mail, label: 'Email', value: 'admin@vattams.net', href: 'mailto:admin@vattams.net', color: 'bg-gold-600' },
                   { icon: MapPin, label: 'Service Area', value: 'Across India', href: '#', color: 'bg-wine-600' },
