@@ -38,7 +38,7 @@ import TuitionHome from '@/pages/tuition/TuitionHome';
 import TuitionCourses from '@/pages/tuition/TuitionCourses';
 import TuitionCourseDetail from '@/pages/tuition/TuitionCourseDetail';
 import TuitionBooking from '@/pages/tuition/TuitionBooking';
-import TuitionTutorRegister from '@/pages/tuition/tutor/TuitionTutorRegister';
+import TuitionTutorRegister from '@/components/tuition/tutor/TuitionTutorRegister';
 import TuitionStudentClasses from '@/pages/tuition/student/TuitionStudentClasses';
 import TuitionTutorClasses from '@/pages/tuition/tutor/TuitionTutorClasses';
 
