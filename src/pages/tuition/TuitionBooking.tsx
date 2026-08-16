@@ -453,8 +453,8 @@ export default function TuitionBooking() {
 
                     {!resolvedCourse && (
                       <>
-                        <option value="Spoken English">
-                          Spoken English
+                        <option value="Public Speaking">
+                          Public Speaking
                         </option>
 
                         <option value="Abacus">
