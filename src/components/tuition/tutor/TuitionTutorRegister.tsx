@@ -26,7 +26,7 @@ const SUBJECT_OPTIONS = [
   'Social Science',
   'Computer Science',
   'Coding',
-  'Spoken English',
+  'Public Speaking',
   'Abacus',
   'Exam Preparation',
   'Other',
