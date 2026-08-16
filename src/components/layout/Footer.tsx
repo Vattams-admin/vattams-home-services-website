@@ -18,6 +18,7 @@ export default function Footer() {
     { label: 'Contact', page: 'contact' },
     { label: 'Book Service', page: 'booking' },
     { label: 'Join as a Technician', page: 'join-technician' },
+    { label: 'VATTAMS Online Tuition', page: 'tuition-home' },
   ];
 
   return (
