@@ -250,12 +250,12 @@ export default function JoinTechnician() {
           <div className="flex flex-wrap gap-6 justify-center mt-10 text-sm">
             <div className="flex items-center gap-2">
               <Users size={18} />
-              500+ Technicians
+              Growing Technician Network
             </div>
 
             <div className="flex items-center gap-2">
               <MapPin size={18} />
-              15+ Cities
+              Multi-City Coverage
             </div>
 
             <div className="flex items-center gap-2">
