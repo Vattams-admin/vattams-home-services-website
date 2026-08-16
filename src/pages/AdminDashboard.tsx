@@ -6,7 +6,7 @@ import {
   CreditCard, LucideIcon, Globe, Facebook, Instagram, Twitter, Youtube, MessageCircle, Save,
   Bell, BellOff, Search, FileText, Tag, Sparkles, Send, BarChart3, Brain,
   GraduationCap, BadgeCheck, Download, Mail, Truck,
-  Contact, ExternalLink, ImageOff, CalendarClock, Landmark,
+  Contact, ExternalLink, ImageOff, CalendarClock, Landmark, Zap,
 } from 'lucide-react';
 import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY, Booking, Technician, BookingStatus, WalletTransaction, WalletRecharge } from '@/lib/supabase';
 import { downloadOnboardingLetter } from '@/lib/onboardingLetter';
@@ -135,6 +135,12 @@ export default function AdminDashboard() {
 
   const [updating, setUpdating] =
     useState(false);
+
+  const [autoAssigning, setAutoAssigning] =
+    useState(false);
+
+  const [autoAssignResult, setAutoAssignResult] =
+    useState<string | null>(null);
 
   const [techUpdating, setTechUpdating] =
     useState(false);
@@ -1076,6 +1082,47 @@ export default function AdminDashboard() {
     setSelectedBooking(null);
     setAssignTechId('');
     setUpdating(false);
+  };
+
+  // Admin-triggered fallback for the same deterministic auto-assign logic
+  // that already runs automatically right after a booking is created (see
+  // Booking.tsx). Reuses the existing booking-ops "auto_assign" action —
+  // no new assignment logic, no new booking flow. Useful when no eligible
+  // technician existed at booking time but one has since become available.
+  const autoAssignSelectedBooking = async () => {
+    if (!selectedBooking) return;
+
+    setAutoAssigning(true);
+    setAutoAssignResult(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('booking-ops', {
+        body: { action: 'auto_assign', booking_id: selectedBooking.id },
+      });
+
+      if (error) {
+        setAutoAssignResult(error.message || 'Auto assignment failed.');
+      } else if (data?.assigned) {
+        setAutoAssignResult('Technician auto-assigned.');
+        setBookings((prev) =>
+          prev.map((b) =>
+            b.id === selectedBooking.id
+              ? { ...b, assigned_technician_id: data.technician_id, status: 'assigned' }
+              : b
+          )
+        );
+        setSelectedBooking((prev) =>
+          prev ? { ...prev, assigned_technician_id: data.technician_id, status: 'assigned' } : prev
+        );
+        setAssignTechId(data.technician_id ?? '');
+      } else {
+        setAutoAssignResult('No eligible technician available for automatic assignment.');
+      }
+    } catch (err) {
+      setAutoAssignResult(err instanceof Error ? err.message : 'Auto assignment failed.');
+    }
+
+    setAutoAssigning(false);
   };
 
   const updateTechStatus = async (
@@ -2118,6 +2165,23 @@ export default function AdminDashboard() {
                 Assign
               </button>
             </div>
+
+            {!selectedBooking.assigned_technician_id &&
+              (selectedBooking.status === 'pending' || selectedBooking.status === 'confirmed') && (
+                <div className="mt-2">
+                  <button
+                    onClick={autoAssignSelectedBooking}
+                    disabled={autoAssigning}
+                    className="w-full flex items-center justify-center gap-1.5 px-4 py-2 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 text-gray-700 text-xs font-semibold rounded-xl transition-colors"
+                  >
+                    {autoAssigning ? <Loader size={13} className="animate-spin" /> : <Zap size={13} />}
+                    Auto Assign
+                  </button>
+                  {autoAssignResult && (
+                    <div className="mt-1.5 text-xs text-gray-500">{autoAssignResult}</div>
+                  )}
+                </div>
+              )}
           </div>
 
           <div>
