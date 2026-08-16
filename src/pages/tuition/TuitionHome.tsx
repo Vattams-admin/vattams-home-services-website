@@ -19,7 +19,7 @@ type Category = {
 
 const categories: Category[] = [
   { label: 'Online School Tuition', icon: School },
-  { label: 'Spoken English', icon: Mic },
+  { label: 'Public Speaking', icon: Mic },
   { label: 'Abacus', icon: Calculator },
   { label: 'Mathematics', icon: Calculator },
   { label: 'Science', icon: FlaskConical },
