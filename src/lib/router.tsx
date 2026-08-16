@@ -86,10 +86,27 @@ const VALID_PAGES: Page[] = [
   'tuition-tutor-classes',
 ];
 
+// Maps a handful of clean top-level paths to existing hash pages, for people
+// who type/bookmark /admin or /admin/dashboard directly. This only ever
+// applies when there is NO hash in the URL — a hash always takes priority,
+// so every existing #-based link/navigate() call behaves exactly as before.
+function getPathOverride(): Page | null {
+  const path = window.location.pathname.replace(/\/+$/, '') || '/';
+
+  if (path === '/admin') return 'admin-login';
+  if (path === '/admin/dashboard') return 'admin-dashboard';
+
+  return null;
+}
+
 function getRouteFromHash(): RouteInfo {
   const hash = window.location.hash.replace(/^#/, '').trim();
 
   if (!hash) {
+    const pathOverride = getPathOverride();
+    if (pathOverride) {
+      return { page: pathOverride, citySlug: null, tuitionCourseSlug: null };
+    }
     return { page: 'home', citySlug: null, tuitionCourseSlug: null };
   }
 
