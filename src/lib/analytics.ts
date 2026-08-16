@@ -71,7 +71,7 @@ export async function fetchAnalyticsSummary(): Promise<AnalyticsSummary> {
   ).length;
 
   const availableTechnicians = (technicians as Technician[]).filter(
-    (t) => (t.status as string) === 'approved' && !t.wallet_locked,
+    (t) => (t.status as string) === 'active' && !t.wallet_locked,
   ).length;
 
   const activeCustomerIds = new Set(
