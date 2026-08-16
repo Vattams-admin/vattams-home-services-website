@@ -22,7 +22,7 @@ export default function Schema() {
         "url": "https://vattams.net/#home",
         "logo": "https://vattams.net/logo.svg",
         "image": "https://vattams.net/logo.svg",
-        "telephone": "+91-81898-00757",
+        "telephone": "+91-63740-68296",
         "email": "support@vattams.net",
         "priceRange": "₹₹",
         "parentOrganization": { "@id": "https://vattams.net/#organization" },
