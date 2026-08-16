@@ -42,6 +42,12 @@ interface LoginBody {
   password: string;
 }
 
+interface DocUrlBody {
+  admin_id: string;
+  technician_id: string;
+  doc_type: "aadhaar" | "pan" | "dl";
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
@@ -62,6 +68,8 @@ Deno.serve(async (req: Request) => {
       return await handleRegister(supabase, body as RegisterBody);
     } else if (action === "login") {
       return await handleLogin(supabase, body as LoginBody);
+    } else if (action === "doc-url") {
+      return await handleDocUrl(supabase, body as DocUrlBody);
     } else {
       return new Response(
         JSON.stringify({ error: "Unknown action" }),
@@ -193,47 +201,129 @@ async function handleLogin(supabase: ReturnType<typeof createClient>, body: Logi
     );
   }
 
-  // Check status — only active (approved) technicians can log in
-  if (technician.status === "pending") {
-    return new Response(
-      JSON.stringify({ error: "Your application is pending approval. Please wait for admin approval." }),
-      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
-  }
-
-  if (technician.status === "rejected") {
-    return new Response(
-      JSON.stringify({ error: "Your application has been rejected. " + (technician.rejection_reason || "Please contact support.") }),
-      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
-  }
-
-  if (technician.status === "suspended") {
-    return new Response(
-      JSON.stringify({ error: "Your account has been suspended. " + (technician.suspend_reason || "Please contact support.") }),
-      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
-  }
-
-  if (technician.status === "inactive") {
-    return new Response(
-      JSON.stringify({ error: "Your account is inactive. Please contact support." }),
-      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
-  }
-
-  if (technician.status !== "active") {
-    return new Response(
-      JSON.stringify({ error: "Your account is not approved. Please contact support." }),
-      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
-  }
-
-  // Return technician data (excluding password_hash)
+  // IMPORTANT: once the password is verified, we always return the
+  // technician record — regardless of application status. Blocking login
+  // outright for pending/rejected/suspended/inactive technicians (as this
+  // endpoint used to do) meant there was no way for a technician to ever
+  // see their own application status; they just got a login-form error
+  // and a dead end. The frontend (TechnicianLogin) is responsible for
+  // routing: `status === 'active'` goes to the dashboard, anything else
+  // goes to the Application Status screen. This endpoint's only job is to
+  // authenticate the technician and hand back their current record.
   const { password_hash, ...safeTech } = technician;
 
   return new Response(
     JSON.stringify({ technician: safeTech }),
+    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+  );
+}
+
+// Mints a short-lived signed URL for a technician's private KYC document
+// (Aadhaar / PAN / driving licence) so the Admin Dashboard can display it
+// for verification. These files live in the private `technician-docs`
+// storage bucket (see the 20260812120000 migration) which has NO select
+// policy for anon/authenticated — only this service_role-backed function
+// can read them back. `aadhaar_url` / `pan_url` / `dl_url` on the
+// technician row store the storage object PATH, not a public URL.
+//
+// Auth model: same pattern already used by the tuition-tutor-admin edge
+// function (see requireActiveAdmin there) — this project's admin login
+// (src/pages/AdminLogin.tsx) verifies credentials via the
+// `verify_admin_login` RPC and stores only the admin's row id client-side
+// (sessionStorage 'vattams_admin'); there is no separate server-verifiable
+// session token in the currently deployed login flow. Rather than invent a
+// new parallel auth system, we re-check that the supplied admin_id still
+// corresponds to an active super_admin row in admin_users on every
+// request. This is a minimum bar, not a redesign of admin auth.
+async function requireActiveAdmin(
+  supabase: ReturnType<typeof createClient>,
+  adminId: string | undefined
+) {
+  if (!adminId) return null;
+
+  const { data, error } = await supabase
+    .from("admin_users")
+    .select("id, email, role, is_active")
+    .eq("id", adminId)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  if (data.role !== "super_admin" || data.is_active !== true) return null;
+
+  return data;
+}
+
+const DOC_COLUMN: Record<DocUrlBody["doc_type"], string> = {
+  aadhaar: "aadhaar_url",
+  pan: "pan_url",
+  dl: "dl_url",
+};
+
+async function handleDocUrl(supabase: ReturnType<typeof createClient>, body: DocUrlBody) {
+  const { admin_id, technician_id, doc_type } = body;
+
+  const admin = await requireActiveAdmin(supabase, admin_id);
+  if (!admin) {
+    return new Response(
+      JSON.stringify({ error: "Not authorized" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+
+  if (!technician_id || !doc_type || !DOC_COLUMN[doc_type]) {
+    return new Response(
+      JSON.stringify({ error: "Missing or invalid technician_id / doc_type" }),
+      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+
+  const column = DOC_COLUMN[doc_type];
+
+  const { data: technician, error } = await supabase
+    .from("technicians")
+    .select(column)
+    .eq("id", technician_id)
+    .maybeSingle();
+
+  if (error || !technician) {
+    return new Response(
+      JSON.stringify({ error: "Technician not found" }),
+      { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+
+  const path = (technician as Record<string, string | null>)[column];
+
+  if (!path) {
+    return new Response(
+      JSON.stringify({ error: "This document was not uploaded by the technician." }),
+      { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+
+  // Old rows created before the private-bucket fix may still hold a full
+  // public URL rather than a bare object path — pass those straight
+  // through instead of trying (and failing) to sign them.
+  if (/^https?:\/\//i.test(path)) {
+    return new Response(
+      JSON.stringify({ url: path }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+
+  const { data: signed, error: signError } = await supabase.storage
+    .from("technician-docs")
+    .createSignedUrl(path, 300); // 5-minute expiry
+
+  if (signError || !signed) {
+    return new Response(
+      JSON.stringify({ error: signError?.message || "Unable to generate document link." }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+
+  return new Response(
+    JSON.stringify({ url: signed.signedUrl }),
     { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
   );
 }
