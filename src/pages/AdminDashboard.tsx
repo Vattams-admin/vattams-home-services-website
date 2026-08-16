@@ -5,9 +5,10 @@ import {
   Trash2, Eye, XCircle, Star, Award, Wallet, Lock, Unlock, History, ShieldCheck,
   CreditCard, LucideIcon, Globe, Facebook, Instagram, Twitter, Youtube, MessageCircle, Save,
   Bell, BellOff, Search, FileText, Tag, Sparkles, Send, BarChart3, Brain,
-  GraduationCap, BadgeCheck, Download,
+  GraduationCap, BadgeCheck, Download, Mail, Truck,
+  IdCard, ExternalLink, ImageOff, CalendarClock, Landmark,
 } from 'lucide-react';
-import { supabase, SUPABASE_URL, Booking, Technician, BookingStatus, WalletTransaction, WalletRecharge } from '@/lib/supabase';
+import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY, Booking, Technician, BookingStatus, WalletTransaction, WalletRecharge } from '@/lib/supabase';
 import { downloadOnboardingLetter } from '@/lib/onboardingLetter';
 import { useRouter } from '@/lib/router';
 import { fetchAllPayments, fetchPendingPayments, updatePaymentStatus, PaymentRecord } from '@/lib/payments';
@@ -114,6 +115,20 @@ export default function AdminDashboard() {
 
   const [selectedTech, setSelectedTech] =
     useState<Technician | null>(null);
+
+  // KYC document viewer state for the technician application modal. URLs
+  // are short-lived signed URLs fetched on demand from the technician-auth
+  // edge function's `doc-url` action (service_role only — the private
+  // technician-docs bucket has no anon SELECT policy).
+  const [docUrls, setDocUrls] = useState<
+    Record<string, string>
+  >({});
+  const [docLoading, setDocLoading] = useState<
+    Record<string, boolean>
+  >({});
+  const [docErrors, setDocErrors] = useState<
+    Record<string, string>
+  >({});
 
   const [assignTechId, setAssignTechId] =
     useState('');
@@ -1236,6 +1251,57 @@ export default function AdminDashboard() {
     }
   };
 
+  // Fetches a short-lived signed URL for a technician's private KYC
+  // document (Aadhaar / PAN / driving licence) via the technician-auth
+  // edge function's `doc-url` action, and opens it in a new tab. The
+  // private technician-docs storage bucket has no anon SELECT policy, so
+  // this must go through the service_role-backed edge function rather
+  // than supabase.storage directly.
+  const viewTechnicianDoc = async (
+    technicianId: string,
+    docType: 'aadhaar' | 'pan' | 'dl'
+  ) => {
+    setDocErrors((prev) => ({ ...prev, [docType]: '' }));
+    setDocLoading((prev) => ({ ...prev, [docType]: true }));
+
+    try {
+      const response = await fetch(
+        `${SUPABASE_URL}/functions/v1/technician-auth/doc-url`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({
+            admin_id: sessionStorage.getItem('vattams_admin') || '',
+            technician_id: technicianId,
+            doc_type: docType,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Unable to load document.');
+      }
+
+      setDocUrls((prev) => ({ ...prev, [docType]: data.url }));
+      window.open(data.url, '_blank', 'noopener,noreferrer');
+    } catch (err) {
+      setDocErrors((prev) => ({
+        ...prev,
+        [docType]:
+          err instanceof Error
+            ? err.message
+            : 'Unable to load document.',
+      }));
+    } finally {
+      setDocLoading((prev) => ({ ...prev, [docType]: false }));
+    }
+  };
+
   const approveRecharge = async (
     rechargeId: string
   ) => {
@@ -1647,7 +1713,11 @@ export default function AdminDashboard() {
               </div>
 
               <button
-                onClick={() => setSelectedTech(t)}
+                onClick={() => {
+                  setDocUrls({});
+                  setDocErrors({});
+                  setSelectedTech(t);
+                }}
                 className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-semibold transition-colors"
               >
                 <Eye size={14} /> View Details
@@ -2096,22 +2166,211 @@ export default function AdminDashboard() {
             </button>
           </div>
 
-          {selectedTech.employee_id && (
-            <div className="mb-4">
+          <div className="mb-4 flex items-center gap-2 flex-wrap">
+            {selectedTech.employee_id && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-extrabold">
                 <BadgeCheck size={12} />
                 {selectedTech.employee_id}
               </span>
+            )}
+            <span
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-extrabold capitalize ${
+                selectedTech.status === 'active'
+                  ? 'bg-green-50 text-green-700'
+                  : selectedTech.status === 'pending'
+                  ? 'bg-amber-50 text-amber-700'
+                  : selectedTech.status === 'rejected'
+                  ? 'bg-red-50 text-red-700'
+                  : 'bg-gray-100 text-gray-600'
+              }`}
+            >
+              {selectedTech.status}
+            </span>
+          </div>
+
+          {selectedTech.status === 'rejected' && selectedTech.rejection_reason && (
+            <div className="mb-4 bg-red-50 border border-red-100 rounded-xl p-3 text-xs text-red-700">
+              <span className="font-bold">Rejection reason:</span> {selectedTech.rejection_reason}
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4 mb-5">
-            <InfoRow icon={Phone} label="Mobile" value={selectedTech.mobile} />
-            <InfoRow icon={MapPin} label="City" value={selectedTech.city} />
-            <InfoRow icon={Wrench} label="Experience" value={`${selectedTech.experience_years} yrs`} />
-            <InfoRow icon={Star} label="Rating" value={selectedTech.rating.toFixed(1)} />
-            <InfoRow icon={Award} label="Total Jobs" value={String(selectedTech.total_jobs)} />
-            <InfoRow icon={Wallet} label="Wallet" value={formatINR(selectedTech.wallet_balance)} />
+          {selectedTech.status === 'suspended' && selectedTech.suspend_reason && (
+            <div className="mb-4 bg-amber-50 border border-amber-100 rounded-xl p-3 text-xs text-amber-700">
+              <span className="font-bold">Suspend reason:</span> {selectedTech.suspend_reason}
+            </div>
+          )}
+
+          {/* ===== Application Summary (all submitted fields) ===== */}
+          <div className="mb-5">
+            <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+              Contact & Location
+            </div>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <InfoRow icon={Phone} label="Mobile" value={selectedTech.mobile} />
+              <InfoRow icon={Phone} label="WhatsApp" value={selectedTech.whatsapp_number || '—'} />
+              <InfoRow icon={Mail} label="Email" value={selectedTech.email || '—'} />
+              <InfoRow icon={MapPin} label="City" value={selectedTech.city} />
+              <InfoRow icon={MapPin} label="Area" value={selectedTech.area || '—'} />
+              <InfoRow icon={MapPin} label="PIN Code" value={selectedTech.pincode || '—'} />
+            </div>
+
+            <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+              Work Details
+            </div>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <InfoRow icon={Wrench} label="Experience" value={`${selectedTech.experience_years} yrs`} />
+              <InfoRow
+                icon={CalendarClock}
+                label="Working Time"
+                value={selectedTech.working_time || '—'}
+              />
+              <InfoRow icon={Truck} label="Has Vehicle" value={selectedTech.has_vehicle ? 'Yes' : 'No'} />
+              <InfoRow icon={Wrench} label="Has Tools" value={selectedTech.has_tools ? 'Yes' : 'No'} />
+            </div>
+            <div className="mb-4">
+              <div className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">
+                Service Categories
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {(selectedTech.service_categories || []).length > 0 ? (
+                  selectedTech.service_categories.map((sc) => (
+                    <span
+                      key={sc}
+                      className="px-2 py-0.5 rounded-lg bg-gray-100 text-gray-700 text-xs font-semibold"
+                    >
+                      {sc}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-sm text-gray-400">—</span>
+                )}
+              </div>
+            </div>
+            <div className="mb-4">
+              <div className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">
+                Available Days
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {(selectedTech.available_days || []).length > 0 ? (
+                  selectedTech.available_days.map((d) => (
+                    <span
+                      key={d}
+                      className="px-2 py-0.5 rounded-lg bg-gray-100 text-gray-700 text-xs font-semibold"
+                    >
+                      {d}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-sm text-gray-400">—</span>
+                )}
+              </div>
+            </div>
+
+            <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+              Bank & Payments
+            </div>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <InfoRow icon={Landmark} label="Bank" value={selectedTech.bank_name || '—'} />
+              <InfoRow
+                icon={CreditCard}
+                label="Account Holder"
+                value={selectedTech.bank_holder_name || '—'}
+              />
+              <InfoRow
+                icon={CreditCard}
+                label="Account No."
+                value={selectedTech.bank_account_number || '—'}
+              />
+              <InfoRow icon={CreditCard} label="IFSC" value={selectedTech.bank_ifsc || '—'} />
+              <InfoRow icon={Wallet} label="UPI ID" value={selectedTech.upi_id || '—'} />
+            </div>
+
+            <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+              Performance
+            </div>
+            <div className="grid grid-cols-2 gap-4 mb-1">
+              <InfoRow icon={Star} label="Rating" value={selectedTech.rating.toFixed(1)} />
+              <InfoRow icon={Award} label="Total Jobs" value={String(selectedTech.total_jobs)} />
+              <InfoRow icon={Wallet} label="Wallet" value={formatINR(selectedTech.wallet_balance)} />
+              <InfoRow
+                icon={ShieldCheck}
+                label="Profile Score"
+                value={`${selectedTech.profile_score ?? 0}%`}
+              />
+            </div>
+          </div>
+
+          {/* ===== KYC Documents ===== */}
+          <div className="mb-5">
+            <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+              Uploaded Documents
+            </div>
+
+            <div className="space-y-2">
+              {selectedTech.profile_photo_url && (
+                <div className="flex items-center gap-3 border border-gray-100 rounded-xl p-2.5">
+                  <img
+                    src={selectedTech.profile_photo_url}
+                    alt="Profile"
+                    className="w-10 h-10 rounded-lg object-cover shrink-0 bg-gray-100"
+                  />
+                  <span className="text-sm font-semibold text-gray-700 flex-1">
+                    Profile Photo
+                  </span>
+                  <a
+                    href={selectedTech.profile_photo_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700"
+                  >
+                    <ExternalLink size={12} /> Open
+                  </a>
+                </div>
+              )}
+
+              {([
+                ['aadhaar', 'Aadhaar Card', selectedTech.aadhaar_url],
+                ['pan', 'PAN Card', selectedTech.pan_url],
+                ['dl', 'Driving License', selectedTech.dl_url],
+              ] as const).map(([docType, label, hasDoc]) => (
+                <div
+                  key={docType}
+                  className="flex items-center gap-3 border border-gray-100 rounded-xl p-2.5"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
+                    {hasDoc ? (
+                      <IdCard size={18} className="text-gray-400" />
+                    ) : (
+                      <ImageOff size={18} className="text-gray-300" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold text-gray-700">{label}</div>
+                    {docErrors[docType] && (
+                      <div className="text-xs text-red-500">{docErrors[docType]}</div>
+                    )}
+                  </div>
+                  {hasDoc ? (
+                    <button
+                      onClick={() => viewTechnicianDoc(selectedTech.id, docType)}
+                      disabled={docLoading[docType]}
+                      className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 disabled:opacity-50 shrink-0"
+                    >
+                      {docLoading[docType] ? (
+                        <Loader size={12} className="animate-spin" />
+                      ) : (
+                        <ExternalLink size={12} />
+                      )}
+                      View
+                    </button>
+                  ) : (
+                    <span className="text-xs text-gray-300 font-semibold shrink-0">
+                      Not uploaded
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
 
           {selectedTech.employee_id && (
