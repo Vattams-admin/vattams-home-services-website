@@ -6,7 +6,7 @@ import {
   CreditCard, LucideIcon, Globe, Facebook, Instagram, Twitter, Youtube, MessageCircle, Save,
   Bell, BellOff, Search, FileText, Tag, Sparkles, Send, BarChart3, Brain,
   GraduationCap, BadgeCheck, Download, Mail, Truck,
-  IdCard, ExternalLink, ImageOff, CalendarClock, Landmark,
+  Contact, ExternalLink, ImageOff, CalendarClock, Landmark,
 } from 'lucide-react';
 import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY, Booking, Technician, BookingStatus, WalletTransaction, WalletRecharge } from '@/lib/supabase';
 import { downloadOnboardingLetter } from '@/lib/onboardingLetter';
@@ -2339,7 +2339,7 @@ export default function AdminDashboard() {
                 >
                   <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
                     {hasDoc ? (
-                      <IdCard size={18} className="text-gray-400" />
+                      <Contact size={18} className="text-gray-400" />
                     ) : (
                       <ImageOff size={18} className="text-gray-300" />
                     )}
