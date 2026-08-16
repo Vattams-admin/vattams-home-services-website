@@ -29,6 +29,13 @@ import {
 import { useRouter } from '@/lib/router';
 import { supabase } from '@/lib/supabase';
 import { downloadOnboardingLetter } from '@/lib/onboardingLetter';
+import {
+  fetchNotifications as fetchJobNotifications,
+  markAsRead as markJobNotificationRead,
+  markAllAsRead as markAllJobNotificationsRead,
+  subscribeToNotifications,
+  NotificationRow,
+} from '@/lib/notifications';
 
 import type {
   Technician,
@@ -37,6 +44,16 @@ import type {
   WalletRecharge,
   TechnicianNotification,
 } from '@/lib/supabase';
+
+// Booking/job-flow notifications (job_assigned, new_booking, registration_*)
+// are written by src/lib/notifications.ts into the shared `notifications`
+// table. Wallet-flow notifications (deposit, commission, wallet_low, etc.)
+// are written directly by DB triggers into `technician_notifications`.
+// This merged type lets the UI display both in one unified list without
+// touching either table's schema or the DB triggers that feed them.
+type MergedTechNotification =
+  | (TechnicianNotification & { _source: 'wallet' })
+  | (NotificationRow & { _source: 'job' });
 
 type DashboardTab =
   | 'overview'
@@ -122,6 +139,9 @@ export default function TechnicianDashboard() {
   const [recharges, setRecharges] = useState<WalletRecharge[]>([]);
   const [notifications, setNotifications] = useState<
     TechnicianNotification[]
+  >([]);
+  const [jobNotifications, setJobNotifications] = useState<
+    NotificationRow[]
   >([]);
 
   const [activeTab, setActiveTab] =
@@ -257,6 +277,7 @@ export default function TechnicianDashboard() {
         transactionsResult,
         rechargesResult,
         notificationsResult,
+        jobNotificationsData,
       ] = await Promise.all([
         supabase
           .from('technician_jobs')
@@ -292,6 +313,8 @@ export default function TechnicianDashboard() {
             ascending: false,
           })
           .limit(30),
+
+        fetchJobNotifications('technician', tech.id, 30),
       ]);
 
       if (jobsResult.error) {
@@ -340,6 +363,8 @@ export default function TechnicianDashboard() {
         (notificationsResult.data ||
           []) as TechnicianNotification[]
       );
+
+      setJobNotifications(jobNotificationsData);
     } catch (err: any) {
       console.error(
         'Technician dashboard error:',
@@ -402,21 +427,43 @@ export default function TechnicianDashboard() {
       )
       .subscribe();
 
+    const jobNotificationUnsubscribe = subscribeToNotifications(
+      'technician',
+      technician.id,
+      () => {
+        loadDashboard(false);
+      }
+    );
+
     return () => {
       supabase.removeChannel(jobsChannel);
       supabase.removeChannel(
         notificationChannel
       );
+      if (jobNotificationUnsubscribe) jobNotificationUnsubscribe();
     };
   }, [technician?.id]);
 
+  const mergedNotifications: MergedTechNotification[] = useMemo(
+    () =>
+      [
+        ...notifications.map((n) => ({ ...n, _source: 'wallet' as const })),
+        ...jobNotifications.map((n) => ({ ...n, _source: 'job' as const })),
+      ].sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() -
+          new Date(a.created_at).getTime()
+      ),
+    [notifications, jobNotifications]
+  );
+
   const unreadNotifications = useMemo(
     () =>
-      notifications.filter(
+      mergedNotifications.filter(
         (notification) =>
           !notification.is_read
       ).length,
-    [notifications]
+    [mergedNotifications]
   );
 
   const activeJobs = useMemo(
@@ -565,11 +612,23 @@ export default function TechnicianDashboard() {
   };
 
   const markNotificationRead = async (
-    notification: TechnicianNotification
+    notification: MergedTechNotification
   ) => {
     if (notification.is_read) return;
 
     try {
+      if (notification._source === 'job') {
+        await markJobNotificationRead(notification.id);
+        setJobNotifications((current) =>
+          current.map((item) =>
+            item.id === notification.id
+              ? { ...item, is_read: true }
+              : item
+          )
+        );
+        return;
+      }
+
       await supabase
         .from('technician_notifications')
         .update({
@@ -597,17 +656,26 @@ export default function TechnicianDashboard() {
       if (!technician) return;
 
       try {
-        await supabase
-          .from('technician_notifications')
-          .update({
-            is_read: true,
-          })
-          .eq(
-            'technician_id',
-            technician.id
-          );
+        await Promise.all([
+          supabase
+            .from('technician_notifications')
+            .update({
+              is_read: true,
+            })
+            .eq(
+              'technician_id',
+              technician.id
+            ),
+          markAllJobNotificationsRead('technician', technician.id),
+        ]);
 
         setNotifications((current) =>
+          current.map((item) => ({
+            ...item,
+            is_read: true,
+          }))
+        );
+        setJobNotifications((current) =>
           current.map((item) => ({
             ...item,
             is_read: true,
@@ -1178,7 +1246,7 @@ export default function TechnicianDashboard() {
           'notifications' && (
           <NotificationsSection
             notifications={
-              notifications
+              mergedNotifications
             }
             markRead={
               markNotificationRead
@@ -2694,9 +2762,9 @@ function NotificationsSection({
   markRead,
   markAllRead,
 }: {
-  notifications: TechnicianNotification[];
+  notifications: MergedTechNotification[];
   markRead: (
-    notification: TechnicianNotification
+    notification: MergedTechNotification
   ) => Promise<void>;
   markAllRead: () => Promise<void>;
 }) {
