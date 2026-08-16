@@ -1,5 +1,6 @@
-import { createClient } from "npm:@supabase/supabase-js@2.45.4";
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import bcrypt from "npm:bcryptjs@2.4.3";
+import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
