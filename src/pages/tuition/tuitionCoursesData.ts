@@ -21,14 +21,6 @@ export type TuitionCourse = {
    * once real files exist, can have them added later.
    */
   materials?: CourseMaterials;
-  /**
-   * Optional ordered list of level names for courses that have a
-   * level-based curriculum (e.g. Abacus, Public Speaking). Foundation
-   * for Phase T1's Course → Level structure — not yet rendered by any
-   * page; safe to add without a UI change. Courses without a defined
-   * progression can omit this field entirely.
-   */
-  levels?: string[];
 };
 
 /** Indicative difficulty/level tag for a single material item. */
@@ -224,18 +216,24 @@ export const tuitionCourses: TuitionCourse[] = [
     },
   },
   {
+    // Renamed in place from "Spoken English" -> "Public Speaking" per
+    // the Foundation/Intermediate/Advanced tier structure. The slug is
+    // kept unchanged (spoken-english) so existing
+    // tuition_course_materials rows (keyed by course_slug) and any
+    // historical tuition_students registrations remain correctly
+    // associated with this course — only the display name/category/
+    // description changed, nothing that existing data depends on.
     slug: 'spoken-english',
-    name: 'Public Speaking',
+    name: 'Public Speaking – Foundation',
     category: 'Public Speaking',
-    levels: ['Foundation', 'Intermediate', 'Advanced'],
     shortDescription:
       'Build fluency, confidence, and correct pronunciation for everyday and academic communication.',
     suitableFor: 'Class 3 and above, and adult learners',
     mode: 'Live Online, Small Group',
     overview:
-      'This course focuses on practical spoken English skills — pronunciation, vocabulary, grammar in conversation, and confident public speaking — through structured, interactive practice sessions.',
+      'This foundation-level course focuses on practical spoken English and public speaking skills — pronunciation, vocabulary, grammar in conversation, and confident speaking in front of others — through structured, interactive practice sessions.',
     whoItIsFor:
-      'School students who want to improve classroom communication, and adult learners looking to build everyday conversational confidence.',
+      'School students who want to improve classroom communication, and adult learners looking to build everyday conversational and speaking confidence, starting from the basics.',
     whatYouWillLearn: [
       'Clear pronunciation and intonation',
       'Everyday conversational vocabulary',
@@ -248,7 +246,7 @@ export const tuitionCourses: TuitionCourse[] = [
       courseMaterials: [
         {
           id: 'spoken-english-curriculum',
-          title: 'Public Speaking Curriculum Overview',
+          title: 'Public Speaking Curriculum Overview (Foundation)',
           description: 'An outline of the modules covered, from pronunciation basics to presentation skills.',
           topic: 'Full Course',
           level: 'All Levels',
@@ -281,18 +279,67 @@ export const tuitionCourses: TuitionCourse[] = [
     },
   },
   {
+    // New tier — Public Speaking. No existing data references this
+    // slug yet, so it starts with an empty materials catalog rather
+    // than fabricated content (matches createEmptyMaterials() default
+    // used across this file for courses without materials yet).
+    slug: 'public-speaking-intermediate',
+    name: 'Public Speaking – Intermediate',
+    category: 'Public Speaking',
+    shortDescription:
+      'Strengthen structure, delivery, and audience engagement for students who already speak with basic confidence.',
+    suitableFor: 'Class 6 and above, and adult learners with basic spoken English confidence',
+    mode: 'Live Online, Small Group',
+    overview:
+      'Builds on foundation-level speaking skills with structured presentations, storytelling, and impromptu speaking practice to develop a more persuasive, organized speaking style.',
+    whoItIsFor:
+      'Learners who are already comfortable with everyday conversation and are ready to develop more structured, confident public speaking.',
+    whatYouWillLearn: [
+      'Structuring a short speech or presentation',
+      'Engaging an audience with tone and body language',
+      'Impromptu speaking practice',
+      'Constructive peer and tutor feedback',
+    ],
+    classFormat:
+      'Live small-group online classes with regular presentation practice and recorded feedback sessions.',
+  },
+  {
+    slug: 'public-speaking-advanced',
+    name: 'Public Speaking – Advanced',
+    category: 'Public Speaking',
+    shortDescription:
+      'Advanced presentation, debate, and persuasive speaking skills for confident, polished public speakers.',
+    suitableFor: 'Class 9 and above, and adult learners',
+    mode: 'Live Online, Small Group',
+    overview:
+      'A high-intensity course for learners who already speak confidently, focused on persuasive speaking, debate, extempore, and polished presentation delivery for academic and professional settings.',
+    whoItIsFor:
+      'Confident speakers looking to refine their delivery for competitions, interviews, academic presentations, or professional settings.',
+    whatYouWillLearn: [
+      'Persuasive and argumentative speaking',
+      'Debate and extempore techniques',
+      'Advanced presentation delivery and audience handling',
+      'Handling Q&A and difficult questions confidently',
+    ],
+    classFormat:
+      'Live small-group online classes with mock debates, recorded presentations, and detailed feedback.',
+  },
+  {
+    // Renamed in place — kept the same "Foundation" positioning it
+    // already had (Age 5-12, beginning learners) and the same slug
+    // (abacus) so existing tuition_course_materials rows stay
+    // correctly associated with this course.
     slug: 'abacus',
-    name: 'Abacus & Mental Arithmetic',
+    name: 'Abacus – Foundation',
     category: 'Abacus',
-    levels: ['Foundation', 'Beginner', 'Intermediate', 'Advanced'],
     shortDescription:
       'Develop mental math speed, accuracy, and concentration using the abacus method.',
     suitableFor: 'Age 5 – 12',
     mode: 'Live Online, Small Group',
     overview:
-      'Our Abacus program builds strong mental arithmetic ability in young learners through a structured, level-based curriculum, improving calculation speed, memory, and focus.',
+      'Our Abacus Foundation program builds strong mental arithmetic ability in young learners through a structured, level-based curriculum, improving calculation speed, memory, and focus.',
     whoItIsFor:
-      'Children aged 5 to 12 who are beginning or continuing their abacus and mental math learning journey.',
+      'Children aged 5 to 12 who are beginning their abacus and mental math learning journey.',
     whatYouWillLearn: [
       'Fast and accurate mental calculation',
       'Improved concentration and memory',
@@ -360,6 +407,70 @@ export const tuitionCourses: TuitionCourse[] = [
       ],
       examPreparation: [],
     },
+  },
+  {
+    // New tier — no existing data references this slug yet.
+    slug: 'abacus-beginner',
+    name: 'Abacus – Beginner',
+    category: 'Abacus',
+    shortDescription:
+      'The next step after Foundation — faster calculation and expanded bead technique.',
+    suitableFor: 'Age 6 – 13, after completing Abacus Foundation',
+    mode: 'Live Online, Small Group',
+    overview:
+      'Builds on Foundation-level abacus skills with faster addition/subtraction, introductory multiplication and division techniques, and continued mental-math practice.',
+    whoItIsFor:
+      'Learners who have completed the Foundation level and are ready to build speed and take on new operations.',
+    whatYouWillLearn: [
+      'Faster addition and subtraction technique',
+      'Introductory multiplication on the abacus',
+      'Introductory division on the abacus',
+      'Continued mental-math visualization practice',
+    ],
+    classFormat:
+      'Live small-group online classes, once or twice a week, with regular practice worksheets.',
+  },
+  {
+    slug: 'abacus-intermediate',
+    name: 'Abacus – Intermediate',
+    category: 'Abacus',
+    shortDescription:
+      'Multi-digit calculation and increased speed for learners progressing beyond the basics.',
+    suitableFor: 'Age 7 – 14, after completing Abacus Beginner',
+    mode: 'Live Online, Small Group',
+    overview:
+      'Focuses on multi-digit mental arithmetic across all four operations, with structured speed and accuracy drills.',
+    whoItIsFor:
+      'Learners who have completed the Beginner level and are ready for multi-digit mental calculation.',
+    whatYouWillLearn: [
+      'Multi-digit mental addition and subtraction',
+      'Multi-digit multiplication and division',
+      'Speed and accuracy drills',
+      'Mental visualization without the physical abacus',
+    ],
+    classFormat:
+      'Live small-group online classes, once or twice a week, with regular practice worksheets.',
+  },
+  {
+    slug: 'abacus-advanced',
+    name: 'Abacus – Advanced',
+    category: 'Abacus',
+    shortDescription:
+      'Advanced mental arithmetic, competition-level speed, and complex calculations.',
+    suitableFor: 'Age 8 – 16, after completing Abacus Intermediate',
+    mode: 'Live Online, Small Group',
+    overview:
+      'The final level in the Abacus program, focused on competition-level mental calculation speed, complex multi-operation problems, and full mental visualization.',
+    whoItIsFor:
+      'Learners who have completed the Intermediate level and want to reach competition-level mental math ability.',
+    whatYouWillLearn: [
+      'Competition-level calculation speed',
+      'Complex multi-operation mental problems',
+      'Full mental visualization (no physical abacus)',
+      'Timed assessments and mock competitions',
+    ],
+    classFormat:
+      'Live small-group online classes, once or twice a week, with regular practice worksheets.',
   },
   {
     slug: 'maths',
