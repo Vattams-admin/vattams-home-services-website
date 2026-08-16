@@ -36,7 +36,7 @@ export const DEMO_CURRENT_TUTOR_ID = 'tutor-priya-nair';
 export const DEMO_TUTORS: TuitionClassTutor[] = [
   { id: 'tutor-priya-nair', name: 'Priya Nair', subjectExpertise: ['Mathematics', 'Science'] },
   { id: 'tutor-rahul-verma', name: 'Rahul Verma', subjectExpertise: ['Science', 'Computer Science'] },
-  { id: 'tutor-anita-menon', name: 'Anita Menon', subjectExpertise: ['English', 'Spoken English'] },
+  { id: 'tutor-anita-menon', name: 'Anita Menon', subjectExpertise: ['English', 'Public Speaking'] },
   { id: 'tutor-suresh-kumar', name: 'Suresh Kumar', subjectExpertise: ['Social Science'] },
 ];
 
@@ -152,7 +152,7 @@ const DEMO_CLASSES: TuitionClass[] = [
   // ---- Upcoming ----
   buildClass({
     courseId: 'spoken-english',
-    courseName: 'Spoken English',
+    courseName: 'Public Speaking',
     subject: 'Conversational Practice',
     classGrade: 'Class 6',
     tutorId: 'tutor-anita-menon',
