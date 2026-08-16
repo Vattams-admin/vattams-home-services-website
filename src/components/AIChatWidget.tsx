@@ -3,7 +3,7 @@ import { MessageSquareText, X, Send, Sparkles } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import { supabase, ServicePrice } from '@/lib/supabase';
 import { formatINR } from '@/lib/pricing';
-import { SERVICE_CATEGORIES, cities } from '@/lib/cities';
+import { cities } from '@/lib/cities';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -36,11 +36,16 @@ function buildReply(userText: string, prices: Record<string, ServicePrice>): str
   }
 
   if (has('service', 'what do you offer', 'what services')) {
-    return `We offer: ${SERVICE_CATEGORIES.join(', ')}. Which one are you interested in?`;
+    const activeServices = Object.keys(prices);
+    if (activeServices.length > 0) {
+      return `We offer: ${activeServices.join(', ')}. Which one are you interested in?`;
+    }
+    return `We offer a range of home appliance and repair services. Which one are you interested in?`;
   }
 
   if (has('price', 'cost', 'charge', 'fee', 'how much')) {
-    const match = SERVICE_CATEGORIES.find((s) => t.includes(s.toLowerCase().split(' ')[0]));
+    const activeServices = Object.keys(prices);
+    const match = activeServices.find((s) => t.includes(s.toLowerCase().split(' ')[0]));
     if (match && prices[match]) {
       const p = prices[match];
       return `${match} starts from ${formatINR(p.base_price)} (+${p.gst_rate}% GST). Final price depends on the issue and parts needed — you'll see the full breakdown before confirming your booking.`;
