@@ -3,6 +3,7 @@ import { Wind, Sparkles, Thermometer, Zap, RotateCw, Flame, Droplets, Wrench, Re
 import { supabase, ServiceCategory } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import JoinTechnicianButton from '@/components/JoinTechnicianButton';
+import { useSEO } from '@/lib/seo';
 
 const iconMap: Record<string, LucideIcon> = {
   wind: Wind, sparkles: Sparkles, thermometer: Thermometer, zap: Zap,
@@ -18,6 +19,13 @@ export default function Services() {
   const { navigate } = useRouter();
   const [services, setServices] = useState<ServiceCategory[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useSEO({
+    title: 'VATTAMS Home Services | Home Appliance & Professional Services Across India',
+    description:
+      'Book AC Service, Washing Machine Service, Refrigerator Service, CCTV Installation, Plumbing, and Electrical Services with VATTAMS — verified professionals across India.',
+    path: '/#services',
+  });
 
   useEffect(() => {
   const loadServices = async () => {
