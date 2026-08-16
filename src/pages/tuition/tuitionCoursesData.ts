@@ -21,6 +21,14 @@ export type TuitionCourse = {
    * once real files exist, can have them added later.
    */
   materials?: CourseMaterials;
+  /**
+   * Optional ordered list of level names for courses that have a
+   * level-based curriculum (e.g. Abacus, Public Speaking). Foundation
+   * for Phase T1's Course → Level structure — not yet rendered by any
+   * page; safe to add without a UI change. Courses without a defined
+   * progression can omit this field entirely.
+   */
+  levels?: string[];
 };
 
 /** Indicative difficulty/level tag for a single material item. */
@@ -217,8 +225,9 @@ export const tuitionCourses: TuitionCourse[] = [
   },
   {
     slug: 'spoken-english',
-    name: 'Spoken English',
-    category: 'Spoken English',
+    name: 'Public Speaking',
+    category: 'Public Speaking',
+    levels: ['Foundation', 'Intermediate', 'Advanced'],
     shortDescription:
       'Build fluency, confidence, and correct pronunciation for everyday and academic communication.',
     suitableFor: 'Class 3 and above, and adult learners',
@@ -239,7 +248,7 @@ export const tuitionCourses: TuitionCourse[] = [
       courseMaterials: [
         {
           id: 'spoken-english-curriculum',
-          title: 'Spoken English Curriculum Overview',
+          title: 'Public Speaking Curriculum Overview',
           description: 'An outline of the modules covered, from pronunciation basics to presentation skills.',
           topic: 'Full Course',
           level: 'All Levels',
@@ -275,6 +284,7 @@ export const tuitionCourses: TuitionCourse[] = [
     slug: 'abacus',
     name: 'Abacus & Mental Arithmetic',
     category: 'Abacus',
+    levels: ['Foundation', 'Beginner', 'Intermediate', 'Advanced'],
     shortDescription:
       'Develop mental math speed, accuracy, and concentration using the abacus method.',
     suitableFor: 'Age 5 – 12',
