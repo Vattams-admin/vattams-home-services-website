@@ -25,19 +25,22 @@ export default function Footer() {
   return (
     <footer className="bg-gray-900 text-gray-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-10">
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-1">
             <img
-              src="/logo.svg"
-              alt="VATTAMS HOME SERVICES"
+              src="/vattams-mark.png"
+              alt="VATTAMS"
               className="h-20 w-auto object-contain mb-4 rounded-xl"
             />
-            <h3 className="text-white font-bold text-lg">VATTAMS HOME SERVICES</h3>
-            <p className="text-gold-400 text-sm font-medium italic mb-4">Service With Care</p>
+            <h3 className="text-white font-bold text-lg">VATTAMS</h3>
+            <p className="text-gold-400 text-sm font-medium italic mb-4">
+              One Platform. Endless Possibilities.
+            </p>
             <p className="text-gray-400 text-sm leading-relaxed">
-              India's most trusted home appliance repair and maintenance service. 
-              Certified technicians at your doorstep.
+              Home Services and Online Tuition, together on one trusted
+              platform — certified technicians at your doorstep and
+              verified tutors online.
             </p>
             <SocialLinks variant="footer" />
           </div>
@@ -59,11 +62,35 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Services */}
+          {/* Home Services */}
           <div>
-            <h4 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">Our Services</h4>
+            <h4 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">Home Services</h4>
             <ul className="space-y-2">
-              {services.map((s) => (
+              <li>
+                <button
+                  onClick={() => navigate('services')}
+                  className="text-gray-400 hover:text-gold-400 text-sm transition-colors text-left"
+                >
+                  Services
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => navigate('booking')}
+                  className="text-gray-400 hover:text-gold-400 text-sm transition-colors text-left"
+                >
+                  Book a Service
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => navigate('join-technician')}
+                  className="text-gray-400 hover:text-gold-400 text-sm transition-colors text-left"
+                >
+                  Technician Network
+                </button>
+              </li>
+              {services.slice(0, 4).map((s) => (
                 <li key={s}>
                   <button
                     onClick={() => navigate('services')}
@@ -73,6 +100,61 @@ export default function Footer() {
                   </button>
                 </li>
               ))}
+            </ul>
+          </div>
+
+          {/* Online Tuition */}
+          <div>
+            <h4 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">Online Tuition</h4>
+            <ul className="space-y-2">
+              <li>
+                <button
+                  onClick={() => navigate('tuition-courses')}
+                  className="text-gray-400 hover:text-gold-400 text-sm transition-colors text-left"
+                >
+                  Courses
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => { window.location.hash = 'tuition-course-detail-abacus'; }}
+                  className="text-gray-400 hover:text-gold-400 text-sm transition-colors text-left"
+                >
+                  Abacus
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => { window.location.hash = 'tuition-course-detail-spoken-english'; }}
+                  className="text-gray-400 hover:text-gold-400 text-sm transition-colors text-left"
+                >
+                  Public Speaking
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => navigate('tuition-tutor-register')}
+                  className="text-gray-400 hover:text-gold-400 text-sm transition-colors text-left"
+                >
+                  Tutor Registration
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => navigate('tuition-booking')}
+                  className="text-gray-400 hover:text-gold-400 text-sm transition-colors text-left"
+                >
+                  Student Registration
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => navigate('tuition-booking')}
+                  className="text-gray-400 hover:text-gold-400 text-sm transition-colors text-left"
+                >
+                  Book Trial – ₹150
+                </button>
+              </li>
             </ul>
           </div>
 
@@ -131,6 +213,12 @@ export default function Footer() {
                 Book a Service
               </button>
               <button
+                onClick={() => navigate('tuition-home')}
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors"
+              >
+                Explore Online Tuition
+              </button>
+              <button
                 onClick={() => navigate('join-technician')}
                 className="w-full flex items-center justify-center gap-2 py-2.5 bg-wine-600 hover:bg-wine-500 text-white text-sm font-semibold rounded-lg transition-colors"
               >
@@ -146,8 +234,8 @@ export default function Footer() {
         </div>
 
         <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500">
-          <span>© 2026 VATTAMS HOME SERVICES. All rights reserved.</span>
-          <span className="italic text-gold-400/80">Service With Care</span>
+          <span>© 2026 VATTAMS. All rights reserved.</span>
+          <span className="italic text-gold-400/80">Home Services + Online Tuition</span>
         </div>
 
         <div className="mt-4 text-center">
