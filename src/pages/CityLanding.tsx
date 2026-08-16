@@ -186,7 +186,7 @@ export default function CityLanding({ city }: { city: CityData }) {
                 className="flex items-center justify-center gap-2 px-6 py-3.5 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl transition-colors">
                 <MessageCircle size={18} /> WhatsApp
               </a>
-              <a href="tel:+918189800757"
+              <a href="tel:+916374068296"
                 className="flex items-center justify-center gap-2 px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition-colors border border-white/20">
                 <Phone size={18} /> Call Now
               </a>
@@ -389,7 +389,7 @@ export default function CityLanding({ city }: { city: CityData }) {
               className="flex items-center justify-center gap-2 px-8 py-4 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl transition-colors">
               <MessageCircle size={18} /> WhatsApp Us
             </a>
-            <a href="tel:+918189800757"
+            <a href="tel:+916374068296"
               className="flex items-center justify-center gap-2 px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition-colors border border-white/20">
               <Phone size={18} /> Call Now
             </a>
