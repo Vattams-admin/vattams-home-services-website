@@ -117,7 +117,11 @@ export async function saveSiteSettings(
 
   if (error) {
     console.error('[siteSettings] save error:', error);
-    return { success: false, error: 'Failed to save settings. Please try again.' };
+    const detail = [error.message, error.details, error.hint].filter(Boolean).join(' — ');
+    return {
+      success: false,
+      error: detail ? `Save failed: ${detail}` : 'Save failed: unknown error. Check the browser console for details.',
+    };
   }
 
   return { success: true };
