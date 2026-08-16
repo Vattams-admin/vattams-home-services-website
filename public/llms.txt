@@ -1,12 +1,12 @@
-# VATTAMS Home Services
+# VATTAMS
 
-> VATTAMS is Tamil Nadu's trusted home services platform connecting customers with certified technicians for AC repair, refrigerator repair, washing machine service, plumbing, electrical work, and more. Government of India MSME (Udyam) Registered Enterprise — UDYAM-TN-02-0274720.
+> VATTAMS is an India-wide platform with two verticals: VATTAMS Home Services and VATTAMS Online Tuition. Home Services connects customers with certified technicians for AC repair, refrigerator repair, washing machine service, plumbing, electrical work, and more. Online Tuition connects students across India with tutors for structured online courses. Government of India MSME (Udyam) Registered Enterprise — UDYAM-TN-02-0274720.
 
-## What We Do
+## VATTAMS Home Services
 
-VATTAMS provides on-demand home maintenance and repair services across Tamil Nadu. Customers book services through our web app or AI assistant, and we automatically assign the nearest available certified technician based on location, rating, availability, and workload.
+VATTAMS Home Services provides on-demand home maintenance and repair services. Customers book services through our web app or AI assistant, and we automatically assign the nearest available certified technician based on location, rating, availability, and workload.
 
-## Services
+### Services
 
 - AC Repair & Service
 - Refrigerator Repair
@@ -22,8 +22,9 @@ VATTAMS provides on-demand home maintenance and repair services across Tamil Nad
 - Pest Control
 - Deep Cleaning
 - Appliance Installation
+- CCTV Installation
 
-## How It Works
+### How It Works
 
 1. Customer describes their problem (via chat or AI assistant)
 2. Our AI system identifies the service category and urgency
@@ -33,7 +34,7 @@ VATTAMS provides on-demand home maintenance and repair services across Tamil Nad
 6. End OTP verification completes the job
 7. Payment is processed securely
 
-## Key Features
+### Key Features
 
 - AI Booking Assistant for natural language booking
 - AI Price Calculator with transparent pricing (base price, GST, platform fee, commission)
@@ -45,9 +46,24 @@ VATTAMS provides on-demand home maintenance and repair services across Tamil Nad
 - Push notifications for all booking events
 - Communication Center routing all calls through VATTAMS support
 
-## Coverage
+### Coverage
 
-We operate across Tamil Nadu including Chennai, Coimbatore, Madurai, Trichy, Salem, Erode, Tiruppur, Vellore, Hosur, Tirunelveli, Thanjavur, Dindigul, Cuddalore, and more.
+VATTAMS Home Services has strong roots and dense coverage across Tamil Nadu (Chennai, Coimbatore, Madurai, Trichy, Salem, Erode, Tiruppur, Vellore, Hosur, Tirunelveli, Thanjavur, Dindigul, Cuddalore, and more) and is expanding service availability to additional cities across India.
+
+## VATTAMS Online Tuition
+
+VATTAMS Online Tuition offers live online classes with tutors for students across India — nationwide, since classes are delivered online.
+
+### Courses
+
+- School Tuition (All Subjects) — Class 1 to Class 10
+- Public Speaking (internal slug: spoken-english)
+- Abacus & Mental Arithmetic
+- Mathematics
+- Science
+- CBSE/ICSE/State Board Exam Preparation
+- Competitive Exam Preparation
+- Other Online Tuition (custom learning needs)
 
 ## Contact
 
