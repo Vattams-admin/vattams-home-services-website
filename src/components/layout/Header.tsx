@@ -3,6 +3,7 @@ import {
   Menu, X, Phone, MessageCircle, ChevronDown, User, Briefcase, LogOut, LogIn,
   ShieldCheck, LayoutDashboard, CreditCard, Star, Home as HomeIcon, Wrench,
   Sparkles, Info, UserPlus, UserCircle2, CalendarCheck, LucideIcon, GraduationCap,
+  Award,
 } from 'lucide-react';
 import { useRouter, Page } from '@/lib/router';
 import SocialLinks from '@/components/SocialLinks';
@@ -15,6 +16,7 @@ const navLinks: { label: string; page: Page; icon: LucideIcon }[] = [
   { label: 'Services', page: 'services', icon: Wrench },
   { label: 'AI Assistant', page: 'ai-assistant', icon: Sparkles },
   { label: 'About', page: 'about', icon: Info },
+  { label: 'Founder', page: 'founder', icon: Award },
   { label: 'Contact', page: 'contact', icon: Phone },
 ];
 
