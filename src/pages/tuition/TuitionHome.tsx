@@ -11,6 +11,7 @@ import {
   School,
   ArrowRight,
 } from 'lucide-react';
+import { useSEO } from '@/lib/seo';
 
 type Category = {
   label: string;
@@ -32,6 +33,13 @@ const categories: Category[] = [
 export default function TuitionHome() {
   const { navigate } = useRouter();
 
+  useSEO({
+    title: 'VATTAMS Online Tuition | Online Classes, Tutors & Courses Across India',
+    description:
+      'VATTAMS Online Tuition offers online learning with tutors and structured courses for students across India.',
+    path: '/#tuition-home',
+  });
+
   return (
     <main className="min-h-screen bg-white text-gray-900">
       {/* ================= HERO ================= */}
@@ -45,8 +53,15 @@ export default function TuitionHome() {
           </h1>
           <p className="text-blue-100 text-lg max-w-2xl mx-auto">
             Trusted, personalized online learning for school students and
-            competitive exam aspirants — from the same team behind Vattams
-            Home Services.
+            competitive exam aspirants — from the same team behind{' '}
+            <button
+              type="button"
+              onClick={() => navigate('home')}
+              className="underline underline-offset-2 hover:text-white"
+            >
+              VATTAMS Home Services
+            </button>
+            .
           </p>
 
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
