@@ -4,6 +4,7 @@ import ServicesGrid from '@/components/home/ServicesGrid';
 import HowItWorks from '@/components/home/HowItWorks';
 import Features from '@/components/home/Features';
 import TechnicianCTA from '@/components/home/TechnicianCTA';
+import TuitionSection from '@/components/home/TuitionSection';
 import CoverageArea from '@/components/home/CoverageArea';
 import Testimonials from '@/components/home/Testimonials';
 import CTASection from '@/components/home/CTASection';
@@ -25,6 +26,7 @@ export default function Home() {
       <HowItWorks />
       <Features />
       <TechnicianCTA />
+      <TuitionSection />
       <CoverageArea />
       <Testimonials />
       <CTASection />
