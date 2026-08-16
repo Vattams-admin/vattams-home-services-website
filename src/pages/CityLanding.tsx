@@ -203,7 +203,7 @@ export default function CityLanding({ city }: { city: CityData }) {
               { icon: ShieldCheck, label: 'Verified Technicians', desc: 'Background-checked' },
               { icon: Clock, label: 'Same-Day Service', desc: 'Book before 2 PM' },
               { icon: Award, label: '30-Day Warranty', desc: 'On all repairs' },
-              { icon: ThumbsUp, label: '4.8/5 Rating', desc: '500+ reviews' },
+              { icon: ThumbsUp, label: 'Customer-First Service', desc: 'Pay after satisfaction' },
             ].map((t) => {
               const Icon = t.icon;
               return (
