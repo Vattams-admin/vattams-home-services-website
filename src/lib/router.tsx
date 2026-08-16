@@ -21,6 +21,7 @@ export type Page =
   | 'admin-dashboard'
   | 'technician-register'
   | 'technician-login'
+  | 'technician-status'
   | 'technician-dashboard'
   | 'join-technician'
   | 'not-found'
@@ -74,6 +75,7 @@ const VALID_PAGES: Page[] = [
   'admin-dashboard',
   'technician-register',
   'technician-login',
+  'technician-status',
   'technician-dashboard',
   'join-technician',
   'not-found',
