@@ -1,4 +1,4 @@
-import { Target, Eye, Heart, ShieldCheck, Users, Award, TrendingUp, Handshake, MapPin, AirVent, Zap, Wrench } from 'lucide-react';
+import { Target, Eye, Heart, ShieldCheck, Award, TrendingUp, Handshake, MapPin, AirVent, Zap, Wrench } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import { cities } from '@/lib/cities';
 import SafeImage from '@/components/SafeImage';
@@ -95,8 +95,8 @@ export default function About() {
                 fallbackClassName="rounded-2xl shadow-xl aspect-[4/3] bg-gradient-to-br from-royal-700 to-royal-900"
               />
               <div className="absolute -bottom-4 -left-4 bg-royal-800 text-white rounded-xl p-4 shadow-lg hidden sm:block border border-gold-500/30">
-                <div className="text-2xl font-extrabold">10,000+</div>
-                <div className="text-xs text-gold-200">Services Completed</div>
+                <div className="text-sm font-extrabold">Trusted Service</div>
+                <div className="text-xs text-gold-200">Verified Technicians</div>
               </div>
             </div>
           </div>
@@ -154,15 +154,23 @@ export default function About() {
         </div>
       </section>
 
-      {/* Stats */}
+      {/* Trust */}
       <section className="py-16 bg-gradient-to-br from-royal-950 via-royal-900 to-royal-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-2">
+              Trusted Home Service Network
+            </h2>
+            <p className="text-gold-200/80 text-sm md:text-base">
+              Professional appliance services with verified service partners.
+            </p>
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { icon: Users, value: '10,000+', label: 'Happy Customers' },
-              { icon: ShieldCheck, value: '500+', label: 'Verified Technicians' },
-              { icon: Award, value: `${cities.length}+`, label: 'Cities Covered' },
-              { icon: TrendingUp, value: '4.9★', label: 'Average Rating' },
+              { icon: ShieldCheck, label: 'Verified Technicians' },
+              { icon: Handshake, label: 'Transparent Pricing' },
+              { icon: Award, label: 'Multi-City Coverage' },
+              { icon: TrendingUp, label: 'Customer-First Service' },
             ].map((s) => {
               const Icon = s.icon;
               return (
@@ -170,8 +178,7 @@ export default function About() {
                   <div className="w-14 h-14 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center mx-auto mb-3">
                     <Icon size={24} className="text-gold-300" />
                   </div>
-                  <div className="text-3xl font-extrabold text-white">{s.value}</div>
-                  <div className="text-gold-200/90 text-sm mt-1">{s.label}</div>
+                  <div className="text-white text-sm font-bold">{s.label}</div>
                 </div>
               );
             })}
