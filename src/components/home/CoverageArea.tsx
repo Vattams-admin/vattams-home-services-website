@@ -16,7 +16,7 @@ export default function CoverageArea() {
             <MapPin size={14} /> Coverage
           </div>
           <h2 className="font-display text-3xl font-bold text-navy-900 mb-3">We Serve Across India</h2>
-          <p className="text-gray-500 max-w-md mx-auto">Available in 30+ cities and growing.</p>
+          <p className="text-gray-500 max-w-md mx-auto">Serving multiple cities across India and growing.</p>
         </div>
 
         <div className="flex flex-wrap justify-center gap-3">
