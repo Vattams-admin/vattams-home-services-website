@@ -239,7 +239,7 @@ export default function JoinTechnician() {
             </button>
 
             <a
-              href="tel:+918189800757"
+              href="tel:+916374068296"
               className="flex items-center gap-2 px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl border-2 border-white/30 transition-all"
             >
               <Phone size={18} />
