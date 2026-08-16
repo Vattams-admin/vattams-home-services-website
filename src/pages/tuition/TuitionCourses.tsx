@@ -2,9 +2,17 @@ import { GraduationCap } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import { tuitionCourses } from './tuitionCoursesData';
 import TuitionCourseCard from './TuitionCourseCard';
+import { useSEO } from '@/lib/seo';
 
 export default function TuitionCourses() {
   const { navigate } = useRouter();
+
+  useSEO({
+    title: 'Online Tuition Courses | VATTAMS Online Tuition',
+    description:
+      'Browse VATTAMS Online Tuition courses — School Tuition, Abacus, Public Speaking, Mathematics, Science, Board Exam Preparation, and Competitive Exam Preparation — for students across India.',
+    path: '/#tuition-courses',
+  });
 
   const categories = Array.from(
     new Set(tuitionCourses.map((course) => course.category))
