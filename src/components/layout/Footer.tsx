@@ -15,6 +15,7 @@ export default function Footer() {
     { label: 'Home', page: 'home' },
     { label: 'Services', page: 'services' },
     { label: 'About Us', page: 'about' },
+    { label: 'Founder', page: 'founder' },
     { label: 'Contact', page: 'contact' },
     { label: 'Book Service', page: 'booking' },
     { label: 'Join as a Technician', page: 'join-technician' },
@@ -139,9 +140,18 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500">
+        <div className="border-t border-gray-800 mt-10 pt-6 flex flex-col items-center gap-1 text-center">
+          <span className="text-white font-bold text-sm tracking-wide">VATTAMS</span>
+          <span className="text-gold-400 text-xs font-medium">One Platform. Endless Possibilities.</span>
+        </div>
+
+        <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500">
           <span>© 2026 VATTAMS HOME SERVICES. All rights reserved.</span>
           <span className="italic text-gold-400/80">Service With Care</span>
+        </div>
+
+        <div className="mt-4 text-center">
+          <span className="text-gray-500 text-xs">Powered by VATTAMS Home Services</span>
         </div>
 
         {/* MSME Trust Badge */}
