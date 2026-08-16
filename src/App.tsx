@@ -27,6 +27,7 @@ import CustomerSupport from '@/pages/CustomerSupport';
 
 import TechnicianRegister from '@/pages/TechnicianRegister';
 import TechnicianLogin from '@/pages/TechnicianLogin';
+import TechnicianApplicationStatus from '@/pages/TechnicianApplicationStatus';
 import TechnicianDashboard from '@/pages/TechnicianDashboard';
 import JoinTechnician from '@/pages/JoinTechnician';
 
@@ -90,6 +91,8 @@ function PageContent() {
       return <TechnicianRegister />;
     case 'technician-login':
       return <TechnicianLogin />;
+    case 'technician-status':
+      return <TechnicianApplicationStatus />;
     case 'technician-dashboard':
       return <TechnicianDashboard />;
     case 'join-technician':
