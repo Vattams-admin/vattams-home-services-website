@@ -120,19 +120,19 @@ CREATE OR REPLACE FUNCTION admin_list_tuition_students(
   p_admin_id uuid,
   p_status text DEFAULT NULL
 )
-RETURNS SETOF tuition_students
+RETURNS SETOF public.tuition_students
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  IF p_admin_id IS NULL OR NOT EXISTS (SELECT 1 FROM admins WHERE id = p_admin_id) THEN
+  IF p_admin_id IS NULL OR NOT EXISTS (SELECT 1 FROM public.admins WHERE id = p_admin_id) THEN
     RAISE EXCEPTION 'Not authorized';
   END IF;
 
   RETURN QUERY
     SELECT *
-    FROM tuition_students
+    FROM public.tuition_students
     WHERE p_status IS NULL OR status = p_status
     ORDER BY created_at DESC;
 END;
@@ -144,13 +144,13 @@ CREATE OR REPLACE FUNCTION admin_update_tuition_student_status(
   p_student_id uuid,
   p_status text
 )
-RETURNS SETOF tuition_students
+RETURNS SETOF public.tuition_students
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  IF p_admin_id IS NULL OR NOT EXISTS (SELECT 1 FROM admins WHERE id = p_admin_id) THEN
+  IF p_admin_id IS NULL OR NOT EXISTS (SELECT 1 FROM public.admins WHERE id = p_admin_id) THEN
     RAISE EXCEPTION 'Not authorized';
   END IF;
 
@@ -159,7 +159,7 @@ BEGIN
   END IF;
 
   RETURN QUERY
-    UPDATE tuition_students
+    UPDATE public.tuition_students
     SET status = p_status
     WHERE id = p_student_id
     RETURNING *;
