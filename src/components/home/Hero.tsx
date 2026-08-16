@@ -1,4 +1,4 @@
-import { Calendar, Star, ArrowRight, Phone, Home } from 'lucide-react';
+import { Calendar, Star, ArrowRight, Phone, Home, ShieldCheck, BadgeCheck, Clock3, Sparkles } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import SocialLinks from '@/components/SocialLinks';
 import SafeImage from '@/components/SafeImage';
@@ -30,7 +30,7 @@ export default function Hero() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-gold-400/30 rounded-full px-4 py-2 mb-7">
             <Star size={14} className="text-gold-400 fill-gold-400" />
-            <span className="text-white/90 text-xs sm:text-sm font-medium tracking-wide">India's #1 Home Service Platform</span>
+            <span className="text-white/90 text-xs sm:text-sm font-medium tracking-wide">Trusted Home Service Network</span>
           </div>
 
           {/* Headline */}
@@ -77,21 +77,21 @@ export default function Hero() {
           {/* Social Links */}
           <SocialLinks variant="hero" />
 
-          {/* Stats — premium trust indicators, not boxed cards */}
+          {/* Trust indicators — factual, non-numeric claims only */}
           <div className="mt-10 pt-8 border-t border-white/10">
             <div className="flex flex-wrap gap-x-10 gap-y-6">
               {[
-                { value: '10,000+', label: 'Happy Customers' },
-                { value: '500+', label: 'Technicians' },
-                { value: '30+', label: 'Cities Served' },
-                { value: '4.9★', label: 'Average Rating' },
+                { icon: ShieldCheck, label: 'Verified Technicians' },
+                { icon: BadgeCheck, label: 'Transparent Pricing' },
+                { icon: Clock3, label: 'Same-Day Service' },
+                { icon: Sparkles, label: 'Quality Assured' },
               ].map((s, i) => (
                 <div key={s.label} className="flex items-center gap-x-10">
-                  <div>
-                    <div className="font-display text-2xl md:text-3xl font-bold text-white tracking-tight">{s.value}</div>
-                    <div className="text-gold-200/70 text-xs font-medium mt-1 uppercase tracking-wider">{s.label}</div>
+                  <div className="flex items-center gap-2.5">
+                    <s.icon size={20} className="text-gold-400 shrink-0" />
+                    <div className="text-white text-sm font-semibold tracking-tight">{s.label}</div>
                   </div>
-                  {i < 3 && <div className="hidden sm:block w-px h-10 bg-white/10" />}
+                  {i < 3 && <div className="hidden sm:block w-px h-8 bg-white/10" />}
                 </div>
               ))}
             </div>
