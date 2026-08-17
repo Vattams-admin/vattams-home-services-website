@@ -8,14 +8,17 @@ import {
   FileText,
   GraduationCap,
   CreditCard,
+  Loader2,
   Mail,
   MapPin,
   Phone,
   ShieldCheck,
+  TriangleAlert,
   User,
   UserSquare2,
 } from 'lucide-react';
 import { useRouter } from '@/lib/router';
+import { submitTutorApplication } from '@/lib/tuitionTutors';
 
 const SUBJECT_OPTIONS = [
   'Mathematics',
@@ -109,6 +112,8 @@ export default function TuitionTutorRegister() {
   const [form, setForm] = useState<TutorFormData>(initialForm);
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const updateField = <K extends keyof TutorFormData>(
     field: K,
@@ -187,8 +192,10 @@ export default function TuitionTutorRegister() {
     return nextErrors;
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (isSubmitting) return;
 
     const nextErrors = validate();
     setErrors(nextErrors);
@@ -200,12 +207,59 @@ export default function TuitionTutorRegister() {
       return;
     }
 
-    setSubmitted(true);
+    setSubmitError(null);
+    setIsSubmitting(true);
 
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
+    try {
+      // Real Supabase INSERT into public.tuition_tutors — awaited, so we
+      // only show success once the row is actually confirmed written.
+      await submitTutorApplication({
+        full_name: form.fullName,
+        date_of_birth: form.dateOfBirth || undefined,
+        gender: form.gender || undefined,
+        phone: form.phone,
+        whatsapp: form.whatsapp || undefined,
+        email: form.email,
+        city: form.city,
+        state: form.state || undefined,
+
+        highest_qualification: form.highestQualification,
+        institution: form.institution || undefined,
+        years_experience: form.yearsExperience || undefined,
+        classes_can_teach: form.classesCanTeach || undefined,
+        teaching_languages: form.teachingLanguages || undefined,
+        teaching_mode: form.teachingMode || undefined,
+
+        subjects: form.subjects,
+        exam_prep: form.examPrep,
+
+        introduction: form.introduction || undefined,
+        teaching_approach: form.teachingApproach || undefined,
+        availability: form.availability || undefined,
+      });
+
+      console.log('[TuitionTutorRegister] Application inserted into tuition_tutors successfully.');
+
+      // Only reached if the INSERT actually succeeded.
+      setSubmitted(true);
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      });
+    } catch (err) {
+      console.error('[TuitionTutorRegister] Tutor application submission failed:', err);
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'We could not submit your application. Please check your connection and try again.';
+      setSubmitError(message);
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const inputClasses =
@@ -236,9 +290,13 @@ export default function TuitionTutorRegister() {
               you.
             </p>
 
-            <p className="text-gray-500 text-sm leading-relaxed max-w-xl mx-auto mb-8">
+            <p className="text-gray-500 text-sm leading-relaxed max-w-xl mx-auto mb-2">
               This submission does not create a tutor account, and
               no verification has taken place yet.
+            </p>
+
+            <p className="inline-flex items-center gap-2 text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-4 py-1.5 text-sm font-medium mb-8">
+              Payment status: Pending
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -256,6 +314,7 @@ export default function TuitionTutorRegister() {
                 onClick={() => {
                   setForm(initialForm);
                   setErrors({});
+                  setSubmitError(null);
                   setSubmitted(false);
                 }}
                 className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 font-semibold transition-colors"
@@ -304,6 +363,19 @@ export default function TuitionTutorRegister() {
 
       {/* FORM */}
       <section className="max-w-5xl mx-auto px-6 py-12 md:py-14">
+        {submitError && (
+          <div className="mb-8 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-red-800">
+            <TriangleAlert size={20} className="mt-0.5 shrink-0 text-red-600" />
+            <div>
+              <p className="font-semibold">Application not submitted</p>
+              <p className="text-sm text-red-700 mt-1">{submitError}</p>
+              <p className="text-sm text-red-700 mt-1">
+                Your entered details have been kept — please try submitting again.
+              </p>
+            </div>
+          </div>
+        )}
+
         <form
           onSubmit={handleSubmit}
           noValidate
@@ -962,10 +1034,20 @@ export default function TuitionTutorRegister() {
             <div>
               <button
                 type="submit"
-                className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold transition-colors shadow-sm"
+                disabled={isSubmitting}
+                className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed text-white font-semibold transition-colors shadow-sm"
               >
-                <GraduationCap size={18} />
-                Submit Tutor Application
+                {isSubmitting ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <GraduationCap size={18} />
+                    Submit Tutor Application
+                  </>
+                )}
               </button>
 
               <p className="text-xs text-gray-500 text-center mt-4">
