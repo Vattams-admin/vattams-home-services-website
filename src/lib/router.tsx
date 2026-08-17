@@ -1,174 +1,32 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+Choose option 2.
 
-export type Page =
-  | 'home'
-  | 'services'
-  | 'about'
-  | 'founder'
-  | 'contact'
-  | 'booking'
-  | 'ai-assistant'
-  | 'customer-login'
-  | 'customer-register'
-  | 'customer-forgot'
-  | 'customer-profile'
-  | 'customer-bookings'
-  | 'customer-dashboard'
-  | 'customer-payments'
-  | 'customer-reviews'
-  | 'customer-support'
-  | 'admin-login'
-  | 'admin-dashboard'
-  | 'technician-register'
-  | 'technician-login'
-  | 'technician-status'
-  | 'technician-dashboard'
-  | 'join-technician'
-  | 'not-found'
-  | 'city-landing'
-  | 'tuition-home'
-  | 'tuition-courses'
-  | 'tuition-course-detail'
-  | 'tuition-booking'
-  | 'tuition-tutor-register'
-  | 'tuition-student-classes'
-  | 'tuition-tutor-classes';
+Build the full new trial flow.
 
-interface RouterContextType {
-  page: Page;
-  navigate: (page: Page, tuitionCourseSlug?: string) => void;
-  citySlug: string | null;
-  tuitionCourseSlug: string | null;
-}
+Requirements:
+- Public CTA: "Book Trial — ₹150"
+- ₹150 is the charge for ONE trial session.
+- Do NOT call it Free Trial anywhere.
+- Create the TuitionTrialBooking page.
+- Add the proper route using the existing router architecture.
+- Wire the Online Tuition Home "Book Trial — ₹150" button to that route.
+- Create/use the trial request database flow safely.
+- Admin must be able to see trial booking requests.
+- Preserve existing tuition_students and tuition_tutors data.
+- Do not modify historical records.
+- Do not create duplicate Abacus.
+- Keep Public Speaking display name with existing slug spoken-english.
+- Do not build Phase 2 features such as batches, attendance, certificates, etc.
+- Keep existing VATTAMS UI/branding.
+- Make the complete booking flow actually functional, not just a visual button.
 
-const RouterContext = createContext<RouterContextType>({
-  page: 'home',
-  navigate: () => {},
-  citySlug: null,
-  tuitionCourseSlug: null,
-});
+Before creating a migration, inspect the existing Supabase schema/migrations.
+If trial-request infrastructure already exists, reuse it.
+If it does not exist, create only a safe additive migration.
 
-interface RouteInfo {
-  page: Page;
-  citySlug: string | null;
-  tuitionCourseSlug: string | null;
-}
+After implementation:
+npm run build
 
-const VALID_PAGES: Page[] = [
-  'home',
-  'services',
-  'about',
-  'founder',
-  'contact',
-  'booking',
-  'ai-assistant',
-  'customer-login',
-  'customer-register',
-  'customer-forgot',
-  'customer-profile',
-  'customer-bookings',
-  'customer-dashboard',
-  'customer-payments',
-  'customer-reviews',
-  'customer-support',
-  'admin-login',
-  'admin-dashboard',
-  'technician-register',
-  'technician-login',
-  'technician-status',
-  'technician-dashboard',
-  'join-technician',
-  'not-found',
-  'tuition-home',
-  'tuition-courses',
-  'tuition-course-detail',
-  'tuition-booking',
-  'tuition-tutor-register',
-  'tuition-student-classes',
-  'tuition-tutor-classes',
-];
+The build must pass.
+Do not deploy automatically.
 
-// Maps a handful of clean top-level paths to existing hash pages, for people
-// who type/bookmark /admin or /admin/dashboard directly. This only ever
-// applies when there is NO hash in the URL — a hash always takes priority,
-// so every existing #-based link/navigate() call behaves exactly as before.
-function getPathOverride(): Page | null {
-  const path = window.location.pathname.replace(/\/+$/, '') || '/';
-
-  if (path === '/admin') return 'admin-login';
-  if (path === '/admin/dashboard') return 'admin-dashboard';
-
-  return null;
-}
-
-function getRouteFromHash(): RouteInfo {
-  const hash = window.location.hash.replace(/^#/, '').trim();
-
-  if (!hash) {
-    const pathOverride = getPathOverride();
-    if (pathOverride) {
-      return { page: pathOverride, citySlug: null, tuitionCourseSlug: null };
-    }
-    return { page: 'home', citySlug: null, tuitionCourseSlug: null };
-  }
-
-  if (hash.startsWith('city-')) {
-    const slug = hash.replace(/^city-/, '');
-    if (slug) {
-      return { page: 'city-landing', citySlug: slug, tuitionCourseSlug: null };
-    }
-    return { page: 'home', citySlug: null, tuitionCourseSlug: null };
-  }
-
-  if (hash.startsWith('tuition-course-detail-')) {
-    const slug = hash.replace(/^tuition-course-detail-/, '');
-    if (slug) {
-      return { page: 'tuition-course-detail', citySlug: null, tuitionCourseSlug: slug };
-    }
-    return { page: 'tuition-courses', citySlug: null, tuitionCourseSlug: null };
-  }
-
-  if (VALID_PAGES.includes(hash as Page)) {
-    return { page: hash as Page, citySlug: null, tuitionCourseSlug: null };
-  }
-
-  return { page: 'not-found', citySlug: null, tuitionCourseSlug: null };
-}
-
-export function RouterProvider({ children }: { children: ReactNode }) {
-  const [route, setRoute] = useState<RouteInfo>(() => getRouteFromHash());
-
-  useEffect(() => {
-    const handleHashChange = () => {
-      const nextRoute = getRouteFromHash();
-      setRoute(nextRoute);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
-
-  const navigate = (page: Page, tuitionCourseSlug?: string) => {
-    const hash =
-      page === 'tuition-course-detail' && tuitionCourseSlug
-        ? `tuition-course-detail-${tuitionCourseSlug}`
-        : page;
-
-    window.location.hash = hash;
-    setRoute({ page, citySlug: null, tuitionCourseSlug: tuitionCourseSlug ?? null });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  return (
-    <RouterContext.Provider
-      value={{ page: route.page, navigate, citySlug: route.citySlug, tuitionCourseSlug: route.tuitionCourseSlug }}
-    >
-      {children}
-    </RouterContext.Provider>
-  );
-}
-
-export function useRouter() {
-  return useContext(RouterContext);
-}
+Report exact files changed, database changes, and build result.
