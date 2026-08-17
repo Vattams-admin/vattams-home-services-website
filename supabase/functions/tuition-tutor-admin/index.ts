@@ -22,9 +22,20 @@ import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 // auth.
 //
 // Actions (POST body: { action, adminId, ...}):
-//   - list     { status?: 'pending' | 'approved' | 'rejected' | 'all' }
-//   - approve  { tutorId }
-//   - reject   { tutorId, notes? }
+//   - list              { status?: 'pending' | 'approved' | 'rejected' | 'all' }
+//                        (status here is the coarse legacy column; the
+//                        response also includes approval_status/payment_status
+//                        so the admin UI's Payment Pending / Pending Approval /
+//                        Approved / Rejected tabs can filter correctly)
+//   - verifyPayment     { tutorId } — payment_status -> verified,
+//                        approval_status -> PENDING_APPROVAL
+//   - markPaymentFailed { tutorId } — payment_status -> failed
+//   - approve           { tutorId, notes? } — requires payment_status ===
+//                        'verified'; sets status -> approved, approval_status
+//                        -> APPROVED, approved_at/approved_by
+//   - reject            { tutorId, notes } — notes required; sets status ->
+//                        rejected, approval_status -> REJECTED,
+//                        rejected_at/rejected_by/rejection_reason
 // -----------------------------------------------------------------------
 
 const corsHeaders = {
@@ -52,6 +63,25 @@ async function requireActiveAdmin(adminId: string) {
   return data;
 }
 
+async function getTutorOrError(
+  tutorId: string
+): Promise<
+  | { tutor: { approval_status: string | null; payment_status: string | null } }
+  | { error: Response }
+> {
+  const { data, error } = await supabase
+    .from("tuition_tutors")
+    .select("id, approval_status, payment_status")
+    .eq("id", tutorId)
+    .maybeSingle();
+
+  if (error || !data) {
+    return { error: errorResponse("Tutor application not found", 404) };
+  }
+
+  return { tutor: data };
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
@@ -76,7 +106,7 @@ Deno.serve(async (req: Request) => {
       let query = supabase
         .from("tuition_tutors")
         .select(
-          "id, employee_id, full_name, phone, whatsapp, email, city, state, highest_qualification, institution, years_experience, classes_can_teach, teaching_languages, teaching_mode, subjects, exam_prep, introduction, teaching_approach, availability, status, admin_notes, reviewed_at, reviewed_by_email, created_at, updated_at"
+          "id, employee_id, full_name, phone, whatsapp, email, city, state, highest_qualification, institution, years_experience, classes_can_teach, teaching_languages, teaching_mode, subjects, exam_prep, introduction, teaching_approach, availability, status, admin_notes, reviewed_at, reviewed_by_email, created_at, updated_at, registration_fee, discount_amount, discount_percentage, amount_paid, payment_status, approval_status, approved_at, approved_by, rejected_at, rejected_by, rejection_reason"
         )
         .order("created_at", { ascending: false });
 
@@ -103,24 +133,92 @@ Deno.serve(async (req: Request) => {
         return errorResponse("tutorId is required");
       }
 
-      const nextStatus = action === "approve" ? "approved" : "rejected";
+      const existing = await getTutorOrError(tutorId);
+      if ("error" in existing) return existing.error;
+      const tutor = existing.tutor;
+
+      if (tutor.approval_status === "APPROVED" || tutor.approval_status === "REJECTED") {
+        return errorResponse("This application has already been decided");
+      }
+
+      const nowIso = new Date().toISOString();
       const notes = typeof body.notes === "string" ? body.notes : null;
+
+      let updatePayload: Record<string, unknown>;
+
+      if (action === "approve") {
+        if (tutor.payment_status !== "verified") {
+          return errorResponse("Payment must be verified before approval");
+        }
+        updatePayload = {
+          status: "approved",
+          approval_status: "APPROVED",
+          approved_at: nowIso,
+          approved_by: admin.email,
+          admin_notes: notes,
+          reviewed_at: nowIso,
+          reviewed_by_email: admin.email,
+        };
+      } else {
+        if (!notes || !notes.trim()) {
+          return errorResponse("A rejection reason is required");
+        }
+        updatePayload = {
+          status: "rejected",
+          approval_status: "REJECTED",
+          rejected_at: nowIso,
+          rejected_by: admin.email,
+          rejection_reason: notes.trim(),
+          admin_notes: notes,
+          reviewed_at: nowIso,
+          reviewed_by_email: admin.email,
+        };
+      }
 
       const { data, error } = await supabase
         .from("tuition_tutors")
-        .update({
-          status: nextStatus,
-          admin_notes: notes,
-          reviewed_at: new Date().toISOString(),
-          reviewed_by_email: admin.email,
-        })
+        .update(updatePayload)
         .eq("id", tutorId)
-        .select("id, status, employee_id")
+        .select("id, status, approval_status, employee_id")
         .maybeSingle();
 
       if (error || !data) {
         console.error("[tuition-tutor-admin] update error:", error);
         return errorResponse("Failed to update tutor application");
+      }
+
+      return jsonResponse({ success: true, tutor: data });
+    }
+
+    if (action === "verifyPayment" || action === "markPaymentFailed") {
+      const tutorId = body.tutorId;
+      if (!tutorId) {
+        return errorResponse("tutorId is required");
+      }
+
+      const existing = await getTutorOrError(tutorId);
+      if ("error" in existing) return existing.error;
+      const tutor = existing.tutor;
+
+      if (tutor.approval_status === "APPROVED" || tutor.approval_status === "REJECTED") {
+        return errorResponse("This application has already been decided");
+      }
+
+      const updatePayload =
+        action === "verifyPayment"
+          ? { payment_status: "verified", approval_status: "PENDING_APPROVAL" }
+          : { payment_status: "failed" };
+
+      const { data, error } = await supabase
+        .from("tuition_tutors")
+        .update(updatePayload)
+        .eq("id", tutorId)
+        .select("id, status, approval_status, payment_status, employee_id")
+        .maybeSingle();
+
+      if (error || !data) {
+        console.error("[tuition-tutor-admin] payment update error:", error);
+        return errorResponse("Failed to update payment status");
       }
 
       return jsonResponse({ success: true, tutor: data });
