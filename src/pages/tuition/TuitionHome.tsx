@@ -60,9 +60,10 @@ export default function TuitionHome() {
             </button>
             <button
               type="button"
+              onClick={() => navigate('tuition-trial-booking')}
               className="flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/30 text-white font-bold rounded-xl transition-colors"
             >
-              Book Free Trial
+              Book Trial — ₹150
             </button>
             <button
               type="button"
@@ -115,7 +116,7 @@ export default function TuitionHome() {
             Not sure where to start?
           </h3>
           <p className="text-gray-600 mb-6">
-            Book a free trial class and we'll help you find the right course.
+            Book a trial class for ₹150 and we'll help you find the right course.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
@@ -128,9 +129,10 @@ export default function TuitionHome() {
             </button>
             <button
               type="button"
+              onClick={() => navigate('tuition-trial-booking')}
               className="flex items-center gap-2 px-6 py-3 bg-white hover:bg-gray-100 border border-gray-300 text-gray-900 font-bold rounded-xl transition-colors"
             >
-              Book Free Trial
+              Book Trial — ₹150
             </button>
             <button
               type="button"
