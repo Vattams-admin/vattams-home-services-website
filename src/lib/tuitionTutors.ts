@@ -87,15 +87,6 @@ export async function submitTutorApplication(
 export type TutorStatus = 'pending' | 'approved' | 'rejected';
 export type TutorStatusFilter = TutorStatus | 'all';
 
-export type TutorPaymentStatus = 'pending' | 'submitted' | 'verified' | 'failed';
-export type TutorApprovalStatus =
-  | 'REGISTERED'
-  | 'PAYMENT_PENDING'
-  | 'PAYMENT_VERIFIED'
-  | 'PENDING_APPROVAL'
-  | 'APPROVED'
-  | 'REJECTED';
-
 export interface TuitionTutorRow {
   id: string;
   employee_id: string | null;
@@ -122,21 +113,6 @@ export interface TuitionTutorRow {
   reviewed_by_email: string | null;
   created_at: string;
   updated_at: string;
-
-  // Registration fee / offer, computed server-side at insert time.
-  registration_fee: number | null;
-  discount_amount: number | null;
-  discount_percentage: number | null;
-  amount_paid: number | null;
-
-  // Payment + approval workflow.
-  payment_status: TutorPaymentStatus;
-  approval_status: TutorApprovalStatus;
-  approved_at: string | null;
-  approved_by: string | null;
-  rejected_at: string | null;
-  rejected_by: string | null;
-  rejection_reason: string | null;
 }
 
 const TUTOR_ADMIN_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/tuition-tutor-admin`;
@@ -185,32 +161,9 @@ export async function approveTuitionTutor(tutorId: string): Promise<void> {
   await callTutorAdminFunction({ action: 'approve', tutorId });
 }
 
-/**
- * Rejects a tutor application. A rejection reason is required — the
- * admin function itself also enforces this, but validating client-side
- * keeps the error next to the form instead of round-tripping to the
- * server first.
- */
 export async function rejectTuitionTutor(
   tutorId: string,
-  reason: string
+  notes?: string
 ): Promise<void> {
-  if (!reason || !reason.trim()) {
-    throw new Error('A rejection reason is required.');
-  }
-  await callTutorAdminFunction({ action: 'reject', tutorId, notes: reason.trim() });
-}
-
-/**
- * Marks a tutor's registration payment as verified (admin has confirmed
- * receipt). Moves the application to PENDING_APPROVAL. Required before
- * a tutor can be approved.
- */
-export async function verifyTuitionTutorPayment(tutorId: string): Promise<void> {
-  await callTutorAdminFunction({ action: 'verifyPayment', tutorId });
-}
-
-/** Marks a tutor's registration payment as failed. */
-export async function markTuitionTutorPaymentFailed(tutorId: string): Promise<void> {
-  await callTutorAdminFunction({ action: 'markPaymentFailed', tutorId });
+  await callTutorAdminFunction({ action: 'reject', tutorId, notes });
 }
