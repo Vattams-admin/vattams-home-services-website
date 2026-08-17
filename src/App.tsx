@@ -38,6 +38,7 @@ import TuitionHome from '@/pages/tuition/TuitionHome';
 import TuitionCourses from '@/pages/tuition/TuitionCourses';
 import TuitionCourseDetail from '@/pages/tuition/TuitionCourseDetail';
 import TuitionBooking from '@/pages/tuition/TuitionBooking';
+import TuitionTrialBooking from '@/pages/tuition/TuitionTrialBooking';
 import TuitionTutorRegister from '@/components/tuition/tutor/TuitionTutorRegister';
 import TuitionStudentClasses from '@/pages/tuition/student/TuitionStudentClasses';
 import TuitionTutorClasses from '@/pages/tuition/tutor/TuitionTutorClasses';
@@ -111,6 +112,8 @@ function PageContent() {
       return <TuitionCourseDetail />;
     case 'tuition-booking':
       return <TuitionBooking />;
+    case 'tuition-trial-booking':
+      return <TuitionTrialBooking />;
     case 'tuition-tutor-register':
       return <TuitionTutorRegister />;
     case 'tuition-student-classes':
