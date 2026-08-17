@@ -22,21 +22,9 @@ import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 // auth.
 //
 // Actions (POST body: { action, adminId, ...}):
-//   - list          { status?: 'pending' | 'approved' | 'rejected' | 'all' }
-//   - verifyPayment { tutorId }
-//   - markPaymentFailed { tutorId }
-//   - approve       { tutorId }   (requires payment_status = 'verified')
-//   - reject        { tutorId, notes }  (notes/reason is required)
-//
-// Payment + approval workflow columns (registration_fee, discount_amount,
-// discount_percentage, amount_paid, payment_status, approval_status,
-// approved_at/by, rejected_at/by, rejection_reason) were added in
-// supabase/migrations/20260816010000_add_tuition_tutor_payment_approval_fields.sql.
-// The legacy `status` column (pending/approved/rejected) and
-// reviewed_at/reviewed_by_email are still written on approve/reject so
-// the existing employee_id trigger and the pre-existing
-// admin_list_tuition_tutors RPC keep working exactly as before — this
-// function only ever ADDS fields to those writes, never removes them.
+//   - list     { status?: 'pending' | 'approved' | 'rejected' | 'all' }
+//   - approve  { tutorId }
+//   - reject   { tutorId, notes? }
 // -----------------------------------------------------------------------
 
 const corsHeaders = {
@@ -88,7 +76,7 @@ Deno.serve(async (req: Request) => {
       let query = supabase
         .from("tuition_tutors")
         .select(
-          "id, employee_id, full_name, phone, whatsapp, email, city, state, highest_qualification, institution, years_experience, classes_can_teach, teaching_languages, teaching_mode, subjects, exam_prep, introduction, teaching_approach, availability, status, admin_notes, reviewed_at, reviewed_by_email, created_at, updated_at, registration_fee, discount_amount, discount_percentage, amount_paid, payment_status, approval_status, approved_at, approved_by, rejected_at, rejected_by, rejection_reason"
+          "id, employee_id, full_name, phone, whatsapp, email, city, state, highest_qualification, institution, years_experience, classes_can_teach, teaching_languages, teaching_mode, subjects, exam_prep, introduction, teaching_approach, availability, status, admin_notes, reviewed_at, reviewed_by_email, created_at, updated_at"
         )
         .order("created_at", { ascending: false });
 
@@ -109,110 +97,25 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ success: true, tutors: data ?? [] });
     }
 
-    if (action === "verifyPayment" || action === "markPaymentFailed") {
-      const tutorId = body.tutorId;
-      if (!tutorId) {
-        return errorResponse("tutorId is required");
-      }
-
-      const { data: existing, error: fetchError } = await supabase
-        .from("tuition_tutors")
-        .select("id, approval_status")
-        .eq("id", tutorId)
-        .maybeSingle();
-
-      if (fetchError || !existing) {
-        return errorResponse("Tutor application not found");
-      }
-
-      if (["APPROVED", "REJECTED"].includes(existing.approval_status)) {
-        return errorResponse(
-          "This application has already been reviewed and its payment status can no longer be changed."
-        );
-      }
-
-      const update =
-        action === "verifyPayment"
-          ? { payment_status: "verified", approval_status: "PENDING_APPROVAL" }
-          : { payment_status: "failed" };
-
-      const { data, error } = await supabase
-        .from("tuition_tutors")
-        .update(update)
-        .eq("id", tutorId)
-        .select("id, payment_status, approval_status")
-        .maybeSingle();
-
-      if (error || !data) {
-        console.error("[tuition-tutor-admin] payment update error:", error);
-        return errorResponse("Failed to update payment status");
-      }
-
-      return jsonResponse({ success: true, tutor: data });
-    }
-
     if (action === "approve" || action === "reject") {
       const tutorId = body.tutorId;
       if (!tutorId) {
         return errorResponse("tutorId is required");
       }
 
-      const notes = typeof body.notes === "string" ? body.notes.trim() : "";
-
-      if (action === "reject" && !notes) {
-        return errorResponse("A rejection reason is required");
-      }
-
-      const { data: existing, error: fetchError } = await supabase
-        .from("tuition_tutors")
-        .select("id, payment_status, approval_status")
-        .eq("id", tutorId)
-        .maybeSingle();
-
-      if (fetchError || !existing) {
-        return errorResponse("Tutor application not found");
-      }
-
-      if (action === "approve" && existing.payment_status !== "verified") {
-        return errorResponse(
-          "Payment must be verified before this tutor can be approved."
-        );
-      }
-
-      const nowIso = new Date().toISOString();
-      // Legacy fields (status, reviewed_at, reviewed_by_email) are kept
-      // in sync unchanged so the existing admin_list_tuition_tutors RPC
-      // and the employee_id-assignment trigger continue to work exactly
-      // as before.
-      const legacyStatus = action === "approve" ? "approved" : "rejected";
-
-      const update =
-        action === "approve"
-          ? {
-              status: legacyStatus,
-              approval_status: "APPROVED",
-              admin_notes: notes || null,
-              reviewed_at: nowIso,
-              reviewed_by_email: admin.email,
-              approved_at: nowIso,
-              approved_by: admin.email,
-            }
-          : {
-              status: legacyStatus,
-              approval_status: "REJECTED",
-              admin_notes: notes,
-              reviewed_at: nowIso,
-              reviewed_by_email: admin.email,
-              rejected_at: nowIso,
-              rejected_by: admin.email,
-              rejection_reason: notes,
-            };
+      const nextStatus = action === "approve" ? "approved" : "rejected";
+      const notes = typeof body.notes === "string" ? body.notes : null;
 
       const { data, error } = await supabase
         .from("tuition_tutors")
-        .update(update)
+        .update({
+          status: nextStatus,
+          admin_notes: notes,
+          reviewed_at: new Date().toISOString(),
+          reviewed_by_email: admin.email,
+        })
         .eq("id", tutorId)
-        .select("id, status, employee_id, approval_status")
+        .select("id, status, employee_id")
         .maybeSingle();
 
       if (error || !data) {
