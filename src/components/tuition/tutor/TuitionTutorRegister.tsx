@@ -13,7 +13,7 @@ import {
   MapPin,
   Phone,
   ShieldCheck,
-  TriangleAlert,
+  AlertTriangle,
   User,
   UserSquare2,
 } from 'lucide-react';
@@ -365,7 +365,7 @@ export default function TuitionTutorRegister() {
       <section className="max-w-5xl mx-auto px-6 py-12 md:py-14">
         {submitError && (
           <div className="mb-8 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-red-800">
-            <TriangleAlert size={20} className="mt-0.5 shrink-0 text-red-600" />
+            <AlertTriangle size={20} className="mt-0.5 shrink-0 text-red-600" />
             <div>
               <p className="font-semibold">Application not submitted</p>
               <p className="text-sm text-red-700 mt-1">{submitError}</p>
