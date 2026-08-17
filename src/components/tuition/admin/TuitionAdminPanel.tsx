@@ -18,10 +18,19 @@ import TuitionAdminAttendanceOverview from '@/pages/tuition/admin/TuitionAdminAt
 import TuitionAdminMaterials from '@/components/tuition/admin/TuitionAdminMaterials';
 import TuitionAdminStudents from '@/components/tuition/admin/TuitionAdminStudents';
 import TuitionAdminTutors from '@/components/tuition/admin/TuitionAdminTutors';
+import TuitionAdminTrials from '@/components/tuition/admin/TuitionAdminTrials';
 import { supabase } from '@/lib/supabase';
 import { fetchTuitionTutors } from '@/lib/tuitionTutors';
+import { adminListTrialRequests } from '@/lib/tuitionTrial';
 
-type TuitionAdminTab = 'overview' | 'students' | 'tutors' | 'classes' | 'attendance' | 'materials';
+type TuitionAdminTab =
+  | 'overview'
+  | 'students'
+  | 'tutors'
+  | 'trials'
+  | 'classes'
+  | 'attendance'
+  | 'materials';
 
 type StatCard = {
   label: string;
@@ -53,7 +62,7 @@ const sections: SectionCard[] = [
   },
   {
     label: 'Trial Classes',
-    description: 'Track free trial class requests and scheduling.',
+    description: 'Track ₹150 trial class requests and payment status.',
     icon: FlaskConical,
   },
   {
@@ -72,6 +81,7 @@ export default function TuitionAdminPanel() {
   const [pendingApprovalTutors, setPendingApprovalTutors] = useState(0);
   const [approvedTutors, setApprovedTutors] = useState(0);
   const [paymentPendingTutors, setPaymentPendingTutors] = useState(0);
+  const [totalTrials, setTotalTrials] = useState(0);
 
   useEffect(() => {
     const adminId = sessionStorage.getItem('vattams_admin');
@@ -123,6 +133,17 @@ export default function TuitionAdminPanel() {
         console.error('[TuitionAdminPanel] fetchTuitionTutors error:', err);
       });
 
+    // Trial Classes count — existing tuition_trial_requests table /
+    // admin_list_tuition_trial_requests RPC (see src/lib/tuitionTrial.ts).
+    adminListTrialRequests(adminId)
+      .then((rows) => {
+        if (!mounted) return;
+        setTotalTrials(rows.length);
+      })
+      .catch((err) => {
+        console.error('[TuitionAdminPanel] adminListTrialRequests error:', err);
+      });
+
     return () => {
       mounted = false;
     };
@@ -135,13 +156,14 @@ export default function TuitionAdminPanel() {
     { label: 'Approved Tutors', value: approvedTutors, icon: BadgeCheck },
     { label: 'Payment Pending', value: paymentPendingTutors, icon: CreditCard },
     { label: 'Active Courses', value: 0, icon: BookOpen },
-    { label: 'Trial Classes', value: 0, icon: FlaskConical },
+    { label: 'Trial Classes', value: totalTrials, icon: FlaskConical },
   ];
 
   const tabs: { id: TuitionAdminTab; label: string; icon: LucideIcon }[] = [
     { id: 'overview', label: 'Overview', icon: GraduationCap },
     { id: 'students', label: 'Students', icon: Users },
     { id: 'tutors', label: 'Tutors', icon: UserCheck },
+    { id: 'trials', label: 'Trial Classes', icon: FlaskConical },
     { id: 'classes', label: 'Classes', icon: CalendarDays },
     { id: 'attendance', label: 'Attendance', icon: ClipboardCheck },
     { id: 'materials', label: 'Materials', icon: FileText },
@@ -211,7 +233,8 @@ export default function TuitionAdminPanel() {
               const Icon = section.icon;
               const isStudents = section.label === 'Students';
               const isTutors = section.label === 'Tutors';
-              const isClickable = isStudents || isTutors;
+              const isTrials = section.label === 'Trial Classes';
+              const isClickable = isStudents || isTutors || isTrials;
               return (
                 <button
                   key={section.label}
@@ -220,6 +243,7 @@ export default function TuitionAdminPanel() {
                   onClick={() => {
                     if (isStudents) setTab('students');
                     if (isTutors) setTab('tutors');
+                    if (isTrials) setTab('trials');
                   }}
                   className={`text-left p-6 rounded-2xl border border-gray-200 bg-white ${
                     isClickable ? 'hover:border-blue-200 hover:shadow-sm cursor-pointer' : 'cursor-default'
@@ -239,6 +263,8 @@ export default function TuitionAdminPanel() {
                       ? `${totalStudents} registration${totalStudents === 1 ? '' : 's'}`
                       : isTutors
                       ? `${totalTutors} application${totalTutors === 1 ? '' : 's'}`
+                      : isTrials
+                      ? `${totalTrials} request${totalTrials === 1 ? '' : 's'}`
                       : 'Coming soon — no data yet.'}
                   </p>
                 </button>
@@ -250,6 +276,7 @@ export default function TuitionAdminPanel() {
 
       {tab === 'students' && <TuitionAdminStudents />}
       {tab === 'tutors' && <TuitionAdminTutors />}
+      {tab === 'trials' && <TuitionAdminTrials />}
       {tab === 'classes' && <TuitionAdminClasses />}
       {tab === 'attendance' && <TuitionAdminAttendanceOverview />}
       {tab === 'materials' && <TuitionAdminMaterials />}
