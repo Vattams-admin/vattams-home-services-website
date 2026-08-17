@@ -63,7 +63,7 @@ export default function Header() {
           >
             <img
               src="/logo.svg"
-              alt="VATTAMS HOME SERVICES"
+              alt="VATTAMS - Home Services & Online Tuition"
               className="h-10 md:h-12 w-auto object-contain"
             />
 
