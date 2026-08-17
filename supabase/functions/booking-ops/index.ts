@@ -58,11 +58,11 @@ Deno.serve(async (req: Request) => {
       // account not locked (dues cleared).
       const { data: candidates } = await supabase
         .from("technicians")
-        .select("id, rating, total_jobs")
+        .select("id, full_name, rating, total_jobs")
         .eq("city", booking.city)
         .eq("status", "active")
         .eq("wallet_locked", false)
-        .contains("service_categories", [booking.service_category]) as { data: { id: string; rating: number; total_jobs: number }[] | null; error: unknown };
+        .contains("service_categories", [booking.service_category]) as { data: { id: string; full_name: string; rating: number; total_jobs: number }[] | null; error: unknown };
 
       if (!candidates || candidates.length === 0) {
         return new Response(JSON.stringify({ success: true, assigned: false, reason: "no_eligible_technician" }), {
@@ -103,18 +103,88 @@ Deno.serve(async (req: Request) => {
         .select("*")
         .single() as { data: Record<string, unknown> | null; error: unknown };
 
-      await supabase.from("technician_notifications").insert({
+      // Two notification writes here:
+      //  1. `technician_notifications` — preserved as-is; TechnicianDashboard
+      //     already merges this feed with the shared `notifications` table,
+      //     and wallet/commission triggers also write here, so it stays.
+      //  2. `notifications` (shared) — this was MISSING before. It's what
+      //     powers unread counts, the realtime subscription, and the
+      //     customer-facing feed, and is what the manual-assignment path
+      //     (AdminDashboard.tsx assignTechnician) already correctly uses.
+      //     Without it, an auto-assigned job never reliably showed up as a
+      //     "New Job Assigned" notification, and the customer never got a
+      //     "Technician Assigned" notification at all for auto-assignment.
+      //
+      // Not wrapped in a DB transaction with the booking/job writes above:
+      // if a notification insert fails, the assignment itself must still
+      // stand (a customer with an assigned technician but a missing
+      // notification is recoverable; silently un-assigning a technician
+      // because a notification insert failed is not). Failures are
+      // reported back in the response instead (notification_created /
+      // customer_notification_created) rather than surfaced as a 500, so
+      // Booking.tsx's fire-and-forget call to this action never breaks the
+      // booking flow over a notification hiccup.
+      //
+      // Duplicate-notification safety: this whole action already exits
+      // early above with `assigned: false` whenever booking.status isn't
+      // "pending"/"confirmed" — so a retry after a successful assignment
+      // can never reach this point a second time for the same booking.
+      let notificationCreated = false;
+      let customerNotificationCreated = false;
+
+      const { error: techNotifError } = await supabase.from("technician_notifications").insert({
         technician_id: chosen.id,
         type: "job_assigned",
         title: "New Job Assigned",
         message: `You've been automatically assigned a ${booking.service_category} job (Booking #${booking.booking_number}). Check your dashboard for details.`,
       });
+      if (techNotifError) {
+        console.error("[booking-ops auto_assign] technician_notifications insert error:", techNotifError);
+      }
+
+      const { error: sharedTechNotifError } = await supabase.from("notifications").insert({
+        recipient_type: "technician",
+        recipient_id: chosen.id,
+        title: "New Job Assigned",
+        message: `You've been assigned a new ${booking.service_category} job (Booking #${booking.booking_number}). Check your dashboard for details.`,
+        type: "job_assigned",
+        reference_type: "job",
+        reference_id: (jobData?.id as string | undefined) ?? null,
+        channels: ["in_app", "push"],
+        status: "sent",
+        is_read: false,
+      });
+      if (sharedTechNotifError) {
+        console.error("[booking-ops auto_assign] shared notifications (technician) insert error:", sharedTechNotifError);
+      } else {
+        notificationCreated = true;
+      }
+
+      const { error: customerNotifError } = await supabase.from("notifications").insert({
+        recipient_type: "customer",
+        recipient_id: booking.mobile_number,
+        title: "Technician Assigned",
+        message: `${chosen.full_name ?? "A technician"} has been assigned to your booking ${booking.booking_number}.`,
+        type: "technician_assigned",
+        reference_type: "booking",
+        reference_id: booking_id,
+        channels: ["in_app", "push"],
+        status: "sent",
+        is_read: false,
+      });
+      if (customerNotifError) {
+        console.error("[booking-ops auto_assign] shared notifications (customer) insert error:", customerNotifError);
+      } else {
+        customerNotificationCreated = true;
+      }
 
       return new Response(JSON.stringify({
         success: true,
         assigned: true,
         technician_id: chosen.id,
         job: jobData,
+        notification_created: notificationCreated,
+        customer_notification_created: customerNotificationCreated,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -143,9 +213,9 @@ Deno.serve(async (req: Request) => {
       // Block technicians who owe platform fee + GST + commission from a previous job
       const { data: techRow, error: techError } = await supabase
         .from("technicians")
-        .select("wallet_locked, commission_due")
+        .select("full_name, wallet_locked, commission_due")
         .eq("id", technician_id)
-        .maybeSingle() as { data: { wallet_locked: boolean; commission_due: number } | null; error: unknown };
+        .maybeSingle() as { data: { full_name: string; wallet_locked: boolean; commission_due: number } | null; error: unknown };
 
       if (techError || !techRow) {
         return new Response(JSON.stringify({ error: "Technician not found" }), {
@@ -192,6 +262,57 @@ Deno.serve(async (req: Request) => {
         .select("*")
         .single() as { data: Record<string, unknown> | null; error: unknown };
 
+      // NOTE: as of this fix, nothing in the frontend actually calls this
+      // action — AdminDashboard.tsx's manual-assignment flow writes to
+      // `bookings`/`technician_jobs`/`notifications` directly and already
+      // creates exactly one technician + one customer notification per
+      // assignment (see assignTechnician() there). This block is kept as
+      // dead code rather than removed (not asked to delete anything), but
+      // brought in line with the same shared-`notifications` behavior as
+      // auto_assign above so it doesn't silently regress if something
+      // starts calling it later. Since there is no live caller today, this
+      // cannot create a duplicate notification for any current flow.
+      let notificationCreated = false;
+      let customerNotificationCreated = false;
+
+      if (jobData) {
+        const { error: techNotifErr } = await supabase.from("notifications").insert({
+          recipient_type: "technician",
+          recipient_id: technician_id,
+          title: "New Job Assigned",
+          message: `You've been assigned a new job for booking ${booking.booking_number}. Check your dashboard for details.`,
+          type: "job_assigned",
+          reference_type: "job",
+          reference_id: jobData.id as string,
+          channels: ["in_app", "push"],
+          status: "sent",
+          is_read: false,
+        });
+        if (techNotifErr) {
+          console.error("[booking-ops assign_booking] notifications (technician) insert error:", techNotifErr);
+        } else {
+          notificationCreated = true;
+        }
+
+        const { error: custNotifErr } = await supabase.from("notifications").insert({
+          recipient_type: "customer",
+          recipient_id: booking.mobile_number,
+          title: "Technician Assigned",
+          message: `${techRow.full_name ?? "A technician"} has been assigned to your booking ${booking.booking_number}.`,
+          type: "technician_assigned",
+          reference_type: "booking",
+          reference_id: booking_id,
+          channels: ["in_app", "push"],
+          status: "sent",
+          is_read: false,
+        });
+        if (custNotifErr) {
+          console.error("[booking-ops assign_booking] notifications (customer) insert error:", custNotifErr);
+        } else {
+          customerNotificationCreated = true;
+        }
+      }
+
       // Remove from other technicians' view by updating booking status
       // (Other technicians will no longer see it as "pending")
 
@@ -199,6 +320,8 @@ Deno.serve(async (req: Request) => {
         success: true,
         job: jobData,
         error: jobError,
+        notification_created: notificationCreated,
+        customer_notification_created: customerNotificationCreated,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
