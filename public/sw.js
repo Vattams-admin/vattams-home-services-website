@@ -1,11 +1,14 @@
-const CACHE_NAME = 'vattams-v3';
+const CACHE_NAME = 'vattams-v4';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
   '/logo.svg',
   '/favicon.svg',
+  '/favicon.png',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
+  '/icons/icon-512-maskable.png',
+  '/icons/apple-touch-icon.png',
 ];
 
 self.addEventListener('install', (event) => {
