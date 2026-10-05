@@ -6,19 +6,12 @@ import {
   Handshake,
   MapPin,
   Wrench,
-  GraduationCap,
   Sparkles,
   Wind,
   Refrigerator,
   Camera,
   Droplets,
   Zap,
-  BookOpen,
-  Calculator,
-  Mic,
-  FlaskConical,
-  GraduationCap as SchoolIcon,
-  Trophy,
   Layers,
   Search,
   MousePointerClick,
@@ -41,7 +34,7 @@ import { useSEO } from '@/lib/seo';
 
 /* ============================================================
    DATA — every fact below already exists in the project
-   (service list, tuition categories, MSME number, city count).
+   (service list, MSME number, city count).
    Nothing here is invented.
 ============================================================ */
 
@@ -54,22 +47,11 @@ const homeServices: { label: string; icon: LucideIcon }[] = [
   { label: 'Electrical', icon: Zap },
 ];
 
-const tuitionCategories: { label: string; icon: LucideIcon }[] = [
-  { label: 'School Tuition', icon: SchoolIcon },
-  { label: 'Abacus', icon: Calculator },
-  { label: 'Public Speaking', icon: Mic },
-  { label: 'Maths', icon: Calculator },
-  { label: 'Science', icon: FlaskConical },
-  { label: 'CBSE / ICSE / State Board', icon: BookOpen },
-  { label: 'Competitive Exam Preparation', icon: Trophy },
-];
-
 const whyVattams: { title: string; text: string; icon: LucideIcon }[] = [
   { title: 'Trusted Ecosystem', text: 'A single platform built around verified professionals and structured onboarding.', icon: ShieldCheck },
   { title: 'Technology Driven', text: 'Every booking, assignment and update runs through a modern digital workflow.', icon: Cpu },
   { title: 'Customer Focused', text: 'Designed around what customers and learners actually need, not just features.', icon: Users },
-  { title: 'Professional Network', text: 'Connecting verified technicians and tutors with the people who need them.', icon: Handshake },
-  { title: 'Learning & Services in One Platform', text: 'Home services and online tuition, unified under one VATTAMS experience.', icon: Layers },
+  { title: 'Professional Network', text: 'Connecting verified technicians with the people who need reliable home services.', icon: Handshake },
   { title: 'Built for India', text: 'Designed with an India-wide vision, growing step by step and responsibly.', icon: Globe2 },
 ];
 
@@ -84,7 +66,6 @@ const trustPoints: { title: string; text: string; icon: LucideIcon }[] = [
   { title: 'Secure Digital Workflows', text: 'Bookings, assignments and payments flow through structured, secure processes.', icon: Lock },
   { title: 'Structured Service Management', text: 'Every service request is tracked from booking to completion.', icon: ClipboardCheck },
   { title: 'Professional Onboarding', text: 'Technicians go through a defined verification and onboarding process.', icon: UserCheck },
-  { title: 'Student & Tutor Workflows', text: 'Structured flows connect learners with the right tutors and courses.', icon: GraduationCap },
   { title: 'Customer-Focused Experience', text: 'Every part of the platform is built around a smooth customer experience.', icon: HeartHandshake },
 ];
 
@@ -92,9 +73,9 @@ export default function About() {
   const { navigate } = useRouter();
 
   useSEO({
-    title: 'About VATTAMS | Home Services & Online Tuition',
+    title: 'About VATTAMS | Home Services',
     description:
-      'Learn about VATTAMS, a unified digital platform connecting professional home services and online tuition across India.',
+      'Learn about VATTAMS Home Services, a trusted platform connecting customers with professional technicians across India.',
     path: '/#about',
   });
 
@@ -153,22 +134,7 @@ export default function About() {
               </span>
             </button>
 
-            <button
-              onClick={() => navigate('tuition-home')}
-              className="group bg-white/[0.04] border border-gold-400/10 rounded-2xl p-7 hover:bg-white/[0.07] hover:border-gold-400/30 transition-all duration-300 hover:-translate-y-1"
-            >
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-navy-700 to-navy-900 border border-gold-400/20 flex items-center justify-center mb-5 shadow-lg group-hover:scale-110 transition-transform">
-                <GraduationCap size={24} className="text-gold-400" aria-hidden="true" />
-              </div>
-              <h2 className="text-white font-bold text-lg mb-1.5">Online Tuition</h2>
-              <p className="text-navy-100/70 text-sm leading-relaxed mb-4">
-                Learn. Grow. Succeed.
-              </p>
-              <span className="inline-flex items-center gap-1.5 text-gold-300 text-sm font-semibold group-hover:text-gold-200">
-                Explore Online Tuition →
-              </span>
-            </button>
-          </div>
+
         </div>
 
         <div className="absolute bottom-0 inset-x-0 leading-none">
@@ -243,41 +209,6 @@ export default function About() {
               </button>
             </div>
 
-            {/* Online Tuition vertical */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-7 md:p-8">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gold-500 to-gold-700 flex items-center justify-center shrink-0">
-                  <GraduationCap size={22} className="text-white" aria-hidden="true" />
-                </div>
-                <h3 className="font-display font-bold text-royal-900 text-xl">
-                  VATTAMS Online Tuition
-                </h3>
-              </div>
-              <p className="text-gray-500 text-sm leading-relaxed mb-6">
-                Accessible online learning designed for students and learners.
-              </p>
-              <ul className="grid grid-cols-2 gap-3 mb-6">
-                {tuitionCategories.map((s) => {
-                  const Icon = s.icon;
-                  return (
-                    <li
-                      key={s.label}
-                      className="flex items-center gap-2 bg-royal-50 rounded-xl px-3 py-2.5 text-sm text-gray-700"
-                    >
-                      <Icon size={16} className="text-royal-700 shrink-0" aria-hidden="true" />
-                      {s.label}
-                    </li>
-                  );
-                })}
-              </ul>
-              <button
-                onClick={() => navigate('tuition-home')}
-                className="inline-flex items-center gap-2 text-gold-700 font-semibold hover:text-gold-800 text-sm"
-              >
-                Explore Online Tuition →
-              </button>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -375,11 +306,6 @@ export default function About() {
                 Find a service → Book → Technician assignment → Service completion
               </p>
             </div>
-            <div className="bg-white/[0.04] border border-gold-400/10 rounded-2xl p-6">
-              <div className="flex items-center gap-2 mb-3">
-                <GraduationCap size={16} className="text-gold-400" aria-hidden="true" />
-                <h3 className="text-white font-bold text-sm uppercase tracking-wide">Online Tuition</h3>
-              </div>
               <p className="text-navy-100/70 text-sm leading-relaxed">
                 Choose a course → Join / Book → Connect with tutor → Learn
               </p>
@@ -535,27 +461,6 @@ export default function About() {
             >
               <CalendarCheck size={17} aria-hidden="true" />
               Book a Service
-            </button>
-            <button
-              onClick={() => navigate('tuition-home')}
-              className="flex items-center gap-2 px-6 py-3.5 border border-white/25 text-white font-semibold rounded-lg hover:bg-white/10 hover:border-white/40 transition-all duration-300"
-            >
-              <GraduationCap size={16} aria-hidden="true" />
-              Explore Online Tuition
-            </button>
-            <button
-              onClick={() => navigate('join-technician')}
-              className="flex items-center gap-2 px-6 py-3.5 border border-white/25 text-white font-semibold rounded-lg hover:bg-white/10 hover:border-white/40 transition-all duration-300"
-            >
-              <Briefcase size={16} aria-hidden="true" />
-              Join as a Technician
-            </button>
-            <button
-              onClick={() => navigate('tuition-tutor-register')}
-              className="flex items-center gap-2 px-6 py-3.5 border border-white/25 text-white font-semibold rounded-lg hover:bg-white/10 hover:border-white/40 transition-all duration-300"
-            >
-              <GraduationCap size={16} aria-hidden="true" />
-              Join as a Tutor
             </button>
           </div>
         </div>
