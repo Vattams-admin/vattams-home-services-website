@@ -128,95 +128,6 @@ export function generateOnboardingLetterHTML(params: OnboardingLetterParams): st
 </html>`;
 }
 
-export interface StudentConfirmationParams {
-  studentId: string;
-  studentName: string;
-  parentName: string;
-  city: string;
-  phone: string;
-  email?: string | null;
-  course: string;
-  classMode: string;
-  registeredOn?: string | null;
-}
-
-export function generateStudentConfirmationHTML(params: StudentConfirmationParams): string {
-  const {
-    studentId,
-    studentName,
-    parentName,
-    city,
-    phone,
-    email,
-    course,
-    classMode,
-    registeredOn,
-  } = params;
-
-  const dateStr = new Date(registeredOn || Date.now()).toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  });
-
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>VATTAMS Tuition Registration Confirmation — ${studentId}</title>
-<style>${baseStyles('#7c3aed', '#a855f7')}</style>
-</head>
-<body>
-<div class="letter">
-  <div class="header">
-    <h1>VATTAMS</h1>
-    <p>Online Tuition — Registration Confirmation</p>
-    <div class="id-badge">${studentId}</div>
-  </div>
-
-  <div class="section">
-    <p class="body-text">
-      Dear ${parentName},<br><br>
-      This confirms that ${studentName} has been registered and
-      approved for Vattams Online Tuition. A permanent Student ID has
-      been generated and is shown above. Please quote this ID in all
-      future communication regarding classes, attendance, or fees.
-    </p>
-  </div>
-
-  <div class="section">
-    <div class="section-title">Registration Details</div>
-    <div class="detail-row"><span class="detail-label">Student Name</span><span class="detail-value">${studentName}</span></div>
-    <div class="detail-row"><span class="detail-label">Student ID</span><span class="detail-value">${studentId}</span></div>
-    <div class="detail-row"><span class="detail-label">Parent / Guardian</span><span class="detail-value">${parentName}</span></div>
-    <div class="detail-row"><span class="detail-label">Mobile</span><span class="detail-value">${phone}</span></div>
-    ${email ? `<div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">${email}</span></div>` : ''}
-    <div class="detail-row"><span class="detail-label">City</span><span class="detail-value">${city}</span></div>
-    <div class="detail-row"><span class="detail-label">Course</span><span class="detail-value">${course}</span></div>
-    <div class="detail-row"><span class="detail-label">Class Mode</span><span class="detail-value">${classMode}</span></div>
-    <div class="detail-row"><span class="detail-label">Registration Date</span><span class="detail-value">${dateStr}</span></div>
-  </div>
-
-  <div class="section">
-    <div class="section-title">Terms &amp; Conditions</div>
-    <ol class="terms">
-      ${TERMS_AND_CONDITIONS.map((t) => `<li>${t}</li>`).join('\n      ')}
-    </ol>
-
-    <div class="notice">
-      This is a digitally generated VATTAMS onboarding letter. It does not require a physical or digital signature to be valid.
-    </div>
-  </div>
-
-  <div class="footer">
-    <p>VATTAMS Online Tuition | Support: +91 81898 00757 | support@vattams.net</p>
-    <p style="margin-top:4px;">Government of India MSME (Udyam) Registered Enterprise | UDYAM-TN-02-0274720</p>
-  </div>
-</div>
-</body>
-</html>`;
-}
-
 function downloadHTML(html: string, filename: string) {
   const blob = new Blob([html], { type: 'text/html' });
   const url = URL.createObjectURL(blob);
@@ -232,9 +143,4 @@ function downloadHTML(html: string, filename: string) {
 export function downloadOnboardingLetter(params: OnboardingLetterParams) {
   const html = generateOnboardingLetterHTML(params);
   downloadHTML(html, `VATTAMS-Onboarding-${params.employeeId}.html`);
-}
-
-export function downloadStudentConfirmation(params: StudentConfirmationParams) {
-  const html = generateStudentConfirmationHTML(params);
-  downloadHTML(html, `VATTAMS-Confirmation-${params.studentId}.html`);
 }
