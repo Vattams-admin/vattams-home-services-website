@@ -52,54 +52,61 @@ export interface CreateNotificationInput {
   referenceType?: string;
   referenceId?: string;
   channels?: string[];
+  bookingActionToken?: string;
 }
 
 export async function createNotification(input: CreateNotificationInput): Promise<NotificationRow | null> {
-  const { data, error } = await supabase
-    .from('notifications')
-    .insert({
-      recipient_type: input.recipientType,
-      recipient_id: input.recipientId,
-      title: input.title,
-      message: input.message,
-      type: input.type,
-      reference_type: input.referenceType ?? null,
-      reference_id: input.referenceId ?? null,
-      channels: input.channels ?? ['in_app', 'push'],
-      status: 'sent',
-      is_read: false,
-    })
-    .select()
-    .single();
-  if (error) {
-    console.error('[notifications] insert error:', error);
+  try {
+    const sessionKey =
+      input.recipientType === 'admin' ? 'vattams_admin' :
+      input.recipientType === 'technician' ? 'vattams_technician_session' :
+      'vattams_customer_session';
+    const token = input.bookingActionToken || sessionStorage.getItem(sessionKey) || '';
+    const body: Record<string, unknown> = {
+      input: {
+        recipientType: input.recipientType,
+        recipientId: input.recipientId,
+        title: input.title,
+        message: input.message,
+        type: input.type,
+        referenceType: input.referenceType,
+        referenceId: input.referenceId,
+        channels: input.channels ?? ['in_app', 'push'],
+      },
+      ...(input.bookingActionToken ? { booking_action_token: input.bookingActionToken } : {}),
+      ...(input.recipientType === 'admin' ? {
+        admin_session_token: token,
+        admin_id: sessionStorage.getItem('vattams_admin_id'),
+      } : input.recipientType === 'technician' ? {
+        technician_session_token: token,
+      } : {
+        customer_session_token: token,
+      }),
+    };
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/notification-ops`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+      body: JSON.stringify(body),
+    });
+    const data = await response.json();
+    if (!response.ok || data.error) {
+      console.error('[notifications] gateway error:', data.error);
+      return null;
+    }
+    void sendPushForNotification(input);
+    return data.notification as NotificationRow;
+  } catch (err) {
+    console.error('[notifications] gateway error:', err);
     return null;
   }
-  void sendPushForNotification(input);
-  return data as NotificationRow;
 }
 
 export async function createNotificationsBatch(inputs: CreateNotificationInput[]): Promise<number> {
-  if (inputs.length === 0) return 0;
-  const rows = inputs.map((i) => ({
-    recipient_type: i.recipientType,
-    recipient_id: i.recipientId,
-    title: i.title,
-    message: i.message,
-    type: i.type,
-    reference_type: i.referenceType ?? null,
-    reference_id: i.referenceId ?? null,
-    channels: i.channels ?? ['in_app', 'push'],
-    status: 'sent' as const,
-    is_read: false,
-  }));
-  const { error } = await supabase.from('notifications').insert(rows);
-  if (error) {
-    console.error('[notifications] batch insert error:', error);
-    return 0;
+  let count = 0;
+  for (const input of inputs) {
+    if (await createNotification(input)) count++;
   }
-  for (const input of inputs) void sendPushForNotification(input);
-  return rows.length;
+  return count;
 }
 
 export async function fetchNotifications(recipientType: NotificationRecipientType, recipientId: string, limit = 50): Promise<NotificationRow[]> {
