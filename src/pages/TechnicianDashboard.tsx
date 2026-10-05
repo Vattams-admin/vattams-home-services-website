@@ -74,11 +74,11 @@ const JOB_STATUS_LABELS: Record<string, string> = {
 };
 
 const JOB_STATUS_CLASSES: Record<string, string> = {
-  assigned: 'bg-blue-50 text-blue-700 border-blue-100',
+  assigned: 'bg-[#f8f4e8] text-[#0b1f3a] border-blue-100',
   accepted: 'bg-indigo-50 text-indigo-700 border-indigo-100',
   on_the_way: 'bg-purple-50 text-purple-700 border-purple-100',
-  in_progress: 'bg-orange-50 text-orange-700 border-orange-100',
-  job_started: 'bg-orange-50 text-orange-700 border-orange-100',
+  in_progress: 'bg-[#f8f4e8] text-orange-700 border-[#e7dcc0]',
+  job_started: 'bg-[#f8f4e8] text-orange-700 border-[#e7dcc0]',
   job_completed: 'bg-green-50 text-green-700 border-green-100',
   completed: 'bg-green-50 text-green-700 border-green-100',
   rejected: 'bg-red-50 text-red-700 border-red-100',
@@ -779,12 +779,12 @@ export default function TechnicianDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
-          <div className="w-14 h-14 rounded-full bg-orange-50 flex items-center justify-center mx-auto mb-4">
+      <div className="min-h-screen bg-[#f7f4ed] flex items-center justify-center px-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-[#e8e1d2] p-8 text-center">
+          <div className="w-14 h-14 rounded-full bg-[#f8f4e8] flex items-center justify-center mx-auto mb-4">
             <RefreshCw
               size={26}
-              className="text-orange-500 animate-spin"
+              className="text-[#b08b18] animate-spin"
             />
           </div>
 
@@ -802,8 +802,8 @@ export default function TechnicianDashboard() {
 
   if (!technician) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+      <div className="min-h-screen bg-[#f7f4ed] flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-sm border border-[#e8e1d2] p-8 text-center">
           <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
             <AlertCircle
               size={28}
@@ -824,7 +824,7 @@ export default function TechnicianDashboard() {
             onClick={() =>
               navigate('technician-login')
             }
-            className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl"
+            className="w-full py-3 bg-[#c9a227] hover:bg-[#b08b18] text-white font-bold rounded-xl"
           >
             Go to Technician Login
           </button>
@@ -834,13 +834,13 @@ export default function TechnicianDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20 md:pt-24">
+    <div className="min-h-screen bg-[#f7f4ed] pt-20 md:pt-24">
       {/* HEADER */}
-      <header className="bg-white border-b border-gray-100 sticky top-20 md:top-24 z-30">
+      <header className="bg-white border-b border-[#e8e1d2] sticky top-20 md:top-24 z-30">
         <div className="max-w-7xl mx-auto px-4">
           <div className="h-16 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center font-extrabold">
+              <div className="w-10 h-10 rounded-xl bg-[#c9a227] text-white flex items-center justify-center font-extrabold">
                 {getInitials(
                   technician.full_name
                 )}
@@ -854,7 +854,7 @@ export default function TechnicianDashboard() {
                 <div className="text-xs text-gray-500 flex items-center gap-1.5">
                   Technician Dashboard
                   {technician.employee_id && (
-                    <span className="px-1.5 py-0.5 rounded bg-orange-50 text-orange-600 font-bold">
+                    <span className="px-1.5 py-0.5 rounded bg-[#f8f4e8] text-[#a47c00] font-bold">
                       {technician.employee_id}
                     </span>
                   )}
@@ -869,8 +869,8 @@ export default function TechnicianDashboard() {
                 }
                 className={`px-3 py-2 rounded-lg text-sm font-semibold ${
                   activeTab === 'overview'
-                    ? 'bg-orange-50 text-orange-600'
-                    : 'text-gray-600 hover:bg-gray-50'
+                    ? 'bg-[#f8f4e8] text-[#a47c00]'
+                    : 'text-gray-600 hover:bg-[#f7f4ed]'
                 }`}
               >
                 Overview
@@ -882,8 +882,8 @@ export default function TechnicianDashboard() {
                 }
                 className={`px-3 py-2 rounded-lg text-sm font-semibold ${
                   activeTab === 'jobs'
-                    ? 'bg-orange-50 text-orange-600'
-                    : 'text-gray-600 hover:bg-gray-50'
+                    ? 'bg-[#f8f4e8] text-[#a47c00]'
+                    : 'text-gray-600 hover:bg-[#f7f4ed]'
                 }`}
               >
                 Jobs
@@ -895,8 +895,8 @@ export default function TechnicianDashboard() {
                 }
                 className={`px-3 py-2 rounded-lg text-sm font-semibold ${
                   activeTab === 'wallet'
-                    ? 'bg-orange-50 text-orange-600'
-                    : 'text-gray-600 hover:bg-gray-50'
+                    ? 'bg-[#f8f4e8] text-[#a47c00]'
+                    : 'text-gray-600 hover:bg-[#f7f4ed]'
                 }`}
               >
                 Wallet
@@ -908,8 +908,8 @@ export default function TechnicianDashboard() {
                 }
                 className={`px-3 py-2 rounded-lg text-sm font-semibold ${
                   activeTab === 'profile'
-                    ? 'bg-orange-50 text-orange-600'
-                    : 'text-gray-600 hover:bg-gray-50'
+                    ? 'bg-[#f8f4e8] text-[#a47c00]'
+                    : 'text-gray-600 hover:bg-[#f7f4ed]'
                 }`}
               >
                 Profile
@@ -921,7 +921,7 @@ export default function TechnicianDashboard() {
                     'notifications'
                   )
                 }
-                className="relative p-2 rounded-lg text-gray-600 hover:bg-gray-50"
+                className="relative p-2 rounded-lg text-gray-600 hover:bg-[#f7f4ed]"
               >
                 <Bell size={20} />
 
@@ -951,7 +951,7 @@ export default function TechnicianDashboard() {
                   (value) => !value
                 )
               }
-              className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-50"
+              className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-[#f7f4ed]"
             >
               {mobileMenuOpen ? (
                 <X size={22} />
@@ -962,7 +962,7 @@ export default function TechnicianDashboard() {
           </div>
 
           {mobileMenuOpen && (
-            <div className="md:hidden border-t border-gray-100 py-3 space-y-1">
+            <div className="md:hidden border-t border-[#e8e1d2] py-3 space-y-1">
               {[
                 ['overview', 'Overview'],
                 ['jobs', 'Jobs'],
@@ -980,7 +980,7 @@ export default function TechnicianDashboard() {
                       key as DashboardTab
                     )
                   }
-                  className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-semibold text-gray-700 hover:bg-orange-50 hover:text-orange-600"
+                  className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-semibold text-gray-700 hover:bg-[#f8f4e8] hover:text-[#a47c00]"
                 >
                   {label}
 
@@ -1352,27 +1352,27 @@ function Overview({
 
       {/* SECONDARY STATS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl border border-gray-100 p-5">
+        <div className="bg-white rounded-2xl border border-[#e8e1d2] p-5">
           <div className="flex items-center justify-between mb-3">
             <div>
               <p className="text-sm text-gray-500">
                 Profile Completeness
               </p>
 
-              <p className="text-2xl font-extrabold text-orange-600 mt-1">
+              <p className="text-2xl font-extrabold text-[#a47c00] mt-1">
                 {profileScore}%
               </p>
             </div>
 
             <User
               size={24}
-              className="text-orange-500"
+              className="text-[#b08b18]"
             />
           </div>
 
           <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
             <div
-              className="h-full bg-orange-500 rounded-full"
+              className="h-full bg-[#c9a227] rounded-full"
               style={{
                 width: `${Math.min(
                   profileScore,
@@ -1383,7 +1383,7 @@ function Overview({
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 p-5">
+        <div className="bg-white rounded-2xl border border-[#e8e1d2] p-5">
           <p className="text-sm text-gray-500">
             Total Earnings
           </p>
@@ -1400,7 +1400,7 @@ function Overview({
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 p-5">
+        <div className="bg-white rounded-2xl border border-[#e8e1d2] p-5">
           <p className="text-sm text-gray-500">
             Notifications
           </p>
@@ -1411,7 +1411,7 @@ function Overview({
 
           <button
             onClick={onNotifications}
-            className="text-xs text-orange-600 font-bold mt-1"
+            className="text-xs text-[#a47c00] font-bold mt-1"
           >
             View notifications →
           </button>
@@ -1433,7 +1433,7 @@ function Overview({
 
           <button
             onClick={onJobs}
-            className="text-sm font-bold text-orange-600 flex items-center gap-1"
+            className="text-sm font-bold text-[#a47c00] flex items-center gap-1"
           >
             View All
             <ChevronRight size={16} />
@@ -1481,7 +1481,7 @@ function Overview({
 
           <button
             onClick={onJobs}
-            className="text-sm font-bold text-orange-600 flex items-center gap-1"
+            className="text-sm font-bold text-[#a47c00] flex items-center gap-1"
           >
             All Jobs
             <ChevronRight size={16} />
@@ -1495,7 +1495,7 @@ function Overview({
             description="Your completed and assigned jobs will appear here."
           />
         ) : (
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-2xl border border-[#e8e1d2] overflow-hidden">
             {recentJobs.map(
               (job, index) => (
                 <div
@@ -1504,12 +1504,12 @@ function Overview({
                     index !==
                     recentJobs.length -
                       1
-                      ? 'border-b border-gray-100'
+                      ? 'border-b border-[#e8e1d2]'
                       : ''
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-[#f8f4e8] text-[#a47c00] flex items-center justify-center shrink-0">
                       <Wrench
                         size={18}
                       />
@@ -1537,7 +1537,7 @@ function Overview({
                         JOB_STATUS_CLASSES[
                           job.status
                         ] ||
-                        'bg-gray-50 text-gray-600 border-gray-100'
+                        'bg-[#f7f4ed] text-gray-600 border-[#e8e1d2]'
                       }`}
                     >
                       {JOB_STATUS_LABELS[
@@ -1571,11 +1571,11 @@ function Overview({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <button
             onClick={onJobs}
-            className="bg-white border border-gray-100 rounded-2xl p-5 text-left hover:shadow-md transition-shadow"
+            className="bg-white border border-[#e8e1d2] rounded-2xl p-5 text-left hover:shadow-md transition-shadow"
           >
             <Briefcase
               size={22}
-              className="text-orange-500 mb-3"
+              className="text-[#b08b18] mb-3"
             />
 
             <p className="font-bold text-gray-900">
@@ -1589,7 +1589,7 @@ function Overview({
 
           <button
             onClick={onWallet}
-            className="bg-white border border-gray-100 rounded-2xl p-5 text-left hover:shadow-md transition-shadow"
+            className="bg-white border border-[#e8e1d2] rounded-2xl p-5 text-left hover:shadow-md transition-shadow"
           >
             <Wallet
               size={22}
@@ -1607,11 +1607,11 @@ function Overview({
 
           <button
             onClick={onNotifications}
-            className="bg-white border border-gray-100 rounded-2xl p-5 text-left hover:shadow-md transition-shadow"
+            className="bg-white border border-[#e8e1d2] rounded-2xl p-5 text-left hover:shadow-md transition-shadow"
           >
             <Bell
               size={22}
-              className="text-blue-600 mb-3"
+              className="text-[#0b1f3a] mb-3"
             />
 
             <p className="font-bold text-gray-900">
@@ -1644,7 +1644,7 @@ function StatCard({
   subtitle: string;
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-4 md:p-5">
+    <div className="bg-white rounded-2xl border border-[#e8e1d2] p-4 md:p-5">
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-xs md:text-sm text-gray-500">
@@ -1660,7 +1660,7 @@ function StatCard({
           </p>
         </div>
 
-        <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-[#f8f4e8] text-[#a47c00] flex items-center justify-center shrink-0">
           <Icon size={20} />
         </div>
       </div>
@@ -1808,10 +1808,10 @@ function JobCard({
     processingJob === job.id;
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+    <div className="bg-white rounded-2xl border border-[#e8e1d2] shadow-sm p-5">
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
         <div className="flex gap-4 min-w-0">
-          <div className="w-12 h-12 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-[#f8f4e8] text-[#a47c00] flex items-center justify-center shrink-0">
             <Wrench size={22} />
           </div>
 
@@ -1826,7 +1826,7 @@ function JobCard({
                   JOB_STATUS_CLASSES[
                     job.status
                   ] ||
-                  'bg-gray-50 text-gray-600 border-gray-100'
+                  'bg-[#f7f4ed] text-gray-600 border-[#e8e1d2]'
                 }`}
               >
                 {JOB_STATUS_LABELS[
@@ -1843,7 +1843,7 @@ function JobCard({
             </p>
 
             {job.notes && (
-              <div className="mt-3 bg-gray-50 rounded-xl p-3 text-sm text-gray-600">
+              <div className="mt-3 bg-[#f7f4ed] rounded-xl p-3 text-sm text-gray-600">
                 <span className="font-bold">
                   Notes:
                 </span>{' '}
@@ -1899,7 +1899,7 @@ function JobCard({
         'job_completed',
         'rejected',
       ].includes(job.status) && (
-        <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t border-gray-100">
+        <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t border-[#e8e1d2]">
           {job.status ===
             'assigned' && (
             <>
@@ -1945,7 +1945,7 @@ function JobCard({
                   'on_the_way'
                 )
               }
-              className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-sm font-bold"
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#0b1f3a] hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-sm font-bold"
             >
               <Navigation
                 size={16}
@@ -1964,7 +1964,7 @@ function JobCard({
                   'in_progress'
                 )
               }
-              className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white rounded-xl text-sm font-bold"
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#c9a227] hover:bg-[#b08b18] disabled:opacity-50 text-white rounded-xl text-sm font-bold"
             >
               <PlayCircle
                 size={16}
@@ -2088,7 +2088,7 @@ function WalletSection({
       </div>
 
       {/* RECHARGE */}
-      <section className="bg-white rounded-2xl border border-gray-100 p-5 md:p-6">
+      <section className="bg-white rounded-2xl border border-[#e8e1d2] p-5 md:p-6">
         <div className="flex items-center gap-3 mb-5">
           <div className="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
             <Wallet size={20} />
@@ -2133,7 +2133,7 @@ function WalletSection({
           <button
             onClick={submitRecharge}
             disabled={rechargeSubmitting}
-            className="px-5 py-3 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-bold rounded-xl"
+            className="px-5 py-3 bg-[#c9a227] hover:bg-[#b08b18] disabled:opacity-60 text-white font-bold rounded-xl"
           >
             {rechargeSubmitting
               ? 'Submitting...'
@@ -2142,7 +2142,7 @@ function WalletSection({
         </div>
 
         {rechargeMessage && (
-          <div className="mt-4 bg-orange-50 text-orange-700 rounded-xl px-4 py-3 text-sm">
+          <div className="mt-4 bg-[#f8f4e8] text-orange-700 rounded-xl px-4 py-3 text-sm">
             {rechargeMessage}
           </div>
         )}
@@ -2180,7 +2180,7 @@ function WalletSection({
             description="Wallet transactions will appear here."
           />
         ) : (
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-2xl border border-[#e8e1d2] overflow-hidden">
             {transactions.map(
               (transaction, index) => {
                 const positive = [
@@ -2198,7 +2198,7 @@ function WalletSection({
                       index !==
                       transactions.length -
                         1
-                        ? 'border-b border-gray-100'
+                        ? 'border-b border-[#e8e1d2]'
                         : ''
                     }`}
                   >
@@ -2300,7 +2300,7 @@ function WalletSection({
               (recharge) => (
                 <div
                   key={recharge.id}
-                  className="bg-white rounded-2xl border border-gray-100 p-4"
+                  className="bg-white rounded-2xl border border-[#e8e1d2] p-4"
                 >
                   <div className="flex justify-between gap-3">
                     <div>
@@ -2376,8 +2376,8 @@ function WalletCard({
   icon: any;
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-5">
-      <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center mb-3">
+    <div className="bg-white rounded-2xl border border-[#e8e1d2] p-5">
+      <div className="w-10 h-10 rounded-xl bg-[#f8f4e8] text-[#a47c00] flex items-center justify-center mb-3">
         <Icon size={20} />
       </div>
 
@@ -2440,7 +2440,7 @@ function ProfileSection({
       </div>
 
       {/* PROFILE HEADER */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6">
+      <div className="bg-white rounded-2xl border border-[#e8e1d2] p-6">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
           {technician.profile_photo_url && !photoFailed ? (
             <img
@@ -2450,11 +2450,11 @@ function ProfileSection({
               alt={
                 technician.full_name
               }
-              className="w-24 h-24 rounded-2xl object-cover border border-gray-100"
+              className="w-24 h-24 rounded-2xl object-cover border border-[#e8e1d2]"
               onError={() => setPhotoFailed(true)}
             />
           ) : (
-            <div className="w-24 h-24 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center text-3xl font-extrabold">
+            <div className="w-24 h-24 rounded-2xl bg-orange-100 text-[#a47c00] flex items-center justify-center text-3xl font-extrabold">
               {getInitials(
                 technician.full_name
               )}
@@ -2478,13 +2478,13 @@ function ProfileSection({
 
             <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-3">
               {technician.employee_id && (
-                <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-extrabold flex items-center gap-1">
+                <span className="px-3 py-1 rounded-full bg-[#f8f4e8] text-[#0b1f3a] text-xs font-extrabold flex items-center gap-1">
                   <BadgeCheck size={12} />
                   {technician.employee_id}
                 </span>
               )}
 
-              <span className="px-3 py-1 rounded-full bg-orange-50 text-orange-600 text-xs font-bold">
+              <span className="px-3 py-1 rounded-full bg-[#f8f4e8] text-[#a47c00] text-xs font-bold">
                 {technician.status}
               </span>
 
@@ -2516,7 +2516,7 @@ function ProfileSection({
                       technician.service_categories?.join(', ') || '—',
                   })
                 }
-                className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors"
+                className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0b1f3a] hover:bg-blue-700 text-white text-xs font-bold transition-colors"
               >
                 <Download size={13} />
                 Download Onboarding Letter
@@ -2531,14 +2531,14 @@ function ProfileSection({
               Profile Completeness
             </span>
 
-            <span className="text-sm font-extrabold text-orange-600">
+            <span className="text-sm font-extrabold text-[#a47c00]">
               {profileScore}%
             </span>
           </div>
 
           <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
             <div
-              className="h-full bg-orange-500 rounded-full"
+              className="h-full bg-[#c9a227] rounded-full"
               style={{
                 width: `${Math.min(
                   profileScore,
@@ -2722,8 +2722,8 @@ function ProfileCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-      <div className="px-5 py-4 border-b border-gray-100">
+    <div className="bg-white rounded-2xl border border-[#e8e1d2] overflow-hidden">
+      <div className="px-5 py-4 border-b border-[#e8e1d2]">
         <h2 className="font-extrabold text-gray-900">
           {title}
         </h2>
@@ -2791,7 +2791,7 @@ function NotificationsSection({
         {unread > 0 && (
           <button
             onClick={markAllRead}
-            className="text-sm font-bold text-orange-600"
+            className="text-sm font-bold text-[#a47c00]"
           >
             Mark all as read
           </button>
@@ -2817,12 +2817,12 @@ function NotificationsSection({
                 }
                 className={`w-full text-left bg-white rounded-2xl border p-4 transition-colors ${
                   notification.is_read
-                    ? 'border-gray-100'
-                    : 'border-orange-200 bg-orange-50/40'
+                    ? 'border-[#e8e1d2]'
+                    : 'border-[#e0d0a8] bg-[#f8f4e8]/40'
                 }`}
               >
                 <div className="flex gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-[#f8f4e8] text-[#a47c00] flex items-center justify-center shrink-0">
                     <Bell size={18} />
                   </div>
 
@@ -2835,7 +2835,7 @@ function NotificationsSection({
                       </h3>
 
                       {!notification.is_read && (
-                        <span className="w-2.5 h-2.5 rounded-full bg-orange-500 shrink-0 mt-1.5" />
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#c9a227] shrink-0 mt-1.5" />
                       )}
                     </div>
 
@@ -2875,8 +2875,8 @@ function EmptyState({
   description: string;
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
-      <div className="w-14 h-14 rounded-2xl bg-gray-50 text-gray-400 flex items-center justify-center mx-auto mb-4">
+    <div className="bg-white rounded-2xl border border-[#e8e1d2] p-8 text-center">
+      <div className="w-14 h-14 rounded-2xl bg-[#f7f4ed] text-gray-400 flex items-center justify-center mx-auto mb-4">
         <Icon size={25} />
       </div>
 
