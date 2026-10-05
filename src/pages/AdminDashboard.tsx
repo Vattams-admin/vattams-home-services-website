@@ -13,15 +13,15 @@ import { downloadOnboardingLetter } from '@/lib/onboardingLetter';
 import { useRouter } from '@/lib/router';
 import { updatePaymentStatus, PaymentRecord } from '@/lib/payments';
 import { adminData } from '@/lib/adminData';
-import { fetchAllServicePrices, getPricingFromServicePrice, formatINR, type PricingBreakdown } from '@/lib/pricing';
+import { getPricingFromServicePrice, formatINR, type PricingBreakdown } from '@/lib/pricing';
 import { ServicePrice } from '@/lib/supabase';
-import { fetchSiteSettings, saveSiteSettings, validateSettings, SiteSettings, SiteSettingsInput } from '@/lib/siteSettings';
+import { validateSettings, SiteSettings, SiteSettingsInput } from '@/lib/siteSettings';
 import { refreshSocialLinksCache } from '@/components/SocialLinks';
 import NotificationCenter from '@/components/NotificationCenter';
 import {
   notifyCustomer, notifyTechnician, notifyAdmin,
   sendAnnouncementToTechnicians, sendAnnouncementToCustomers,
-  fetchNotifications, NotificationRow,
+  NotificationRow,
 } from '@/lib/notifications';
 import { Customer } from '@/lib/supabase';
 import { fetchAllReminders, type CRMReminder } from '@/lib/crm';
@@ -701,17 +701,9 @@ export default function AdminDashboard() {
   ) => {
     setUpdating(true);
 
-    await supabase
-      .from('bookings')
-      .update({
-        status,
-        updated_at:
-          new Date().toISOString(),
-      })
-      .eq(
-        'id',
-        id
-      );
+    try {
+      const { booking } = await adminData<{ booking: Booking }>('booking_status', { booking_id: id, status });
+      setBookings((prev) => prev.map((b) => b.id === id ? { ...b, ...booking } : b));
 
     setBookings(
       (prev) =>
@@ -786,118 +778,41 @@ export default function AdminDashboard() {
       }
     }
 
-    setUpdating(false);
+    } catch (error) {
+      console.error('[AdminDashboard] booking status update failed:', error);
+      alert(error instanceof Error ? error.message : 'Failed to update booking.');
+    } finally {
+      setUpdating(false);
+    }
   };
 
   const assignTechnician = async () => {
-    if (
-      !selectedBooking ||
-      !assignTechId
-    ) {
-      return;
-    }
-
+    if (!selectedBooking || !assignTechId) return;
     setUpdating(true);
-
-    const {
-      error: bookErr
-    } = await supabase
-      .from('bookings')
-      .update({
-        assigned_technician_id:
-          assignTechId,
-
-        status:
-          'confirmed',
-
-        updated_at:
-          new Date().toISOString(),
-      })
-      .eq(
-        'id',
-        selectedBooking.id
-      );
-
-    if (bookErr) {
-      console.error(
-        '[AdminDashboard] assign booking update error:',
-        bookErr
-      );
+    try {
+      const { booking, job } = await adminData<{ booking: Booking; job: { id: string } }>('assign', {
+        booking_id: selectedBooking.id,
+        technician_id: assignTechId,
+      });
+      const assignedTech = technicians.find((t) => t.id === assignTechId);
+      await Promise.all([
+        notifyCustomer.technicianAssigned(
+          selectedBooking.mobile_number,
+          selectedBooking.booking_number,
+          assignedTech?.full_name ?? 'A technician',
+          selectedBooking.id
+        ),
+        job ? notifyTechnician.jobAssigned(assignTechId, selectedBooking.booking_number, job.id) : null,
+      ]);
+      setBookings((prev) => prev.map((b) => b.id === selectedBooking.id ? { ...b, ...booking } : b));
+      setSelectedBooking(null);
+      setAssignTechId('');
+    } catch (error) {
+      console.error('[AdminDashboard] secure assignment failed:', error);
+      alert(error instanceof Error ? error.message : 'Failed to assign technician.');
+    } finally {
+      setUpdating(false);
     }
-
-    const {
-      data: jobData,
-      error: jobErr
-    } = await supabase
-      .from(
-        'technician_jobs'
-      )
-      .insert({
-        booking_id:
-          selectedBooking.id,
-
-        technician_id:
-          assignTechId,
-
-        status:
-          'assigned',
-      })
-      .select()
-      .single();
-
-    if (jobErr) {
-      console.error(
-        '[AdminDashboard] technician_jobs insert error:',
-        jobErr
-      );
-    }
-
-    const assignedTech =
-      technicians.find(
-        (t) =>
-          t.id ===
-          assignTechId
-      );
-
-    // Send notifications
-    await Promise.all([
-      notifyCustomer.technicianAssigned(
-        selectedBooking.mobile_number,
-        selectedBooking.booking_number,
-        assignedTech?.full_name ??
-          'A technician',
-        selectedBooking.id
-      ),
-
-      jobData
-        ? notifyTechnician.jobAssigned(
-            assignTechId,
-            selectedBooking.booking_number,
-            jobData.id
-          )
-        : null,
-    ]);
-
-    setBookings(
-      (prev) =>
-        prev.map(
-          (b) =>
-            b.id ===
-            selectedBooking.id
-              ? {
-                  ...b,
-                  assigned_technician_id:
-                    assignTechId,
-                  status:
-                    'confirmed',
-                }
-              : b
-        )
-    );
-
-    setSelectedBooking(null);
-    setAssignTechId('');
-    setUpdating(false);
   };
 
   // Admin-triggered fallback for the same deterministic auto-assign logic
@@ -943,172 +858,26 @@ export default function AdminDashboard() {
 
   const updateTechStatus = async (
     id: string,
-    status:
-      | 'active'
-      | 'inactive'
-      | 'rejected'
-      | 'suspended',
+    status: 'active' | 'inactive' | 'rejected' | 'suspended',
     reason?: string
   ) => {
     setTechUpdating(true);
-
     try {
-      const updateData:
-        Record<
-          string,
-          unknown
-        > = {
+      const { technician } = await adminData<{ technician: Technician }>('technician_status', {
+        technician_id: id,
         status,
-      };
-
-      if (
-        status === 'active'
-      ) {
-        updateData.rejection_reason =
-          null;
-
-        updateData.suspend_reason =
-          null;
-      } else if (
-        status === 'rejected' ||
-        status === 'inactive'
-      ) {
-        updateData.rejection_reason =
-          reason || null;
-      } else if (
-        status === 'suspended'
-      ) {
-        updateData.suspend_reason =
-          reason || null;
-      }
-
-      // IMPORTANT: wait for the real database response.
-      const {
-        data: updatedTech,
-        error,
-      } = await supabase
-        .from('technicians')
-        .update(
-          updateData
-        )
-        .eq(
-          'id',
-          id
-        )
-        .select('*')
-        .single();
-
-      if (error) {
-        console.error(
-          '[AdminDashboard] technician status update error:',
-          error
-        );
-
-        throw new Error(
-          error.message
-        );
-      }
-
-      if (!updatedTech) {
-        throw new Error(
-          'Technician was not updated in the database.'
-        );
-      }
-
-      console.log(
-        '[AdminDashboard] technician status saved:',
-        updatedTech.id,
-        updatedTech.status
-      );
-
-      // Replace the local row with the exact row returned by Supabase.
-      setTechnicians(
-        (prev) =>
-          prev.map(
-            (t) =>
-              t.id === id
-                ? updatedTech
-                : t
-          )
-      );
-
-      if (
-        selectedTech?.id === id
-      ) {
-        setSelectedTech(
-          updatedTech
-        );
-      }
-
-      // Notification happens only after the database update succeeds.
-      if (
-        status === 'active'
-      ) {
-        await notifyTechnician.registrationApproved(
-          id,
-          updatedTech.full_name
-        );
-      } else if (
-        status === 'inactive' ||
-        status === 'rejected'
-      ) {
-        await notifyTechnician.registrationRejected(
-          id,
-          updatedTech.full_name
-        );
-      }
-
-      // Final database read: this guarantees the dashboard is showing
-      // the persisted value, not just React state.
-      const {
-        data: freshTech,
-        error: refreshError,
-      } = await supabase
-        .from('technicians')
-        .select('*')
-        .eq(
-          'id',
-          id
-        )
-        .single();
-
-      if (refreshError) {
-        console.error(
-          '[AdminDashboard] technician refresh error:',
-          refreshError
-        );
-      } else if (
-        freshTech
-      ) {
-        setTechnicians(
-          (prev) =>
-            prev.map(
-              (t) =>
-                t.id === id
-                  ? freshTech
-                  : t
-            )
-        );
-
-        if (
-          selectedTech?.id === id
-        ) {
-          setSelectedTech(
-            freshTech
-          );
-        }
+        reason,
+      });
+      setTechnicians((prev) => prev.map((t) => t.id === id ? technician : t));
+      if (selectedTech?.id === id) setSelectedTech(technician);
+      if (status === 'active') {
+        await notifyTechnician.registrationApproved(id, technician.full_name);
+      } else if (status === 'inactive' || status === 'rejected') {
+        await notifyTechnician.registrationRejected(id, technician.full_name);
       }
     } catch (error) {
-      console.error(
-        '[AdminDashboard] updateTechStatus failed:',
-        error
-      );
-
-      alert(
-        error instanceof Error
-          ? error.message
-          : 'Failed to update technician status.'
-      );
+      console.error('[AdminDashboard] updateTechStatus failed:', error);
+      alert(error instanceof Error ? error.message : 'Failed to update technician status.');
     } finally {
       setTechUpdating(false);
     }
