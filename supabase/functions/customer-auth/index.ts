@@ -204,6 +204,7 @@ Deno.serve(async (req: Request) => {
           sessionToken,
           expiresAt,
         });
+      }
 
       case "forgot-password": {
         const { mobile } = body;
