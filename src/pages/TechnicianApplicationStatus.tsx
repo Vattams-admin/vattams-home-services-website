@@ -11,7 +11,8 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { useRouter } from '@/lib/router';
-import { supabase, Technician } from '@/lib/supabase';
+import { Technician } from '@/lib/supabase';
+import { technicianData } from '@/lib/technicianData';
 
 // This page is the "Application Status" screen in the required onboarding
 // flow: Login -> Application Status -> Pending / Approved / Rejected.
@@ -47,13 +48,13 @@ export default function TechnicianApplicationStatus() {
         return;
       }
 
-      const query = storedId
-        ? supabase.from('technicians').select('*').eq('id', storedId)
-        : supabase.from('technicians').select('*').eq('mobile', storedMobile as string);
-
-      const { data, error: fetchError } = await query.maybeSingle();
-
-      if (fetchError) throw new Error(fetchError.message);
+      const token = sessionStorage.getItem('vattams_technician_session') || '';
+      if (!token) {
+        navigate('technician-login');
+        return;
+      }
+      const result = await technicianData<{ technician?: Technician }>('account');
+      const data = result.technician;
 
       if (!data) {
         setTechnician(null);
