@@ -63,31 +63,31 @@ export default function TechnicianLogin() {
   };
 
   return (
-    <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-950 via-blue-900 to-indigo-900 px-4 py-12">
+    <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-gradient-to-br from-[#071426] via-[#0b1f3a] to-[#071426] px-4 py-12">
       <div className="max-w-md w-full">
         <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl p-8 shadow-2xl">
           <div className="text-center mb-8">
             <img src="/logo.svg" alt="VATTAMS HOME SERVICES" className="h-20 w-auto mx-auto mb-4 rounded-xl" />
-            <div className="inline-flex items-center gap-2 text-blue-200 text-sm font-semibold mb-2">
+            <div className="inline-flex items-center gap-2 text-[#e8dcc0] text-sm font-semibold mb-2">
               <Wrench size={16} /> Technician Portal
             </div>
             <h1 className="text-2xl font-extrabold text-white mb-1">Technician Login</h1>
-            <p className="text-blue-200 text-sm">
+            <p className="text-[#e8dcc0] text-sm">
   Login using your registered mobile number or email address and password.
 </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-blue-100 mb-1.5">Mobile Number or Email</label>
+              <label className="block text-sm font-medium text-[#f3ead7] mb-1.5">Mobile Number or Email</label>
               <div className="relative">
-                <span className="absolute left-3 top-3.5 text-blue-200/50">
+                <span className="absolute left-3 top-3.5 text-[#e8dcc0]/50">
                   {identifier.includes('@') ? <Mail size={16} /> : <Phone size={16} />}
                 </span>
                 <input
                   type="text" required value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-blue-200/50 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-blue-200/50 focus:border-[#c9a227] focus:ring-2 focus:ring-[#c9a227]/30 outline-none transition-all"
                   placeholder="e.g. 9876543210 or you@example.com"
                   autoComplete="username"
                 />
@@ -95,17 +95,17 @@ export default function TechnicianLogin() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-blue-100 mb-1.5">Password</label>
+              <label className="block text-sm font-medium text-[#f3ead7] mb-1.5">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'} required value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-4 pr-10 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-blue-200/50 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all"
+                  className="w-full pl-4 pr-10 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-blue-200/50 focus:border-[#c9a227] focus:ring-2 focus:ring-[#c9a227]/30 outline-none transition-all"
                   placeholder="Enter your password"
                   autoComplete="current-password"
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3.5 text-blue-200/50 hover:text-blue-200">
+                  className="absolute right-3 top-3.5 text-[#e8dcc0]/50 hover:text-[#e8dcc0]">
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
@@ -119,18 +119,18 @@ export default function TechnicianLogin() {
             )}
 
             <button type="submit" disabled={loading}
-              className="w-full flex items-center justify-center gap-2 py-3.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white font-bold rounded-xl transition-colors">
+              className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#0b1f3a] hover:bg-[#132d50] disabled:opacity-60 text-white font-bold rounded-xl transition-colors">
               {loading ? <Loader size={18} className="animate-spin" /> : <><Lock size={16} /> Sign In</>}
             </button>
           </form>
 
           <div className="mt-6 text-center space-y-2">
-            <p className="text-blue-200/60 text-xs">
+            <p className="text-[#e8dcc0]/60 text-xs">
               You can log in anytime to check your application status. Only approved technicians can access the full Technician Dashboard.
             </p>
-            <p className="text-blue-200/50 text-xs">
+            <p className="text-[#e8dcc0]/50 text-xs">
               New to VATTAMS?{' '}
-              <button onClick={() => navigate('technician-register')} className="text-blue-300 underline font-medium">
+              <button onClick={() => navigate('technician-register')} className="text-[#d7b85a] underline font-medium">
                 Register as a Technician
               </button>
             </p>
