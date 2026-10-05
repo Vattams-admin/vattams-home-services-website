@@ -490,7 +490,8 @@ export function clearRegistrationDraft(): void {
   }
 }
 export async function submitTechnicianApplication(
-  form: TechnicianFormData
+  form: TechnicianFormData,
+  registrationPaymentId?: string
 ): Promise<any> {
   const { score } = calculateProfileScore(form);
 
@@ -527,6 +528,7 @@ export async function submitTechnicianApplication(
         bank_ifsc: form.bank_ifsc,
         upi_id: form.upi_id || undefined,
         profile_score: score,
+        registration_payment_id: registrationPaymentId,
       }),
     }
   );
