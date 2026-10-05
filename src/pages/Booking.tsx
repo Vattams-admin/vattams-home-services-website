@@ -133,7 +133,7 @@ export default function Booking() {
   if (success) {
     return (
       <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-ivory px-4">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-gray-100 p-8 text-center">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-[#e8e1d2] p-8 text-center">
           <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
             <CheckCircle size={40} className="text-green-600" />
           </div>
@@ -188,7 +188,7 @@ export default function Booking() {
             onClick={() => window.dispatchEvent(new CustomEvent('vattams:open-chat'))}
             className="w-full flex items-center gap-3 bg-gold-50 hover:bg-gold-100 border border-gold-200 rounded-2xl p-4 mb-5 text-left transition-colors"
           >
-            <div className="w-10 h-10 rounded-xl bg-royal-800 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-[#0b1f3a] flex items-center justify-center shrink-0">
               <Sparkles size={18} className="text-white" />
             </div>
             <div>
@@ -197,7 +197,7 @@ export default function Booking() {
             </div>
           </button>
 
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
+          <div className="bg-white rounded-2xl border border-[#e8e1d2] shadow-sm p-6 md:p-8">
             {loading ? (
               <div className="flex justify-center py-16">
                 <Loader className="animate-spin text-navy-700" size={32} />
@@ -244,7 +244,7 @@ export default function Booking() {
                 </div>
 
                 {selectedService && pricing && (
-                  <div className="bg-ivory rounded-xl p-4 border border-gray-100">
+                  <div className="bg-ivory rounded-xl p-4 border border-[#e8e1d2]">
                     <div className="flex items-center gap-2 mb-3">
                       <Receipt size={16} className="text-navy-700" />
                       <span className="font-semibold text-gray-800 text-sm">Price Breakdown</span>
@@ -277,7 +277,7 @@ export default function Booking() {
                 )}
 
                 {selectedService && pricing && (
-                  <div className="bg-ivory rounded-xl p-4 border border-gray-100">
+                  <div className="bg-ivory rounded-xl p-4 border border-[#e8e1d2]">
                     <div className="flex items-center gap-2 mb-2">
                       <Tag size={16} className="text-navy-700" />
                       <span className="font-semibold text-gray-800 text-sm">Have a Coupon Code?</span>
@@ -335,7 +335,7 @@ export default function Booking() {
                 </div>
 
                 <button type="submit" disabled={submitting}
-                  className="w-full flex items-center justify-center gap-2 py-4 bg-navy-900 hover:bg-navy-800 disabled:opacity-60 text-white font-bold rounded-xl transition-colors shadow-lg shadow-royal-200">
+                  className="w-full flex items-center justify-center gap-2 py-4 bg-navy-900 hover:bg-navy-800 disabled:opacity-60 text-white font-bold rounded-xl transition-colors shadow-lg shadow-[#d8c58c]">
                   {submitting ? (
                     <><Loader size={18} className="animate-spin" /> Confirming...</>
                   ) : (
