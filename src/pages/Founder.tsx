@@ -101,9 +101,9 @@ export default function Founder() {
               </p>
 
               <p className="text-navy-100/70 text-base leading-relaxed max-w-xl mt-6">
-                Building VATTAMS with a vision to create a trusted digital ecosystem where
-                people can access professional services, discover learning opportunities, and
-                connect through technology.
+                Building VATTAMS with a vision to create a trusted home services network where
+                people can access reliable technicians and dependable service experiences
+                through technology.
               </p>
             </div>
 
@@ -144,12 +144,12 @@ export default function Founder() {
           </h2>
           <p className="text-navy-100/80 text-base sm:text-lg leading-relaxed mb-6">
             VATTAMS represents a long-term vision to build something meaningful — not just
-            another website or service business, but a technology-driven ecosystem that can
-            grow with people and communities.
+            another website or service business, but a technology-driven home services network
+            that can grow with people and communities.
           </p>
           <p className="text-navy-100/80 text-base sm:text-lg leading-relaxed">
-            From home services to online learning, the goal is simple: make trusted services
-            and opportunities easier to discover, access and manage.
+            The goal is simple: make trusted home services easier to discover, book, access and
+            manage.
           </p>
         </div>
       </section>
