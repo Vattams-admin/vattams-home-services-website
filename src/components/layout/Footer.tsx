@@ -161,7 +161,7 @@ export default function Footer() {
 
         <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500">
           <span>© 2026 VATTAMS. All rights reserved.</span>
-          <span className="italic text-gold-400/80">Home Services + Online Tuition</span>
+          <span className="italic text-gold-400/80">Professional Home Services</span>
         </div>
 
         <div className="mt-4 text-center">
