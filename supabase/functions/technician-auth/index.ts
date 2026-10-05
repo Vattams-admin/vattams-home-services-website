@@ -237,19 +237,25 @@ async function handleLogin(supabase: ReturnType<typeof createClient>, body: Logi
     );
   }
 
-  // IMPORTANT: once the password is verified, we always return the
-  // technician record — regardless of application status. Blocking login
-  // outright for pending/rejected/suspended/inactive technicians (as this
-  // endpoint used to do) meant there was no way for a technician to ever
-  // see their own application status; they just got a login-form error
-  // and a dead end. The frontend (TechnicianLogin) is responsible for
-  // routing: `status === 'active'` goes to the dashboard, anything else
-  // goes to the Application Status screen. This endpoint's only job is to
-  // authenticate the technician and hand back their current record.
-  const { password_hash, ...safeTech } = technician;
+  // Mint an opaque server-side session. The browser never uses the technician id as proof of identity.
+  const sessionToken = crypto.randomUUID() + crypto.randomUUID();
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  await supabase.from("technician_auth_sessions").delete().eq("technician_id", technician.id);
+  const { error: sessionError } = await supabase.from("technician_auth_sessions").insert({
+    technician_id: technician.id,
+    token: sessionToken,
+    expires_at: expiresAt,
+  });
+  if (sessionError) {
+    return new Response(
+      JSON.stringify({ error: "Unable to create secure login session. Please try again." }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
 
+  const { password_hash, ...safeTech } = technician;
   return new Response(
-    JSON.stringify({ technician: safeTech }),
+    JSON.stringify({ technician: safeTech, sessionToken, expiresAt }),
     { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
   );
 }
