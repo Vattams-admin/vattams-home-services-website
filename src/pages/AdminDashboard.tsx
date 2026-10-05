@@ -31,7 +31,6 @@ import AdminAIDashboard from '@/components/admin/AdminAIDashboard';
 import AdminCRM from '@/components/admin/AdminCRM';
 import AdminContent from '@/components/admin/AdminContent';
 import AdminCoupons from '@/components/admin/AdminCoupons';
-import TuitionAdminPanel from '@/components/tuition/admin/TuitionAdminPanel';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -87,7 +86,6 @@ type Tab =
   | 'crm'
   | 'content'
   | 'coupons'
-  | 'tuition';
 
 export default function AdminDashboard() {
   const { navigate } = useRouter();
@@ -1544,7 +1542,6 @@ export default function AdminDashboard() {
     { id: 'content', label: 'AI Content', icon: Sparkles },
     { id: 'crm', label: 'CRM', icon: FileText },
     { id: 'ai-dashboard', label: 'AI Insights', icon: Brain },
-    { id: 'tuition', label: 'Tuition', icon: GraduationCap },
   ];
 
   if (loading) {
@@ -3501,11 +3498,6 @@ export default function AdminDashboard() {
       {/* ===================== COUPONS ===================== */}
       {tab === 'coupons' && (
         <AdminCoupons />
-      )}
-
-      {/* ===================== TUITION ===================== */}
-      {tab === 'tuition' && (
-        <TuitionAdminPanel />
       )}
         </div>
       </div>
