@@ -50,7 +50,7 @@ const homeServices: { label: string; icon: LucideIcon }[] = [
 const whyVattams: { title: string; text: string; icon: LucideIcon }[] = [
   { title: 'Trusted Ecosystem', text: 'A single platform built around verified professionals and structured onboarding.', icon: ShieldCheck },
   { title: 'Technology Driven', text: 'Every booking, assignment and update runs through a modern digital workflow.', icon: Cpu },
-  { title: 'Customer Focused', text: 'Designed around what customers and learners actually need, not just features.', icon: Users },
+  { title: 'Customer Focused', text: 'Designed around what customers actually need, not just features.', icon: Users },
   { title: 'Professional Network', text: 'Connecting verified technicians with the people who need reliable home services.', icon: Handshake },
   { title: 'Built for India', text: 'Designed with an India-wide vision, growing step by step and responsibly.', icon: Globe2 },
 ];
@@ -112,11 +112,11 @@ export default function About() {
           </p>
 
           <p className="text-navy-100/80 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto mb-14">
-            VATTAMS is building a trusted digital ecosystem that brings professional home
-            services and quality online learning together on one platform.
+            VATTAMS is building a trusted home services platform that brings professional
+            technicians and dependable service experiences together on one platform.
           </p>
 
-          {/* Ecosystem cards */}
+          {/* Home Services */}
           <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto text-left">
             <button
               onClick={() => navigate('services')}
@@ -151,9 +151,8 @@ export default function About() {
             About VATTAMS
           </h2>
           <p className="text-gray-600 text-base sm:text-lg leading-relaxed mb-6">
-            VATTAMS is designed as a unified platform connecting customers, professionals,
-            students, tutors and trusted services through technology — bringing everyday
-            home services and structured online learning together in one place.
+            VATTAMS is designed to connect customers with trusted home service professionals
+            through a reliable digital booking and service workflow.
           </p>
           <button
             onClick={() => navigate('founder')}
@@ -164,12 +163,12 @@ export default function About() {
         </div>
       </section>
 
-      {/* ================= OUR TWO VERTICALS ================= */}
+      {/* ================= OUR SERVICES ================= */}
       <section className="bg-gray-50 py-16 md:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <h2 className="font-display text-2xl md:text-4xl font-bold text-royal-900 tracking-tight">
-              Our Two Verticals
+              Our Home Services
             </h2>
           </div>
 
@@ -223,7 +222,7 @@ export default function About() {
               <h3 className="font-display font-bold text-royal-900 text-lg mb-2">Our Vision</h3>
               <p className="text-gray-500 text-sm leading-relaxed">
                 To build a trusted technology platform that connects everyday services and
-                learning opportunities with people across India.
+                reliable home services with people across India.
               </p>
             </div>
             <div className="bg-gray-50 rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
@@ -232,8 +231,8 @@ export default function About() {
               </div>
               <h3 className="font-display font-bold text-royal-900 text-lg mb-2">Our Mission</h3>
               <p className="text-gray-500 text-sm leading-relaxed">
-                To make professional services and quality learning easier to discover, access
-                and manage through one digital platform.
+                To make professional home services easier to discover, book, access and manage
+                through one digital platform.
               </p>
             </div>
           </div>
@@ -306,11 +305,7 @@ export default function About() {
                 Find a service → Book → Technician assignment → Service completion
               </p>
             </div>
-              <p className="text-navy-100/70 text-sm leading-relaxed">
-                Choose a course → Join / Book → Connect with tutor → Learn
-              </p>
             </div>
-          </div>
         </div>
       </section>
 
@@ -325,7 +320,7 @@ export default function About() {
                 <span className="text-gold-600">Designed to Scale.</span>
               </h2>
               <p className="text-gray-600 text-base md:text-lg leading-relaxed max-w-lg">
-                VATTAMS is building toward a connected platform serving customers and learners
+                VATTAMS is building toward a connected home services platform serving customers
                 across India.
               </p>
             </div>
