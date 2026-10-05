@@ -86,7 +86,7 @@ function buildReply(userText: string, prices: Record<string, ServicePrice>): str
   }
 
   if (has('technician job', 'join as', 'work with you', 'become a technician', 'hiring')) {
-    return `We're hiring technicians across India! Tap "Join as a Technician" in the menu to register — it's free and takes about 5 minutes.`;
+    return `We're hiring technicians across India! Tap "Join as a Technician" in the menu to register — the one-time joining fee is ₹49 and registration takes about 5 minutes.`;
   }
 
   if (has('thank', 'thanks', 'ok', 'okay', 'great')) {
