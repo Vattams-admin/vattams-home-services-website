@@ -55,7 +55,11 @@ export default function AIAssistant() {
     const customerName = customer ? JSON.parse(customer).full_name : 'Guest User';
     const customerMobile = customer ? JSON.parse(customer).mobile : '';
 
-    const { data: booking } = await supabase.from('bookings').insert({
+    const bookingResponse = await supabase.functions.invoke('booking-ops', {
+      body: {
+        action: 'create_booking',
+        customer_session_token: sessionStorage.getItem('vattams_customer_session') || undefined,
+        booking: {
       customer_name: customerName,
       mobile_number: customerMobile,
       customer_id: customerId,
@@ -68,7 +72,10 @@ export default function AIAssistant() {
       status: 'pending',
       ai_booking: true,
       urgency: (data.urgency as string) ?? 'normal',
-    }).select().single();
+    }
+      },
+    });
+    const booking = bookingResponse.data?.data ?? null;
 
     if (booking) {
       setBookingNumber(booking.booking_number);
