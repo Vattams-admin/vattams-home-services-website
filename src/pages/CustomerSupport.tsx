@@ -51,9 +51,9 @@ export default function CustomerSupport() {
   };
 
   return (
-    <div className="pt-20 md:pt-24 min-h-screen bg-gray-50">
+    <div className="pt-20 md:pt-24 min-h-screen bg-ivory-50">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
-        <h1 className="text-2xl font-extrabold text-gray-900 mb-6 flex items-center gap-2"><Headphones size={24} className="text-blue-600" /> Customer Support</h1>
+        <h1 className="text-2xl font-extrabold text-gray-900 mb-6 flex items-center gap-2"><Headphones size={24} className="text-gold-700" /> Customer Support</h1>
 
         {toast && (
           <div className={`rounded-xl p-3 text-sm mb-4 ${toast.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>{toast.text}</div>
@@ -65,9 +65,9 @@ export default function CustomerSupport() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6">
-          <a href={`mailto:${SUPPORT_EMAIL}`} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md hover:border-amber-200 transition-all group">
-            <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center mb-3 group-hover:bg-amber-500 transition-colors">
-              <Mail size={20} className="text-amber-600 group-hover:text-white transition-colors" />
+          <a href={`mailto:${SUPPORT_EMAIL}`} className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-5 hover:shadow-md hover:border-gold-300 transition-all group">
+            <div className="w-12 h-12 rounded-xl bg-gold-100 flex items-center justify-center mb-3 group-hover:bg-gold-500 transition-colors">
+              <Mail size={20} className="text-gold-700 group-hover:text-white transition-colors" />
             </div>
             <div className="font-bold text-gray-900 text-sm">Email Support</div>
             <div className="text-xs text-gray-500 mt-1">{SUPPORT_EMAIL}</div>
@@ -75,30 +75,30 @@ export default function CustomerSupport() {
         </div>
 
         {/* Contact Form */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-6">
           <h2 className="font-bold text-gray-900 text-sm mb-4">Send Us a Message</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Subject</label>
               <input type="text" value={subject} onChange={(e) => setSubject(e.target.value)}
                 placeholder="What do you need help with?"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm" />
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1.5">Message</label>
               <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={5}
                 placeholder="Describe your issue in detail..."
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm resize-none" />
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm resize-none" />
             </div>
             <button type="submit" disabled={sending}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold rounded-xl transition-colors">
+              className="w-full flex items-center justify-center gap-2 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors">
               {sending ? <Loader size={18} className="animate-spin" /> : <Send size={18} />} Send Message
             </button>
           </form>
         </div>
 
         {/* Business Info */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mt-6">
+        <div className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-6 mt-6">
           <h2 className="font-bold text-gray-900 text-sm mb-4">Business Information</h2>
           <div className="space-y-3">
             <div className="flex items-center gap-3 text-sm text-gray-600">
@@ -114,13 +114,13 @@ export default function CustomerSupport() {
           <div className="mt-4 pt-4 border-t border-gray-100">
             <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-2">Quick Links</div>
             <div className="space-y-1">
-              <button onClick={() => navigate('customer-dashboard')} className="w-full flex items-center justify-between text-sm text-gray-600 hover:text-blue-600 py-1">
+              <button onClick={() => navigate('customer-dashboard')} className="w-full flex items-center justify-between text-sm text-gray-600 hover:text-gold-700 py-1">
                 <span>Dashboard</span><ChevronRight size={16} />
               </button>
-              <button onClick={() => navigate('customer-bookings')} className="w-full flex items-center justify-between text-sm text-gray-600 hover:text-blue-600 py-1">
+              <button onClick={() => navigate('customer-bookings')} className="w-full flex items-center justify-between text-sm text-gray-600 hover:text-gold-700 py-1">
                 <span>My Bookings</span><ChevronRight size={16} />
               </button>
-              <button onClick={() => navigate('customer-payments')} className="w-full flex items-center justify-between text-sm text-gray-600 hover:text-blue-600 py-1">
+              <button onClick={() => navigate('customer-payments')} className="w-full flex items-center justify-between text-sm text-gray-600 hover:text-gold-700 py-1">
                 <span>Payments</span><ChevronRight size={16} />
               </button>
             </div>
