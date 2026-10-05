@@ -1,11 +1,3 @@
-// Digitally generated VATTAMS onboarding letters (Technicians / Tutors)
-// and student registration confirmation documents.
-//
-// Follows the same pattern already used by src/lib/invoice.ts:
-// build a self-contained HTML string, then offer it as a downloadable
-// .html file via a Blob. No new dependency, no PDF library, no
-// signature capture — matches the existing project conventions.
-
 const TERMS_AND_CONDITIONS = [
   'This ID card / letter is issued solely for identification within the VATTAMS platform and must not be used for any purpose outside VATTAMS-related work.',
   'The holder must comply with all VATTAMS service standards, code of conduct, and applicable local laws while representing VATTAMS.',
@@ -38,7 +30,7 @@ function baseStyles(accentFrom: string, accentTo: string): string {
 }
 
 export interface OnboardingLetterParams {
-  role: 'Technician' | 'Tutor';
+  role: 'Technician';
   employeeId: string;
   fullName: string;
   city: string;
@@ -70,7 +62,7 @@ export function generateOnboardingLetterHTML(params: OnboardingLetterParams): st
     year: 'numeric',
   });
 
-  const accent = role === 'Technician' ? ['#2563eb', '#3b82f6'] : ['#7c3aed', '#a855f7'];
+  const accent = ['#2563eb', '#3b82f6'];
 
   return `<!DOCTYPE html>
 <html lang="en">
