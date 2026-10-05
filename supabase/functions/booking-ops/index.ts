@@ -31,6 +31,47 @@ Deno.serve(async (req: Request) => {
 
     const { action, booking_id, technician_id, otp, purpose, status, booking_action_token, admin_id, admin_session_token } = await req.json();
 
+    if (action === "create_booking") {
+      const input = arguments;
+      const customerSessionToken = String((await req.clone().json()).customer_session_token || "");
+      let customerId: string | null = null;
+      if (customerSessionToken) {
+        const { data: cs } = await supabase.from("customer_auth_sessions").select("customer_id, expires_at").eq("token", customerSessionToken).maybeSingle();
+        if (cs && new Date(cs.expires_at).getTime() > Date.now()) customerId = String(cs.customer_id);
+      }
+      const allowedStatuses = new Set(["pending"]);
+      const b = (await req.clone().json()).booking || {};
+      if (!b.customer_name || !b.mobile_number || !b.city || !b.address || !b.service_category || !b.problem_description) {
+        return new Response(JSON.stringify({ error: "Required booking fields are missing" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const row: Record<string, unknown> = {
+        customer_name: String(b.customer_name).slice(0,150),
+        mobile_number: String(b.mobile_number).replace(/[^0-9+]/g,"").slice(0,20),
+        city: String(b.city).slice(0,100),
+        address: String(b.address).slice(0,500),
+        service_category: String(b.service_category).slice(0,100),
+        problem_description: String(b.problem_description).slice(0,2000),
+        preferred_date: b.preferred_date || null,
+        preferred_time: b.preferred_time || null,
+        amount: Math.max(0, Number(b.amount)||0),
+        base_price: Math.max(0, Number(b.base_price)||0),
+        gst_amount: Math.max(0, Number(b.gst_amount)||0),
+        platform_fee: Math.max(0, Number(b.platform_fee)||0),
+        commission_amount: Math.max(0, Number(b.commission_amount)||0),
+        total_amount: Math.max(0, Number(b.total_amount)||0),
+        coupon_code: b.coupon_code ? String(b.coupon_code).slice(0,50) : null,
+        discount_amount: Math.max(0, Number(b.discount_amount)||0),
+        customer_id: customerId,
+        status: "pending",
+        assigned_technician_id: null,
+        ai_booking: Boolean(b.ai_booking),
+        urgency: ["normal","urgent","emergency"].includes(String(b.urgency)) ? String(b.urgency) : "normal",
+      };
+      const { data, error } = await supabase.from("bookings").insert(row).select("id,booking_number,booking_action_token").single();
+      if (error) return new Response(JSON.stringify({ error: "Unable to create booking" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ data }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     if (action === "auto_assign") {
       const { data: capabilityBooking } = await supabase.from("bookings").select("id, booking_action_token").eq("id", booking_id).maybeSingle();
       const tokenMatches = Boolean(capabilityBooking && booking_action_token && capabilityBooking.booking_action_token === booking_action_token);
