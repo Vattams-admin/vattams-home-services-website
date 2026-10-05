@@ -56,7 +56,7 @@ export default function Services() {
   return (
     <div className="pt-20 md:pt-24">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-royal-950 via-royal-900 to-royal-800 py-16 md:py-20">
+      <section className="bg-gradient-to-br from-navy-950 via-navy-900 to-navy-800 py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 bg-white/10 text-gold-300 rounded-full px-4 py-1.5 text-sm font-semibold mb-4">
             Our Services
@@ -64,7 +64,7 @@ export default function Services() {
           <h1 className="font-display text-3xl md:text-5xl font-bold text-white mb-4">
             Professional Home Services
           </h1>
-          <p className="text-royal-100 max-w-xl mx-auto text-base md:text-lg">
+          <p className="text-navy-100 max-w-xl mx-auto text-base md:text-lg">
             From AC installation to plumbing — we cover all your home appliance needs with certified technicians.
           </p>
         </div>
@@ -75,7 +75,7 @@ export default function Services() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {loading ? (
             <div className="flex justify-center py-16">
-              <Loader className="animate-spin text-royal-700" size={32} />
+              <Loader className="animate-spin text-navy-700" size={32} />
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -116,7 +116,7 @@ export default function Services() {
       {/* What's Included */}
       <section className="py-16 bg-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-royal-900 text-center mb-10">
+          <h2 className="font-display text-2xl md:text-3xl font-bold text-navy-900 text-center mb-10">
             What's Included in Every Service
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -142,12 +142,12 @@ export default function Services() {
       </section>
 
       {/* Join as Technician CTA */}
-      <section className="py-12 bg-gradient-to-r from-wine-700 to-wine-600 text-white">
+      <section className="py-14 md:py-18 bg-navy-950 text-white">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <Briefcase size={32} className="mx-auto mb-3" />
           <h2 className="font-display text-2xl md:text-3xl font-bold mb-3">Are You a Skilled Technician?</h2>
-          <p className="text-white/90 mb-6 max-w-xl mx-auto">Join VATTAMS and start receiving job requests near you. Free registration, flexible hours, secure payments.</p>
-          <button onClick={() => navigate('join-technician')} className="inline-flex items-center gap-2 px-8 py-3.5 bg-gold-500 hover:bg-gold-400 text-royal-950 font-extrabold rounded-xl shadow-lg transition-all hover:scale-105">
+          <p className="text-white/90 mb-6 max-w-xl mx-auto">Join VATTAMS and start receiving job requests near you. Professional onboarding, flexible working, secure payouts.</p>
+          <button onClick={() => navigate('join-technician')} className="inline-flex items-center gap-2 px-8 py-3.5 bg-gold-500 hover:bg-gold-400 text-navy-950 font-extrabold rounded-xl shadow-lg transition-all hover:-translate-y-0.5">
             <Briefcase size={18} /> Join as a Technician
           </button>
         </div>
