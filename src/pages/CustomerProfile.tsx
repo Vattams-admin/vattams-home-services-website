@@ -56,9 +56,22 @@ export default function CustomerProfile() {
     setSaving(false);
   };
 
-  const handleLogout = () => {
-    sessionStorage.removeItem('vattams_customer');
-    navigate('home');
+  const handleLogout = async () => {
+    const sessionToken = sessionStorage.getItem('vattams_customer_session') || '';
+    try {
+      if (sessionToken) {
+        await fetch(SUPABASE_URL + '/functions/v1/customer-auth/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + ANON_KEY },
+          body: JSON.stringify({ session_token: sessionToken }),
+        });
+      }
+    } finally {
+      sessionStorage.removeItem('vattams_customer');
+      sessionStorage.removeItem('vattams_customer_session');
+      sessionStorage.removeItem('vattams_customer_expires');
+      navigate('home');
+    }
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
