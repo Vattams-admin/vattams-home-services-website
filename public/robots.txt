@@ -3,9 +3,6 @@ Allow: /
 Disallow: /admin-dashboard
 Disallow: /customer-dashboard
 Disallow: /technician-dashboard
-Disallow: /tuition-student-classes
-Disallow: /tuition-tutor-classes
-Disallow: /tuition-admin
 
 # AI Crawlers
 User-agent: GPTBot
