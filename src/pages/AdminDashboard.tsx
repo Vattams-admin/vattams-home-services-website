@@ -11,7 +11,8 @@ import {
 import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY, Booking, Technician, BookingStatus, WalletTransaction, WalletRecharge } from '@/lib/supabase';
 import { downloadOnboardingLetter } from '@/lib/onboardingLetter';
 import { useRouter } from '@/lib/router';
-import { fetchAllPayments, fetchPendingPayments, updatePaymentStatus, PaymentRecord } from '@/lib/payments';
+import { updatePaymentStatus, PaymentRecord } from '@/lib/payments';
+import { adminData } from '@/lib/adminData';
 import { fetchAllServicePrices, getPricingFromServicePrice, formatINR, type PricingBreakdown } from '@/lib/pricing';
 import { ServicePrice } from '@/lib/supabase';
 import { fetchSiteSettings, saveSiteSettings, validateSettings, SiteSettings, SiteSettingsInput } from '@/lib/siteSettings';
@@ -26,7 +27,6 @@ import { Customer } from '@/lib/supabase';
 import { fetchAllReminders, type CRMReminder } from '@/lib/crm';
 import { generateSocialContent, generateBlogPost, generateCityPage, generateFAQ, generateOfferPoster, saveContentDraft, fetchContentDrafts, type ContentDraft } from '@/lib/aiContent';
 import { fetchActiveCoupons, validateCoupon, type Coupon } from '@/lib/coupons';
-import { autoAssignTechnician } from '@/lib/aiAssignment';
 import AdminAIDashboard from '@/components/admin/AdminAIDashboard';
 import AdminCRM from '@/components/admin/AdminCRM';
 import AdminContent from '@/components/admin/AdminContent';
@@ -357,268 +357,60 @@ export default function AdminDashboard() {
   }, []);
 
   const loadData = async () => {
-    // ---- TEMP DIAGNOSTICS (remove once root cause is confirmed) ----
-    // NOTE: this project's Supabase client (src/lib/supabase.ts) does NOT
-    // read import.meta.env.VITE_SUPABASE_URL — the URL/anon key are
-    // hardcoded constants. We log both here so a mismatch between what
-    // Vite injected at build time and what the client actually uses is
-    // impossible to miss.
-    console.log(
-      '[ADMIN DEBUG] SUPABASE_URL (actually used by client):',
-      SUPABASE_URL
-    );
-    console.log(
-      '[ADMIN DEBUG] import.meta.env.VITE_SUPABASE_URL (NOT used by client, informational only):',
-      import.meta.env.VITE_SUPABASE_URL
-    );
+    try {
+      const [bookingData, techData, customerData, walletData, rechargeData, paymentData, notificationData] =
+        await Promise.all([
+          adminData<{ bookings: Booking[] }>('bookings'),
+          adminData<{ technicians: Technician[] }>('technicians'),
+          adminData<{ customers: Customer[] }>('customers'),
+          adminData<{ transactions: WalletTransaction[] }>('wallet_transactions'),
+          adminData<{ recharges: Array<WalletRecharge & { technician?: { full_name?: string } }> }>('recharges'),
+          adminData<{ payments: PaymentRecord[] }>('payments'),
+          adminData<{ notifications: NotificationRow[] }>('notifications', { limit: 100 }),
+        ]);
 
-    const [
-      bookingsRes,
-      techRes,
-      techMinimalRes,
-    ] = await Promise.all([
-      supabase
-        .from('bookings')
-        .select('*')
-        .order(
-          'created_at',
-          { ascending: false }
-        ),
+      setBookings(bookingData.bookings ?? []);
+      setTechnicians(techData.technicians ?? []);
+      setCustomers(customerData.customers ?? []);
+      setWalletTxns(walletData.transactions ?? []);
+      setRecharges((rechargeData.recharges ?? []).map((r) => ({
+        ...r,
+        technician_name: r.technician?.full_name,
+      })));
+      setPayments(paymentData.payments ?? []);
+      setNotifLogs(notificationData.notifications ?? []);
 
-      supabase
-        .from('technicians')
-        .select('*')
-        .order(
-          'created_at',
-          { ascending: false }
-        ),
-
-      // TEMP: minimal-column query to compare against select('*') and
-      // isolate whether a specific column is the problem.
-      supabase
-        .from('technicians')
-        .select('id, full_name, mobile, status, created_at', { count: 'exact' })
-        .order('created_at', { ascending: false }),
-    ]);
-
-    if (bookingsRes.error) {
-      console.error(
-        '[AdminDashboard] bookings query error:',
-        bookingsRes.error
-      );
+      await loadSiteSettings();
+      await loadServicePrices();
+    } catch (error) {
+      console.error('[AdminDashboard] secure load failed:', error);
+      if (error instanceof Error && /Unauthorized|expired/i.test(error.message)) {
+        navigate('admin-login');
+      }
+    } finally {
+      setLoading(false);
     }
-
-    if (techRes.error) {
-      console.error(
-        '[AdminDashboard] technicians query error:',
-        techRes.error
-      );
-    }
-
-    // ---- TEMP DIAGNOSTICS (remove once root cause is confirmed) ----
-    console.log('[ADMIN DEBUG] technicians data (select *):', techRes.data);
-    console.log('[ADMIN DEBUG] technicians error (select *):', techRes.error);
-    console.log('[ADMIN DEBUG] technicians count (select *):', techRes.data?.length);
-    console.log(
-      '[ADMIN DEBUG] pending technicians (select *):',
-      (techRes.data ?? []).filter((t) => t.status === 'pending')
-    );
-
-    console.log('[ADMIN DEBUG] technicians data (minimal select):', techMinimalRes.data);
-    console.log('[ADMIN DEBUG] technicians error (minimal select):', techMinimalRes.error);
-    console.log('[ADMIN DEBUG] technicians count (minimal select, exact):', techMinimalRes.count);
-    if (
-      !techRes.error &&
-      !techMinimalRes.error &&
-      (techRes.data?.length ?? 0) !== (techMinimalRes.data?.length ?? 0)
-    ) {
-      console.warn(
-        '[ADMIN DEBUG] MISMATCH: select(*) returned a different row count than the minimal select — a specific column is likely the problem.'
-      );
-    }
-
-    console.log(
-      '[AdminDashboard] bookings raw:',
-      bookingsRes.data
-    );
-
-    console.log(
-      '[AdminDashboard] technicians raw:',
-      techRes.data
-    );
-
-    console.log(
-      '[AdminDashboard] active technicians for dropdown:',
-      (techRes.data ?? []).filter(
-        (t) => t.status === 'active'
-      )
-    );
-
-    setBookings(
-      bookingsRes.data ?? []
-    );
-
-    setTechnicians(
-      techRes.data ?? []
-    );
-
-    // TEMP: this logs the array we just PASSED to setTechnicians, not the
-    // committed state (React state updates are async, so `technicians` in
-    // this closure is still the OLD value here). See the useEffect below
-    // for the actual post-commit state.
-    console.log(
-      '[ADMIN DEBUG] value passed to setTechnicians():',
-      techRes.data ?? []
-    );
-
-    const [
-      txnRes,
-      rechargeRes
-    ] = await Promise.all([
-      supabase
-        .from('wallet_transactions')
-        .select('*')
-        .order(
-          'created_at',
-          { ascending: false }
-        )
-        .limit(100),
-
-      supabase
-        .from('wallet_recharges')
-        .select(
-          '*, technician:technicians(full_name)'
-        )
-        .order(
-          'created_at',
-          { ascending: false }
-        )
-        .limit(50),
-    ]);
-
-    if (txnRes.error) {
-      console.error(
-        '[AdminDashboard] wallet_transactions query error:',
-        txnRes.error
-      );
-    }
-
-    if (rechargeRes.error) {
-      console.error(
-        '[AdminDashboard] wallet_recharges query error:',
-        rechargeRes.error
-      );
-    }
-
-    setWalletTxns(
-      txnRes.data ?? []
-    );
-
-    setRecharges(
-      (rechargeRes.data ?? []).map(
-        (r) => ({
-          ...r,
-          technician_name:
-            (r as Record<string, unknown>)
-              .technician
-              ? (
-                  (r as Record<
-                    string,
-                    { full_name: string }
-                  >).technician
-                ).full_name
-              : undefined,
-        })
-      )
-    );
-
-    const [
-      pendingPay,
-      allPay,
-      custRes
-    ] = await Promise.all([
-      fetchPendingPayments(),
-      fetchAllPayments(),
-
-      supabase
-        .from('customers')
-        .select('*')
-        .order(
-          'created_at',
-          { ascending: false }
-        ),
-    ]);
-
-    setPayments(allPay);
-
-    if (custRes.data) {
-      setCustomers(
-        custRes.data
-      );
-    }
-
-    if (custRes.error) {
-      console.error(
-        '[AdminDashboard] customers query error:',
-        custRes.error
-      );
-    }
-
-    await loadSiteSettings();
-    await loadNotifLogs();
-    await loadServicePrices();
-
-    setLoading(false);
   };
 
   const loadServicePrices = async () => {
-    const prices =
-      await fetchAllServicePrices();
-
-    setServicePrices(prices);
-
-    const edits: Record<
-      string,
-      {
-        base_price: string;
-        gst_rate: string;
-        platform_fee: string;
-        commission_rate: string;
-        is_active: boolean;
-      }
-    > = {};
-
-    prices.forEach((p) => {
+    const { prices } = await adminData<{ prices: ServicePrice[] }>('service_prices');
+    setServicePrices(prices ?? []);
+    const edits: Record<string, { base_price: string; gst_rate: string; platform_fee: string; commission_rate: string; is_active: boolean }> = {};
+    (prices ?? []).forEach((p) => {
       edits[p.id] = {
-        base_price:
-          String(p.base_price),
-
-        gst_rate:
-          String(p.gst_rate),
-
-        platform_fee:
-          String(p.platform_fee),
-
-        commission_rate:
-          String(p.commission_rate),
-
-        is_active:
-          p.is_active,
+        base_price: String(p.base_price),
+        gst_rate: String(p.gst_rate),
+        platform_fee: String(p.platform_fee),
+        commission_rate: String(p.commission_rate),
+        is_active: p.is_active,
       };
     });
-
     setPriceEdits(edits);
   };
 
   const loadNotifLogs = async () => {
-    const logs =
-      await fetchNotifications(
-        'admin',
-        'admin',
-        100
-      );
-
-    setNotifLogs(logs);
+    const { notifications } = await adminData<{ notifications: NotificationRow[] }>('notifications', { limit: 100 });
+    setNotifLogs(notifications ?? []);
   };
 
   // Re-fetch the latest notification records from the database every time
@@ -634,9 +426,19 @@ export default function AdminDashboard() {
   }, [tab]);
 
   const loadSiteSettings = async () => {
-    const s =
-      await fetchSiteSettings();
-
+    const { settings } = await adminData<{ settings: SiteSettings | null }>('site_settings');
+    const s = settings ?? {
+      id: 1,
+      google_business_url: null,
+      facebook_url: null,
+      instagram_url: null,
+      twitter_url: null,
+      youtube_url: null,
+      whatsapp_number: null,
+      website_url: null,
+      updated_at: null,
+      updated_by: null,
+    } as SiteSettings;
     setSiteSettings(s);
 
     setSocialForm({
@@ -687,11 +489,15 @@ export default function AdminDashboard() {
       return;
     }
 
-    const result =
-      await saveSiteSettings(
-        socialForm,
-        'admin'
-      );
+    const result = await (async () => {
+      try {
+        validateSettings(socialForm);
+        await adminData('save_site_settings', { input: socialForm });
+        return { success: true as const };
+      } catch (error) {
+        return { success: false as const, error: error instanceof Error ? error.message : 'Failed to save settings.' };
+      }
+    })();
 
     if (result.success) {
       setSocialMsg({
