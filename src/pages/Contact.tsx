@@ -25,24 +25,24 @@ export default function Contact() {
             Get in Touch
           </div>
           <h1 className="font-display text-3xl md:text-5xl font-bold text-white mb-4">Contact Us</h1>
-          <p className="text-royal-100 max-w-xl mx-auto text-base md:text-lg">
+          <p className="text-[#e8dcc0] max-w-xl mx-auto text-base md:text-lg">
             Have a question? We're here to help. Reach out and we'll respond within 24 hours.
           </p>
         </div>
       </section>
 
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-[#f7f4ed]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Contact Info */}
             <div>
-              <h2 className="font-display text-2xl font-bold text-royal-900 mb-6">Contact Information</h2>
+              <h2 className="font-display text-2xl font-bold text-[#0b1f3a] mb-6">Contact Information</h2>
               <div className="space-y-4">
                 {[
-                  { icon: Phone, label: 'Call Us', value: '+91 63740 68296', href: 'tel:+916374068296', color: 'bg-royal-800' },
+                  { icon: Phone, label: 'Call Us', value: '+91 63740 68296', href: 'tel:+916374068296', color: 'bg-[#0b1f3a]' },
                   { icon: MessageCircle, label: 'WhatsApp', value: 'Chat with us', href: 'https://wa.me/918189800757', color: 'bg-green-500' },
                   { icon: Mail, label: 'Email', value: 'admin@vattams.net', href: 'mailto:admin@vattams.net', color: 'bg-gold-600' },
-                  { icon: MapPin, label: 'Service Area', value: 'Across India', href: '#', color: 'bg-wine-600' },
+                  { icon: MapPin, label: 'Service Area', value: 'Across India', href: '#', color: 'bg-[#0b1f3a]' },
                 ].map((c) => {
                   const Icon = c.icon;
                   return (
@@ -51,7 +51,7 @@ export default function Contact() {
                       href={c.href}
                       target={c.href.startsWith('http') ? '_blank' : undefined}
                       rel="noreferrer"
-                      className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow"
+                      className="flex items-center gap-4 bg-white rounded-2xl border border-[#e8e1d2] shadow-sm p-5 hover:shadow-md transition-shadow"
                     >
                       <div className={`w-12 h-12 rounded-xl ${c.color} flex items-center justify-center shrink-0`}>
                         <Icon size={22} className="text-white" />
@@ -80,7 +80,7 @@ export default function Contact() {
 
               <div className="mt-8">
                 <h3 className="font-bold text-gray-900 mb-3">Our Office</h3>
-                <div className="relative rounded-2xl overflow-hidden border border-gray-100 shadow-sm h-56">
+                <div className="relative rounded-2xl overflow-hidden border border-[#e8e1d2] shadow-sm h-56">
                   <iframe
                     title="VATTAMS office location"
                     src="https://www.google.com/maps?q=13.0827,80.2707&z=12&output=embed"
@@ -94,8 +94,8 @@ export default function Contact() {
             </div>
 
             {/* Contact Form */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
-              <h2 className="font-display text-2xl font-bold text-royal-900 mb-6">Send a Message</h2>
+            <div className="bg-white rounded-2xl border border-[#e8e1d2] shadow-sm p-8">
+              <h2 className="font-display text-2xl font-bold text-[#0b1f3a] mb-6">Send a Message</h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Your Name</label>
@@ -137,7 +137,7 @@ export default function Contact() {
                 </div>
                 <button
                   type="submit" disabled={status === 'sending'}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 bg-royal-800 hover:bg-royal-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors shadow-lg shadow-royal-200"
+                  className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#0b1f3a] hover:bg-[#071426] disabled:opacity-60 text-white font-bold rounded-xl transition-colors shadow-lg shadow-[#d8c58c]"
                 >
                   {status === 'sending' ? (
                     <><Loader size={18} className="animate-spin" /> Sending...</>
@@ -159,7 +159,7 @@ export default function Contact() {
       </section>
 
       {/* MSME Trust Badge */}
-      <section className="py-12 bg-gray-50">
+      <section className="py-12 bg-[#f7f4ed]">
         <div className="max-w-3xl mx-auto px-4 text-center">
           <div className="inline-flex flex-col items-center gap-2 bg-white rounded-2xl border border-gold-200 shadow-sm px-8 py-6">
             <div className="inline-flex items-center gap-2 text-gold-700">
