@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { adminData } from '@/lib/adminData';
 import { sendPushNotification } from '@/lib/fcm';
 
 export type NotificationRecipientType = 'customer' | 'technician' | 'admin';
@@ -102,6 +103,14 @@ export async function createNotificationsBatch(inputs: CreateNotificationInput[]
 }
 
 export async function fetchNotifications(recipientType: NotificationRecipientType, recipientId: string, limit = 50): Promise<NotificationRow[]> {
+  if (recipientType === 'admin') {
+    try {
+      const { notifications } = await adminData<{ notifications: NotificationRow[] }>('notifications', { limit });
+      return notifications ?? [];
+    } catch {
+      return [];
+    }
+  }
   const { data, error } = await supabase
     .from('notifications')
     .select('*')
@@ -117,6 +126,14 @@ export async function fetchNotifications(recipientType: NotificationRecipientTyp
 }
 
 export async function fetchUnreadCount(recipientType: NotificationRecipientType, recipientId: string): Promise<number> {
+  if (recipientType === 'admin') {
+    try {
+      const { notifications } = await adminData<{ notifications: NotificationRow[] }>('notifications', { limit: 1000 });
+      return (notifications ?? []).filter((n) => !n.is_read).length;
+    } catch {
+      return 0;
+    }
+  }
   const { count, error } = await supabase
     .from('notifications')
     .select('*', { count: 'exact', head: true })
@@ -128,6 +145,9 @@ export async function fetchUnreadCount(recipientType: NotificationRecipientType,
 }
 
 export async function markAsRead(notificationId: string): Promise<boolean> {
+  if (sessionStorage.getItem('vattams_admin')) {
+    try { await adminData('notification_read', { notification_id: notificationId }); return true; } catch { return false; }
+  }
   const { error } = await supabase
     .from('notifications')
     .update({ is_read: true, read_at: new Date().toISOString(), status: 'read' })
@@ -137,6 +157,9 @@ export async function markAsRead(notificationId: string): Promise<boolean> {
 }
 
 export async function markAllAsRead(recipientType: NotificationRecipientType, recipientId: string): Promise<boolean> {
+  if (recipientType === 'admin') {
+    try { await adminData('notifications_read_all'); return true; } catch { return false; }
+  }
   const { error } = await supabase
     .from('notifications')
     .update({ is_read: true, read_at: new Date().toISOString(), status: 'read' })
@@ -148,6 +171,9 @@ export async function markAllAsRead(recipientType: NotificationRecipientType, re
 }
 
 export async function deleteNotification(notificationId: string): Promise<boolean> {
+  if (sessionStorage.getItem('vattams_admin')) {
+    try { await adminData('notification_delete', { notification_id: notificationId }); return true; } catch { return false; }
+  }
   const { error } = await supabase
     .from('notifications')
     .delete()
