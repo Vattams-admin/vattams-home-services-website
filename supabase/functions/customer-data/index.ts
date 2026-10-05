@@ -19,7 +19,6 @@ Deno.serve(async req=>{
       case "account":{
         const {data:customer}=await supabase.from("customers").select("id,full_name,mobile,email,city,address,created_at,updated_at").eq("id",customerId).single();if(!customer)return out({error:"Customer not found"},404);const customerMobile=customer.mobile;
         const [{data:bookings},{data:notifications},{data:reviews}]=await Promise.all([
-          supabase.from("customers").select("id,full_name,mobile,email,city,address,created_at,updated_at").eq("id",customerId).single(),
           supabase.from("bookings").select("*").eq("customer_id",customerId).order("created_at",{ascending:false}),
           supabase.from("notifications").select("*").eq("recipient_type","customer").eq("recipient_id",customerMobile).order("created_at",{ascending:false}).limit(20),
           supabase.from("reviews").select("*").eq("customer_id",customerId).order("created_at",{ascending:false})
