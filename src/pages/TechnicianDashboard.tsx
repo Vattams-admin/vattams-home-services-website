@@ -27,8 +27,9 @@ import {
 } from 'lucide-react';
 
 import { useRouter } from '@/lib/router';
-import { supabase } from '@/lib/supabase';
+import { SUPABASE_ANON_KEY, SUPABASE_URL } from '@/lib/supabase';
 import { downloadOnboardingLetter } from '@/lib/onboardingLetter';
+import { technicianData } from '@/lib/technicianData';
 import {
   fetchNotifications as fetchJobNotifications,
   markAsRead as markJobNotificationRead,
@@ -173,215 +174,34 @@ export default function TechnicianDashboard() {
    * This also tries Supabase auth if an auth session exists.
    */
   const findTechnician = async () => {
-    setError('');
-
-    const storedId =
-      sessionStorage.getItem('vattams_technician_id') ||
-      sessionStorage.getItem('technician_id');
-
-    const storedMobile =
-      sessionStorage.getItem('vattams_technician_mobile') ||
-      sessionStorage.getItem('technician_mobile');
-
-    if (storedId) {
-      const { data, error: technicianError } = await supabase
-        .from('technicians')
-        .select('*')
-        .eq('id', storedId)
-        .maybeSingle();
-
-      if (technicianError) {
-        throw new Error(technicianError.message);
-      }
-
-      if (data) {
-        return data as Technician;
-      }
-    }
-
-    if (storedMobile) {
-      const { data, error: technicianError } = await supabase
-        .from('technicians')
-        .select('*')
-        .eq('mobile', storedMobile)
-        .maybeSingle();
-
-      if (technicianError) {
-        throw new Error(technicianError.message);
-      }
-
-      if (data) {
-        sessionStorage.setItem(
-          'vattams_technician_id',
-          data.id
-        );
-
-        return data as Technician;
-      }
-    }
-
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (session?.user?.id) {
-      const { data, error: technicianError } = await supabase
-        .from('technicians')
-        .select('*')
-        .eq('id', session.user.id)
-        .maybeSingle();
-
-      if (!technicianError && data) {
-        sessionStorage.setItem(
-          'vattams_technician_id',
-          data.id
-        );
-
-        return data as Technician;
-      }
-    }
-
-    return null;
+    const session = sessionStorage.getItem('vattams_technician_session');
+    if (!session) return null;
+    const result = await technicianData<{ technician: Technician }>('account');
+    return result?.technician ?? null;
   };
 
   const loadDashboard = async (showLoader = true) => {
-    if (showLoader) {
-      setLoading(true);
-    } else {
-      setRefreshing(true);
-    }
-
+    if (showLoader) setLoading(true); else setRefreshing(true);
     setError('');
-
     try {
-      const tech = await findTechnician();
-
-      if (!tech) {
-        setTechnician(null);
-        setJobs([]);
-        setTransactions([]);
-        setRecharges([]);
-        setNotifications([]);
-
-        // A direct visit to the protected dashboard without a valid
-        // technician session must always reroute to technician login.
-        sessionStorage.removeItem('vattams_technician_id');
-        sessionStorage.removeItem('technician_id');
-        sessionStorage.removeItem('vattams_technician_mobile');
-        sessionStorage.removeItem('technician_mobile');
-        navigate('technician-login');
-        return;
+      const result = await technicianData<{
+        technician: Technician; jobs: TechnicianJob[]; transactions: WalletTransaction[];
+        recharges: WalletRecharge[]; notifications: TechnicianNotification[];
+      }>('account');
+      if (!result?.technician) {
+        setTechnician(null); setJobs([]); setTransactions([]); setRecharges([]); setNotifications([]);
+        sessionStorage.removeItem('vattams_technician_session');
+        sessionStorage.removeItem('vattams_technician_expires');
+        navigate('technician-login'); return;
       }
-
-      setTechnician(tech);
-
-      const [
-        jobsResult,
-        transactionsResult,
-        rechargesResult,
-        notificationsResult,
-        jobNotificationsData,
-      ] = await Promise.all([
-        supabase
-          .from('technician_jobs')
-          .select('*')
-          .eq('technician_id', tech.id)
-          .order('assigned_at', {
-            ascending: false,
-          }),
-
-        supabase
-          .from('wallet_transactions')
-          .select('*')
-          .eq('technician_id', tech.id)
-          .order('created_at', {
-            ascending: false,
-          })
-          .limit(20),
-
-        supabase
-          .from('wallet_recharges')
-          .select('*')
-          .eq('technician_id', tech.id)
-          .order('created_at', {
-            ascending: false,
-          })
-          .limit(10),
-
-        supabase
-          .from('technician_notifications')
-          .select('*')
-          .eq('technician_id', tech.id)
-          .order('created_at', {
-            ascending: false,
-          })
-          .limit(30),
-
-        fetchJobNotifications('technician', tech.id, 30),
-      ]);
-
-      if (jobsResult.error) {
-        console.error(
-          'Jobs error:',
-          jobsResult.error
-        );
-      }
-
-      if (transactionsResult.error) {
-        console.error(
-          'Transactions error:',
-          transactionsResult.error
-        );
-      }
-
-      if (rechargesResult.error) {
-        console.error(
-          'Recharges error:',
-          rechargesResult.error
-        );
-      }
-
-      if (notificationsResult.error) {
-        console.error(
-          'Notifications error:',
-          notificationsResult.error
-        );
-      }
-
-      setJobs(
-        (jobsResult.data || []) as TechnicianJob[]
-      );
-
-      setTransactions(
-        (transactionsResult.data ||
-          []) as WalletTransaction[]
-      );
-
-      setRecharges(
-        (rechargesResult.data ||
-          []) as WalletRecharge[]
-      );
-
-      setNotifications(
-        (notificationsResult.data ||
-          []) as TechnicianNotification[]
-      );
-
+      setTechnician(result.technician);
+      setJobs(result.jobs ?? []); setTransactions(result.transactions ?? []);
+      setRecharges(result.recharges ?? []); setNotifications(result.notifications ?? []);
+      const jobNotificationsData = await fetchJobNotifications('technician', result.technician.id, 30);
       setJobNotifications(jobNotificationsData);
     } catch (err: any) {
-      console.error(
-        'Technician dashboard error:',
-        err
-      );
-
-      setError(
-        err?.message ||
-          'Unable to load technician dashboard.'
-      );
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
+      setError(err?.message || 'Unable to load technician dashboard.');
+    } finally { setLoading(false); setRefreshing(false); }
   };
 
   useEffect(() => {
@@ -524,94 +344,17 @@ export default function TechnicianDashboard() {
   const isOnline =
     technician?.is_online === true;
 
-  const setOnlineStatus = async (
-    online: boolean
-  ) => {
-    if (!technician) return;
-
-    try {
-      const { data, error: updateError } =
-        await supabase
-          .from('technicians')
-          .update({
-            is_online: online,
-            last_active_at:
-              new Date().toISOString(),
-          })
-          .eq('id', technician.id)
-          .select()
-          .single();
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      setTechnician(
-        data as Technician
-      );
-    } catch (err: any) {
-      console.error(err);
-      setError(
-        err?.message ||
-          'Unable to update online status.'
-      );
-    }
+  const setOnlineStatus = async (online: boolean) => {
+    const result = await technicianData<{ technician: Technician }>('online', { online });
+    if (result?.technician) setTechnician(result.technician);
   };
 
-  const updateJobStatus = async (
-    job: TechnicianJob,
-    status:
-      | 'accepted'
-      | 'rejected'
-      | 'on_the_way'
-      | 'in_progress'
-      | 'job_started'
-      | 'job_completed'
-      | 'completed'
-  ) => {
+  const updateJobStatus = async (job: TechnicianJob, status: 'accepted'|'rejected'|'on_the_way'|'in_progress'|'job_started'|'job_completed'|'completed') => {
     if (!technician) return;
-
-    setProcessingJob(job.id);
-    setError('');
-
-    try {
-      const updateData: Record<
-        string,
-        any
-      > = {
-        status,
-      };
-
-      if (status === 'completed' || status === 'job_completed') {
-        updateData.completed_at =
-          new Date().toISOString();
-      }
-
-      const { error: updateError } =
-        await supabase
-          .from('technician_jobs')
-          .update(updateData)
-          .eq('id', job.id)
-          .eq(
-            'technician_id',
-            technician.id
-          );
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      await loadDashboard(false);
-    } catch (err: any) {
-      console.error(err);
-
-      setError(
-        err?.message ||
-          'Unable to update job status.'
-      );
-    } finally {
-      setProcessingJob(null);
-    }
+    setProcessingJob(job.id); setError('');
+    try { await technicianData('job_status', { job_id: job.id, status }); await loadDashboard(false); }
+    catch (err:any) { setError(err?.message || 'Unable to update job status.'); }
+    finally { setProcessingJob(null); }
   };
 
   const markNotificationRead = async (
@@ -632,12 +375,7 @@ export default function TechnicianDashboard() {
         return;
       }
 
-      await supabase
-        .from('technician_notifications')
-        .update({
-          is_read: true,
-        })
-        .eq('id', notification.id);
+      await technicianData('notification_read', { notification_id: notification.id });
 
       setNotifications((current) =>
         current.map((item) =>
@@ -660,15 +398,7 @@ export default function TechnicianDashboard() {
 
       try {
         await Promise.all([
-          supabase
-            .from('technician_notifications')
-            .update({
-              is_read: true,
-            })
-            .eq(
-              'technician_id',
-              technician.id
-            ),
+          technicianData('notifications_read_all'),
           markAllJobNotificationsRead('technician', technician.id),
         ]);
 
@@ -691,68 +421,22 @@ export default function TechnicianDashboard() {
 
   const submitRecharge = async () => {
     if (!technician) return;
-
-    const amount = Number(
-      rechargeAmount
-    );
-
-    if (!amount || amount <= 0) {
-      setRechargeMessage(
-        'Please enter a valid amount.'
-      );
-      return;
-    }
-
-    setRechargeSubmitting(true);
-    setRechargeMessage('');
-
+    const amount = Number(rechargeAmount);
+    if (!amount || amount <= 0) { setRechargeMessage('Please enter a valid amount.'); return; }
+    setRechargeSubmitting(true); setRechargeMessage('');
     try {
-      const { error: insertError } =
-        await supabase
-          .from('wallet_recharges')
-          .insert({
-            technician_id:
-              technician.id,
-            amount,
-            status: 'pending',
-            payment_ref:
-              paymentRef.trim() || null,
-          });
-
-      if (insertError) {
-        throw insertError;
-      }
-
-      setRechargeAmount('');
-      setPaymentRef('');
-
-      setRechargeMessage(
-        'Recharge request submitted successfully. Admin will review it.'
-      );
-
+      await technicianData('recharge', { amount, payment_ref: paymentRef.trim() || null });
+      setRechargeAmount(''); setPaymentRef('');
+      setRechargeMessage('Recharge request submitted successfully. Admin will review it.');
       await loadDashboard(false);
-    } catch (err: any) {
-      console.error(err);
-
-      setRechargeMessage(
-        err?.message ||
-          'Unable to submit recharge request.'
-      );
-    } finally {
-      setRechargeSubmitting(false);
-    }
+    } catch (err:any) { setRechargeMessage(err?.message || 'Unable to submit recharge request.'); }
+    finally { setRechargeSubmitting(false); }
   };
 
   const logout = async () => {
-    try {
-      await supabase.auth.signOut();
-    } catch {
-      // Ignore sign-out error.
-    }
-
-    sessionStorage.removeItem(
-      'vattams_technician_id'
-    );
+    sessionStorage.removeItem('vattams_technician_session');
+    sessionStorage.removeItem('vattams_technician_expires');
+    sessionStorage.removeItem('vattams_technician_id');
     sessionStorage.removeItem(
       'technician_id'
     );
