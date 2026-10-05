@@ -10,25 +10,29 @@ const values: { icon: LucideIcon; label: string; desc: string }[] = [
 
 export default function TrustStrip() {
   return (
-    <section className="bg-white border-y border-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-12">
-        <div className="text-center mb-8">
-          <h2 className="font-display text-xl md:text-2xl font-bold text-royal-900 mb-1.5">
-            Trusted Home Service Network
-          </h2>
-          <p className="text-gray-500 text-sm md:text-base">
-            Professional appliance services with verified service partners.
+    <section className="bg-white border-y border-gold-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-14">
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5 mb-9">
+          <div>
+            <div className="text-gold-700 text-xs font-bold uppercase tracking-[0.2em] mb-3">The VATTAMS Standard</div>
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-navy-900">
+              A service network built on trust.
+            </h2>
+          </div>
+          <p className="text-gray-500 text-sm md:text-base max-w-xl lg:text-right">
+            Professional appliance services with verified service partners and a structured customer experience.
           </p>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
           {values.map((v) => (
             <div
               key={v.label}
-              className="text-center bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-6 flex flex-col items-center gap-2"
+              className="group bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-6 md:px-5 flex flex-col gap-3 hover:border-gold-200 hover:shadow-lg transition-all duration-300"
             >
-              <IconBadge icon={v.icon} size="sm" variant="blue" />
-              <div className="font-display text-sm md:text-base font-bold text-royal-900">{v.label}</div>
-              <div className="text-gray-500 text-xs md:text-sm font-medium">{v.desc}</div>
+              <IconBadge icon={v.icon} size="sm" variant="gold" />
+              <div className="font-display text-sm md:text-base font-bold text-navy-900">{v.label}</div>
+              <div className="text-gray-500 text-xs md:text-sm leading-relaxed">{v.desc}</div>
             </div>
           ))}
         </div>
