@@ -36,16 +36,12 @@ const KNOWN_PAGES: Page[] = [
   'technician-register', 'technician-login', 'technician-status', 'technician-dashboard',
   'join-technician',
   'admin-login', 'admin-dashboard',
-  'tuition-home', 'tuition-courses', 'tuition-course-detail', 'tuition-booking',
-  'tuition-trial-booking', 'tuition-tutor-register', 'tuition-student-classes',
-  'tuition-tutor-classes',
   'not-found',
 ];
 
 interface RouteState {
   page: Page;
   citySlug?: string;
-  tuitionCourseSlug?: string;
 }
 
 interface RouterContextValue extends RouteState {
