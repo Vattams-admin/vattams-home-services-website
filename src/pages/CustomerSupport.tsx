@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Mail, MapPin, Send, Loader, Headphones, ChevronRight } from 'lucide-react';
 import { useRouter } from '@/lib/router';
-import { supabase, Customer } from '@/lib/supabase';
+import { Customer } from '@/lib/supabase';
+import { customerData } from '@/lib/customerData';
 import CommunicationCenter, { SUPPORT_PHONE, SUPPORT_WHATSAPP } from '@/components/CommunicationCenter';
 
 const SUPPORT_EMAIL = 'support@vattams.net';
@@ -32,15 +33,8 @@ export default function CustomerSupport() {
 
     setSending(true);
     try {
-      const { error } = await supabase.from('support_messages').insert({
-        customer_id: customer.id,
-        customer_name: customer.full_name,
-        customer_mobile: customer.mobile,
-        subject: subject.trim(),
-        message: message.trim(),
-        status: 'open',
-      });
-      if (error) throw error;
+      const result = await customerData<{ success: boolean }>('support', { subject: subject.trim(), message: message.trim() });
+      if (!result?.success) throw new Error('Failed to send support message');
       showToast('success', 'Message sent! Our team will get back to you shortly.');
       setSubject('');
       setMessage('');
