@@ -68,6 +68,7 @@ export default function TechnicianRegister() {
   const [resumedDraft, setResumedDraft] = useState(false);
   const [showJoinFeePayment, setShowJoinFeePayment] = useState(false);
   const [joinFeePaid, setJoinFeePaid] = useState(false);
+  const [joinFeePaymentId, setJoinFeePaymentId] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -469,7 +470,7 @@ export default function TechnicianRegister() {
     setError('');
 
     try {
-      await submitTechnicianApplication(form);
+      await submitTechnicianApplication(form, joinFeePaymentId || undefined);
 
       clearRegistrationDraft();
       setSuccess(true);
@@ -1136,6 +1137,7 @@ export default function TechnicianRegister() {
               note={`VATTAMS Technician Joining Fee - ${form.full_name || form.mobile}`}
               onSuccess={() => {
                 setJoinFeePaid(true);
+                setJoinFeePaymentId(paymentId);
                 setShowJoinFeePayment(false);
               }}
             />
