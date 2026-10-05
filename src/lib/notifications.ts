@@ -224,12 +224,12 @@ export function subscribeToNotifications(
 // ---- Typed notification creators for each event ----
 
 export const notifyCustomer = {
-  bookingReceived: (mobile: string, bookingNumber: string, bookingId: string) =>
+  bookingReceived: (mobile: string, bookingNumber: string, bookingId: string, bookingActionToken?: string) =>
     createNotification({
       recipientType: 'customer', recipientId: mobile,
       title: 'Booking Received',
       message: `Your booking ${bookingNumber} has been received. We'll assign a technician shortly.`,
-      type: 'booking_received', referenceType: 'booking', referenceId: bookingId,
+      type: 'booking_received', referenceType: 'booking', referenceId: bookingId, bookingActionToken,
     }),
   technicianAssigned: (mobile: string, bookingNumber: string, techName: string, bookingId: string) =>
     createNotification({
@@ -391,12 +391,12 @@ export const notifyTechnician = {
 };
 
 export const notifyAdmin = {
-  newBooking: (bookingNumber: string, customerName: string, service: string, bookingId: string) =>
+  newBooking: (bookingNumber: string, customerName: string, service: string, bookingId: string, bookingActionToken?: string) =>
     createNotification({
       recipientType: 'admin', recipientId: 'admin',
       title: 'New Customer Booking',
       message: `New booking ${bookingNumber} from ${customerName} for ${service}.`,
-      type: 'new_booking', referenceType: 'booking', referenceId: bookingId,
+      type: 'new_booking', referenceType: 'booking', referenceId: bookingId, bookingActionToken,
     }),
   newTechnicianRegistration: (techName: string, techId: string) =>
     createNotification({
