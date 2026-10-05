@@ -332,6 +332,7 @@ Deno.serve(async (req: Request) => {
           .maybeSingle();
 
         if (!booking) return errorResponse("Booking not found");
+        if (booking.customer_id !== customer_id) return errorResponse("You are not authorized to review this booking", 403);
         if (booking.status !== "completed") return errorResponse("You can only review completed bookings");
 
         const finalTechId = technician_id || booking.assigned_technician_id;
