@@ -89,9 +89,20 @@ async function verifyPayment(body: Record<string, unknown>) {
   const paymentId = String(body.payment_id ?? "").trim();
   const status = body.status;
   const adminId = String(body.admin_id ?? "").trim();
+  const adminSessionToken = String(body.admin_session_token ?? "").trim();
 
-  if (!paymentId || (status !== "success" && status !== "failed") || !adminId) {
+  if (!paymentId || (status !== "success" && status !== "failed") || !adminId || !adminSessionToken) {
     return json({ error: "Payment ID, status and admin authorization are required" }, 400);
+  }
+
+  const { data: session, error: sessionError } = await supabase
+    .from("admin_auth_sessions")
+    .select("admin_id,expires_at")
+    .eq("token", adminSessionToken)
+    .maybeSingle();
+
+  if (sessionError || !session || session.admin_id !== adminId || new Date(session.expires_at).getTime() <= Date.now()) {
+    return json({ error: "Not authorized" }, 401);
   }
 
   const { data: admin, error: adminError } = await supabase
