@@ -25,14 +25,6 @@ export type Page =
   | 'join-technician'
   | 'admin-login'
   | 'admin-dashboard'
-  | 'tuition-home'
-  | 'tuition-courses'
-  | 'tuition-course-detail'
-  | 'tuition-booking'
-  | 'tuition-trial-booking'
-  | 'tuition-tutor-register'
-  | 'tuition-student-classes'
-  | 'tuition-tutor-classes'
   | 'not-found';
 
 const KNOWN_PAGES: Page[] = [
@@ -84,29 +76,12 @@ function parseHash(rawHash: string): RouteState {
     return citySlug ? { page: 'city-landing', citySlug } : { page: 'not-found' };
   }
 
-  if (hash.startsWith('tuition-course-detail-')) {
-    const tuitionCourseSlug = hash.slice('tuition-course-detail-'.length);
-    return tuitionCourseSlug
-      ? { page: 'tuition-course-detail', tuitionCourseSlug }
-      : { page: 'not-found' };
-  }
-
-  if (hash.startsWith('tuition-booking-')) {
-    const tuitionCourseSlug = hash.slice('tuition-booking-'.length);
-    return tuitionCourseSlug
-      ? { page: 'tuition-booking', tuitionCourseSlug }
-      : { page: 'not-found' };
-  }
-
   return { page: 'not-found' };
 }
 
 function buildHash(page: Page, slug?: string): string {
   if (page === 'city-landing' && slug) {
     return `city-${slug}`;
-  }
-  if ((page === 'tuition-course-detail' || page === 'tuition-booking') && slug) {
-    return `${page}-${slug}`;
   }
   return page;
 }
