@@ -43,7 +43,7 @@ export default function TechnicianApplicationStatus() {
 
       if (!storedId && !storedMobile) {
         setTechnician(null);
-        setError('Please login to check your application status.');
+        navigate('technician-login');
         return;
       }
 
