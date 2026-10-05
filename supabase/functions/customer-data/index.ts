@@ -17,16 +17,18 @@ Deno.serve(async req=>{
     if(!customerId) return out({error:"Unauthorized"},401);
     switch(body.action){
       case "account":{
-        const [{data:customer},{data:bookings},{data:notifications},{data:reviews}]=await Promise.all([
+        const {data:customer}=await supabase.from("customers").select("id,full_name,mobile,email,city,address,created_at,updated_at").eq("id",customerId).single();if(!customer)return out({error:"Customer not found"},404);const customerMobile=customer.mobile;
+        const [{data:bookings},{data:notifications},{data:reviews}]=await Promise.all([
           supabase.from("customers").select("id,full_name,mobile,email,city,address,created_at,updated_at").eq("id",customerId).single(),
           supabase.from("bookings").select("*").eq("customer_id",customerId).order("created_at",{ascending:false}),
-          supabase.from("notifications").select("*").eq("recipient_type","customer").eq("recipient_id",body.mobile||"").order("created_at",{ascending:false}).limit(20),
+          supabase.from("notifications").select("*").eq("recipient_type","customer").eq("recipient_id",customerMobile).order("created_at",{ascending:false}).limit(20),
           supabase.from("reviews").select("*").eq("customer_id",customerId).order("created_at",{ascending:false})
         ]);
         return out({customer,bookings:bookings||[],notifications:notifications||[],reviews:reviews||[]});
       }
       case "payments":{
-        const {data}=await supabase.from("payments").select("*").eq("payee_type","customer").eq("payee_id",body.mobile||"").order("created_at",{ascending:false});
+        const {data:customer}=await supabase.from("customers").select("mobile").eq("id",customerId).single();if(!customer)return out({error:"Customer not found"},404);
+        const {data}=await supabase.from("payments").select("*").eq("payee_type","customer").eq("payee_id",customer.mobile).order("created_at",{ascending:false});
         return out({payments:data||[]});
       }
       case "bookings":{
