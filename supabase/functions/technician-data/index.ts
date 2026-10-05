@@ -1,0 +1,20 @@
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "npm:@supabase/supabase-js@2.57.4";
+const corsHeaders={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"POST,OPTIONS","Access-Control-Allow-Headers":"Content-Type,Authorization,X-Client-Info,Apikey"};
+const supabase=createClient(Deno.env.get("SUPABASE_URL")!,Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+async function auth(token:string){const {data}=await supabase.from("technician_auth_sessions").select("technician_id,expires_at").eq("token",token).maybeSingle();if(!data||new Date(data.expires_at)<=new Date())return null;return data.technician_id;}
+function out(data:unknown,status=200){return new Response(JSON.stringify(data),{status,headers:{...corsHeaders,"Content-Type":"application/json"}})}
+Deno.serve(async req=>{if(req.method==="OPTIONS")return new Response(null,{status:200,headers:corsHeaders});try{const body=await req.json();const technicianId=await auth(body.session_token||"");if(!technicianId)return out({error:"Unauthorized"},401);
+switch(body.action){
+case "account":{const [{data:technician},{data:jobs},{data:transactions},{data:recharges},{data:notifications}]=await Promise.all([
+supabase.from("technicians").select("*").eq("id",technicianId).single(),
+supabase.from("technician_jobs").select("*").eq("technician_id",technicianId).order("assigned_at",{ascending:false}),
+supabase.from("wallet_transactions").select("*").eq("technician_id",technicianId).order("created_at",{ascending:false}).limit(20),
+supabase.from("wallet_recharges").select("*").eq("technician_id",technicianId).order("created_at",{ascending:false}).limit(10),
+supabase.from("technician_notifications").select("*").eq("technician_id",technicianId).order("created_at",{ascending:false}).limit(30)]);return out({technician,jobs:jobs||[],transactions:transactions||[],recharges:recharges||[],notifications:notifications||[]});}
+case "online":{const {data,error}=await supabase.from("technicians").update({is_online:!!body.online,last_active_at:new Date().toISOString()}).eq("id",technicianId).select("*").single();if(error)return out({error:"Unable to update online status"},400);return out({technician:data});}
+case "job_status":{if(!body.job_id||!body.status)return out({error:"Job and status are required"},400);const allowed=["accepted","rejected","on_the_way","in_progress","job_started","job_completed","completed"];if(!allowed.includes(body.status))return out({error:"Invalid job status"},400);const update:any={status:body.status};if(body.status==="completed"||body.status==="job_completed")update.completed_at=new Date().toISOString();const {data,error}=await supabase.from("technician_jobs").update(update).eq("id",body.job_id).eq("technician_id",technicianId).select("*").single();if(error)return out({error:"Unable to update job status"},400);return out({job:data});}
+case "notification_read":{if(!body.notification_id)return out({error:"Notification ID is required"},400);const {error}=await supabase.from("technician_notifications").update({is_read:true}).eq("id",body.notification_id).eq("technician_id",technicianId);if(error)return out({error:"Unable to update notification"},400);return out({success:true});}
+case "notifications_read_all":{const {error}=await supabase.from("technician_notifications").update({is_read:true}).eq("technician_id",technicianId);if(error)return out({error:"Unable to update notifications"},400);return out({success:true});}
+case "recharge":{const amount=Number(body.amount);if(!amount||amount<=0)return out({error:"Invalid amount"},400);const {data,error}=await supabase.from("wallet_recharges").insert({technician_id:technicianId,amount,status:"pending",payment_ref:String(body.payment_ref||"").trim()||null}).select("*").single();if(error)return out({error:"Unable to submit recharge"},400);return out({recharge:data});}
+default:return out({error:"Invalid action"},400)}}catch{return out({error:"Unexpected server error"},500)}});
