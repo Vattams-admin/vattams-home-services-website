@@ -91,6 +91,10 @@ export async function updatePaymentStatus(
   const adminId =
     status === 'pending'
       ? undefined
+      : sessionStorage.getItem('vattams_admin_id') || undefined;
+  const adminSessionToken =
+    status === 'pending'
+      ? undefined
       : sessionStorage.getItem('vattams_admin') || undefined;
 
   const { data, error } = await supabase.functions.invoke('payment-auth', {
@@ -100,6 +104,7 @@ export async function updatePaymentStatus(
       utr,
       status,
       admin_id: adminId,
+      admin_session_token: adminSessionToken,
       verified_by: verifiedBy,
     },
   });
