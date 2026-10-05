@@ -21,11 +21,19 @@ BEGIN
     ) AS v(table_name, policy_name, operation)
   LOOP
     EXECUTE format('DROP POLICY IF EXISTS %I ON %I', item.policy_name, item.table_name);
-    EXECUTE format(
-      'CREATE POLICY %I ON %I FOR %s TO anon, authenticated USING (false) WITH CHECK (false)',
-      'deny_' || lower(item.operation) || '_' || item.table_name || '_public',
-      item.table_name,
-      item.operation
-    );
+    IF item.operation = 'INSERT' THEN
+      EXECUTE format(
+        'CREATE POLICY %I ON %I FOR INSERT TO anon, authenticated WITH CHECK (false)',
+        'deny_insert_' || item.table_name || '_public',
+        item.table_name
+      );
+    ELSE
+      EXECUTE format(
+        'CREATE POLICY %I ON %I FOR %s TO anon, authenticated USING (false)',
+        'deny_' || lower(item.operation) || '_' || item.table_name || '_public',
+        item.table_name,
+        item.operation
+      );
+    END IF;
   END LOOP;
 END $$;
