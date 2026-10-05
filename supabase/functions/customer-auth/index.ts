@@ -318,7 +318,7 @@ Deno.serve(async (req: Request) => {
         const { error: updateError } = await supabase
           .from("customers")
           .update({ password_hash: passwordHash, updated_at: new Date().toISOString() })
-          .eq("mobile", mobile);
+          .eq("id", customer.id);
 
         if (updateError) return errorResponse("Failed to change password. Please try again.");
 
