@@ -124,6 +124,12 @@ Deno.serve(async (req: Request) => {
         // If registration, create the customer account
         if (purpose === "registration" && registration_data) {
           const { full_name, mobile: regMobile, password, email, city, address } = registration_data;
+          if (String(regMobile).replace(/\D/g, "") !== String(mobile).replace(/\D/g, "")) {
+            return errorResponse("Registration mobile does not match the verified OTP");
+          }
+          if (!full_name?.trim() || !password?.trim() || password.length < 6) {
+            return errorResponse("Valid registration details are required");
+          }
 
           // Double-check no duplicate created in the meantime
           const { data: existing } = await supabase
@@ -279,7 +285,7 @@ Deno.serve(async (req: Request) => {
         const { error: updateError } = await supabase
           .from("customers")
           .update({ password_hash: passwordHash, updated_at: new Date().toISOString() })
-          .eq("mobile", mobile);
+          .eq("id", customer.id);
 
         if (updateError) return errorResponse("Failed to reset password. Please try again.");
 
@@ -290,23 +296,19 @@ Deno.serve(async (req: Request) => {
       }
 
       case "change-password": {
-        const { mobile, current_password, new_password } = body;
-
-        if (!mobile?.trim()) return errorResponse("Mobile number is required");
+        const { current_password, new_password, session_token } = body;
+        if (!session_token) return errorResponse("Secure login session is required", 401);
+        const { data: session } = await supabase.from("customer_auth_sessions").select("customer_id,expires_at").eq("token", session_token).maybeSingle();
+        if (!session || new Date(session.expires_at) <= new Date()) return errorResponse("Session expired. Please log in again.", 401);
+        const { data: sessionCustomer } = await supabase.from("customers").select("id,mobile,password_hash").eq("id", session.customer_id).maybeSingle();
+        if (!sessionCustomer) return errorResponse("Account not found", 404);
         if (!current_password?.trim()) return errorResponse("Current password is required");
         if (!new_password?.trim()) return errorResponse("New password is required");
 
         const passErr = validatePassword(new_password);
         if (passErr) return errorResponse(passErr);
 
-        const { data: customer } = await supabase
-          .from("customers")
-          .select("id, password_hash")
-          .eq("mobile", mobile)
-          .maybeSingle();
-
-        if (!customer) return errorResponse("Account not found");
-
+        const customer = sessionCustomer;
         const passwordMatch = bcrypt.compareSync(current_password, customer.password_hash);
         if (!passwordMatch) return errorResponse("Current password is incorrect");
 
@@ -327,6 +329,8 @@ Deno.serve(async (req: Request) => {
         const { booking_id, customer_id, customer_name, technician_id, rating, review_text, session_token } = body;
         const { data: session } = await supabase.from("customer_auth_sessions").select("customer_id,expires_at").eq("token", session_token || "").maybeSingle();
         if (!session || new Date(session.expires_at) <= new Date() || session.customer_id !== customer_id) return errorResponse("Unauthorized", 401);
+        const { data: reviewCustomer } = await supabase.from("customers").select("id,full_name").eq("id", session.customer_id).maybeSingle();
+        if (!reviewCustomer) return errorResponse("Customer account not found", 404);
 
         if (!booking_id) return errorResponse("Booking ID is required");
         if (!customer_id) return errorResponse("Customer ID is required");
@@ -359,7 +363,7 @@ Deno.serve(async (req: Request) => {
           .insert({
             booking_id,
             customer_id,
-            customer_name,
+            customer_name: reviewCustomer.full_name,
             technician_id: finalTechId || null,
             rating,
             review_text: review_text || null,
