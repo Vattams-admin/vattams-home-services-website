@@ -14,3 +14,8 @@ TO anon, authenticated USING (false) WITH CHECK (false);
 
 CREATE POLICY "no_public_delete_payments" ON payments FOR DELETE
 TO anon, authenticated USING (false);
+
+
+-- Defense in depth: the browser anon/authenticated roles must not have direct
+-- table write privileges. The Edge Function uses service_role for trusted writes.
+REVOKE INSERT, UPDATE, DELETE ON TABLE payments FROM anon, authenticated;
