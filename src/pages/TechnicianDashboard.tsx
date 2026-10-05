@@ -263,10 +263,13 @@ export default function TechnicianDashboard() {
         setRecharges([]);
         setNotifications([]);
 
-        setError(
-          'Technician account could not be found. Please login again.'
-        );
-
+        // A direct visit to the protected dashboard without a valid
+        // technician session must always reroute to technician login.
+        sessionStorage.removeItem('vattams_technician_id');
+        sessionStorage.removeItem('technician_id');
+        sessionStorage.removeItem('vattams_technician_mobile');
+        sessionStorage.removeItem('technician_mobile');
+        navigate('technician-login');
         return;
       }
 
