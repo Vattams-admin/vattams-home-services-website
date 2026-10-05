@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Loader, Briefcase, Calendar, Clock, MapPin, Wrench, CheckCircle, X, ChevronRight, Bell, TrendingUp, CreditCard, Star, Phone, User } from 'lucide-react';
 import { useRouter } from '@/lib/router';
-import { supabase, Booking, Customer } from '@/lib/supabase';
+import { Booking, Customer } from '@/lib/supabase';
+import { customerData } from '@/lib/customerData';
 import { formatCurrency } from '@/lib/pricing';
 import CommunicationCenter from '@/components/CommunicationCenter';
 
@@ -34,17 +35,13 @@ export default function CustomerDashboard() {
   }, []);
 
   const loadBookings = async (c: Customer) => {
-    const { data } = await supabase.from('bookings')
-      .select('*').or(`customer_id.eq.${c.id},mobile_number.eq.${c.mobile}`)
-      .order('created_at', { ascending: false });
-    setBookings(data ?? []);
+    const data = await customerData<{ bookings: Booking[] }>('bookings', { mobile: c.mobile });
+    setBookings(data?.bookings ?? []);
   };
 
   const loadNotifications = async (c: Customer) => {
-    const { data } = await supabase.from('notifications')
-      .select('*').eq('recipient_type', 'customer').eq('recipient_id', c.mobile)
-      .order('created_at', { ascending: false }).limit(5);
-    setNotifications(data ?? []);
+    const data = await customerData<{ notifications: { id: string; title: string; message: string; created_at: string; is_read: boolean }[] }>('account', { mobile: c.mobile });
+    setNotifications(data?.notifications ?? []);
   };
 
   if (loading || !customer) {
