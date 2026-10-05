@@ -1107,7 +1107,7 @@ export default function AdminDashboard() {
 
     try {
       const { data, error } = await supabase.functions.invoke('booking-ops', {
-        body: { action: 'auto_assign', booking_id: selectedBooking.id },
+        body: { action: 'auto_assign', booking_id: selectedBooking.id, admin_id: sessionStorage.getItem('vattams_admin_id') || '', admin_session_token: sessionStorage.getItem('vattams_admin') || '' },
       });
 
       if (error) {
