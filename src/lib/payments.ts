@@ -67,27 +67,15 @@ export async function createPaymentRecord(params: {
   reference_id?: string;
   notes?: string;
 }): Promise<PaymentRecord | null> {
-  const { data, error } = await supabase
-    .from('payments')
-    .insert({
-      payee_type: params.payee_type,
-      payee_id: params.payee_id,
-      payee_name: params.payee_name || null,
-      upi_id: DEFAULT_UPI_ID,
-      amount: params.amount,
-      purpose: params.purpose,
-      reference_id: params.reference_id || null,
-      status: 'pending',
-      notes: params.notes || null,
-    })
-    .select('*')
-    .single();
+  const { data, error } = await supabase.functions.invoke('payment-auth', {
+    body: { action: 'create', ...params },
+  });
 
   if (error) {
     console.error('Failed to create payment record:', error);
     return null;
   }
-  return data as PaymentRecord;
+  return (data?.payment ?? null) as PaymentRecord | null;
 }
 
 /**
@@ -99,23 +87,28 @@ export async function updatePaymentStatus(
   utr?: string,
   verifiedBy?: string,
 ): Promise<PaymentRecord | null> {
-  const updates: Record<string, unknown> = { status };
-  if (utr) updates.utr = utr;
-  if (verifiedBy) updates.verified_by = verifiedBy;
-  if (status === 'success') updates.verified_at = new Date().toISOString();
+  const action = status === 'pending' ? 'submit-utr' : 'verify';
+  const adminId =
+    status === 'pending'
+      ? undefined
+      : sessionStorage.getItem('vattams_admin') || undefined;
 
-  const { data, error } = await supabase
-    .from('payments')
-    .update(updates)
-    .eq('payment_id', paymentId)
-    .select('*')
-    .single();
+  const { data, error } = await supabase.functions.invoke('payment-auth', {
+    body: {
+      action,
+      payment_id: paymentId,
+      utr,
+      status,
+      admin_id: adminId,
+      verified_by: verifiedBy,
+    },
+  });
 
   if (error) {
     console.error('Failed to update payment status:', error);
     return null;
   }
-  return data as PaymentRecord;
+  return (data?.payment ?? null) as PaymentRecord | null;
 }
 
 /**
