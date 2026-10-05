@@ -11,7 +11,7 @@ export interface SEOConfig {
   /** Optional meta keywords (comma-separated). Used sparingly. */
   keywords?: string;
   /**
-   * Canonical path relative to the site, e.g. '/#tuition-home' or
+   * Canonical path relative to the site, e.g. '/#services' or
    * '/#city-chennai'. Combined with BASE_URL to form the full canonical
    * and og:url. Defaults to the current hash location if omitted.
    */
@@ -29,8 +29,7 @@ export interface SEOConfig {
  * defaults) takes over cleanly.
  *
  * Mirrors the existing tag-injection pattern already used for city landing
- * pages, generalized for reuse across Home Services and Online Tuition
- * pages. Uses a shared `data-seo` attribute namespace distinct from
+ * pages and shared across the Home Services site. Uses a shared `data-seo` attribute namespace distinct from
  * `data-city` so both can coexist without conflicting.
  */
 export function useSEO(config: SEOConfig) {
