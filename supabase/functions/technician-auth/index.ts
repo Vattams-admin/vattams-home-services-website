@@ -46,6 +46,7 @@ interface LoginBody {
 
 interface DocUrlBody {
   admin_id: string;
+  admin_session_token?: string;
   technician_id: string;
   doc_type: "aadhaar" | "pan" | "dl";
 }
@@ -272,9 +273,18 @@ async function handleLogin(supabase: ReturnType<typeof createClient>, body: Logi
 // request. This is a minimum bar, not a redesign of admin auth.
 async function requireActiveAdmin(
   supabase: ReturnType<typeof createClient>,
-  adminId: string | undefined
+  adminId: string | undefined,
+  sessionToken: string | undefined
 ) {
-  if (!adminId) return null;
+  if (!adminId || !sessionToken) return null;
+
+  const { data: session, error: sessionError } = await supabase
+    .from("admin_auth_sessions")
+    .select("admin_id,expires_at")
+    .eq("token", sessionToken)
+    .maybeSingle();
+
+  if (sessionError || !session || session.admin_id !== adminId || new Date(session.expires_at).getTime() <= Date.now()) return null;
 
   const { data, error } = await supabase
     .from("admin_users")
@@ -295,9 +305,9 @@ const DOC_COLUMN: Record<DocUrlBody["doc_type"], string> = {
 };
 
 async function handleDocUrl(supabase: ReturnType<typeof createClient>, body: DocUrlBody) {
-  const { admin_id, technician_id, doc_type } = body;
+  const { admin_id, admin_session_token, technician_id, doc_type } = body;
 
-  const admin = await requireActiveAdmin(supabase, admin_id);
+  const admin = await requireActiveAdmin(supabase, admin_id, admin_session_token);
   if (!admin) {
     return new Response(
       JSON.stringify({ error: "Not authorized" }),
