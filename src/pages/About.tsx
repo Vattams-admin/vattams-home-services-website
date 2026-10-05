@@ -77,7 +77,7 @@ export default function About() {
 
       <section className="bg-white py-16 md:py-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-display text-2xl md:text-4xl font-bold text-royal-900 mb-6">About VATTAMS</h2>
+          <h2 className="font-display text-2xl md:text-4xl font-bold text-[#0b1f3a] mb-6">About VATTAMS</h2>
           <p className="text-gray-600 text-base sm:text-lg leading-relaxed mb-6">
             VATTAMS is a home-services platform focused on making professional repair, maintenance and installation services easier to discover, book and manage.
           </p>
@@ -87,13 +87,13 @@ export default function About() {
         </div>
       </section>
 
-      <section className="bg-gray-50 py-16 md:py-24">
+      <section className="bg-[#f7f4ed] py-16 md:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14"><h2 className="font-display text-2xl md:text-4xl font-bold text-royal-900">Our Home Services</h2></div>
-          <div className="max-w-3xl mx-auto bg-white rounded-2xl border border-gray-100 shadow-sm p-7 md:p-8">
+          <div className="text-center mb-14"><h2 className="font-display text-2xl md:text-4xl font-bold text-[#0b1f3a]">Our Home Services</h2></div>
+          <div className="max-w-3xl mx-auto bg-white rounded-2xl border border-[#e8e1d2] shadow-sm p-7 md:p-8">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-xl bg-royal-800 flex items-center justify-center shrink-0"><Wrench size={22} className="text-white" aria-hidden="true" /></div>
-              <h3 className="font-display font-bold text-royal-900 text-xl">VATTAMS Home Services</h3>
+              <div className="w-12 h-12 rounded-xl bg-[#0b1f3a] flex items-center justify-center shrink-0"><Wrench size={22} className="text-white" aria-hidden="true" /></div>
+              <h3 className="font-display font-bold text-[#0b1f3a] text-xl">VATTAMS Home Services</h3>
             </div>
             <p className="text-gray-500 text-sm leading-relaxed mb-6">Reliable professional services when you need them.</p>
             <ul className="grid grid-cols-2 gap-3 mb-6">
@@ -111,27 +111,27 @@ export default function About() {
       <section className="bg-white py-16 md:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-gray-50 rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
-              <div className="w-14 h-14 rounded-xl bg-royal-800 flex items-center justify-center mx-auto mb-4"><Eye size={26} className="text-white" /></div>
-              <h3 className="font-display font-bold text-royal-900 text-lg mb-2">Our Vision</h3>
+            <div className="bg-[#f7f4ed] rounded-2xl border border-[#e8e1d2] shadow-sm p-8 text-center">
+              <div className="w-14 h-14 rounded-xl bg-[#0b1f3a] flex items-center justify-center mx-auto mb-4"><Eye size={26} className="text-white" /></div>
+              <h3 className="font-display font-bold text-[#0b1f3a] text-lg mb-2">Our Vision</h3>
               <p className="text-gray-500 text-sm leading-relaxed">To build a trusted home-services network that makes dependable professional help accessible across India.</p>
             </div>
-            <div className="bg-gray-50 rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
+            <div className="bg-[#f7f4ed] rounded-2xl border border-[#e8e1d2] shadow-sm p-8 text-center">
               <div className="w-14 h-14 rounded-xl bg-gold-600 flex items-center justify-center mx-auto mb-4"><Target size={26} className="text-white" /></div>
-              <h3 className="font-display font-bold text-royal-900 text-lg mb-2">Our Mission</h3>
+              <h3 className="font-display font-bold text-[#0b1f3a] text-lg mb-2">Our Mission</h3>
               <p className="text-gray-500 text-sm leading-relaxed">To make home-service discovery, booking, technician assignment and support simple and reliable.</p>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="bg-gray-50 py-16 md:py-24">
+      <section className="bg-[#f7f4ed] py-16 md:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14"><h2 className="font-display text-2xl md:text-4xl font-bold text-royal-900">Why VATTAMS</h2></div>
+          <div className="text-center mb-14"><h2 className="font-display text-2xl md:text-4xl font-bold text-[#0b1f3a]">Why VATTAMS</h2></div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {whyVattams.map((item) => { const Icon = item.icon; return (
-              <div key={item.title} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                <div className="w-12 h-12 rounded-xl bg-royal-800 flex items-center justify-center mb-4"><Icon size={22} className="text-white" /></div>
+              <div key={item.title} className="bg-white rounded-2xl border border-[#e8e1d2] shadow-sm p-6">
+                <div className="w-12 h-12 rounded-xl bg-[#0b1f3a] flex items-center justify-center mb-4"><Icon size={22} className="text-white" /></div>
                 <h3 className="font-bold text-gray-900 mb-1.5">{item.title}</h3>
                 <p className="text-gray-500 text-sm leading-relaxed">{item.text}</p>
               </div>
@@ -174,9 +174,9 @@ export default function About() {
         </div>
       </section>
 
-      <section className="py-16 md:py-24 bg-gray-50">
+      <section className="py-16 md:py-24 bg-[#f7f4ed]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="font-display text-2xl md:text-4xl font-bold text-royal-900 text-center mb-3">Cities We Serve</h2>
+          <h2 className="font-display text-2xl md:text-4xl font-bold text-[#0b1f3a] text-center mb-3">Cities We Serve</h2>
           <p className="text-gray-500 text-center mb-10 max-w-xl mx-auto">VATTAMS Home Services operates in {cities.length}+ cities across India — tap a city to see local services.</p>
           <div className="space-y-8 max-w-5xl mx-auto">
             {Object.entries(citiesByState).map(([state, list]) => (
@@ -197,7 +197,7 @@ export default function About() {
 
       <section className="py-12 bg-white">
         <div className="max-w-3xl mx-auto px-4 text-center">
-          <div className="inline-flex flex-col items-center gap-2 bg-gray-50 rounded-2xl border border-gold-200 shadow-sm px-8 py-6">
+          <div className="inline-flex flex-col items-center gap-2 bg-[#f7f4ed] rounded-2xl border border-gold-200 shadow-sm px-8 py-6">
             <div className="inline-flex items-center gap-2 text-gold-700"><Award size={20} /><span className="font-bold text-sm uppercase tracking-wider">Government of India MSME Registered</span></div>
             <p className="text-gray-500 text-sm">Udyam Registration No: <span className="font-bold text-gray-700">UDYAM-TN-02-0274720</span></p>
           </div>
