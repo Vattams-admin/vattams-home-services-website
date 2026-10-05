@@ -22,11 +22,6 @@ import {
 import { useRouter } from '@/lib/router';
 import { useSEO } from '@/lib/seo';
 
-// Alias so the "Explore Online Tuition" CTA and ecosystem card can reuse
-// the same icon as the timeline's "Learn" step without a duplicate named
-// import of GraduationCap.
-const TuitionIcon = GraduationCap;
-
 /* ============================================================
    DATA — every fact below already exists in the project
    (photo path, contact details, MSME number, LinkedIn URL).
@@ -54,7 +49,7 @@ export default function Founder() {
   useSEO({
     title: 'Founder | VATTAMS — Venkatesan Ponniah',
     description:
-      'Meet Venkatesan Ponniah, Founder of VATTAMS, and discover the vision behind the VATTAMS Home Services and Online Tuition ecosystem.',
+      'Meet Venkatesan Ponniah, Founder of VATTAMS, and discover the vision behind VATTAMS Home Services.',
     path: '/#founder',
   });
 
@@ -233,11 +228,11 @@ export default function Founder() {
             MY VISION FOR VATTAMS
           </h2>
           <p className="text-navy-100/85 text-lg md:text-xl leading-relaxed mb-6 max-w-2xl mx-auto">
-            I envision VATTAMS becoming a trusted digital ecosystem connecting people with
-            reliable services and meaningful learning opportunities across India.
+            I envision VATTAMS becoming a trusted home services platform connecting people
+            with reliable technicians and dependable service experiences across India.
           </p>
           <p className="text-navy-100/75 text-base md:text-lg leading-relaxed mb-10 max-w-2xl mx-auto">
-            Home services and online tuition are only the beginning.
+            Reliable home services are at the heart of VATTAMS.
           </p>
           <p className="font-display text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gold-300 via-gold-400 to-gold-300 leading-snug">
             One platform.
@@ -275,18 +270,6 @@ export default function Founder() {
               </p>
             </button>
 
-            <button
-              onClick={() => navigate('tuition-home')}
-              className="group text-left bg-white/[0.04] border border-gold-400/10 rounded-2xl p-8 hover:bg-white/[0.07] hover:border-gold-400/30 transition-all duration-300 hover:-translate-y-1"
-            >
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-navy-700 to-navy-900 border border-gold-400/20 flex items-center justify-center mb-5 shadow-lg group-hover:scale-110 transition-transform">
-                <TuitionIcon size={26} className="text-gold-400" />
-              </div>
-              <h3 className="text-white font-bold text-lg mb-2">VATTAMS ONLINE TUITION</h3>
-              <p className="text-navy-100/70 text-sm leading-relaxed">
-                Connecting learners with structured online education and tutors.
-              </p>
-            </button>
           </div>
         </div>
       </section>
@@ -446,13 +429,6 @@ export default function Founder() {
             >
               <Calendar size={16} />
               Book a Service
-            </button>
-            <button
-              onClick={() => navigate('tuition-home')}
-              className="flex items-center gap-2 px-6 py-3.5 border border-white/25 text-white font-semibold rounded-lg hover:bg-white/10 hover:border-white/40 transition-all duration-300"
-            >
-              <TuitionIcon size={16} />
-              Explore Online Tuition
             </button>
             <button
               onClick={() => navigate('join-technician')}
