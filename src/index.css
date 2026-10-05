@@ -1,3 +1,105 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-ivory text-navy-900 antialiased;
+    font-feature-settings: "kern", "liga", "calt";
+  }
+
+  ::selection {
+    @apply bg-gold-400 text-navy-950;
+  }
+
+  :focus-visible {
+    outline: 2px solid #D4AF37;
+    outline-offset: 3px;
+  }
+}
+
+@layer components {
+  /* Executive corporate header language */
+  header {
+    background: rgba(5, 10, 23, 0.94) !important;
+    border-bottom-color: rgba(212, 175, 55, 0.18) !important;
+    box-shadow: 0 10px 30px rgba(5, 10, 23, 0.14) !important;
+  }
+
+  header .text-blue-900 {
+    color: #fff !important;
+  }
+
+  header .text-amber-600 {
+    color: #D4AF37 !important;
+  }
+
+  header .text-gray-700 {
+    color: rgba(255,255,255,.78) !important;
+  }
+
+  header .bg-blue-600 {
+    background: #D4AF37 !important;
+    color: #050A17 !important;
+  }
+
+  header .bg-blue-600:hover {
+    background: #EBD48A !important;
+  }
+
+  header .hover\:bg-blue-50:hover {
+    background: rgba(212,175,55,.10) !important;
+    color: #F5E9C2 !important;
+  }
+
+  header .border-blue-200 {
+    border-color: rgba(212,175,55,.35) !important;
+    color: #F5E9C2 !important;
+  }
+
+  header .border-blue-100 {
+    border-color: rgba(212,175,55,.16) !important;
+  }
+
+  header .bg-white {
+    background: #0A132A !important;
+    color: #fff;
+  }
+
+  header .bg-blue-50,
+  header .bg-blue-50\/50 {
+    background: rgba(255,255,255,.04) !important;
+  }
+
+  /* Premium account/menu surfaces */
+  header .shadow-xl {
+    box-shadow: 0 24px 60px rgba(0,0,0,.28) !important;
+  }
+
+  /* Corporate footer consistency */
+  footer .bg-royal-700,
+  footer .bg-wine-600 {
+    background: #D4AF37 !important;
+    color: #050A17 !important;
+  }
+
+  footer .bg-royal-700:hover,
+  footer .bg-wine-600:hover {
+    background: #EBD48A !important;
+  }
+
+  .premium-surface {
+    box-shadow: 0 20px 60px rgba(5,10,23,.08);
+    border: 1px solid rgba(212,175,55,.16);
+  }
+}
+
+/* Quiet, premium scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #C9A227 #F2EBDA;
+}
