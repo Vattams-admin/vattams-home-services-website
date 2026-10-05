@@ -145,6 +145,7 @@ async function handleRegister(supabase: ReturnType<typeof createClient>, body: R
     .insert({
       full_name,
       mobile,
+      registration_payment_id,
       email: email || null,
       city,
       service_categories: service_categories || [],
