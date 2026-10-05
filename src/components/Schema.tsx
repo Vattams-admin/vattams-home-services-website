@@ -8,10 +8,9 @@ export default function Schema() {
         "name": "VATTAMS",
         "url": "https://vattams.net",
         "logo": "https://vattams.net/icons/icon-512.png",
-        "description": "VATTAMS is an India-wide platform for home services and online tuition, connecting customers and students with service professionals and tutors.",
+        "description": "VATTAMS Home Services connects customers with professional home service technicians across India.",
         "department": [
-          { "@id": "https://vattams.net/#business" },
-          { "@id": "https://vattams.net/#tuition-organization" }
+          { "@id": "https://vattams.net/#business" }
         ],
         "sameAs": []
       },
@@ -31,18 +30,6 @@ export default function Schema() {
           "name": "India"
         },
         "sameAs": []
-      },
-      {
-        "@type": "EducationalOrganization",
-        "@id": "https://vattams.net/#tuition-organization",
-        "name": "VATTAMS Online Tuition",
-        "url": "https://vattams.net/#tuition-home",
-        "logo": "https://vattams.net/logo.svg",
-        "parentOrganization": { "@id": "https://vattams.net/#organization" },
-        "areaServed": {
-          "@type": "Country",
-          "name": "India"
-        }
       },
       {
         "@type": "WebSite",
