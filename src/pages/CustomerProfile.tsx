@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Loader, User, Phone, Mail, MapPin, Home, Save, LogOut, Calendar, Briefcase, CheckCircle, Lock, Key } from 'lucide-react';
 import { useRouter } from '@/lib/router';
-import { supabase, Customer } from '@/lib/supabase';
+import { Customer } from '@/lib/supabase';
+import { customerData } from '@/lib/customerData';
 
 const SUPABASE_URL = 'https://nfcibyprftnowaiwlxxc.supabase.co';
 const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mY2lieXByZnRub3dhaXdseHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4ODMzOTgsImV4cCI6MjA5OTQ1OTM5OH0.5ZMjWYOuRBKNKG3ZonXXOBAfBapm54naphNXrHxq16k';
@@ -31,8 +32,8 @@ export default function CustomerProfile() {
   }, []);
 
   const loadBookingCount = async (customerId: string) => {
-    const { count } = await supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('customer_id', customerId);
-    setBookingCount(count ?? 0);
+    const result = await customerData<{ bookings: { id: string }[] }>('bookings');
+    setBookingCount(result?.bookings.length ?? 0);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -41,14 +42,11 @@ export default function CustomerProfile() {
     setSaving(true);
     setMsg(null);
     try {
-      const { data, error } = await supabase.from('customers')
-        .update({ full_name: form.full_name, email: form.email || null, city: form.city || null, address: form.address || null, updated_at: new Date().toISOString() })
-        .eq('id', customer.id)
-        .select('id, full_name, mobile, email, city, address, created_at, updated_at')
-        .single();
-      if (error) throw error;
-      if (data) {
-        setCustomer(data);
+      const result = await customerData<{ customer: Customer }>('profile', { full_name: form.full_name, email: form.email, city: form.city, address: form.address });
+      if (!result?.customer) throw new Error('Failed to update profile');
+      if (!result?.customer) throw new Error('Failed to update profile');
+      if (result.customer) {
+        setCustomer(result.customer);
         sessionStorage.setItem('vattams_customer', JSON.stringify(data));
         setMsg({ type: 'success', text: 'Profile updated successfully!' });
       }
