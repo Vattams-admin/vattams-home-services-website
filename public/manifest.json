@@ -1,7 +1,7 @@
 {
-  "name": "VATTAMS - Home Services & Online Tuition",
+  "name": "VATTAMS - Home Services",
   "short_name": "VATTAMS",
-  "description": "VATTAMS is an India-wide platform for home services and online tuition — book AC repair, plumbing, electrical, and more, or join verified tutors for Abacus, Public Speaking, and other courses.",
+  "description": "VATTAMS is a trusted home services platform — book AC repair, plumbing, electrical, and other professional services with verified technicians.",
   "id": "/",
   "start_url": "/",
   "scope": "/",
@@ -39,7 +39,6 @@
     "home",
     "services",
     "repair",
-    "education"
   ],
   "lang": "en-IN"
 }
