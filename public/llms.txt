@@ -1,6 +1,6 @@
 # VATTAMS
 
-> VATTAMS is an India-wide platform with two verticals: VATTAMS Home Services and VATTAMS Online Tuition. Home Services connects customers with certified technicians for AC repair, refrigerator repair, washing machine service, plumbing, electrical work, and more. Online Tuition connects students across India with tutors for structured online courses. Government of India MSME (Udyam) Registered Enterprise — UDYAM-TN-02-0274720.
+> VATTAMS Home Services is a trusted India-wide home services platform connecting customers with professional technicians. Government of India MSME (Udyam) Registered Enterprise — UDYAM-TN-02-0274720.
 
 ## VATTAMS Home Services
 
