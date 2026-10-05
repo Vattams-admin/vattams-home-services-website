@@ -88,28 +88,6 @@ export function useSEO(config: SEOConfig) {
   }, [config.title, config.description, config.keywords, config.path, config.image, config.type]);
 }
 
-/**
- * Builds an Organization-scoped Course JSON-LD object for a tuition course
- * page, using only real, existing course data. Deliberately omits
- * aggregateRating/review/numberOfStudents/offers fields since no such data
- * exists in the course catalogue — inventing them would violate schema.org
- * guidance on truthful structured data.
- */
-export function buildCourseSchema(course: { name: string; shortDescription: string; slug: string }) {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'Course',
-    name: course.name,
-    description: course.shortDescription,
-    provider: {
-      '@type': 'Organization',
-      name: 'VATTAMS',
-      sameAs: BASE_URL,
-    },
-    url: `${BASE_URL}/#tuition-course-detail-${course.slug}`,
-  };
-}
-
 /** Simple BreadcrumbList JSON-LD builder shared across pages. */
 export function buildBreadcrumbSchema(items: { name: string; path: string }[]) {
   return {
