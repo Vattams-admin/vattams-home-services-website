@@ -260,7 +260,7 @@ async function handleLogin(supabase: ReturnType<typeof createClient>, body: Logi
 // can read them back. `aadhaar_url` / `pan_url` / `dl_url` on the
 // technician row store the storage object PATH, not a public URL.
 //
-// Auth model: same pattern already used by the tuition-tutor-admin edge
+// Auth model: uses the Home Services technician/admin authorization pattern
 // function (see requireActiveAdmin there) — this project's admin login
 // (src/pages/AdminLogin.tsx) verifies credentials via the
 // `verify_admin_login` RPC and stores only the admin's row id client-side
