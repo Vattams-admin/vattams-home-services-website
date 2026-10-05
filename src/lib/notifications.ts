@@ -110,71 +110,57 @@ export async function createNotificationsBatch(inputs: CreateNotificationInput[]
 }
 
 export async function fetchNotifications(recipientType: NotificationRecipientType, recipientId: string, limit = 50): Promise<NotificationRow[]> {
-  if (recipientType === 'admin') {
-    try {
+  try {
+    if (recipientType === 'admin') {
       const { notifications } = await adminData<{ notifications: NotificationRow[] }>('notifications', { limit });
       return notifications ?? [];
-    } catch {
-      return [];
     }
-  }
-  const { data, error } = await supabase
-    .from('notifications')
-    .select('*')
-    .eq('recipient_type', recipientType)
-    .eq('recipient_id', recipientId)
-    .order('created_at', { ascending: false })
-    .limit(limit);
-  if (error) {
-    console.error('[notifications] fetch error:', error);
-    return [];
-  }
-  return (data ?? []) as NotificationRow[];
+    const endpoint = recipientType === 'technician' ? 'technician-data' : 'customer-data';
+    const sessionKey = recipientType === 'technician' ? 'vattams_technician_session' : 'vattams_customer_session';
+    const token = sessionStorage.getItem(sessionKey);
+    if (!token) return [];
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+      body: JSON.stringify({ action: 'account', session_token: token }),
+    });
+    const data = await response.json();
+    return recipientType === 'technician' ? (data.jobNotifications ?? []) : (data.notifications ?? []);
+  } catch { return []; }
 }
 
 export async function fetchUnreadCount(recipientType: NotificationRecipientType, recipientId: string): Promise<number> {
-  if (recipientType === 'admin') {
-    try {
-      const { notifications } = await adminData<{ notifications: NotificationRow[] }>('notifications', { limit: 1000 });
-      return (notifications ?? []).filter((n) => !n.is_read).length;
-    } catch {
-      return 0;
-    }
-  }
-  const { count, error } = await supabase
-    .from('notifications')
-    .select('*', { count: 'exact', head: true })
-    .eq('recipient_type', recipientType)
-    .eq('recipient_id', recipientId)
-    .eq('is_read', false);
-  if (error) return 0;
-  return count ?? 0;
+  const rows = await fetchNotifications(recipientType, recipientId, 1000);
+  return rows.filter((n) => !n.is_read).length;
 }
 
 export async function markAsRead(notificationId: string): Promise<boolean> {
-  if (sessionStorage.getItem('vattams_admin')) {
-    try { await adminData('notification_read', { notification_id: notificationId }); return true; } catch { return false; }
-  }
-  const { error } = await supabase
-    .from('notifications')
-    .update({ is_read: true, read_at: new Date().toISOString(), status: 'read' })
-    .eq('id', notificationId);
-  if (error) console.error('[notifications] markAsRead error:', error);
-  return !error;
+  try {
+    const adminToken = sessionStorage.getItem('vattams_admin');
+    if (adminToken) { await adminData('notification_read', { notification_id: notificationId }); return true; }
+    const techToken = sessionStorage.getItem('vattams_technician_session');
+    if (techToken) {
+      await fetch(`${SUPABASE_URL}/functions/v1/technician-data`, { method:'POST', headers:{'Content-Type':'application/json',Authorization:`Bearer ${SUPABASE_ANON_KEY}`}, body:JSON.stringify({action:'notification_read',session_token:techToken,notification_id:notificationId,source:'job'}) });
+      return true;
+    }
+    const customerToken = sessionStorage.getItem('vattams_customer_session');
+    if (customerToken) {
+      const res=await fetch(`${SUPABASE_URL}/functions/v1/customer-data`, { method:'POST', headers:{'Content-Type':'application/json',Authorization:`Bearer ${SUPABASE_ANON_KEY}`}, body:JSON.stringify({action:'notification_read',session_token:customerToken,notification_id:notificationId}) });
+      return res.ok;
+    }
+  } catch {}
+  return false;
 }
 
 export async function markAllAsRead(recipientType: NotificationRecipientType, recipientId: string): Promise<boolean> {
-  if (recipientType === 'admin') {
-    try { await adminData('notifications_read_all'); return true; } catch { return false; }
-  }
-  const { error } = await supabase
-    .from('notifications')
-    .update({ is_read: true, read_at: new Date().toISOString(), status: 'read' })
-    .eq('recipient_type', recipientType)
-    .eq('recipient_id', recipientId)
-    .eq('is_read', false);
-  if (error) console.error('[notifications] markAllAsRead error:', error);
-  return !error;
+  try {
+    if (recipientType === 'admin') { await adminData('notifications_read_all'); return true; }
+    const endpoint=recipientType==='technician'?'technician-data':'customer-data';
+    const token=sessionStorage.getItem(recipientType==='technician'?'vattams_technician_session':'vattams_customer_session');
+    if(!token) return false;
+    const res=await fetch(`${SUPABASE_URL}/functions/v1/${endpoint}`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${SUPABASE_ANON_KEY}`},body:JSON.stringify({action:'notifications_read_all',session_token:token})});
+    return res.ok;
+  } catch { return false; }
 }
 
 export async function deleteNotification(notificationId: string): Promise<boolean> {
