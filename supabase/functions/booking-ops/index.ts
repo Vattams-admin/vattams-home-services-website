@@ -43,6 +43,23 @@ Deno.serve(async (req: Request) => {
       if (!b.customer_name || !b.mobile_number || !b.city || !b.address || !b.service_category || !b.problem_description) {
         return new Response(JSON.stringify({ error: "Required booking fields are missing" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
+      const { data: servicePrice } = await supabase.from("service_prices").select("base_price,gst_rate,platform_fee,commission_rate,is_active").eq("service_name",String(b.service_category)).eq("is_active",true).maybeSingle();
+      if (!servicePrice) return new Response(JSON.stringify({ error: "Service is unavailable" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const basePrice = Number(servicePrice.base_price) || 0;
+      const gstAmount = Math.round((basePrice * (Number(servicePrice.gst_rate)||0) / 100) * 100) / 100;
+      const platformFee = Number(servicePrice.platform_fee) || 0;
+      const commissionAmount = Math.round((basePrice * (Number(servicePrice.commission_rate)||0) / 100) * 100) / 100;
+      const totalAmount = Math.round((basePrice + gstAmount + platformFee) * 100) / 100;
+      let discountAmount = 0;
+      let couponCode: string | null = null;
+      if (b.coupon_code) {
+        const { data: coupon } = await supabase.from("coupons").select("code,discount_type,discount_value,max_uses,used_count,min_order_amount,valid_from,valid_until,is_active").eq("code",String(b.coupon_code).trim().toUpperCase()).eq("is_active",true).maybeSingle();
+        if (coupon && (!coupon.valid_from || new Date(coupon.valid_from) <= new Date()) && (!coupon.valid_until || new Date(coupon.valid_until) >= new Date()) && (coupon.max_uses === null || Number(coupon.used_count) < Number(coupon.max_uses)) && totalAmount >= Number(coupon.min_order_amount||0)) {
+          discountAmount = coupon.discount_type === "percentage" ? Math.round((totalAmount * Number(coupon.discount_value) / 100) * 100) / 100 : Math.min(totalAmount, Number(coupon.discount_value));
+          couponCode = coupon.code;
+        }
+      }
+      const finalAmount = Math.max(0, Math.round((totalAmount - discountAmount) * 100) / 100);
       const row: Record<string, unknown> = {
         customer_name: String(b.customer_name).slice(0,150),
         mobile_number: String(b.mobile_number).replace(/[^0-9+]/g,"").slice(0,20),
@@ -52,14 +69,14 @@ Deno.serve(async (req: Request) => {
         problem_description: String(b.problem_description).slice(0,2000),
         preferred_date: b.preferred_date || null,
         preferred_time: b.preferred_time || null,
-        amount: 0,
-        base_price: 0,
-        gst_amount: 0,
-        platform_fee: 0,
-        commission_amount: 0,
-        total_amount: 0,
-        coupon_code: null,
-        discount_amount: 0,
+        amount: totalAmount,
+        base_price: basePrice,
+        gst_amount: gstAmount,
+        platform_fee: platformFee,
+        commission_amount: commissionAmount,
+        total_amount: finalAmount,
+        coupon_code: couponCode,
+        discount_amount: discountAmount,
         customer_id: customerId,
         status: "pending",
         assigned_technician_id: null,
