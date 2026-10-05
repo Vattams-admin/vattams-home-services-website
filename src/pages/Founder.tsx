@@ -2,7 +2,6 @@ import {
   Sparkles,
   Lightbulb,
   Hammer,
-  GraduationCap,
   TrendingUp,
   Rocket,
   ShieldCheck,
@@ -31,7 +30,6 @@ import { useSEO } from '@/lib/seo';
 const journey: { label: string; icon: LucideIcon }[] = [
   { label: 'Idea', icon: Lightbulb },
   { label: 'Build', icon: Hammer },
-  { label: 'Learn', icon: GraduationCap },
   { label: 'Improve', icon: TrendingUp },
   { label: 'Scale', icon: Rocket },
 ];
