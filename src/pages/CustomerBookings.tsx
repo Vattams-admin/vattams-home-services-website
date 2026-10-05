@@ -109,7 +109,7 @@ export default function Booking() {
         customer_id: customer?.id || null,
         status: 'pending',
       })
-      .select('id,booking_number')
+      .select('id,booking_number,booking_action_token')
       .single();
 
     setSubmitting(false);
@@ -132,7 +132,7 @@ export default function Booking() {
     // accept needed). If none are eligible, the booking simply stays
     // pending and can still be picked up manually as a fallback.
     void supabase.functions.invoke('booking-ops', {
-      body: { action: 'auto_assign', booking_id: data.id },
+      body: { action: 'auto_assign', booking_id: data.id, booking_action_token: data.booking_action_token },
     });
   };
 
