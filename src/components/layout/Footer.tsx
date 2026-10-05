@@ -34,7 +34,7 @@ export default function Footer() {
             />
             <h3 className="text-white font-bold text-lg">VATTAMS</h3>
             <p className="text-gold-400 text-sm font-medium italic mb-4">
-              One Platform. Endless Possibilities.
+              Reliable Home Services. Trusted Technicians.
             </p>
             <p className="text-gray-400 text-sm leading-relaxed">
               Trusted home services through a professional technician
