@@ -42,6 +42,8 @@ export default function TechnicianLogin() {
       // suspended technician has somewhere real to land after a correct
       // login, instead of a dead-end error message on this form.
       sessionStorage.setItem('vattams_technician_id', technician.id);
+      sessionStorage.setItem('vattams_technician_session', data.sessionToken);
+      sessionStorage.setItem('vattams_technician_expires', data.expiresAt);
       if (technician.mobile) {
         sessionStorage.setItem('vattams_technician_mobile', technician.mobile);
       }
