@@ -1331,7 +1331,8 @@ export default function AdminDashboard() {
             Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
           },
           body: JSON.stringify({
-            admin_id: sessionStorage.getItem('vattams_admin') || '',
+            admin_id: sessionStorage.getItem('vattams_admin_id') || '',
+            admin_session_token: sessionStorage.getItem('vattams_admin') || '',
             technician_id: technicianId,
             doc_type: docType,
           }),
