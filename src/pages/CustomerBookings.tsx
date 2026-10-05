@@ -87,10 +87,11 @@ export default function Booking() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    const { data, error } = await supabase
-      .from('bookings')
-      .insert({
-        customer_name: form.customer_name,
+    const { data, error } = await supabase.functions.invoke('booking-ops', {
+      body: {
+        action: 'create_booking',
+        customer_session_token: sessionStorage.getItem('vattams_customer_session') || undefined,
+        booking: {customer_name: form.customer_name,
         mobile_number: form.mobile_number,
         city: form.city,
         address: form.address,
@@ -107,10 +108,12 @@ export default function Booking() {
         coupon_code: couponResult?.valid ? couponResult.coupon?.code ?? null : null,
         discount_amount: couponResult?.valid ? couponResult.discountAmount : 0,
         customer_id: customer?.id || null,
-        status: 'pending',
-      })
-      .select('id,booking_number,booking_action_token')
-      .single();
+        status: 'pending',}
+      }
+    }).then((response) => ({
+      data: response.data?.data ?? null,
+      error: response.error || (!response.data?.data ? new Error('Booking failed') : null),
+    }));
 
     setSubmitting(false);
     if (error) {
