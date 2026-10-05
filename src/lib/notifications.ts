@@ -167,12 +167,8 @@ export async function deleteNotification(notificationId: string): Promise<boolea
   if (sessionStorage.getItem('vattams_admin')) {
     try { await adminData('notification_delete', { notification_id: notificationId }); return true; } catch { return false; }
   }
-  const { error } = await supabase
-    .from('notifications')
-    .delete()
-    .eq('id', notificationId);
-  if (error) console.error('[notifications] delete error:', error);
-  return !error;
+  // Notification deletion is intentionally not exposed to customer/technician clients.
+  return false;
 }
 
 export function subscribeToNotifications(
