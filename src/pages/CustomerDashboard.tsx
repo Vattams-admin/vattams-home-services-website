@@ -7,7 +7,7 @@ import CommunicationCenter from '@/components/CommunicationCenter';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-700 border-amber-200',
-  confirmed: 'bg-blue-100 text-blue-700 border-blue-200',
+  confirmed: 'bg-blue-100 text-blue-700 border-gold-200',
   in_progress: 'bg-purple-100 text-purple-700 border-purple-200',
   completed: 'bg-green-100 text-green-700 border-green-200',
   cancelled: 'bg-red-100 text-red-700 border-red-200',
@@ -48,7 +48,7 @@ export default function CustomerDashboard() {
   };
 
   if (loading || !customer) {
-    return <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-gray-50"><Loader className="animate-spin text-blue-600" size={32} /></div>;
+    return <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-ivory-50"><Loader className="animate-spin text-gold-700" size={32} /></div>;
   }
 
   const activeBookings = bookings.filter((b) => ['pending', 'confirmed', 'in_progress'].includes(b.status));
@@ -57,27 +57,27 @@ export default function CustomerDashboard() {
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   const quickLinks = [
-    { label: 'My Bookings', icon: Briefcase, page: 'customer-bookings' as const, color: 'bg-blue-100 text-blue-600' },
+    { label: 'My Bookings', icon: Briefcase, page: 'customer-bookings' as const, color: 'bg-blue-100 text-gold-700' },
     { label: 'Payments', icon: CreditCard, page: 'customer-payments' as const, color: 'bg-green-100 text-green-600' },
     { label: 'Reviews', icon: Star, page: 'customer-reviews' as const, color: 'bg-amber-100 text-amber-600' },
-    { label: 'Profile', icon: User, page: 'customer-profile' as const, color: 'bg-purple-100 text-purple-600' },
+    { label: 'Profile', icon: User, page: 'customer-profile' as const, color: 'bg-navy-100 text-navy-700' },
     { label: 'Support', icon: Phone, page: 'customer-support' as const, color: 'bg-red-100 text-red-600' },
-    { label: 'Book New', icon: Wrench, page: 'booking' as const, color: 'bg-indigo-100 text-indigo-600' },
-    { label: 'Join as Tech', icon: Briefcase, page: 'join-technician' as const, color: 'bg-orange-100 text-orange-600' },
+    { label: 'Book New', icon: Wrench, page: 'booking' as const, color: 'bg-navy-100 text-navy-700' },
+    { label: 'Join as Tech', icon: Briefcase, page: 'join-technician' as const, color: 'bg-gold-100 text-gold-700' },
   ];
 
   return (
-    <div className="pt-20 md:pt-24 min-h-screen bg-gray-50">
+    <div className="pt-20 md:pt-24 min-h-screen bg-ivory-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         {/* Welcome */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-500 rounded-3xl p-6 md:p-8 mb-6 text-white shadow-lg shadow-blue-200">
+        <div className="bg-gradient-to-r from-navy-950 via-navy-900 to-navy-800 rounded-3xl p-6 md:p-8 mb-6 text-white shadow-xl shadow-navy-950/15">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <h1 className="text-2xl md:text-3xl font-extrabold">Welcome back, {customer.full_name.split(' ')[0]}!</h1>
-              <p className="text-blue-100 text-sm mt-1">Here's your service overview</p>
+              <p className="text-navy-100 text-sm mt-1">Here's your service overview</p>
             </div>
             <div className="flex gap-3">
-              <button onClick={() => navigate('booking')} className="px-5 py-2.5 bg-white text-blue-600 font-bold text-sm rounded-xl hover:bg-blue-50 transition-colors">
+              <button onClick={() => navigate('booking')} className="px-5 py-2.5 bg-gold-500 text-navy-950 font-bold text-sm rounded-xl hover:bg-gold-400 transition-colors">
                 Book a Service
               </button>
             </div>
@@ -86,9 +86,9 @@ export default function CustomerDashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <StatCard icon={Briefcase} label="Active Bookings" value={String(activeBookings.length)} color="bg-blue-100 text-blue-600" />
+          <StatCard icon={Briefcase} label="Active Bookings" value={String(activeBookings.length)} color="bg-blue-100 text-gold-700" />
           <StatCard icon={CheckCircle} label="Completed" value={String(completedBookings.length)} color="bg-green-100 text-green-600" />
-          <StatCard icon={TrendingUp} label="Total Bookings" value={String(bookings.length)} color="bg-purple-100 text-purple-600" />
+          <StatCard icon={TrendingUp} label="Total Bookings" value={String(bookings.length)} color="bg-navy-100 text-navy-700" />
           <StatCard icon={Bell} label="Notifications" value={String(unreadCount)} color="bg-amber-100 text-amber-600" />
         </div>
 
@@ -96,7 +96,7 @@ export default function CustomerDashboard() {
         <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-6">
           {quickLinks.map((q) => (
             <button key={q.label} onClick={() => navigate(q.page)}
-              className="flex flex-col items-center gap-2 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-200 transition-all">
+              className="flex flex-col items-center gap-2 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gold-300 transition-all">
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${q.color}`}><q.icon size={18} /></div>
               <span className="text-xs font-semibold text-gray-700">{q.label}</span>
             </button>
@@ -108,7 +108,7 @@ export default function CustomerDashboard() {
           <div className="lg:col-span-2">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-extrabold text-gray-900">Active Bookings</h2>
-              <button onClick={() => navigate('customer-bookings')} className="text-sm text-blue-600 font-semibold hover:underline">View All</button>
+              <button onClick={() => navigate('customer-bookings')} className="text-sm text-gold-700 font-semibold hover:underline">View All</button>
             </div>
             {activeBookings.length === 0 ? (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
@@ -189,7 +189,7 @@ export default function CustomerDashboard() {
               {upcomingBooking ? (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center"><Wrench size={18} className="text-blue-600" /></div>
+                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center"><Wrench size={18} className="text-gold-700" /></div>
                     <div>
                       <div className="font-bold text-gray-900 text-sm">{upcomingBooking.service_category}</div>
                       <div className="text-xs text-gray-400">{upcomingBooking.booking_number}</div>
@@ -223,9 +223,9 @@ export default function CustomerDashboard() {
               ) : (
                 <div className="space-y-2">
                   {notifications.map((n) => (
-                    <div key={n.id} className={`bg-white rounded-xl border shadow-sm p-3 ${n.is_read ? 'border-gray-100' : 'border-blue-200 bg-blue-50/30'}`}>
+                    <div key={n.id} className={`bg-white rounded-xl border shadow-sm p-3 ${n.is_read ? 'border-gray-100' : 'border-gold-200 bg-gold-50/30'}`}>
                       <div className="flex items-start gap-2">
-                        <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.is_read ? 'bg-gray-300' : 'bg-blue-500'}`} />
+                        <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.is_read ? 'bg-gray-300' : 'bg-gold-500'}`} />
                         <div>
                           <div className="font-semibold text-gray-900 text-sm">{n.title}</div>
                           <div className="text-xs text-gray-500 mt-0.5">{n.message}</div>
@@ -248,7 +248,7 @@ export default function CustomerDashboard() {
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
               <div>
                 <h3 className="font-extrabold text-gray-900 text-lg">Booking Details</h3>
-                <p className="text-blue-600 font-bold text-sm">{selected.booking_number}</p>
+                <p className="text-gold-700 font-bold text-sm">{selected.booking_number}</p>
               </div>
               <button onClick={() => setSelected(null)} className="p-2 rounded-lg hover:bg-gray-100"><X size={20} className="text-gray-500" /></button>
             </div>
@@ -262,12 +262,12 @@ export default function CustomerDashboard() {
               </div>
               <div>
                 <div className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">Address</div>
-                <div className="text-sm text-gray-700 bg-gray-50 rounded-xl p-3">{selected.address}</div>
+                <div className="text-sm text-gray-700 bg-ivory-50 rounded-xl p-3">{selected.address}</div>
               </div>
               {selected.problem_description && (
                 <div>
                   <div className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">Problem Description</div>
-                  <div className="text-sm text-gray-700 bg-gray-50 rounded-xl p-3">{selected.problem_description}</div>
+                  <div className="text-sm text-gray-700 bg-ivory-50 rounded-xl p-3">{selected.problem_description}</div>
                 </div>
               )}
               <div className="flex items-center justify-between pt-3 border-t border-gray-100">
