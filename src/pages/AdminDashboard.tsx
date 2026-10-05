@@ -5,7 +5,7 @@ import {
   Trash2, Eye, XCircle, Star, Award, Wallet, Lock, Unlock, History, ShieldCheck,
   CreditCard, LucideIcon, Globe, Facebook, Instagram, Twitter, Youtube, MessageCircle, Save,
   Bell, BellOff, Search, FileText, Tag, Sparkles, Send, BarChart3, Brain,
-  GraduationCap, BadgeCheck, Download, Mail, Truck,
+  BadgeCheck, Download, Mail, Truck,
   Contact, ExternalLink, ImageOff, CalendarClock, Landmark, Zap,
 } from 'lucide-react';
 import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY, Booking, Technician, BookingStatus, WalletTransaction, WalletRecharge } from '@/lib/supabase';
