@@ -935,159 +935,45 @@ export default function AdminDashboard() {
     }
   };
 
-  const approveRecharge = async (
-    rechargeId: string
-  ) => {
+  const approveRecharge = async (rechargeId: string) => {
     setWalletUpdating(true);
-
-    const {
-      error
-    } = await supabase
-      .from(
-        'wallet_recharges'
-      )
-      .update({
-        status:
-          'approved',
-
-        approved_at:
-          new Date().toISOString(),
-
-        approved_by:
-          'admin',
-      })
-      .eq(
-        'id',
-        rechargeId
-      );
-
-    if (error) {
-      console.error(
-        '[AdminDashboard] recharge approve error:',
-        error
-      );
-    } else {
-      setRecharges(
-        (prev) =>
-          prev.map(
-            (r) =>
-              r.id ===
-              rechargeId
-                ? {
-                    ...r,
-                    status:
-                      'approved',
-
-                    approved_at:
-                      new Date().toISOString(),
-                  }
-                : r
-          )
-      );
-
-      const r =
-        recharges.find(
-          (x) =>
-            x.id ===
-            rechargeId
-        );
-
+    try {
+      const { recharge } = await adminData<{ recharge: WalletRecharge }>('recharge_status', { recharge_id: rechargeId, status: 'approved' });
+      setRecharges((prev) => prev.map((r) => r.id === rechargeId ? { ...r, ...recharge, status: 'approved' } : r));
+      const r = recharges.find((x) => x.id === rechargeId);
       if (r) {
-        await notifyTechnician.walletRechargeApproved(
-          r.technician_id,
-          Number(
-            r.amount
-          )
-        );
-
-        const {
-          data:
-            updatedTech
-        } = await supabase
-          .from(
-            'technicians'
-          )
-          .select('*')
-          .eq(
-            'id',
-            r.technician_id
-          )
-          .maybeSingle();
-
-        if (
-          updatedTech
-        ) {
-          setTechnicians(
-            (prev) =>
-              prev.map(
-                (t) =>
-                  t.id ===
-                  updatedTech.id
-                    ? updatedTech
-                    : t
-              )
-          );
-        }
-
-        const {
-          data:
-            newTxns
-        } = await supabase
-          .from(
-            'wallet_transactions'
-          )
-          .select('*')
-          .order(
-            'created_at',
-            {
-              ascending:
-                false
-            }
-          )
-          .limit(100);
-
-        if (
-          newTxns
-        ) {
-          setWalletTxns(
-            newTxns
-          );
-        }
+        await notifyTechnician.walletRechargeApproved(r.technician_id, Number(r.amount));
+        const { technicians: latestTechs } = await adminData<{ technicians: Technician[] }>('technicians');
+        const { transactions } = await adminData<{ transactions: WalletTransaction[] }>('wallet_transactions');
+        setTechnicians(latestTechs ?? []);
+        setWalletTxns(transactions ?? []);
       }
+    } catch (error) {
+      console.error('[AdminDashboard] recharge approve error:', error);
+      alert(error instanceof Error ? error.message : 'Failed to approve recharge.');
+    } finally {
+      setWalletUpdating(false);
     }
-
-    setWalletUpdating(
-      false
-    );
   };
 
   const rejectRecharge = async (rechargeId: string) => {
     setWalletUpdating(true);
-
-    const reason =
-      window.prompt('Reason for rejecting this recharge (optional):') ?? undefined;
-
-    const { error } = await supabase
-      .from('wallet_recharges')
-      .update({
+    const reason = window.prompt('Reason for rejecting this recharge (optional):') ?? undefined;
+    try {
+      const { recharge } = await adminData<{ recharge: WalletRecharge }>('recharge_status', {
+        recharge_id: rechargeId,
         status: 'rejected',
-        admin_notes: reason || null,
-        approved_at: new Date().toISOString(),
-        approved_by: 'admin',
-      })
-      .eq('id', rechargeId);
-
-    if (error) {
+        reason,
+      });
+      setRecharges((prev) => prev.map((r) => r.id === rechargeId ? { ...r, ...recharge, status: 'rejected' } : r));
+      const r = recharges.find((x) => x.id === rechargeId);
+      if (r) await notifyTechnician.walletRechargeRejected(r.technician_id, Number(r.amount));
+    } catch (error) {
       console.error('[AdminDashboard] recharge reject error:', error);
-    } else {
-      setRecharges((prev) =>
-        prev.map((r) =>
-          r.id === rechargeId ? { ...r, status: 'rejected' } : r
-        )
-      );
+      alert(error instanceof Error ? error.message : 'Failed to reject recharge.');
+    } finally {
+      setWalletUpdating(false);
     }
-
-    setWalletUpdating(false);
   };
 
   const handleLogout = async () => {
@@ -1098,7 +984,10 @@ export default function AdminDashboard() {
     }
 
     sessionStorage.removeItem('vattams_admin');
+    sessionStorage.removeItem('vattams_admin_id');
     sessionStorage.removeItem('vattams_admin_email');
+    sessionStorage.removeItem('vattams_admin_role');
+    sessionStorage.removeItem('vattams_admin_name');
     sessionStorage.removeItem('vattams_admin_expires');
 
     navigate('admin-login');
@@ -2988,52 +2877,18 @@ export default function AdminDashboard() {
               setPriceMsg(null);
 
               try {
-                const updates = Object.entries(
-                  priceEdits
-                ).map(([id, edit]) =>
-                  supabase
-                    .from('service_prices')
-                    .update({
-                      base_price:
-                        Number(edit.base_price) || 0,
-                      gst_rate:
-                        Number(edit.gst_rate) || 0,
-                      platform_fee:
-                        Number(edit.platform_fee) || 0,
-                      commission_rate:
-                        Number(edit.commission_rate) || 0,
-                      is_active: edit.is_active,
-                      updated_at:
-                        new Date().toISOString(),
-                    })
-                    .eq('id', id)
-                );
-
-                const results =
-                  await Promise.all(updates);
-
-                const failed =
-                  results.filter(
-                    (r) => r.error
-                  );
-
-                if (failed.length > 0) {
-                  setPriceMsg({
-                    type: 'error',
-                    text: `${failed.length} service(s) failed to save.`,
-                  });
-                } else {
-                  setPriceMsg({
-                    type: 'success',
-                    text: 'All service prices updated successfully!',
-                  });
-
-                  await loadServicePrices();
-                }
-              } catch {
+                await adminData('save_service_prices', {
+                  updates: Object.entries(priceEdits).map(([id, edit]) => ({ id, ...edit })),
+                });
+                setPriceMsg({
+                  type: 'success',
+                  text: 'All service prices updated successfully!',
+                });
+                await loadServicePrices();
+              } catch (error) {
                 setPriceMsg({
                   type: 'error',
-                  text: 'Failed to save prices. Please try again.',
+                  text: error instanceof Error ? error.message : 'Failed to save prices. Please try again.',
                 });
               }
 
