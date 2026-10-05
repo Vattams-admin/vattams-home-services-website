@@ -705,19 +705,6 @@ export default function AdminDashboard() {
       const { booking } = await adminData<{ booking: Booking }>('booking_status', { booking_id: id, status });
       setBookings((prev) => prev.map((b) => b.id === id ? { ...b, ...booking } : b));
 
-    setBookings(
-      (prev) =>
-        prev.map(
-          (b) =>
-            b.id === id
-              ? {
-                  ...b,
-                  status,
-                }
-              : b
-        )
-    );
-
     if (
       selectedBooking?.id === id
     ) {
