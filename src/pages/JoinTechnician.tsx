@@ -197,7 +197,7 @@ export default function JoinTechnician() {
   return (
     <div className="pt-20 md:pt-24">
       {/* HERO */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-wine-700 to-wine-600 text-white">
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#071426] via-[#0b1f3a] to-[#071426] text-white">
         <div
           className="absolute inset-0 opacity-20"
           style={{
@@ -229,7 +229,7 @@ export default function JoinTechnician() {
               onClick={() =>
                 navigate('technician-register')
               }
-              className="group flex items-center gap-2 px-8 py-4 bg-gold-500 hover:bg-gold-400 text-royal-950 font-extrabold rounded-xl shadow-2xl transition-all duration-300 hover:scale-105"
+              className="group flex items-center gap-2 px-8 py-4 bg-gold-500 hover:bg-gold-400 text-[#071426] font-extrabold rounded-xl shadow-2xl transition-all duration-300 hover:scale-105"
             >
               Start Registration
               <ArrowRight
@@ -269,7 +269,7 @@ export default function JoinTechnician() {
       {/* BENEFITS */}
       <section className="py-16 md:py-20 bg-white">
         <div className="max-w-6xl mx-auto px-4">
-          <h2 className="font-display text-3xl font-bold text-royal-900 text-center mb-4">
+          <h2 className="font-display text-3xl font-bold text-[#0b1f3a] text-center mb-4">
             Why Join VATTAMS?
           </h2>
 
@@ -284,9 +284,9 @@ export default function JoinTechnician() {
               return (
                 <div
                   key={benefit.title}
-                  className="bg-gray-50 rounded-2xl p-6 border border-gray-100 hover:shadow-lg transition-shadow"
+                  className="bg-[#f7f4ed] rounded-2xl p-6 border border-[#e8e1d2] hover:shadow-lg transition-shadow"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-wine-50 text-wine-700 flex items-center justify-center mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-[#f8f4e8] text-[#0b1f3a] flex items-center justify-center mb-4">
                     <Icon size={24} />
                   </div>
 
@@ -305,9 +305,9 @@ export default function JoinTechnician() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="py-16 md:py-20 bg-gray-50">
+      <section className="py-16 md:py-20 bg-[#f7f4ed]">
         <div className="max-w-4xl mx-auto px-4">
-          <h2 className="font-display text-3xl font-bold text-royal-900 text-center mb-12">
+          <h2 className="font-display text-3xl font-bold text-[#0b1f3a] text-center mb-12">
             How It Works
           </h2>
 
@@ -338,7 +338,7 @@ export default function JoinTechnician() {
                 key={step.num}
                 className="flex gap-4 items-start"
               >
-                <div className="w-12 h-12 rounded-full bg-wine-600 text-white font-extrabold flex items-center justify-center shrink-0 text-lg">
+                <div className="w-12 h-12 rounded-full bg-[#0b1f3a] text-white font-extrabold flex items-center justify-center shrink-0 text-lg">
                   {step.num}
                 </div>
 
@@ -364,7 +364,7 @@ export default function JoinTechnician() {
       {/* SERVICES */}
       <section className="py-16 bg-white">
         <div className="max-w-5xl mx-auto px-4">
-          <h2 className="font-display text-3xl font-bold text-royal-900 text-center mb-4">
+          <h2 className="font-display text-3xl font-bold text-[#0b1f3a] text-center mb-4">
             Service Categories
           </h2>
 
@@ -376,7 +376,7 @@ export default function JoinTechnician() {
             {SERVICE_KEYWORDS.map((service) => (
               <span
                 key={service}
-                className="px-4 py-2 bg-wine-50 text-wine-700 rounded-lg text-sm font-semibold border border-wine-100"
+                className="px-4 py-2 bg-[#f8f4e8] text-[#0b1f3a] rounded-lg text-sm font-semibold border border-[#e7dcc0]"
               >
                 {service}
               </span>
@@ -386,7 +386,7 @@ export default function JoinTechnician() {
       </section>
 
       {/* CITIES */}
-      <section className="py-12 bg-gray-50">
+      <section className="py-12 bg-[#f7f4ed]">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-2xl font-extrabold text-gray-900 mb-6">
             Technician Jobs in India
@@ -408,7 +408,7 @@ export default function JoinTechnician() {
       {/* FAQ */}
       <section className="py-16 md:py-20 bg-white">
         <div className="max-w-3xl mx-auto px-4">
-          <h2 className="font-display text-3xl font-bold text-royal-900 text-center mb-10">
+          <h2 className="font-display text-3xl font-bold text-[#0b1f3a] text-center mb-10">
             Frequently Asked Questions
           </h2>
 
@@ -416,12 +416,12 @@ export default function JoinTechnician() {
             {FAQS.map((faq) => (
               <details
                 key={faq.q}
-                className="group bg-gray-50 rounded-xl border border-gray-100 p-4"
+                className="group bg-[#f7f4ed] rounded-xl border border-[#e8e1d2] p-4"
               >
                 <summary className="font-bold text-gray-900 cursor-pointer flex items-center justify-between list-none">
                   {faq.q}
 
-                  <span className="text-wine-600 group-open:rotate-180 transition-transform">
+                  <span className="text-[#a47c00] group-open:rotate-180 transition-transform">
                     ▼
                   </span>
                 </summary>
@@ -436,7 +436,7 @@ export default function JoinTechnician() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 bg-gradient-to-r from-wine-700 to-wine-600 text-white text-center">
+      <section className="py-16 bg-gradient-to-r from-[#071426] via-[#0b1f3a] to-[#071426] text-white text-center">
         <div className="max-w-2xl mx-auto px-4">
           <h2 className="font-display text-3xl font-bold mb-4">
             Ready to Start Earning?
@@ -451,7 +451,7 @@ export default function JoinTechnician() {
             onClick={() =>
               navigate('technician-register')
             }
-            className="group inline-flex items-center gap-2 px-8 py-4 bg-gold-500 hover:bg-gold-400 text-royal-950 font-extrabold rounded-xl shadow-2xl transition-all duration-300 hover:scale-105"
+            className="group inline-flex items-center gap-2 px-8 py-4 bg-gold-500 hover:bg-gold-400 text-[#071426] font-extrabold rounded-xl shadow-2xl transition-all duration-300 hover:scale-105"
           >
             Register Now — ₹49 Joining Fee
 
@@ -464,7 +464,7 @@ export default function JoinTechnician() {
       </section>
 
       {/* MSME TRUST */}
-      <section className="py-12 bg-gray-50">
+      <section className="py-12 bg-[#f7f4ed]">
         <div className="max-w-3xl mx-auto px-4 text-center">
           <div className="inline-flex flex-col items-center gap-2 bg-white rounded-2xl border border-gold-200 shadow-sm px-8 py-6">
             <div className="inline-flex items-center gap-2 text-gold-700">
