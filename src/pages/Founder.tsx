@@ -2,7 +2,6 @@ import {
   Sparkles,
   Lightbulb,
   Hammer,
-  GraduationCap,
   TrendingUp,
   Rocket,
   ShieldCheck,
@@ -31,7 +30,6 @@ import { useSEO } from '@/lib/seo';
 const journey: { label: string; icon: LucideIcon }[] = [
   { label: 'Idea', icon: Lightbulb },
   { label: 'Build', icon: Hammer },
-  { label: 'Learn', icon: GraduationCap },
   { label: 'Improve', icon: TrendingUp },
   { label: 'Scale', icon: Rocket },
 ];
@@ -102,8 +100,7 @@ export default function Founder() {
 
               <p className="text-navy-100/70 text-base leading-relaxed max-w-xl mt-6">
                 Building VATTAMS with a vision to create a trusted digital ecosystem where
-                people can access professional services, discover learning opportunities, and
-                connect through technology.
+                people can access dependable professional home services and connect through technology.
               </p>
             </div>
 
@@ -148,8 +145,8 @@ export default function Founder() {
             grow with people and communities.
           </p>
           <p className="text-navy-100/80 text-base sm:text-lg leading-relaxed">
-            From home services to online learning, the goal is simple: make trusted services
-            and opportunities easier to discover, access and manage.
+            From home services to professional technician support, the goal is simple: make trusted services
+            easier to discover, access and manage.
           </p>
         </div>
       </section>
