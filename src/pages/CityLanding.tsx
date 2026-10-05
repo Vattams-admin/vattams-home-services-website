@@ -150,7 +150,7 @@ export default function CityLanding({ city }: { city: CityData }) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
 
       {/* Breadcrumb */}
-      <nav className="bg-gray-50 border-b border-gray-100">
+      <nav className="bg-[#f7f4ed] border-b border-[#e8e1d2]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <ol className="flex items-center gap-1.5 text-xs text-gray-500 flex-wrap">
             <li><button onClick={() => navigate('home')} className="hover:text-gold-700">Home</button></li>
@@ -176,10 +176,10 @@ export default function CityLanding({ city }: { city: CityData }) {
               </span>
             </div>
             <h1 className="font-display text-3xl md:text-5xl font-bold leading-tight mb-4">{city.h1}</h1>
-            <p className="text-lg text-royal-100 mb-8 leading-relaxed">{city.intro}</p>
+            <p className="text-lg text-[#e8dcc0] mb-8 leading-relaxed">{city.intro}</p>
             <div className="flex flex-col sm:flex-row gap-3">
               <button onClick={() => navigate('booking')}
-                className="flex items-center justify-center gap-2 px-6 py-3.5 bg-gold-500 hover:bg-gold-400 text-royal-950 font-bold rounded-xl transition-colors shadow-lg shadow-gold-500/20">
+                className="flex items-center justify-center gap-2 px-6 py-3.5 bg-gold-500 hover:bg-gold-400 text-[#071426] font-bold rounded-xl transition-colors shadow-lg shadow-gold-500/20">
                 Book Now <ArrowRight size={18} />
               </button>
               <a href="https://wa.me/918189800757" target="_blank" rel="noreferrer"
@@ -196,7 +196,7 @@ export default function CityLanding({ city }: { city: CityData }) {
       </section>
 
       {/* Trust badges */}
-      <section className="bg-white border-b border-gray-100">
+      <section className="bg-white border-b border-[#e8e1d2]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
@@ -227,7 +227,7 @@ export default function CityLanding({ city }: { city: CityData }) {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           {city.contentSections.map((sec, idx) => (
             <div key={idx} className="mb-10">
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-royal-900 mb-4">{sec.heading}</h2>
+              <h2 className="font-display text-2xl md:text-3xl font-bold text-[#0b1f3a] mb-4">{sec.heading}</h2>
               <p className="text-gray-600 leading-relaxed text-base">{sec.body}</p>
             </div>
           ))}
@@ -235,9 +235,9 @@ export default function CityLanding({ city }: { city: CityData }) {
       </section>
 
       {/* Service categories */}
-      <section className="bg-gray-50 py-16 md:py-20">
+      <section className="bg-[#f7f4ed] py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="font-display text-3xl font-bold text-royal-900 text-center mb-4">Our Services in {city.name}</h2>
+          <h2 className="font-display text-3xl font-bold text-[#0b1f3a] text-center mb-4">Our Services in {city.name}</h2>
           <p className="text-gray-500 text-center mb-12 max-w-2xl mx-auto">
             Comprehensive home repair and maintenance services by certified technicians across {city.name}
           </p>
@@ -245,7 +245,7 @@ export default function CityLanding({ city }: { city: CityData }) {
             {SERVICE_CATEGORIES.map((svc) => {
               const Icon = serviceIcons[svc] ?? Wrench;
               return (
-                <div key={svc} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition-shadow">
+                <div key={svc} className="bg-white rounded-2xl border border-[#e8e1d2] shadow-sm p-6 hover:shadow-md transition-shadow">
                   <div className="w-12 h-12 rounded-xl bg-gold-50 flex items-center justify-center mb-4">
                     <Icon size={24} className="text-gold-700" />
                   </div>
@@ -267,7 +267,7 @@ export default function CityLanding({ city }: { city: CityData }) {
       {/* Embedded map */}
       <section className="py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="font-display text-3xl font-bold text-royal-900 text-center mb-4">Find Us in {city.name}</h2>
+          <h2 className="font-display text-3xl font-bold text-[#0b1f3a] text-center mb-4">Find Us in {city.name}</h2>
           <p className="text-gray-500 text-center mb-8">VATTAMS technicians serve all areas of {city.name}</p>
           <div className="relative rounded-2xl overflow-hidden border border-gray-200 shadow-sm h-80">
             <iframe
@@ -289,9 +289,9 @@ export default function CityLanding({ city }: { city: CityData }) {
       </section>
 
       {/* Nearby areas */}
-      <section className="bg-gray-50 py-16 md:py-20">
+      <section className="bg-[#f7f4ed] py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="font-display text-3xl font-bold text-royal-900 text-center mb-4">Areas We Cover in {city.name}</h2>
+          <h2 className="font-display text-3xl font-bold text-[#0b1f3a] text-center mb-4">Areas We Cover in {city.name}</h2>
           <p className="text-gray-500 text-center mb-12 max-w-2xl mx-auto">
             VATTAMS provides home services across all neighborhoods and surrounding areas of {city.name}
           </p>
@@ -308,11 +308,11 @@ export default function CityLanding({ city }: { city: CityData }) {
       {/* Testimonials */}
       <section className="py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="font-display text-3xl font-bold text-royal-900 text-center mb-4">Customer Reviews in {city.name}</h2>
+          <h2 className="font-display text-3xl font-bold text-[#0b1f3a] text-center mb-4">Customer Reviews in {city.name}</h2>
           <p className="text-gray-500 text-center mb-12">Real reviews from {city.name} customers who trusted VATTAMS</p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {city.testimonials.map((t, idx) => (
-              <div key={idx} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <div key={idx} className="bg-white rounded-2xl border border-[#e8e1d2] shadow-sm p-6">
                 <div className="flex items-center gap-1 mb-3">
                   {[...Array(t.rating)].map((_, i) => (
                     <Star key={i} size={16} className="text-gold-500 fill-gold-500" />
@@ -320,7 +320,7 @@ export default function CityLanding({ city }: { city: CityData }) {
                 </div>
                 <p className="text-gray-600 text-sm leading-relaxed mb-4">"{t.text}"</p>
                 <div className="flex items-center gap-3 pt-3 border-t border-gray-50">
-                  <div className="w-10 h-10 rounded-full bg-royal-100 flex items-center justify-center font-bold text-royal-700">
+                  <div className="w-10 h-10 rounded-full bg-royal-100 flex items-center justify-center font-bold text-[#0b1f3a]">
                     {t.name.charAt(0)}
                   </div>
                   <div>
@@ -335,13 +335,13 @@ export default function CityLanding({ city }: { city: CityData }) {
       </section>
 
       {/* FAQ */}
-      <section className="bg-gray-50 py-16 md:py-20">
+      <section className="bg-[#f7f4ed] py-16 md:py-20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="font-display text-3xl font-bold text-royal-900 text-center mb-4">Frequently Asked Questions — {city.name}</h2>
+          <h2 className="font-display text-3xl font-bold text-[#0b1f3a] text-center mb-4">Frequently Asked Questions — {city.name}</h2>
           <p className="text-gray-500 text-center mb-12">Everything you need to know about home services in {city.name}</p>
           <div className="space-y-3">
             {city.faqs.map((faq, idx) => (
-              <details key={idx} className="group bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+              <details key={idx} className="group bg-white rounded-xl border border-[#e8e1d2] shadow-sm overflow-hidden">
                 <summary className="flex items-center justify-between cursor-pointer p-5 font-semibold text-gray-900 text-sm list-none">
                   {faq.q}
                   <ChevronRight size={18} className="text-gray-400 group-open:rotate-90 transition-transform shrink-0" />
@@ -357,7 +357,7 @@ export default function CityLanding({ city }: { city: CityData }) {
       {otherCities.length > 0 && (
       <section className="py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="font-display text-3xl font-bold text-royal-900 text-center mb-4">Also Serving Other Cities in {city.state}</h2>
+          <h2 className="font-display text-3xl font-bold text-[#0b1f3a] text-center mb-4">Also Serving Other Cities in {city.state}</h2>
           <p className="text-gray-500 text-center mb-12">VATTAMS provides home services across {city.state}</p>
           <div className="flex flex-wrap justify-center gap-3">
             {otherCities.map((c) => (
@@ -375,14 +375,14 @@ export default function CityLanding({ city }: { city: CityData }) {
       <section className="bg-gradient-to-br from-royal-950 to-royal-800 py-16 md:py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">Ready to Book a Service in {city.name}?</h2>
-          <p className="text-royal-100 mb-8 text-lg">Get verified technicians at your doorstep in {city.name} with transparent pricing and a 30-day warranty.</p>
+          <p className="text-[#e8dcc0] mb-8 text-lg">Get verified technicians at your doorstep in {city.name} with transparent pricing and a 30-day warranty.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button onClick={() => navigate('booking')}
-              className="flex items-center justify-center gap-2 px-8 py-4 bg-gold-500 hover:bg-gold-400 text-royal-950 font-bold rounded-xl transition-colors shadow-lg">
+              className="flex items-center justify-center gap-2 px-8 py-4 bg-gold-500 hover:bg-gold-400 text-[#071426] font-bold rounded-xl transition-colors shadow-lg">
               Book Now <ArrowRight size={18} />
             </button>
             <button onClick={() => navigate('join-technician')}
-              className="flex items-center justify-center gap-2 px-8 py-4 bg-wine-600 hover:bg-wine-500 text-white font-bold rounded-xl transition-colors shadow-lg">
+              className="flex items-center justify-center gap-2 px-8 py-4 bg-[#0b1f3a] hover:bg-[#132d50] text-white font-bold rounded-xl transition-colors shadow-lg">
               <Briefcase size={18} /> Join as Technician
             </button>
             <a href="https://wa.me/918189800757" target="_blank" rel="noreferrer"
