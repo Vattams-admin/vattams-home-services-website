@@ -66,31 +66,31 @@ export default function CustomerPayments() {
   };
 
   if (loading || !customer) {
-    return <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-gray-50"><Loader className="animate-spin text-blue-600" size={32} /></div>;
+    return <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-ivory-50"><Loader className="animate-spin text-gold-700" size={32} /></div>;
   }
 
   const totalPaid = payments.filter((p) => p.status === 'success').reduce((sum, p) => sum + p.amount, 0);
   const totalPending = payments.filter((p) => p.status === 'pending').reduce((sum, p) => sum + p.amount, 0);
 
   return (
-    <div className="pt-20 md:pt-24 min-h-screen bg-gray-50">
+    <div className="pt-20 md:pt-24 min-h-screen bg-ivory-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-        <h1 className="text-2xl font-extrabold text-gray-900 mb-6 flex items-center gap-2"><CreditCard size={24} className="text-blue-600" /> Payment History</h1>
+        <h1 className="text-2xl font-extrabold text-gray-900 mb-6 flex items-center gap-2"><CreditCard size={24} className="text-gold-700" /> Payment History</h1>
 
         {/* Summary */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <div className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-5">
             <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center mb-3"><CheckCircle size={18} className="text-green-600" /></div>
             <div className="text-2xl font-extrabold text-gray-900">₹{totalPaid.toLocaleString('en-IN')}</div>
             <div className="text-xs text-gray-400 font-medium">Total Paid</div>
           </div>
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <div className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-5">
             <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center mb-3"><Clock size={18} className="text-amber-600" /></div>
             <div className="text-2xl font-extrabold text-gray-900">₹{totalPending.toLocaleString('en-IN')}</div>
             <div className="text-xs text-gray-400 font-medium">Pending Verification</div>
           </div>
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center mb-3"><CreditCard size={18} className="text-blue-600" /></div>
+          <div className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-5">
+            <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center mb-3"><CreditCard size={18} className="text-gold-700" /></div>
             <div className="text-2xl font-extrabold text-gray-900">{payments.length}</div>
             <div className="text-xs text-gray-400 font-medium">Total Transactions</div>
           </div>
@@ -98,7 +98,7 @@ export default function CustomerPayments() {
 
         {/* Payment List */}
         {payments.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
+          <div className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-12 text-center">
             <CreditCard size={40} className="text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500">No payment transactions yet.</p>
           </div>
@@ -108,7 +108,7 @@ export default function CustomerPayments() {
               const cfg = statusConfig[p.status] ?? statusConfig.pending;
               const booking = p.reference_id ? bookings[p.reference_id] : null;
               return (
-                <div key={p.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <div key={p.id} className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-5">
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <div className="font-bold text-blue-700 text-sm">{p.payment_id}</div>
@@ -130,7 +130,7 @@ export default function CustomerPayments() {
                       <span className="text-xs">UPI: {p.upi_id}</span>
                     </div>
                     {p.status === 'success' && (
-                      <button onClick={() => downloadInvoice(p)} className="flex items-center gap-1 text-blue-600 font-semibold hover:underline">
+                      <button onClick={() => downloadInvoice(p)} className="flex items-center gap-1 text-gold-700 font-semibold hover:underline">
                         <Download size={14} /> Invoice
                       </button>
                     )}
