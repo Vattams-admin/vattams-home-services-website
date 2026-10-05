@@ -1529,7 +1529,7 @@ export default function AdminDashboard() {
                               onClick={async () => {
                                 setPaymentUpdating(true);
                                 await updatePaymentStatus(p.payment_id, 'success', p.utr ?? undefined, 'admin');
-                                setPayments(await fetchAllPayments());
+                                setPayments((await adminData<{ payments: PaymentRecord[] }>('payments')).payments ?? []);
                                 setPaymentUpdating(false);
                               }}
                               disabled={paymentUpdating}
@@ -1541,7 +1541,7 @@ export default function AdminDashboard() {
                               onClick={async () => {
                                 setPaymentUpdating(true);
                                 await updatePaymentStatus(p.payment_id, 'failed', p.utr ?? undefined, 'admin');
-                                setPayments(await fetchAllPayments());
+                                setPayments((await adminData<{ payments: PaymentRecord[] }>('payments')).payments ?? []);
                                 setPaymentUpdating(false);
                               }}
                               disabled={paymentUpdating}
