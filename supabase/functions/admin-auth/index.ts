@@ -46,7 +46,7 @@ Deno.serve(async (req: Request) => {
     const sessionToken = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString();
 
-    const { error: sessionError } = await supabase.from("admin_sessions").insert({
+    const { error: sessionError } = await supabase.from("admin_auth_sessions").insert({
       admin_id: admin.id,
       token: sessionToken,
       expires_at: expiresAt,
@@ -61,6 +61,7 @@ Deno.serve(async (req: Request) => {
       message: "Login successful",
       sessionToken,
       expiresAt,
+      admin: { id: admin.id, email: admin.email, role: admin.role, full_name: admin.full_name },
     });
   } catch (err) {
     return errorResponse(err instanceof Error ? err.message : "An unexpected error occurred");
