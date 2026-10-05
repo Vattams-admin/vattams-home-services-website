@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Loader, Star, CheckCircle, MessageSquare, ChevronRight } from 'lucide-react';
 import { useRouter } from '@/lib/router';
-import { Customer, Booking, Review, SUPABASE_ANON_KEY, SUPABASE_URL, supabase } from '@/lib/supabase';
+import { Customer, Booking, Review, SUPABASE_ANON_KEY, SUPABASE_URL } from '@/lib/supabase';
+import { customerData } from '@/lib/customerData';
 
 export default function CustomerReviews() {
   const { navigate } = useRouter();
@@ -25,12 +26,12 @@ export default function CustomerReviews() {
   }, []);
 
   const load = async (c: Customer) => {
-    const [{ data: bookingData }, { data: reviewData }] = await Promise.all([
-      supabase.from('bookings').select('*').or(`customer_id.eq.${c.id},mobile_number.eq.${c.mobile}`).eq('status', 'completed').order('created_at', { ascending: false }),
-      supabase.from('reviews').select('*').eq('customer_id', c.id).order('created_at', { ascending: false }),
+    const [bookingResult, reviewResult] = await Promise.all([
+      customerData<{ bookings: Booking[] }>('completed_bookings', { mobile: c.mobile }),
+      customerData<{ reviews: Review[] }>('reviews', { mobile: c.mobile }),
     ]);
-    setBookings(bookingData ?? []);
-    setReviews(reviewData ?? []);
+    setBookings(bookingResult?.bookings ?? []);
+    setReviews(reviewResult?.reviews ?? []);
     setLoading(false);
   };
 
@@ -48,6 +49,7 @@ export default function CustomerReviews() {
         body: JSON.stringify({
           booking_id: booking.id,
           customer_id: customer.id,
+          session_token: sessionStorage.getItem('vattams_customer_session'),
           customer_name: customer.full_name,
           technician_id: booking.assigned_technician_id,
           rating: selectedRating,
