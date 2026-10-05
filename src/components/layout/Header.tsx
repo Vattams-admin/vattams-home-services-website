@@ -117,7 +117,7 @@ export default function Header() {
     'Account';
 
   return (
-    <header className="fixed top-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md border-b border-blue-100 shadow-sm">
+    <header className="fixed top-0 inset-x-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#e8e1d2] shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="h-16 md:h-20 flex items-center justify-between gap-3">
 
@@ -135,11 +135,11 @@ export default function Header() {
             />
 
             <div className="hidden sm:block text-left">
-              <div className="font-extrabold text-blue-900 text-base md:text-lg leading-tight">
+              <div className="font-extrabold text-[#0b1f3a] text-base md:text-lg leading-tight">
                 VATTAMS
               </div>
 
-              <div className="text-[10px] md:text-xs font-semibold text-amber-600 tracking-wider uppercase">
+              <div className="text-[10px] md:text-xs font-semibold text-[#a47c00] tracking-wider uppercase">
                 Home Services
               </div>
             </div>
@@ -155,8 +155,8 @@ export default function Header() {
                 className={[
                   'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                   page === item.page
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700',
+                    ? 'bg-[#0b1f3a] text-white'
+                    : 'text-gray-700 hover:bg-[#f8f4e8] hover:text-[#0b1f3a]',
                 ].join(' ')}
               >
                 {item.label}
@@ -166,7 +166,7 @@ export default function Header() {
             <button
               type="button"
               onClick={() => goTo('join-technician')}
-              className="px-3 py-2 rounded-lg text-sm font-semibold text-orange-600 hover:bg-orange-50"
+              className="px-3 py-2 rounded-lg text-sm font-semibold text-[#a47c00] hover:bg-[#f8f4e8]"
             >
               Join as a Technician
             </button>
@@ -177,7 +177,7 @@ export default function Header() {
 
             <a
               href="tel:+916374068296"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-blue-200 text-blue-700 text-sm font-medium hover:bg-blue-50"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#d8c58c] text-[#0b1f3a] text-sm font-medium hover:bg-[#f8f4e8]"
             >
               <Phone size={15} />
               Call
@@ -200,7 +200,7 @@ export default function Header() {
                 onClick={() =>
                   setAccountOpen((value) => !value)
                 }
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#0b1f3a] text-white text-sm font-semibold hover:bg-[#132d50]"
               >
                 <User size={15} />
 
@@ -212,7 +212,7 @@ export default function Header() {
               </button>
 
               {accountOpen && (
-                <div className="absolute right-0 top-full mt-2 w-60 bg-white border border-blue-100 rounded-xl shadow-xl overflow-hidden">
+                <div className="absolute right-0 top-full mt-2 w-60 bg-white border border-[#e8e1d2] rounded-xl shadow-xl overflow-hidden">
 
                   {customer ? (
                     <>
@@ -383,7 +383,7 @@ export default function Header() {
                 setMobileOpen(true);
                 setAccountOpen(false);
               }}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-bold shadow-sm"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#0b1f3a] text-white text-sm font-bold shadow-sm"
               aria-label="Open Account"
             >
               <User size={16} />
@@ -396,7 +396,7 @@ export default function Header() {
               onClick={() =>
                 setMobileOpen((value) => !value)
               }
-              className="p-2 rounded-lg text-gray-700 hover:bg-blue-50"
+              className="p-2 rounded-lg text-gray-700 hover:bg-[#f8f4e8]"
               aria-label={
                 mobileOpen
                   ? 'Close menu'
@@ -416,7 +416,7 @@ export default function Header() {
 
       {/* MOBILE MENU */}
       {mobileOpen && (
-        <div className="lg:hidden bg-white border-t border-blue-100 shadow-lg">
+        <div className="lg:hidden bg-white border-t border-[#e8e1d2] shadow-lg">
           <div className="max-h-[calc(100vh-64px)] overflow-y-auto px-4 py-3">
 
             {/* NAVIGATION */}
@@ -429,8 +429,8 @@ export default function Header() {
                   className={[
                     'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-sm font-medium',
                     page === item.page
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-700 hover:bg-blue-50',
+                      ? 'bg-[#0b1f3a] text-white'
+                      : 'text-gray-700 hover:bg-[#f8f4e8]',
                   ].join(' ')}
                 >
                   {item.page === 'home' ? (
@@ -450,7 +450,7 @@ export default function Header() {
                 onClick={() =>
                   goTo('join-technician')
                 }
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-sm font-semibold text-orange-600 hover:bg-orange-50"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-sm font-semibold text-[#a47c00] hover:bg-[#f8f4e8]"
               >
                 <Briefcase size={17} />
                 Join as a Technician
@@ -458,12 +458,12 @@ export default function Header() {
             </div>
 
             {/* ACCOUNT */}
-            <div className="mt-4 border border-blue-100 rounded-xl overflow-hidden bg-blue-50/50">
+            <div className="mt-4 border border-[#e8e1d2] rounded-xl overflow-hidden bg-blue-50/50">
 
-              <div className="px-4 py-3 bg-blue-50 border-b border-blue-100 flex items-center gap-2">
-                <User size={18} className="text-blue-600" />
+              <div className="px-4 py-3 bg-blue-50 border-b border-[#e8e1d2] flex items-center gap-2">
+                <User size={18} className="text-[#0b1f3a]" />
 
-                <span className="font-bold text-blue-900">
+                <span className="font-bold text-[#0b1f3a]">
                   Account
                 </span>
               </div>
@@ -626,7 +626,7 @@ export default function Header() {
             <button
               type="button"
               onClick={() => goTo('booking')}
-              className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-blue-600 text-white text-sm font-bold hover:bg-blue-700"
+              className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-[#0b1f3a] text-white text-sm font-bold hover:bg-[#132d50]"
             >
               <CalendarCheck size={17} />
               Book a Service
@@ -636,7 +636,7 @@ export default function Header() {
             <div className="flex gap-2 mt-3">
               <a
                 href="tel:+916374068296"
-                className="flex-1 flex items-center justify-center gap-2 px-3 py-3 rounded-lg border border-blue-200 text-blue-700 text-sm font-semibold"
+                className="flex-1 flex items-center justify-center gap-2 px-3 py-3 rounded-lg border border-[#d8c58c] text-[#0b1f3a] text-sm font-semibold"
               >
                 <Phone size={16} />
                 Call
