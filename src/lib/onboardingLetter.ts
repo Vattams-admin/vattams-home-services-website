@@ -1,5 +1,4 @@
-// Digitally generated VATTAMS onboarding letters (Technicians / Tutors)
-// and student registration confirmation documents.
+// Digitally generated VATTAMS Home Services technician onboarding letters.
 //
 // Follows the same pattern already used by src/lib/invoice.ts:
 // build a self-contained HTML string, then offer it as a downloadable
@@ -38,7 +37,7 @@ function baseStyles(accentFrom: string, accentTo: string): string {
 }
 
 export interface OnboardingLetterParams {
-  role: 'Technician' | 'Tutor';
+  role: 'Technician';
   employeeId: string;
   fullName: string;
   city: string;
