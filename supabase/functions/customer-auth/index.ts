@@ -324,7 +324,9 @@ Deno.serve(async (req: Request) => {
       }
 
       case "submit-review": {
-        const { booking_id, customer_id, customer_name, technician_id, rating, review_text } = body;
+        const { booking_id, customer_id, customer_name, technician_id, rating, review_text, session_token } = body;
+        const { data: session } = await supabase.from("customer_auth_sessions").select("customer_id,expires_at").eq("token", session_token || "").maybeSingle();
+        if (!session || new Date(session.expires_at) <= new Date() || session.customer_id !== customer_id) return errorResponse("Unauthorized", 401);
 
         if (!booking_id) return errorResponse("Booking ID is required");
         if (!customer_id) return errorResponse("Customer ID is required");
