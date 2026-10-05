@@ -124,8 +124,8 @@ export default function Booking() {
     }
 
     await Promise.all([
-      notifyCustomer.bookingReceived(form.mobile_number, data.booking_number, data.id),
-      notifyAdmin.newBooking(data.booking_number, form.customer_name, form.service_category, data.id),
+      notifyCustomer.bookingReceived(form.mobile_number, data.booking_number, data.id, data.booking_action_token),
+      notifyAdmin.newBooking(data.booking_number, form.customer_name, form.service_category, data.id, data.booking_action_token),
     ]);
 
     // Automatically find and assign the best matching technician (no manual
