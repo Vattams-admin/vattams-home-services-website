@@ -138,8 +138,8 @@ export default function Booking() {
 
   if (success) {
     return (
-      <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-gray-100 p-8 text-center">
+      <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-[#f7f4ed] px-4">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-[#e8e1d2] p-8 text-center">
           <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
             <CheckCircle size={40} className="text-green-600" />
           </div>
@@ -152,7 +152,7 @@ export default function Booking() {
           <div className="flex flex-col gap-3">
             {customer && (
               <button onClick={() => navigate('customer-bookings')}
-                className="flex items-center justify-center gap-2 py-3 bg-royal-800 hover:bg-royal-900 text-white font-semibold rounded-xl transition-colors">
+                className="flex items-center justify-center gap-2 py-3 bg-[#0b1f3a] hover:bg-[#071426] text-white font-semibold rounded-xl transition-colors">
                 View My Bookings
               </button>
             )}
@@ -167,7 +167,7 @@ export default function Booking() {
               Back to Home
             </button>
             <button onClick={() => navigate('join-technician')}
-              className="flex items-center justify-center gap-2 py-3 bg-wine-600 hover:bg-wine-500 text-white font-semibold rounded-xl transition-colors">
+              className="flex items-center justify-center gap-2 py-3 bg-[#0b1f3a] hover:bg-[#132d50] text-white font-semibold rounded-xl transition-colors">
               <Briefcase size={16} /> Join as a Technician
             </button>
           </div>
@@ -181,32 +181,32 @@ export default function Booking() {
       <section className="bg-gradient-to-br from-royal-950 via-royal-900 to-royal-800 py-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-3">Book a Service</h1>
-          <p className="text-royal-100 max-w-lg mx-auto">
+          <p className="text-[#e8dcc0] max-w-lg mx-auto">
             Fill in the details below and our team will reach out to confirm your booking.
           </p>
         </div>
       </section>
 
-      <section className="py-12 bg-gray-50">
+      <section className="py-12 bg-[#f7f4ed]">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <button
             type="button"
             onClick={() => window.dispatchEvent(new CustomEvent('vattams:open-chat'))}
             className="w-full flex items-center gap-3 bg-gold-50 hover:bg-gold-100 border border-gold-200 rounded-2xl p-4 mb-5 text-left transition-colors"
           >
-            <div className="w-10 h-10 rounded-xl bg-royal-800 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-[#0b1f3a] flex items-center justify-center shrink-0">
               <Sparkles size={18} className="text-white" />
             </div>
             <div>
-              <div className="font-bold text-royal-900 text-sm">Not sure what you need?</div>
+              <div className="font-bold text-[#0b1f3a] text-sm">Not sure what you need?</div>
               <div className="text-gold-700 text-xs">Ask our AI Assistant about services, pricing, or how booking works</div>
             </div>
           </button>
 
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
+          <div className="bg-white rounded-2xl border border-[#e8e1d2] shadow-sm p-6 md:p-8">
             {loading ? (
               <div className="flex justify-center py-16">
-                <Loader className="animate-spin text-royal-700" size={32} />
+                <Loader className="animate-spin text-[#0b1f3a]" size={32} />
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
@@ -250,9 +250,9 @@ export default function Booking() {
                 </div>
 
                 {selectedService && pricing && (
-                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <div className="bg-[#f7f4ed] rounded-xl p-4 border border-[#e8e1d2]">
                     <div className="flex items-center gap-2 mb-3">
-                      <Receipt size={16} className="text-royal-700" />
+                      <Receipt size={16} className="text-[#0b1f3a]" />
                       <span className="font-semibold text-gray-800 text-sm">Price Breakdown</span>
                     </div>
                     <div className="space-y-1.5 text-sm">
@@ -283,9 +283,9 @@ export default function Booking() {
                 )}
 
                 {selectedService && pricing && (
-                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <div className="bg-[#f7f4ed] rounded-xl p-4 border border-[#e8e1d2]">
                     <div className="flex items-center gap-2 mb-2">
-                      <Tag size={16} className="text-royal-700" />
+                      <Tag size={16} className="text-[#0b1f3a]" />
                       <span className="font-semibold text-gray-800 text-sm">Have a Coupon Code?</span>
                     </div>
                     <div className="flex gap-2">
@@ -293,7 +293,7 @@ export default function Booking() {
                         placeholder="Enter coupon code"
                         className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-gold-500 uppercase" />
                       <button type="button" onClick={handleValidateCoupon} disabled={validatingCoupon || !couponCode.trim()}
-                        className="px-4 py-2 bg-royal-800 hover:bg-royal-900 disabled:bg-gray-300 text-white text-sm font-semibold rounded-lg transition-colors">
+                        className="px-4 py-2 bg-[#0b1f3a] hover:bg-[#071426] disabled:bg-gray-300 text-white text-sm font-semibold rounded-lg transition-colors">
                         {validatingCoupon ? '...' : 'Apply'}
                       </button>
                     </div>
@@ -341,7 +341,7 @@ export default function Booking() {
                 </div>
 
                 <button type="submit" disabled={submitting}
-                  className="w-full flex items-center justify-center gap-2 py-4 bg-royal-800 hover:bg-royal-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors shadow-lg shadow-royal-200">
+                  className="w-full flex items-center justify-center gap-2 py-4 bg-[#0b1f3a] hover:bg-[#071426] disabled:opacity-60 text-white font-bold rounded-xl transition-colors shadow-lg shadow-[#d8c58c]">
                   {submitting ? (
                     <><Loader size={18} className="animate-spin" /> Confirming...</>
                   ) : (
