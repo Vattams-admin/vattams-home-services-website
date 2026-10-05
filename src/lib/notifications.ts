@@ -187,6 +187,9 @@ export function subscribeToNotifications(
   recipientId: string,
   onNew: (notification: NotificationRow) => void,
 ): (() => void) | null {
+  // Custom admin sessions are not represented by Supabase Auth; do not expose
+  // the notifications table through a client Realtime subscription.
+  if (recipientType === 'admin') return null;
   const channel = supabase
     .channel(`notifications:${recipientType}:${recipientId}`)
     .on(
