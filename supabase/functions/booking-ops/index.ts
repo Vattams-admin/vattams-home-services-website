@@ -29,9 +29,20 @@ Deno.serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const { action, booking_id, technician_id, otp, purpose, status } = await req.json();
+    const { action, booking_id, technician_id, otp, purpose, status, booking_action_token, admin_id, admin_session_token } = await req.json();
 
     if (action === "auto_assign") {
+      const { data: capabilityBooking } = await supabase.from("bookings").select("id, booking_action_token").eq("id", booking_id).maybeSingle();
+      const tokenMatches = Boolean(capabilityBooking && booking_action_token && capabilityBooking.booking_action_token === booking_action_token);
+      let adminAuthorized = false;
+      if (admin_id && admin_session_token) {
+        const { data: adminSession } = await supabase.from("admin_auth_sessions").select("admin_id, expires_at").eq("token", admin_session_token).maybeSingle();
+        if (adminSession && adminSession.admin_id === admin_id && new Date(adminSession.expires_at).getTime() > Date.now()) {
+          const { data: admin } = await supabase.from("admin_users").select("id, role, is_active").eq("id", admin_id).maybeSingle();
+          adminAuthorized = Boolean(admin && admin.id === admin_id && admin.role === "super_admin" && admin.is_active === true);
+        }
+      }
+      if (!tokenMatches && !adminAuthorized) return new Response(JSON.stringify({ error: "Not authorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       // System automatically finds and assigns the best matching technician —
       // no manual "accept" step required. Falls back silently (booking stays
       // "pending") if no eligible technician is found, so the existing
@@ -191,6 +202,7 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === "assign_booking") {
+      return new Response(JSON.stringify({ error: "Deprecated action" }), { status: 410, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       // First-accept assignment: first technician to accept gets the booking
       const { data: booking, error: bookingError } = await supabase
         .from("bookings")
@@ -328,6 +340,7 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === "generate_otp") {
+      return new Response(JSON.stringify({ error: "Deprecated action" }), { status: 410, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       // Generate OTP for start or complete job
       const otpCode = generateOTP();
       const column = purpose === "start" ? "start_otp" : "complete_otp";
@@ -347,6 +360,7 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === "verify_otp") {
+      return new Response(JSON.stringify({ error: "Deprecated action" }), { status: 410, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       const { data: booking } = await supabase
         .from("bookings")
         .select("*")
@@ -394,6 +408,7 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === "update_status") {
+      return new Response(JSON.stringify({ error: "Deprecated action" }), { status: 410, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       await supabase.from("bookings").update({
         status,
         updated_at: new Date().toISOString(),
