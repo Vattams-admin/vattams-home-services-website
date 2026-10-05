@@ -29,7 +29,7 @@ export interface SEOConfig {
  * defaults) takes over cleanly.
  *
  * Mirrors the existing tag-injection pattern already used for city landing
- * pages, generalized for reuse across Home Services and Online Tuition
+ * pages, generalized for reuse across Home Services and Home Services
  * pages. Uses a shared `data-seo` attribute namespace distinct from
  * `data-city` so both can coexist without conflicting.
  */
