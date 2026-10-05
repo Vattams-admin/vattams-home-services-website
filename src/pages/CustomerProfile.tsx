@@ -73,7 +73,7 @@ export default function CustomerProfile() {
       const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-auth/change-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ANON_KEY}` },
-        body: JSON.stringify({ mobile: customer.mobile, current_password: pwdForm.current, new_password: pwdForm.new }),
+        body: JSON.stringify({ session_token: sessionStorage.getItem('vattams_customer_session') || '', current_password: pwdForm.current, new_password: pwdForm.new }),
       });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || 'Failed to change password');
