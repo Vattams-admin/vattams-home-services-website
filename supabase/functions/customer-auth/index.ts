@@ -39,6 +39,13 @@ Deno.serve(async (req: Request) => {
     const body = await req.json();
 
     switch (action) {
+      case "logout": {
+        const { session_token } = body;
+        if (!session_token) return errorResponse("Secure login session is required", 401);
+        await supabase.from("customer_auth_sessions").delete().eq("token", session_token);
+        return jsonResponse({ success: true, message: "Logged out successfully" });
+      }
+
       case "register": {
         const { full_name, mobile, password, email, city, address } = body;
 
