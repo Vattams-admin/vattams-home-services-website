@@ -132,7 +132,7 @@ export default function Booking() {
 
   if (success) {
     return (
-      <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-ivory px-4">
         <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-gray-100 p-8 text-center">
           <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
             <CheckCircle size={40} className="text-green-600" />
@@ -146,7 +146,7 @@ export default function Booking() {
           <div className="flex flex-col gap-3">
             {customer && (
               <button onClick={() => navigate('customer-bookings')}
-                className="flex items-center justify-center gap-2 py-3 bg-royal-800 hover:bg-royal-900 text-white font-semibold rounded-xl transition-colors">
+                className="flex items-center justify-center gap-2 py-3 bg-navy-900 hover:bg-navy-800 text-white font-semibold rounded-xl transition-colors">
                 View My Bookings
               </button>
             )}
@@ -161,7 +161,7 @@ export default function Booking() {
               Back to Home
             </button>
             <button onClick={() => navigate('join-technician')}
-              className="flex items-center justify-center gap-2 py-3 bg-wine-600 hover:bg-wine-500 text-white font-semibold rounded-xl transition-colors">
+              className="flex items-center justify-center gap-2 py-3 bg-gold-400 hover:bg-gold-300 text-navy-950 text-white font-semibold rounded-xl transition-colors">
               <Briefcase size={16} /> Join as a Technician
             </button>
           </div>
@@ -172,16 +172,16 @@ export default function Booking() {
 
   return (
     <div className="pt-20 md:pt-24">
-      <section className="bg-gradient-to-br from-royal-950 via-royal-900 to-royal-800 py-14">
+      <section className="bg-navy-950 py-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-3">Book a Service</h1>
-          <p className="text-royal-100 max-w-lg mx-auto">
+          <p className="text-navy-100 max-w-lg mx-auto">
             Fill in the details below and our team will reach out to confirm your booking.
           </p>
         </div>
       </section>
 
-      <section className="py-12 bg-gray-50">
+      <section className="py-12 bg-ivory">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <button
             type="button"
@@ -192,7 +192,7 @@ export default function Booking() {
               <Sparkles size={18} className="text-white" />
             </div>
             <div>
-              <div className="font-bold text-royal-900 text-sm">Not sure what you need?</div>
+              <div className="font-bold text-navy-900 text-sm">Not sure what you need?</div>
               <div className="text-gold-700 text-xs">Ask our AI Assistant about services, pricing, or how booking works</div>
             </div>
           </button>
@@ -200,7 +200,7 @@ export default function Booking() {
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
             {loading ? (
               <div className="flex justify-center py-16">
-                <Loader className="animate-spin text-royal-700" size={32} />
+                <Loader className="animate-spin text-navy-700" size={32} />
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
@@ -244,9 +244,9 @@ export default function Booking() {
                 </div>
 
                 {selectedService && pricing && (
-                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <div className="bg-ivory rounded-xl p-4 border border-gray-100">
                     <div className="flex items-center gap-2 mb-3">
-                      <Receipt size={16} className="text-royal-700" />
+                      <Receipt size={16} className="text-navy-700" />
                       <span className="font-semibold text-gray-800 text-sm">Price Breakdown</span>
                     </div>
                     <div className="space-y-1.5 text-sm">
@@ -277,9 +277,9 @@ export default function Booking() {
                 )}
 
                 {selectedService && pricing && (
-                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <div className="bg-ivory rounded-xl p-4 border border-gray-100">
                     <div className="flex items-center gap-2 mb-2">
-                      <Tag size={16} className="text-royal-700" />
+                      <Tag size={16} className="text-navy-700" />
                       <span className="font-semibold text-gray-800 text-sm">Have a Coupon Code?</span>
                     </div>
                     <div className="flex gap-2">
@@ -287,7 +287,7 @@ export default function Booking() {
                         placeholder="Enter coupon code"
                         className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-gold-500 uppercase" />
                       <button type="button" onClick={handleValidateCoupon} disabled={validatingCoupon || !couponCode.trim()}
-                        className="px-4 py-2 bg-royal-800 hover:bg-royal-900 disabled:bg-gray-300 text-white text-sm font-semibold rounded-lg transition-colors">
+                        className="px-4 py-2 bg-navy-900 hover:bg-navy-800 disabled:bg-gray-300 text-white text-sm font-semibold rounded-lg transition-colors">
                         {validatingCoupon ? '...' : 'Apply'}
                       </button>
                     </div>
@@ -335,7 +335,7 @@ export default function Booking() {
                 </div>
 
                 <button type="submit" disabled={submitting}
-                  className="w-full flex items-center justify-center gap-2 py-4 bg-royal-800 hover:bg-royal-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors shadow-lg shadow-royal-200">
+                  className="w-full flex items-center justify-center gap-2 py-4 bg-navy-900 hover:bg-navy-800 disabled:opacity-60 text-white font-bold rounded-xl transition-colors shadow-lg shadow-royal-200">
                   {submitting ? (
                     <><Loader size={18} className="animate-spin" /> Confirming...</>
                   ) : (
