@@ -27,6 +27,8 @@ export default function CustomerLogin() {
       if (!res.ok || data.error) throw new Error(data.error || 'Login failed');
 
       sessionStorage.setItem('vattams_customer', JSON.stringify(data.customer));
+      sessionStorage.setItem('vattams_customer_session', data.sessionToken);
+      sessionStorage.setItem('vattams_customer_expires', data.expiresAt);
       void registerServiceWorker();
       void initFCM('customer', data.customer.mobile);
       navigate('customer-dashboard');
