@@ -69,36 +69,13 @@ export async function redeemCoupon(
   customerId: string | null,
   discountAmount: number,
 ): Promise<boolean> {
-  const { error: redemptionError } = await supabase.from('coupon_redemptions').insert({
-    coupon_id: couponId,
-    booking_id: bookingId,
-    customer_id: customerId,
-    discount_amount: discountAmount,
+  const { data, error } = await supabase.functions.invoke('coupon-ops', {
+    body: { action: 'redeem', coupon_id: couponId, booking_id: bookingId, customer_id: customerId, discount_amount: discountAmount },
   });
-
-  if (redemptionError) {
-    console.error('[coupons] redemption insert error:', redemptionError);
+  if (error || !data?.success) {
+    console.error('[coupons] redemption error:', error || data?.error);
     return false;
   }
-
-  const { error: updateError } = await supabase.rpc('increment_coupon_usage', {
-    coupon_id: couponId,
-  });
-
-  if (updateError) {
-    const { data: current } = await supabase
-      .from('coupons')
-      .select('used_count')
-      .eq('id', couponId)
-      .maybeSingle();
-    const newCount = (current?.used_count ?? 0) + 1;
-    const { error: rawUpdateError } = await supabase
-      .from('coupons')
-      .update({ used_count: newCount })
-      .eq('id', couponId);
-    if (rawUpdateError) console.error('[coupons] usage increment error:', rawUpdateError);
-  }
-
   return true;
 }
 
