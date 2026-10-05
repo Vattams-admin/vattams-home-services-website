@@ -11,7 +11,7 @@ export interface SEOConfig {
   /** Optional meta keywords (comma-separated). Used sparingly. */
   keywords?: string;
   /**
-   * Canonical path relative to the site, e.g. '/#tuition-home' or
+   * Canonical path relative to the site, e.g. '/#city-chennai' or
    * '/#city-chennai'. Combined with BASE_URL to form the full canonical
    * and og:url. Defaults to the current hash location if omitted.
    */
