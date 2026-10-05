@@ -490,8 +490,8 @@ export default function TechnicianRegister() {
 
   if (success) {
     return (
-      <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-gray-100 p-8 text-center">
+      <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-[#f7f4ed] px-4">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-[#e8e1d2] p-8 text-center">
 
           <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
             <CheckCircle
@@ -506,7 +506,7 @@ export default function TechnicianRegister() {
 
           <p className="text-gray-500 mb-2">
             Your profile score:{' '}
-            <span className="font-bold text-orange-600">
+            <span className="font-bold text-[#a47c00]">
               {score}%
             </span>
           </p>
@@ -542,7 +542,7 @@ export default function TechnicianRegister() {
           <div className="flex gap-3 justify-center">
             <button
               onClick={() => navigate('home')}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors"
+              className="px-6 py-3 bg-[#0b1f3a] hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors"
             >
               Go to Home
             </button>
@@ -560,10 +560,10 @@ export default function TechnicianRegister() {
   }
 
   return (
-    <div className="pt-20 md:pt-24 min-h-screen bg-gray-50">
+    <div className="pt-20 md:pt-24 min-h-screen bg-[#f7f4ed]">
 
       {/* Hero */}
-      <section className="bg-gradient-to-br from-orange-500 to-amber-600 py-10 text-white">
+      <section className="bg-gradient-to-br from-[#071426] via-[#0b1f3a] to-[#071426] py-10 text-white">
         <div className="max-w-2xl mx-auto px-4 text-center">
 
           <div className="inline-flex items-center gap-2 bg-white/20 rounded-full px-4 py-1.5 text-sm font-semibold mb-4">
@@ -585,14 +585,14 @@ export default function TechnicianRegister() {
       <div className="max-w-2xl mx-auto px-4 py-8">
 
         {resumedDraft && (
-          <div className="mb-4 flex items-center justify-between gap-3 bg-blue-50 border border-blue-100 text-blue-700 text-xs font-semibold rounded-xl px-4 py-2.5">
+          <div className="mb-4 flex items-center justify-between gap-3 bg-[#f8f4e8] border border-blue-100 text-[#0b1f3a] text-xs font-semibold rounded-xl px-4 py-2.5">
             <span>
               Welcome back — we picked up where you left off.
             </span>
 
             <button
               onClick={handleStartOver}
-              className="flex items-center gap-1 text-blue-700 hover:text-blue-900 underline shrink-0"
+              className="flex items-center gap-1 text-[#0b1f3a] hover:text-blue-900 underline shrink-0"
             >
               <RotateCcw size={12} />
               Start Over
@@ -608,14 +608,14 @@ export default function TechnicianRegister() {
               Step {stepIndex + 1} of {STEPS.length}
             </span>
 
-            <span className="text-sm font-bold text-orange-600">
+            <span className="text-sm font-bold text-[#a47c00]">
               {progress}% Complete
             </span>
           </div>
 
           <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
             <div
-              className="h-full bg-orange-500 rounded-full transition-all duration-300"
+              className="h-full bg-[#c9a227] rounded-full transition-all duration-300"
               style={{
                 width: `${progress}%`,
               }}
@@ -627,7 +627,7 @@ export default function TechnicianRegister() {
               Profile Score:
             </span>
 
-            <span className="text-xs font-bold text-orange-600">
+            <span className="text-xs font-bold text-[#a47c00]">
               {score}%
             </span>
 
@@ -641,9 +641,9 @@ export default function TechnicianRegister() {
         </div>
 
         {/* Chat */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl border border-[#e8e1d2] shadow-sm overflow-hidden">
 
-          <div className="h-64 md:h-80 overflow-y-auto p-4 space-y-3 bg-gray-50">
+          <div className="h-64 md:h-80 overflow-y-auto p-4 space-y-3 bg-[#f7f4ed]">
 
             {chatHistory.map((message, index) => (
               <div
@@ -659,7 +659,7 @@ export default function TechnicianRegister() {
                   className={
                     'max-w-[85%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-line ' +
                     (message.role === 'user'
-                      ? 'bg-orange-500 text-white rounded-br-sm'
+                      ? 'bg-[#c9a227] text-white rounded-br-sm'
                       : 'bg-white text-gray-800 border border-gray-200 rounded-bl-sm shadow-sm')
                   }
                 >
@@ -674,7 +674,7 @@ export default function TechnicianRegister() {
 
                   <Loader
                     size={14}
-                    className="animate-spin text-orange-500"
+                    className="animate-spin text-[#b08b18]"
                   />
 
                   <span className="text-sm text-gray-500">
@@ -690,7 +690,7 @@ export default function TechnicianRegister() {
           </div>
 
           {/* Input */}
-          <div className="border-t border-gray-100 p-4">
+          <div className="border-t border-[#e8e1d2] p-4">
 
             {error && (
               <div className="mb-3 flex items-center gap-2 text-red-600 text-sm bg-red-50 rounded-lg px-3 py-2">
@@ -735,7 +735,7 @@ export default function TechnicianRegister() {
 
                 <button
                   onClick={handleNext}
-                  className="px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl transition-colors"
+                  className="px-4 py-2.5 bg-[#c9a227] hover:bg-[#b08b18] text-white rounded-xl transition-colors"
                 >
                   <Send size={18} />
                 </button>
@@ -772,7 +772,7 @@ export default function TechnicianRegister() {
                         className={
                           'px-4 py-2 rounded-lg text-sm font-semibold transition-colors ' +
                           (selected
-                            ? 'bg-orange-500 text-white'
+                            ? 'bg-[#c9a227] text-white'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
                         }
                       >
@@ -785,7 +785,7 @@ export default function TechnicianRegister() {
 
                 <button
                   onClick={handleNext}
-                  className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-2.5 bg-[#c9a227] hover:bg-[#b08b18] text-white rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2"
                 >
                   Continue
                   <ArrowRight size={16} />
@@ -821,7 +821,7 @@ export default function TechnicianRegister() {
                         className={
                           'px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ' +
                           (selected
-                            ? 'bg-orange-500 text-white'
+                            ? 'bg-[#c9a227] text-white'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200')
                         }
                       >
@@ -835,7 +835,7 @@ export default function TechnicianRegister() {
 
                 <button
                   onClick={handleNext}
-                  className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-2.5 bg-[#c9a227] hover:bg-[#b08b18] text-white rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2"
                 >
                   Confirm Selection
                   <ArrowRight size={16} />
@@ -898,7 +898,7 @@ export default function TechnicianRegister() {
                   {state.status === 'idle' && (
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-full flex items-center justify-center gap-2 py-4 border-2 border-dashed border-orange-300 hover:border-orange-500 bg-orange-50/50 hover:bg-orange-50 text-orange-600 font-bold rounded-xl transition-colors text-sm"
+                      className="w-full flex items-center justify-center gap-2 py-4 border-2 border-dashed border-orange-300 hover:border-orange-500 bg-[#f8f4e8]/50 hover:bg-[#f8f4e8] text-[#a47c00] font-bold rounded-xl transition-colors text-sm"
                     >
                       <Upload size={18} />
                       Upload {label}
@@ -907,11 +907,11 @@ export default function TechnicianRegister() {
 
                   {/* Uploading */}
                   {state.status === 'uploading' && (
-                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                    <div className="bg-[#f7f4ed] border border-gray-200 rounded-xl p-4">
                       <div className="flex items-center gap-2 mb-2">
                         <Loader
                           size={16}
-                          className="animate-spin text-orange-500"
+                          className="animate-spin text-[#b08b18]"
                         />
                         <span className="text-sm font-semibold text-gray-700 truncate">
                           Uploading {state.fileName}...
@@ -920,7 +920,7 @@ export default function TechnicianRegister() {
 
                       <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-orange-500 rounded-full transition-all duration-200"
+                          className="h-full bg-[#c9a227] rounded-full transition-all duration-200"
                           style={{ width: `${state.progress}%` }}
                         />
                       </div>
@@ -953,7 +953,7 @@ export default function TechnicianRegister() {
 
                       <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="shrink-0 flex items-center gap-1 text-xs font-bold text-orange-600 hover:text-orange-700 bg-white border border-orange-200 rounded-lg px-3 py-1.5"
+                        className="shrink-0 flex items-center gap-1 text-xs font-bold text-[#a47c00] hover:text-orange-700 bg-white border border-[#e0d0a8] rounded-lg px-3 py-1.5"
                       >
                         <RefreshCw size={12} />
                         Replace
@@ -993,7 +993,7 @@ export default function TechnicianRegister() {
                       state.status === 'uploading' ||
                       (!savedValue && !currentStep.optional)
                     }
-                    className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-2.5 bg-[#c9a227] hover:bg-[#b08b18] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2"
                   >
                     Continue
                     <ArrowRight size={16} />
@@ -1017,7 +1017,7 @@ export default function TechnicianRegister() {
             {currentStep.type === 'review' && (
               <div className="space-y-3">
 
-                <div className="bg-gray-50 rounded-xl p-4 max-h-64 overflow-y-auto space-y-1.5">
+                <div className="bg-[#f7f4ed] rounded-xl p-4 max-h-64 overflow-y-auto space-y-1.5">
 
                   <div className="text-xs font-bold text-gray-500 mb-2">
                     Application Summary
@@ -1076,14 +1076,14 @@ export default function TechnicianRegister() {
 
                 </div>
 
-                <div className="bg-orange-50 rounded-xl p-3 flex items-center justify-between">
+                <div className="bg-[#f8f4e8] rounded-xl p-3 flex items-center justify-between">
 
                   <span className="text-sm font-bold text-orange-700">
                     Profile Score: {score}%
                   </span>
 
                   {missing.length > 0 && (
-                    <span className="text-xs text-orange-600">
+                    <span className="text-xs text-[#a47c00]">
                       {missing.length} items missing
                     </span>
                   )}
@@ -1158,7 +1158,7 @@ export default function TechnicianRegister() {
         </div>
 
         {/* Profile Score */}
-        <div className="mt-4 bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+        <div className="mt-4 bg-white rounded-xl border border-[#e8e1d2] shadow-sm p-4">
 
           <div className="flex items-center justify-between mb-2">
 
@@ -1166,7 +1166,7 @@ export default function TechnicianRegister() {
               Profile Completeness
             </span>
 
-            <span className="text-lg font-extrabold text-orange-600">
+            <span className="text-lg font-extrabold text-[#a47c00]">
               {score}%
             </span>
 
