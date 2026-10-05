@@ -134,13 +134,13 @@ export default function Footer() {
             <div className="mt-5 space-y-2">
               <button
                 onClick={() => navigate('booking')}
-                className="w-full py-2.5 bg-royal-700 hover:bg-royal-800 text-white text-sm font-semibold rounded-lg transition-colors"
+                className="w-full py-2.5 bg-[#0b1f3a] hover:bg-[#0b1f3a] text-white text-sm font-semibold rounded-lg transition-colors"
               >
                 Book a Service
               </button>
               <button
                 onClick={() => navigate('join-technician')}
-                className="w-full flex items-center justify-center gap-2 py-2.5 bg-wine-600 hover:bg-wine-500 text-white text-sm font-semibold rounded-lg transition-colors"
+                className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#0b1f3a] hover:bg-[#132d50] text-white text-sm font-semibold rounded-lg transition-colors"
               >
                 <Briefcase size={15} /> Join as a Technician
               </button>
