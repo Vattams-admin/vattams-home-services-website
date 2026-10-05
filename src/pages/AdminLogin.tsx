@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Lock, Loader, AlertCircle, Mail } from 'lucide-react';
 import { useRouter } from '@/lib/router';
-import { supabase } from '@/lib/supabase';
+import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase';
 
 export default function AdminLogin() {
   const { navigate } = useRouter();
@@ -28,12 +28,12 @@ export default function AdminLogin() {
       }
 
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL || 'https://nfcibyprftnowaiwlxxc.supabase.co'}/functions/v1/admin-auth`,
+        `${SUPABASE_URL}/functions/v1/admin-auth`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+            apikey: SUPABASE_ANON_KEY,
           },
           body: JSON.stringify({ email: cleanEmail, password: cleanPassword }),
         }
