@@ -50,21 +50,6 @@ VATTAMS Home Services provides on-demand home maintenance and repair services. C
 
 VATTAMS Home Services has strong roots and dense coverage across Tamil Nadu (Chennai, Coimbatore, Madurai, Trichy, Salem, Erode, Tiruppur, Vellore, Hosur, Tirunelveli, Thanjavur, Dindigul, Cuddalore, and more) and is expanding service availability to additional cities across India.
 
-## VATTAMS Online Tuition
-
-VATTAMS Online Tuition offers live online classes with tutors for students across India — nationwide, since classes are delivered online.
-
-### Courses
-
-- School Tuition (All Subjects) — Class 1 to Class 10
-- Public Speaking (internal slug: spoken-english)
-- Abacus & Mental Arithmetic
-- Mathematics
-- Science
-- CBSE/ICSE/State Board Exam Preparation
-- Competitive Exam Preparation
-- Other Online Tuition (custom learning needs)
-
 ## Contact
 
 - Website: https://vattams.net
