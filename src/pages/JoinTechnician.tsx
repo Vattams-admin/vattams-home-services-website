@@ -43,8 +43,8 @@ const FAQS = [
     a: 'Our system matches customer bookings with suitable technicians based on service category, location, availability, rating, and workload. Eligible technicians receive job notifications through the platform.',
   },
   {
-    q: 'Is registration free?',
-    a: 'Yes. Technician registration is free. Any applicable security deposit or platform-related charges will be communicated clearly after your application is reviewed and approved.',
+    q: 'What is the technician joining fee?',
+    a: 'Technician registration requires a one-time ₹49 joining fee, payable by UPI QR. Submit the UTR/reference number after payment; the application is then sent for Admin review.',
   },
   {
     q: 'How long does approval take?',
