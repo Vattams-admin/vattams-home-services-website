@@ -89,11 +89,11 @@ export default function CustomerProfile() {
   };
 
   if (loading || !customer) {
-    return <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-gray-50"><Loader className="animate-spin text-blue-600" size={32} /></div>;
+    return <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-ivory-50"><Loader className="animate-spin text-gold-700" size={32} /></div>;
   }
 
   return (
-    <div className="pt-20 md:pt-24 min-h-screen bg-gray-50">
+    <div className="pt-20 md:pt-24 min-h-screen bg-ivory-50">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-extrabold text-gray-900">My Profile</h1>
@@ -104,12 +104,12 @@ export default function CustomerProfile() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center mb-3"><Briefcase size={18} className="text-blue-600" /></div>
+          <div className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-5">
+            <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center mb-3"><Briefcase size={18} className="text-gold-700" /></div>
             <div className="text-2xl font-extrabold text-gray-900">{bookingCount}</div>
             <div className="text-xs text-gray-400 font-medium">Total Bookings</div>
           </div>
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <div className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-5">
             <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center mb-3"><CheckCircle size={18} className="text-green-600" /></div>
             <div className="text-2xl font-extrabold text-gray-900">{customer.mobile}</div>
             <div className="text-xs text-gray-400 font-medium">Mobile Number</div>
@@ -118,9 +118,9 @@ export default function CustomerProfile() {
 
         {msg && <div className={'rounded-xl p-3 text-sm mb-4 ' + (msg.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200')}>{msg.text}</div>}
 
-        <form onSubmit={handleSave} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
+        <form onSubmit={handleSave} className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-6 space-y-4">
           <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
-            <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center"><User size={22} className="text-blue-600" /></div>
+            <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center"><User size={22} className="text-gold-700" /></div>
             <div>
               <div className="font-bold text-gray-900">{customer.full_name}</div>
               <div className="text-xs text-gray-400 flex items-center gap-1"><Calendar size={11} /> Joined {new Date(customer.created_at).toLocaleDateString('en-IN')}</div>
@@ -132,7 +132,7 @@ export default function CustomerProfile() {
             <div className="relative">
               <User size={16} className="absolute left-3 top-3.5 text-gray-400" />
               <input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm" />
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
             </div>
           </div>
 
@@ -140,7 +140,7 @@ export default function CustomerProfile() {
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Mobile Number (cannot change)</label>
             <div className="relative">
               <Phone size={16} className="absolute left-3 top-3.5 text-gray-400" />
-              <input value={customer.mobile} disabled className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-500 text-sm" />
+              <input value={customer.mobile} disabled className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-ivory-50 text-gray-500 text-sm" />
             </div>
           </div>
 
@@ -149,7 +149,7 @@ export default function CustomerProfile() {
             <div className="relative">
               <Mail size={16} className="absolute left-3 top-3.5 text-gray-400" />
               <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm" />
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
             </div>
           </div>
 
@@ -158,7 +158,7 @@ export default function CustomerProfile() {
             <div className="relative">
               <MapPin size={16} className="absolute left-3 top-3.5 text-gray-400" />
               <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm" />
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
             </div>
           </div>
 
@@ -167,21 +167,21 @@ export default function CustomerProfile() {
             <div className="relative">
               <Home size={16} className="absolute left-3 top-3.5 text-gray-400" />
               <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm" />
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
             </div>
           </div>
 
           <button type="submit" disabled={saving}
-            className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold rounded-xl transition-colors">
+            className="w-full flex items-center justify-center gap-2 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors">
             {saving ? <Loader size={18} className="animate-spin" /> : <Save size={18} />} Save Changes
           </button>
         </form>
 
         {/* Change Password */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mt-4">
+        <div className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-6 mt-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2"><Lock size={16} className="text-gray-400" /> Change Password</h3>
-            <button onClick={() => setShowPwdForm(!showPwdForm)} className="text-sm text-blue-600 font-semibold hover:underline">
+            <button onClick={() => setShowPwdForm(!showPwdForm)} className="text-sm text-gold-700 font-semibold hover:underline">
               {showPwdForm ? 'Cancel' : 'Change'}
             </button>
           </div>
@@ -193,7 +193,7 @@ export default function CustomerProfile() {
                 <div className="relative">
                   <Key size={16} className="absolute left-3 top-3.5 text-gray-400" />
                   <input type="password" value={pwdForm.current} onChange={(e) => setPwdForm({ ...pwdForm, current: e.target.value })} required
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm" />
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
                 </div>
               </div>
               <div>
@@ -201,7 +201,7 @@ export default function CustomerProfile() {
                 <div className="relative">
                   <Lock size={16} className="absolute left-3 top-3.5 text-gray-400" />
                   <input type="password" value={pwdForm.new} onChange={(e) => setPwdForm({ ...pwdForm, new: e.target.value })} required minLength={6}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm" />
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
                 </div>
               </div>
               <div>
@@ -209,11 +209,11 @@ export default function CustomerProfile() {
                 <div className="relative">
                   <Lock size={16} className="absolute left-3 top-3.5 text-gray-400" />
                   <input type="password" value={pwdForm.confirm} onChange={(e) => setPwdForm({ ...pwdForm, confirm: e.target.value })} required minLength={6}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm" />
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
                 </div>
               </div>
               <button type="submit" disabled={pwdLoading}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold rounded-xl transition-colors">
+                className="w-full flex items-center justify-center gap-2 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors">
                 {pwdLoading ? <Loader size={18} className="animate-spin" /> : <Key size={18} />} Update Password
               </button>
             </form>
