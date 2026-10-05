@@ -31,10 +31,6 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL } from '@/lib/supabase';
 import { downloadOnboardingLetter } from '@/lib/onboardingLetter';
 import { technicianData } from '@/lib/technicianData';
 import {
-  fetchNotifications as fetchJobNotifications,
-  markAsRead as markJobNotificationRead,
-  markAllAsRead as markAllJobNotificationsRead,
-  subscribeToNotifications,
   NotificationRow,
 } from '@/lib/notifications';
 
@@ -197,8 +193,7 @@ export default function TechnicianDashboard() {
       setTechnician(result.technician);
       setJobs(result.jobs ?? []); setTransactions(result.transactions ?? []);
       setRecharges(result.recharges ?? []); setNotifications(result.notifications ?? []);
-      const jobNotificationsData = await fetchJobNotifications('technician', result.technician.id, 30);
-      setJobNotifications(jobNotificationsData);
+      setJobNotifications(result.jobNotifications ?? []);
     } catch (err: any) {
       setError(err?.message || 'Unable to load technician dashboard.');
     } finally { setLoading(false); setRefreshing(false); }
@@ -211,60 +206,12 @@ export default function TechnicianDashboard() {
   /*
    * Realtime refresh for technician jobs and notifications.
    */
+  // Realtime is intentionally disabled for custom technician sessions.
+  // All sensitive job/notification refreshes go through technician-data.
   useEffect(() => {
     if (!technician?.id) return;
-
-    const jobsChannel = supabase
-      .channel(
-        `technician-jobs-${technician.id}`
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'technician_jobs',
-          filter: `technician_id=eq.${technician.id}`,
-        },
-        () => {
-          loadDashboard(false);
-        }
-      )
-      .subscribe();
-
-    const notificationChannel = supabase
-      .channel(
-        `technician-notifications-${technician.id}`
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'technician_notifications',
-          filter: `technician_id=eq.${technician.id}`,
-        },
-        () => {
-          loadDashboard(false);
-        }
-      )
-      .subscribe();
-
-    const jobNotificationUnsubscribe = subscribeToNotifications(
-      'technician',
-      technician.id,
-      () => {
-        loadDashboard(false);
-      }
-    );
-
-    return () => {
-      supabase.removeChannel(jobsChannel);
-      supabase.removeChannel(
-        notificationChannel
-      );
-      if (jobNotificationUnsubscribe) jobNotificationUnsubscribe();
-    };
+    const refresh = window.setInterval(() => { void loadDashboard(false); }, 30000);
+    return () => window.clearInterval(refresh);
   }, [technician?.id]);
 
   const mergedNotifications: MergedTechNotification[] = useMemo(
@@ -364,7 +311,7 @@ export default function TechnicianDashboard() {
 
     try {
       if (notification._source === 'job') {
-        await markJobNotificationRead(notification.id);
+        await technicianData('notification_read', { notification_id: notification.id, source: 'job' });
         setJobNotifications((current) =>
           current.map((item) =>
             item.id === notification.id
@@ -399,7 +346,7 @@ export default function TechnicianDashboard() {
       try {
         await Promise.all([
           technicianData('notifications_read_all'),
-          markAllJobNotificationsRead('technician', technician.id),
+          technicianData('notifications_read_all'),
         ]);
 
         setNotifications((current) =>
