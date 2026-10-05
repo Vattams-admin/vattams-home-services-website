@@ -185,11 +185,25 @@ Deno.serve(async (req: Request) => {
         const passwordMatch = bcrypt.compareSync(password, customer.password_hash);
         if (!passwordMatch) return errorResponse("Invalid mobile number or password");
 
-        // Don't return password_hash
-        const { password_hash, ...customerData } = customer;
+        // Mint an opaque server-side session. The browser never uses the customer id as proof of identity.
+        const sessionToken = crypto.randomUUID() + crypto.randomUUID();
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+        await supabase.from("customer_auth_sessions").delete().eq("customer_id", customer.id);
+        const { error: sessionError } = await supabase.from("customer_auth_sessions").insert({
+          customer_id: customer.id,
+          token: sessionToken,
+          expires_at: expiresAt,
+        });
+        if (sessionError) return errorResponse("Unable to create secure login session. Please try again.", 500);
 
-        return jsonResponse({ success: true, message: "Login successful", customer: customerData });
-      }
+        const { password_hash, ...customerData } = customer;
+        return jsonResponse({
+          success: true,
+          message: "Login successful",
+          customer: customerData,
+          sessionToken,
+          expiresAt,
+        });
 
       case "forgot-password": {
         const { mobile } = body;
