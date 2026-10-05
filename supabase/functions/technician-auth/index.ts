@@ -36,6 +36,7 @@ interface RegisterBody {
   upi_id?: string;
   profile_score?: number;
   mobile_verified?: boolean;
+  registration_payment_id?: string;
 }
 
 interface LoginBody {
@@ -88,7 +89,7 @@ Deno.serve(async (req: Request) => {
 async function handleRegister(supabase: ReturnType<typeof createClient>, body: RegisterBody) {
   const { full_name, mobile, email, city, service_categories, experience_years, id_proof_type, id_proof_number, password,
     whatsapp_number, area, pincode, available_days, working_time, has_vehicle, has_tools,
-    aadhaar_url, pan_url, dl_url, profile_photo_url, bank_name, bank_holder_name, bank_account_number, bank_ifsc, upi_id, profile_score, mobile_verified } = body;
+    aadhaar_url, pan_url, dl_url, profile_photo_url, bank_name, bank_holder_name, bank_account_number, bank_ifsc, upi_id, profile_score, mobile_verified, registration_payment_id } = body;
 
   if (!full_name || !mobile || !city || !password) {
     return new Response(
@@ -101,6 +102,38 @@ async function handleRegister(supabase: ReturnType<typeof createClient>, body: R
     return new Response(
       JSON.stringify({ error: "Password must be at least 6 characters" }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+
+  // Technician applications require the one-time ₹49 joining fee.
+  // The payment must be linked to this mobile number and have a UTR
+  // confirmation before the application can be created.
+  if (!registration_payment_id) {
+    return new Response(
+      JSON.stringify({ error: "₹49 technician joining fee payment is required before submitting your application." }),
+      { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+
+  const { data: registrationPayment, error: paymentError } = await supabase
+    .from("payments")
+    .select("payment_id, payee_type, payee_id, amount, purpose, utr, status")
+    .eq("payment_id", registration_payment_id)
+    .maybeSingle();
+
+  if (
+    paymentError ||
+    !registrationPayment ||
+    registrationPayment.payee_type !== "technician" ||
+    registrationPayment.payee_id !== mobile ||
+    Number(registrationPayment.amount) !== 49 ||
+    registrationPayment.purpose !== "registration_fee" ||
+    !registrationPayment.utr ||
+    !["pending", "success"].includes(registrationPayment.status)
+  ) {
+    return new Response(
+      JSON.stringify({ error: "Valid ₹49 technician joining fee payment confirmation is required." }),
+      { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 
