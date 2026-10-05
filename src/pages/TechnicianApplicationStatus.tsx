@@ -89,10 +89,10 @@ export default function TechnicianApplicationStatus() {
 
   if (loading) {
     return (
-      <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
-          <div className="w-14 h-14 rounded-full bg-orange-50 flex items-center justify-center mx-auto mb-4">
-            <RefreshCw size={26} className="text-orange-500 animate-spin" />
+      <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-[#f7f4ed] px-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-[#e8e1d2] p-8 text-center">
+          <div className="w-14 h-14 rounded-full bg-[#f8f4e8] flex items-center justify-center mx-auto mb-4">
+            <RefreshCw size={26} className="text-[#b08b18] animate-spin" />
           </div>
           <h2 className="font-bold text-gray-900">Checking your application status</h2>
           <p className="text-sm text-gray-500 mt-1">Please wait...</p>
@@ -103,8 +103,8 @@ export default function TechnicianApplicationStatus() {
 
   if (!technician) {
     return (
-      <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
+      <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-[#f7f4ed] px-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-sm border border-[#e8e1d2] p-8 text-center">
           <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
             <AlertCircle size={28} className="text-red-500" />
           </div>
@@ -114,7 +114,7 @@ export default function TechnicianApplicationStatus() {
           </p>
           <button
             onClick={() => navigate('technician-login')}
-            className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl"
+            className="w-full py-3 bg-[#c9a227] hover:bg-[#b08b18] text-white font-bold rounded-xl"
           >
             Go to Technician Login
           </button>
@@ -164,7 +164,7 @@ export default function TechnicianApplicationStatus() {
     inactive: {
       icon: AlertCircle,
       color: 'text-gray-600',
-      bg: 'bg-gray-50 border-gray-100',
+      bg: 'bg-[#f7f4ed] border-[#e8e1d2]',
       title: 'Account Inactive',
       message: 'Your technician account is currently inactive. Please contact VATTAMS support.',
     },
@@ -174,9 +174,9 @@ export default function TechnicianApplicationStatus() {
   const Icon = config.icon;
 
   return (
-    <div className="pt-20 md:pt-24 min-h-screen bg-gray-50 px-4 py-10">
+    <div className="pt-20 md:pt-24 min-h-screen bg-[#f7f4ed] px-4 py-10">
       <div className="max-w-lg mx-auto">
-        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 text-center">
+        <div className="bg-white rounded-3xl shadow-xl border border-[#e8e1d2] p-8 text-center">
           <div
             className={`w-20 h-20 rounded-full ${config.bg} border flex items-center justify-center mx-auto mb-6`}
           >
@@ -194,15 +194,15 @@ export default function TechnicianApplicationStatus() {
           </div>
 
           <div className="grid grid-cols-2 gap-3 text-left text-sm mb-6">
-            <div className="bg-gray-50 rounded-xl p-3">
+            <div className="bg-[#f7f4ed] rounded-xl p-3">
               <div className="text-xs text-gray-400 mb-0.5">Mobile</div>
               <div className="font-semibold text-gray-800">{technician.mobile}</div>
             </div>
-            <div className="bg-gray-50 rounded-xl p-3">
+            <div className="bg-[#f7f4ed] rounded-xl p-3">
               <div className="text-xs text-gray-400 mb-0.5">City</div>
               <div className="font-semibold text-gray-800">{technician.city}</div>
             </div>
-            <div className="bg-gray-50 rounded-xl p-3 col-span-2">
+            <div className="bg-[#f7f4ed] rounded-xl p-3 col-span-2">
               <div className="text-xs text-gray-400 mb-0.5">Current Status</div>
               <div className={`font-bold capitalize ${config.color}`}>{technician.status}</div>
             </div>
