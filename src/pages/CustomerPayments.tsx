@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Loader, CreditCard, Download, CheckCircle, Clock, XCircle, FileText } from 'lucide-react';
 import { useRouter } from '@/lib/router';
-import { supabase, Customer } from '@/lib/supabase';
+import { Customer } from '@/lib/supabase';
+import { customerData } from '@/lib/customerData';
 import { fetchPaymentsByPayee, PaymentRecord } from '@/lib/payments';
 
 interface BookingRef { service_category: string; booking_number: string; }
@@ -38,16 +39,14 @@ export default function CustomerPayments() {
   }, []);
 
   const loadPayments = async (c: Customer) => {
-    const data = await fetchPaymentsByPayee(c.mobile);
-    setPayments(data);
+    const data = await customerData<{ payments: PaymentRecord[] }>('payments', { mobile: c.mobile });
+    setPayments(data?.payments ?? []);
   };
 
   const loadBookings = async (c: Customer) => {
-    const { data } = await supabase.from('bookings')
-      .select('id, service_category, booking_number')
-      .or(`customer_id.eq.${c.id},mobile_number.eq.${c.mobile}`);
+    const result = await customerData<{ bookings: { id: string; service_category: string; booking_number: string }[] }>('booking_refs', { mobile: c.mobile });
     const map: Record<string, BookingRef> = {};
-    data?.forEach((b) => { map[b.id] = { service_category: b.service_category, booking_number: b.booking_number }; });
+    result?.bookings.forEach((b) => { map[b.id] = { service_category: b.service_category, booking_number: b.booking_number }; });
     setBookings(map);
   };
 
