@@ -29,7 +29,7 @@ export default function CustomerLogin() {
       sessionStorage.setItem('vattams_customer', JSON.stringify(data.customer));
       void registerServiceWorker();
       void initFCM('customer', data.customer.mobile);
-      navigate('home');
+      navigate('customer-dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Network error. Please try again.');
     }
