@@ -185,7 +185,7 @@ export default function JoinTechnician() {
     }
 
     metaDesc.content =
-      'Join VATTAMS as a technician. Electrician jobs, plumber jobs, AC technician jobs, and home service jobs across India. Free registration, flexible hours, and secure payments.';
+      'Join VATTAMS as a technician. Electrician jobs, plumber jobs, AC technician jobs, and home service jobs across India. One-time ₹49 joining fee, flexible hours, and secure payments.';
 
     return () => {
       document.getElementById(schemaId)?.remove();
@@ -260,7 +260,7 @@ export default function JoinTechnician() {
 
             <div className="flex items-center gap-2">
               <CheckCircle size={18} />
-              Free Registration
+              ₹49 One-Time Fee
             </div>
           </div>
         </div>
@@ -453,7 +453,7 @@ export default function JoinTechnician() {
             }
             className="group inline-flex items-center gap-2 px-8 py-4 bg-gold-500 hover:bg-gold-400 text-royal-950 font-extrabold rounded-xl shadow-2xl transition-all duration-300 hover:scale-105"
           >
-            Register Now — It's Free
+            Register Now — ₹49 Joining Fee
 
             <ArrowRight
               size={18}
