@@ -43,6 +43,8 @@ Deno.serve(async req=>{
         if(error) return out({error:"Failed to update profile"},400);
         return out({customer:data});
       }
+      case "reviews":{ return out({reviews:(await supabase.from("reviews").select("*").eq("customer_id",customerId).order("created_at",{ascending:false})).data||[]}); }
+      case "completed_bookings":{ return out({bookings:(await supabase.from("bookings").select("*").eq("customer_id",customerId).eq("status","completed").order("created_at",{ascending:false})).data||[]}); }
       case "support":{
         const {data:customer}=await supabase.from("customers").select("full_name,mobile").eq("id",customerId).single();
         const {error}=await supabase.from("support_messages").insert({customer_id:customerId,customer_name:customer?.full_name,customer_mobile:customer?.mobile,subject:String(body.subject||"").trim(),message:String(body.message||"").trim(),status:"open"});
