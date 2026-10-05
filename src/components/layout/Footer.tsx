@@ -139,12 +139,6 @@ export default function Footer() {
                 Book a Service
               </button>
               <button
-                onClick={() => navigate('tuition-home')}
-                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors"
-              >
-                Explore Online Tuition
-              </button>
-              <button
                 onClick={() => navigate('join-technician')}
                 className="w-full flex items-center justify-center gap-2 py-2.5 bg-wine-600 hover:bg-wine-500 text-white text-sm font-semibold rounded-lg transition-colors"
               >
@@ -161,7 +155,7 @@ export default function Footer() {
 
         <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500">
           <span>© 2026 VATTAMS. All rights reserved.</span>
-          <span className="italic text-gold-400/80">Home Services + Online Tuition</span>
+          <span className="italic text-gold-400/80">Home Services</span>
         </div>
 
         <div className="mt-4 text-center">
