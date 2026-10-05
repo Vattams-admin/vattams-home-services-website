@@ -19,7 +19,6 @@ export default function Footer() {
     { label: 'Contact', page: 'contact' },
     { label: 'Book Service', page: 'booking' },
     { label: 'Join as a Technician', page: 'join-technician' },
-    { label: 'VATTAMS Online Tuition', page: 'tuition-home' },
   ];
 
   return (
@@ -38,9 +37,8 @@ export default function Footer() {
               One Platform. Endless Possibilities.
             </p>
             <p className="text-gray-400 text-sm leading-relaxed">
-              Home Services and Online Tuition, together on one trusted
-              platform — certified technicians at your doorstep and
-              verified tutors online.
+              Trusted home services through a professional technician
+              network, with convenient booking and service support.
             </p>
             <SocialLinks variant="footer" />
           </div>
@@ -98,78 +96,6 @@ export default function Footer() {
                   >
                     {s}
                   </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Online Tuition */}
-          <div>
-            <h4 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">Online Tuition</h4>
-            <ul className="space-y-2">
-              <li>
-                <button
-                  onClick={() => navigate('tuition-courses')}
-                  className="text-gray-400 hover:text-gold-400 text-sm transition-colors text-left"
-                >
-                  Courses
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => { window.location.hash = 'tuition-course-detail-abacus'; }}
-                  className="text-gray-400 hover:text-gold-400 text-sm transition-colors text-left"
-                >
-                  Abacus
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => { window.location.hash = 'tuition-course-detail-spoken-english'; }}
-                  className="text-gray-400 hover:text-gold-400 text-sm transition-colors text-left"
-                >
-                  Public Speaking
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigate('tuition-tutor-register')}
-                  className="text-gray-400 hover:text-gold-400 text-sm transition-colors text-left"
-                >
-                  Tutor Registration
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigate('tuition-booking')}
-                  className="text-gray-400 hover:text-gold-400 text-sm transition-colors text-left"
-                >
-                  Student Registration
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigate('tuition-booking')}
-                  className="text-gray-400 hover:text-gold-400 text-sm transition-colors text-left"
-                >
-                  Book Trial – ₹150
-                </button>
-              </li>
-            </ul>
-          </div>
-
-          {/* Cities Served */}
-          <div>
-            <h4 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">Cities We Serve</h4>
-            <ul className="space-y-2">
-              {['Chennai','Delhi','Mumbai','Bangalore','Kolkata','Hyderabad','Pune','Ahmedabad','Jaipur','Lucknow'].map((c) => (
-                <li key={c}>
-                  <a
-                    href={`#city-${c.toLowerCase()}`}
-                    className="text-gray-400 hover:text-gold-400 text-sm transition-colors"
-                  >
-                    {c}
-                  </a>
                 </li>
               ))}
             </ul>
