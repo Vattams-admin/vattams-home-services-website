@@ -29,18 +29,17 @@ Deno.serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const { action, booking_id, technician_id, otp, purpose, status, booking_action_token, admin_id, admin_session_token } = await req.json();
+    const { action, booking_id, technician_id, otp, purpose, status, booking_action_token, admin_id, admin_session_token, customer_session_token, booking } = await req.json();
 
     if (action === "create_booking") {
-      const input = arguments;
-      const customerSessionToken = String((await req.clone().json()).customer_session_token || "");
+      const customerSessionToken = String(customer_session_token || "");
       let customerId: string | null = null;
       if (customerSessionToken) {
         const { data: cs } = await supabase.from("customer_auth_sessions").select("customer_id, expires_at").eq("token", customerSessionToken).maybeSingle();
         if (cs && new Date(cs.expires_at).getTime() > Date.now()) customerId = String(cs.customer_id);
       }
       const allowedStatuses = new Set(["pending"]);
-      const b = (await req.clone().json()).booking || {};
+      const b = booking || {};
       if (!b.customer_name || !b.mobile_number || !b.city || !b.address || !b.service_category || !b.problem_description) {
         return new Response(JSON.stringify({ error: "Required booking fields are missing" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
