@@ -26,7 +26,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: admin, error } = await supabase
       .from("admin_users")
-      .select("id, email, password_hash, role, full_name")
+      .select("id, email, password_hash, role, full_name, is_active")
       .eq("email", email.trim().toLowerCase())
       .maybeSingle();
 
@@ -39,7 +39,7 @@ Deno.serve(async (req: Request) => {
       return errorResponse("Invalid credentials");
     }
 
-    if (admin.role !== "super_admin") {
+    if (admin.role !== "super_admin" || admin.is_active !== true) {
       return errorResponse("This account is not authorized for admin access");
     }
 
