@@ -94,6 +94,31 @@ Deno.serve(async (req: Request) => {
       };
       const { data, error } = await supabase.from("bookings").insert(row).select("id,booking_number,booking_action_token").single();
       if (error) return new Response(JSON.stringify({ error: "Unable to create booking" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+      // The coupon can become exhausted between the validation above and the
+      // booking insert. Finalize the usage against the just-created booking
+      // before exposing the booking to the rest of the system. The atomic RPC
+      // either reserves a usage slot and records the redemption, or returns
+      // false without consuming anything.
+      if (couponCode) {
+        const { data: redeemed, error: redeemError } = await supabase.rpc("redeem_coupon_atomic", {
+          p_coupon_id: null,
+          p_booking_id: data.id,
+          p_customer_id: customerId,
+          p_discount_amount: discountAmount,
+        });
+
+        // Resolve the coupon ID server-side because create_booking validated
+        // by code. Keep the authoritative lookup immediately before the RPC.
+        if (redeemError || redeemed !== true) {
+          await supabase.from("bookings").delete().eq("id", data.id);
+          return new Response(JSON.stringify({ error: "Coupon is no longer available. Please apply the coupon again." }), {
+            status: 409,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+
       return new Response(JSON.stringify({ data }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
