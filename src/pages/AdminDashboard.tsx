@@ -732,7 +732,7 @@ export default function AdminDashboard() {
       ) {
         await notifyCustomer.serviceStarted(
           currentBooking.mobile_number,
-          booking.booking_number,
+          currentBooking.booking_number,
           booking.id
         );
       } else if (
