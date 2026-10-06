@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase';
 import { adminData } from '@/lib/adminData';
 
 export type NotificationRecipientType = 'customer' | 'technician' | 'admin';
@@ -156,4 +156,81 @@ export function subscribeToNotifications(
   // Custom session authentication is not represented by Supabase Auth.
   // Do not expose notification rows through client Realtime.
   return null;
+}
+
+
+async function notify(
+  recipientType: NotificationRecipientType,
+  recipientId: string,
+  title: string,
+  message: string,
+  type: string,
+  referenceId?: string,
+): Promise<NotificationRow | null> {
+  return createNotification({
+    recipientType,
+    recipientId,
+    title,
+    message,
+    type,
+    referenceType: referenceId ? 'booking' : undefined,
+    referenceId,
+    channels: ['in_app', 'push'],
+  });
+}
+
+export const notifyCustomer = {
+  serviceStarted: (mobile: string, bookingNumber: string, bookingId: string) =>
+    notify('customer', mobile, 'Service Started', `Service for booking ${bookingNumber} has started.`, 'service_started', bookingId),
+  serviceCompleted: (mobile: string, bookingNumber: string, bookingId: string) =>
+    notify('customer', mobile, 'Service Completed', `Service for booking ${bookingNumber} has been completed.`, 'service_completed', bookingId),
+  bookingCancelled: (mobile: string, bookingNumber: string, bookingId: string) =>
+    notify('customer', mobile, 'Booking Cancelled', `Booking ${bookingNumber} has been cancelled.`, 'booking_cancelled', bookingId),
+  technicianAssigned: (mobile: string, bookingNumber: string, technicianName: string, bookingId: string) =>
+    notify('customer', mobile, 'Technician Assigned', `${technicianName} has been assigned to booking ${bookingNumber}.`, 'technician_assigned', bookingId),
+};
+
+export const notifyTechnician = {
+  jobAssigned: (technicianId: string, bookingNumber: string, jobId: string) =>
+    notify('technician', technicianId, 'New Job Assigned', `Booking ${bookingNumber} has been assigned to you.`, 'job_assigned', jobId),
+  jobCancelled: (technicianId: string, bookingNumber: string) =>
+    notify('technician', technicianId, 'Job Cancelled', `Booking ${bookingNumber} has been cancelled.`, 'job_cancelled'),
+  registrationApproved: (technicianId: string, name: string) =>
+    notify('technician', technicianId, 'Registration Approved', `Welcome ${name}. Your technician registration is approved.`, 'registration_approved'),
+  registrationRejected: (technicianId: string, name: string) =>
+    notify('technician', technicianId, 'Registration Update', `Your technician registration for ${name} was not approved.`, 'registration_rejected'),
+  walletRechargeApproved: (technicianId: string, amount: number) =>
+    notify('technician', technicianId, 'Wallet Recharge Approved', `Your wallet recharge of ₹${amount} was approved.`, 'wallet_recharge_approved'),
+  walletRechargeRejected: (technicianId: string, amount: number) =>
+    notify('technician', technicianId, 'Wallet Recharge Rejected', `Your wallet recharge of ₹${amount} was rejected.`, 'wallet_recharge_rejected'),
+};
+
+export const notifyAdmin = {};
+
+export async function sendAnnouncementToTechnicians(
+  recipients: Array<{ id: string }>,
+  title: string,
+  message: string,
+): Promise<number> {
+  return createNotificationsBatch(recipients.map((r) => ({
+    recipientType: 'technician',
+    recipientId: r.id,
+    title,
+    message,
+    type: 'announcement',
+  })));
+}
+
+export async function sendAnnouncementToCustomers(
+  recipients: string[],
+  title: string,
+  message: string,
+): Promise<number> {
+  return createNotificationsBatch(recipients.map((id) => ({
+    recipientType: 'customer',
+    recipientId: id,
+    title,
+    message,
+    type: 'announcement',
+  })));
 }
