@@ -731,7 +731,7 @@ export default function AdminDashboard() {
         'in_progress'
       ) {
         await notifyCustomer.serviceStarted(
-          booking.mobile_number,
+          currentBooking.mobile_number,
           booking.booking_number,
           booking.id
         );
