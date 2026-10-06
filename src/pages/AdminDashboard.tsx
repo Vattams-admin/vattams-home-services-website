@@ -720,7 +720,7 @@ export default function AdminDashboard() {
     }
 
     // Send customer notification based on status
-    const booking =
+    const currentBooking =
       bookings.find(
         (b) => b.id === id
       );
