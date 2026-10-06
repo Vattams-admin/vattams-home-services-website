@@ -34,9 +34,18 @@ Deno.serve(async (req: Request) => {
     if (action === "create_booking") {
       const customerSessionToken = String(customer_session_token || "");
       let customerId: string | null = null;
+      let authenticatedCustomerMobile: string | null = null;
       if (customerSessionToken) {
         const { data: cs } = await supabase.from("customer_auth_sessions").select("customer_id, expires_at").eq("token", customerSessionToken).maybeSingle();
-        if (cs && new Date(cs.expires_at).getTime() > Date.now()) customerId = String(cs.customer_id);
+        if (!cs || new Date(cs.expires_at).getTime() <= Date.now()) {
+          return new Response(JSON.stringify({ error: "Invalid or expired customer session" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        customerId = String(cs.customer_id);
+        const { data: customer } = await supabase.from("customers").select("id,mobile").eq("id", customerId).maybeSingle();
+        if (!customer?.mobile) {
+          return new Response(JSON.stringify({ error: "Customer account is incomplete" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        authenticatedCustomerMobile = String(customer.mobile).replace(/\D/g, "");
       }
       const allowedStatuses = new Set(["pending"]);
       const b = booking || {};
@@ -62,7 +71,7 @@ Deno.serve(async (req: Request) => {
       const finalAmount = Math.max(0, Math.round((totalAmount - discountAmount) * 100) / 100);
       const row: Record<string, unknown> = {
         customer_name: String(b.customer_name).slice(0,150),
-        mobile_number: String(b.mobile_number).replace(/[^0-9+]/g,"").slice(0,20),
+        mobile_number: authenticatedCustomerMobile || String(b.mobile_number).replace(/\D/g,"").slice(0,10),
         city: String(b.city).slice(0,100),
         address: String(b.address).slice(0,500),
         service_category: String(b.service_category).slice(0,100),
@@ -159,11 +168,22 @@ Deno.serve(async (req: Request) => {
       free.sort((a, b) => (b.rating - a.rating) || (b.total_jobs - a.total_jobs));
       const chosen = free[0];
 
-      await supabase.from("bookings").update({
-        assigned_technician_id: chosen.id,
-        status: "assigned",
-        updated_at: new Date().toISOString(),
-      }).eq("id", booking_id);
+      const { data: claimedBooking, error: claimError } = await supabase.from("bookings")
+        .update({
+          assigned_technician_id: chosen.id,
+          status: "assigned",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", booking_id)
+        .eq("status", booking.status)
+        .is("assigned_technician_id", null)
+        .select("id,booking_number,booking_action_token")
+        .maybeSingle();
+      if (claimError || !claimedBooking) {
+        return new Response(JSON.stringify({ success: true, assigned: false, reason: "booking_already_claimed" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
       const { data: jobData } = await supabase
         .from("technician_jobs")
