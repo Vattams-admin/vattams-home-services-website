@@ -21,7 +21,7 @@ import {
 type CouponForm = {
   code: string;
   description: string;
-  discount_type: 'percentage' | 'fixed';
+  discount_type: 'percentage' | 'flat';
   discount_value: string;
   min_order_amount: string;
   max_discount_amount: string;
