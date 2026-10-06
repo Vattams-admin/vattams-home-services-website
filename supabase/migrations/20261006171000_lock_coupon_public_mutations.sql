@@ -4,6 +4,9 @@
 ALTER TABLE coupons ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "admin_all_coupons" ON coupons;
+DROP POLICY IF EXISTS "deny_public_coupon_inserts" ON coupons;
+DROP POLICY IF EXISTS "deny_public_coupon_updates" ON coupons;
+DROP POLICY IF EXISTS "deny_public_coupon_deletes" ON coupons;
 
 CREATE POLICY "deny_public_coupon_inserts"
   ON coupons FOR INSERT TO anon, authenticated
