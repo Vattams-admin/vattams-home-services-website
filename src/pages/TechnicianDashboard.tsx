@@ -172,7 +172,7 @@ export default function TechnicianDashboard() {
   const findTechnician = async () => {
     const session = sessionStorage.getItem('vattams_technician_session');
     if (!session) return null;
-    const result = await technicianData<{ technician: Technician; jobNotifications?: NotificationRow[] }>('account');
+    const result = await technicianData<{ technician: Technician; notifications?: NotificationRow[] }>('account');
     return result?.technician ?? null;
   };
 
@@ -193,7 +193,7 @@ export default function TechnicianDashboard() {
       setTechnician(result.technician);
       setJobs(result.jobs ?? []); setTransactions(result.transactions ?? []);
       setRecharges(result.recharges ?? []); setNotifications(result.notifications ?? []);
-      setJobNotifications(result.jobNotifications ?? []);
+      setJobNotifications(result.notifications ?? []);
     } catch (err: any) {
       setError(err?.message || 'Unable to load technician dashboard.');
     } finally { setLoading(false); setRefreshing(false); }
