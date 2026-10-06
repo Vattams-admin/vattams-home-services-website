@@ -3,7 +3,7 @@ import { Loader, CreditCard, Download, CheckCircle, Clock, XCircle, FileText } f
 import { useRouter } from '@/lib/router';
 import { Customer } from '@/lib/supabase';
 import { customerData } from '@/lib/customerData';
-import { fetchPaymentsByPayee, PaymentRecord } from '@/lib/payments';
+import { PaymentRecord } from '@/lib/payments';
 
 interface BookingRef { service_category: string; booking_number: string; }
 
