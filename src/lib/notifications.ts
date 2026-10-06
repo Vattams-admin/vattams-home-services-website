@@ -1,30 +1,8 @@
 import { supabase } from '@/lib/supabase';
 import { adminData } from '@/lib/adminData';
-import { sendPushNotification } from '@/lib/fcm';
 
 export type NotificationRecipientType = 'customer' | 'technician' | 'admin';
 export type NotificationStatus = 'sent' | 'delivered' | 'read' | 'failed';
-
-async function sendPushForNotification(
-  input: CreateNotificationInput,
-): Promise<void> {
-  if (input.recipientType === 'admin') return;
-  try {
-    await sendPushNotification(
-      input.recipientType,
-      input.recipientId,
-      input.title,
-      input.message,
-      {
-        type: input.type,
-        referenceType: input.referenceType ?? '',
-        referenceId: input.referenceId ?? '',
-      },
-    );
-  } catch (err) {
-    console.error('[notifications] push send error:', err);
-  }
-}
 
 export interface NotificationRow {
   id: string;
@@ -93,7 +71,6 @@ export async function createNotification(input: CreateNotificationInput): Promis
       console.error('[notifications] gateway error:', data.error);
       return null;
     }
-    void sendPushForNotification(input);
     return data.notification as NotificationRow;
   } catch (err) {
     console.error('[notifications] gateway error:', err);
