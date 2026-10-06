@@ -94,13 +94,20 @@ Deno.serve(async (req: Request) => {
 
         if (otpError) return errorResponse("Failed to generate OTP. Please try again.");
 
-        // Store pending registration data in otp_codes row (reuse as temp store)
-        // We'll pass registration data back to the verify step via the client
-        return jsonResponse({
-          success: true,
-          message: "OTP sent successfully",
-          pending_registration: { full_name, mobile, password, email: email || null, city: city || null, address: address || null },
-        });
+        const passwordHash = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
+        const { error: pendingError } = await supabase.from("otp_codes").update({
+          registration_data: {
+            full_name: String(full_name).trim(),
+            mobile,
+            password_hash: passwordHash,
+            email: email || null,
+            city: city || null,
+            address: address || null,
+          },
+        }).eq("mobile", mobile).eq("purpose", "registration").eq("code", otp);
+        if (pendingError) return errorResponse("Failed to prepare registration. Please try again.", 500);
+
+        return jsonResponse({ success: true, message: "OTP sent successfully" });
       }
 
       case "verify-otp": {
@@ -131,12 +138,14 @@ Deno.serve(async (req: Request) => {
         await supabase.from("otp_codes").update({ verified: true }).eq("id", otpRecord.id);
 
         // If registration, create the customer account
-        if (purpose === "registration" && registration_data) {
-          const { full_name, mobile: regMobile, password, email, city, address } = registration_data;
+        if (purpose === "registration") {
+          const pending = (otpRecord as { registration_data?: Record<string, unknown> }).registration_data;
+          if (!pending) return errorResponse("Registration session expired. Please register again.");
+          const { full_name, mobile: regMobile, password_hash, email, city, address } = pending;
           if (String(regMobile).replace(/\D/g, "") !== String(mobile).replace(/\D/g, "")) {
             return errorResponse("Registration mobile does not match the verified OTP");
           }
-          if (!full_name?.trim() || !password?.trim() || password.length < 6) {
+          if (!String(full_name || "").trim() || !String(password_hash || "").trim()) {
             return errorResponse("Valid registration details are required");
           }
 
@@ -149,16 +158,13 @@ Deno.serve(async (req: Request) => {
 
           if (existing) return errorResponse("Account already exists with this mobile number");
 
-          const salt = bcrypt.genSaltSync(10);
-          const passwordHash = bcrypt.hashSync(password, salt);
-
           const { data: customer, error: insertError } = await supabase
             .from("customers")
             .insert({
               full_name,
               mobile: regMobile,
               email: email || null,
-              password_hash: passwordHash,
+              password_hash: String(password_hash),
               city: city || null,
               address: address || null,
             })
