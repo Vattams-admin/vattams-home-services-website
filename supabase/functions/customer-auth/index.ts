@@ -301,7 +301,7 @@ Deno.serve(async (req: Request) => {
 
         if (!otpRecord) return errorResponse("Please verify your OTP first");
 
-        // Check OTP not expired (verified within last 30 minutes)
+        // Check OTP not expired (verified within last 30 minutes).
         const otpAge = Date.now() - new Date(otpRecord.created_at).getTime();
         if (otpAge > 30 * 60 * 1000) {
           return errorResponse("Verification expired. Please request a new OTP.");
@@ -314,7 +314,19 @@ Deno.serve(async (req: Request) => {
           .maybeSingle();
         if (!resetCustomer) return errorResponse("No account found with this mobile number");
 
-        // Update password
+        // Atomically consume the verified reset capability before changing the password.
+        // This prevents two concurrent reset requests from reusing the same verified OTP.
+        const { data: consumedReset, error: consumeResetError } = await supabase
+          .from("otp_codes")
+          .delete()
+          .eq("id", otpRecord.id)
+          .eq("verified", true)
+          .select("id")
+          .maybeSingle();
+        if (consumeResetError || !consumedReset) {
+          return errorResponse("Verification has already been used. Please request a new OTP.", 409);
+        }
+
         const salt = bcrypt.genSaltSync(10);
         const passwordHash = bcrypt.hashSync(new_password, salt);
 
@@ -323,10 +335,7 @@ Deno.serve(async (req: Request) => {
           .update({ password_hash: passwordHash, updated_at: new Date().toISOString() })
           .eq("id", resetCustomer.id);
 
-        if (updateError) return errorResponse("Failed to reset password. Please try again.");
-
-        // Delete used OTP
-        await supabase.from("otp_codes").delete().eq("id", otpRecord.id);
+        if (updateError) return errorResponse("Failed to reset password. Please request a new OTP and try again.");
 
         return jsonResponse({ success: true, message: "Password reset successfully" });
       }
