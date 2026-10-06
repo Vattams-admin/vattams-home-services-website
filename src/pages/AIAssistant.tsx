@@ -79,14 +79,6 @@ export default function AIAssistant() {
 
     if (booking) {
       setBookingNumber(booking.booking_number);
-      await supabase.from('ai_conversations').insert({
-        session_id: sessionId,
-        customer_id: customerId,
-        messages: state.messages,
-        extracted_data: data,
-        status: 'completed',
-        created_booking_id: booking.id,
-      });
     }
     setCreating(false);
   };
