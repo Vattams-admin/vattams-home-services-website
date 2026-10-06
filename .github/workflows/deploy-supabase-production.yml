@@ -31,6 +31,6 @@ jobs:
 
       - name: Deploy Edge Functions
         run: |
-          for fn in admin-auth customer-auth customer-data technician-auth technician-data payment-auth admin-data booking-ops coupon-ops; do
+          for fn in admin-auth customer-auth customer-data technician-auth technician-data payment-auth admin-data booking-ops coupon-ops fcm-data notification-ops send-push-notification; do
             supabase functions deploy "$fn" --no-verify-jwt
           done
