@@ -1,10 +1,9 @@
 /*
   Remove VATTAMS Online Tuition from the Home Services product.
 
-  This migration intentionally removes only tuition-specific database objects
-  and storage. Existing Home Services tables, bookings, technicians,
-  customers, payments, admin workflows, and technician employee IDs remain
-  untouched.
+  This migration intentionally removes only tuition-specific database objects.
+  Existing Home Services tables, bookings, technicians, customers, payments,
+  admin workflows, and technician employee IDs remain untouched.
 */
 
 -- Remove tuition-specific triggers/functions first.
@@ -33,9 +32,8 @@ DROP TABLE IF EXISTS tuition_students CASCADE;
 DROP TABLE IF EXISTS tuition_tutors CASCADE;
 DROP TABLE IF EXISTS tuition_courses CASCADE;
 
--- Remove tuition-only storage objects.
-DELETE FROM storage.objects
-WHERE bucket_id IN ('tuition-materials-originals', 'tuition-materials-protected');
-
-DELETE FROM storage.buckets
-WHERE id IN ('tuition-materials-originals', 'tuition-materials-protected');
+-- Supabase Storage does not permit direct SQL deletion from storage.objects
+-- or storage.buckets. Storage cleanup must be performed through the Storage
+-- API/dashboard separately; keeping this migration SQL-only makes deployment
+-- compatible with Supabase's storage protection.
+-- Tuition database objects above are fully removed here.
