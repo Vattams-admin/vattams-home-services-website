@@ -90,7 +90,7 @@ Deno.serve(async (req: Request) => {
 async function handleRegister(supabase: ReturnType<typeof createClient>, body: RegisterBody) {
   const { full_name, mobile, email, city, service_categories, experience_years, id_proof_type, id_proof_number, password,
     whatsapp_number, area, pincode, available_days, working_time, has_vehicle, has_tools,
-    aadhaar_url, pan_url, dl_url, profile_photo_url, bank_name, bank_holder_name, bank_account_number, bank_ifsc, upi_id, profile_score, mobile_verified, registration_payment_id } = body;
+    aadhaar_url, pan_url, dl_url, profile_photo_url, bank_name, bank_holder_name, bank_account_number, bank_ifsc, upi_id, registration_payment_id } = body;
 
   if (!full_name || !mobile || !city || !password) {
     return new Response(
@@ -130,7 +130,7 @@ async function handleRegister(supabase: ReturnType<typeof createClient>, body: R
     Number(registrationPayment.amount) !== 49 ||
     registrationPayment.purpose !== "registration_fee" ||
     !registrationPayment.utr ||
-    !["pending", "success"].includes(registrationPayment.status)
+    registrationPayment.status !== "success"
   ) {
     return new Response(
       JSON.stringify({ error: "Valid ₹49 technician joining fee payment confirmation is required." }),
@@ -171,8 +171,10 @@ async function handleRegister(supabase: ReturnType<typeof createClient>, body: R
       bank_account_number: bank_account_number || null,
       bank_ifsc: bank_ifsc || null,
       upi_id: upi_id || null,
-      profile_score: profile_score || 0,
-      mobile_verified: mobile_verified ?? false,
+      // These fields are server-authoritative and are intentionally never
+      // accepted from the registration request.
+      profile_score: 0,
+      mobile_verified: false,
     })
     .select("id, full_name, mobile, email, city, status")
     .single();
