@@ -137,9 +137,7 @@ export default function TechnicianDashboard() {
   const [notifications, setNotifications] = useState<
     TechnicianNotification[]
   >([]);
-  const [jobNotifications, setJobNotifications] = useState<
-    TechnicianNotification[]
-  >([]);
+  const [jobNotifications, setJobNotifications] = useState<NotificationRow[]>([]);
 
   const [activeTab, setActiveTab] =
     useState<DashboardTab>('overview');
@@ -181,8 +179,12 @@ export default function TechnicianDashboard() {
     setError('');
     try {
       const result = await technicianData<{
-        technician: Technician; jobs: TechnicianJob[]; transactions: WalletTransaction[];
-        recharges: WalletRecharge[]; notifications: TechnicianNotification[];
+        technician: Technician;
+        jobs: TechnicianJob[];
+        transactions: WalletTransaction[];
+        recharges: WalletRecharge[];
+        notifications: TechnicianNotification[];
+        jobNotifications: NotificationRow[];
       }>('account');
       if (!result?.technician) {
         setTechnician(null); setJobs([]); setTransactions([]); setRecharges([]); setNotifications([]);
@@ -192,8 +194,9 @@ export default function TechnicianDashboard() {
       }
       setTechnician(result.technician);
       setJobs(result.jobs ?? []); setTransactions(result.transactions ?? []);
-      setRecharges(result.recharges ?? []); setNotifications(result.notifications ?? []);
-      setJobNotifications(result.notifications ?? []);
+      setRecharges(result.recharges ?? []);
+      setNotifications(result.notifications ?? []);
+      setJobNotifications(result.jobNotifications ?? []);
     } catch (err: any) {
       setError(err?.message || 'Unable to load technician dashboard.');
     } finally { setLoading(false); setRefreshing(false); }
