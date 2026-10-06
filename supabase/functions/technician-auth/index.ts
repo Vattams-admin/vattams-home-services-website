@@ -214,7 +214,7 @@ async function handleLogin(supabase: ReturnType<typeof createClient>, body: Logi
   const column = isEmail ? "email" : "mobile";
   const { data: technician, error } = await supabase
     .from("technicians")
-    .select("*")
+    .select("id,full_name,mobile,email,city,service_categories,experience_years,status,whatsapp_number,area,pincode,available_days,working_time,has_vehicle,has_tools,profile_photo_url,rating,total_jobs,completed_jobs,is_online,last_active_at,wallet_balance,wallet_locked,created_at,updated_at,password_hash")
     .eq(column, identifier)
     .maybeSingle();
 
@@ -256,7 +256,7 @@ async function handleLogin(supabase: ReturnType<typeof createClient>, body: Logi
     );
   }
 
-  const { password_hash, ...safeTech } = technician;
+  const { password_hash: _passwordHash, ...safeTech } = technician;
   return new Response(
     JSON.stringify({ technician: safeTech, sessionToken, expiresAt }),
     { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
