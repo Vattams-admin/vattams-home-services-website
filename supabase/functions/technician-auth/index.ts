@@ -127,7 +127,7 @@ async function handleRegister(supabase: ReturnType<typeof createClient>, body: R
     paymentError ||
     !registrationPayment ||
     registrationPayment.payee_type !== "technician" ||
-    registrationPayment.payee_id !== mobile ||
+    registrationPayment.payee_id !== normalizedMobile ||
     Number(registrationPayment.amount) !== 49 ||
     registrationPayment.purpose !== "registration_fee" ||
     !registrationPayment.utr ||
@@ -355,13 +355,10 @@ async function handleDocUrl(supabase: ReturnType<typeof createClient>, body: Doc
     );
   }
 
-  // Old rows created before the private-bucket fix may still hold a full
-  // public URL rather than a bare object path — pass those straight
-  // through instead of trying (and failing) to sign them.
   if (/^https?:\/\//i.test(path)) {
     return new Response(
-      JSON.stringify({ url: path }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      JSON.stringify({ error: "Legacy public document URL is not allowed. Re-upload the document to the private storage bucket." }),
+      { status: 410, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 
