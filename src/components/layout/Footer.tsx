@@ -5,173 +5,81 @@ import SocialLinks from '@/components/SocialLinks';
 export default function Footer() {
   const { navigate } = useRouter();
 
-  const services = [
-    'AC Installation', 'AC Deep Cleaning', 'AC Gas Refill',
-    'Refrigerator Repair', 'Washing Machine Repair', 'Microwave Repair',
-    'Water Heater Repair', 'RO Water Purifier', 'Electrical Services', 'Plumbing Services',
-  ];
-
   const quickLinks: { label: string; page: Page }[] = [
     { label: 'Home', page: 'home' },
     { label: 'Services', page: 'services' },
     { label: 'About Us', page: 'about' },
     { label: 'Founder', page: 'founder' },
     { label: 'Contact', page: 'contact' },
-    { label: 'Book Service', page: 'booking' },
+    { label: 'Book a Service', page: 'booking' },
     { label: 'Join as a Technician', page: 'join-technician' },
   ];
 
+  const serviceLinks = ['AC Service', 'Refrigerator Repair', 'Washing Machine Repair', 'Electrical Services', 'Plumbing Services'];
+
   return (
-    <footer className="bg-gray-900 text-gray-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-10">
-          {/* Brand */}
-          <div className="sm:col-span-2 lg:col-span-1">
-            <img
-              src="/vattams-mark.png"
-              alt="VATTAMS"
-              className="h-20 w-auto object-contain mb-4 rounded-xl"
-            />
-            <h3 className="text-white font-bold text-lg">VATTAMS</h3>
-            <p className="text-gold-400 text-sm font-medium italic mb-4">
-              Reliable Home Services. Trusted Technicians.
-            </p>
-            <p className="text-gray-400 text-sm leading-relaxed">
-              Trusted home services through a professional technician
-              network, with convenient booking and service support.
-            </p>
+    <footer className="bg-[#050A17] text-gray-300 border-t border-orange-400/20">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 pt-14 pb-8">
+        <div className="mb-10 rounded-3xl border border-orange-400/20 bg-gradient-to-r from-[#0A132A] via-[#101A2E] to-[#11100D] p-6 sm:p-8 shadow-[0_24px_80px_rgba(0,0,0,.28)]">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[.28em] text-orange-400">VATTAMS Ecosystem</p>
+              <h2 className="mt-2 text-2xl font-extrabold text-white sm:text-3xl">Reliable technology for everyday life.</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-400">Home Services is one part of the VATTAMS ecosystem, alongside education and intelligent communication.</p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <a href="https://academia.vattams.net" className="rounded-full border border-blue-400/40 bg-blue-400/10 px-4 py-2 text-sm font-semibold text-blue-200">Academia</a>
+              <a href="https://vattams.net" className="rounded-full border border-orange-400/50 bg-orange-400/10 px-4 py-2 text-sm font-semibold text-orange-200">Home Services</a>
+              <a href="https://callpilot.vattams.net" className="rounded-full border border-green-400/40 bg-green-400/10 px-4 py-2 text-sm font-semibold text-green-200">CallPilot</a>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
+          <div>
+            <button type="button" onClick={() => navigate('home')} className="text-left">
+              <img src="/vattams-mark.png" alt="VATTAMS Home Services" className="h-16 w-auto object-contain rounded-xl" />
+            </button>
+            <p className="mt-4 max-w-sm text-sm leading-6 text-gray-400">Trusted home appliance and household service solutions delivered through a professional service network.</p>
+            <p className="mt-3 text-xs font-semibold uppercase tracking-[.2em] text-orange-400">Live Easier. Get It Done.</p>
             <SocialLinks variant="footer" />
           </div>
 
-          {/* Quick Links */}
           <div>
-            <h4 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">Quick Links</h4>
-            <ul className="space-y-2">
-              {quickLinks.map((l) => (
-                <li key={l.page}>
-                  <button
-                    onClick={() => navigate(l.page)}
-                    className="text-gray-400 hover:text-gold-400 text-sm transition-colors text-left"
-                  >
-                    {l.label}
-                  </button>
-                </li>
+            <h4 className="text-xs font-bold uppercase tracking-[.22em] text-orange-400 mb-4">Home Services</h4>
+            <ul className="space-y-2.5 text-sm text-gray-400">
+              {serviceLinks.map((label) => (
+                <li key={label}><button onClick={() => navigate('services')} className="hover:text-white transition-colors">{label}</button></li>
+              ))}
+              <li><button onClick={() => navigate('booking')} className="hover:text-white transition-colors">Book a Service</button></li>
+              <li><button onClick={() => navigate('join-technician')} className="hover:text-white transition-colors">Join as a Technician</button></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-xs font-bold uppercase tracking-[.22em] text-orange-400 mb-4">Company</h4>
+            <ul className="space-y-2.5 text-sm text-gray-400">
+              {quickLinks.slice(0, 5).map((l) => (
+                <li key={l.page}><button onClick={() => navigate(l.page)} className="hover:text-white transition-colors">{l.label}</button></li>
               ))}
             </ul>
           </div>
 
-          {/* Home Services */}
           <div>
-            <h4 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">Home Services</h4>
-            <ul className="space-y-2">
-              <li>
-                <button
-                  onClick={() => navigate('services')}
-                  className="text-gray-400 hover:text-gold-400 text-sm transition-colors text-left"
-                >
-                  Services
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigate('booking')}
-                  className="text-gray-400 hover:text-gold-400 text-sm transition-colors text-left"
-                >
-                  Book a Service
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => navigate('join-technician')}
-                  className="text-gray-400 hover:text-gold-400 text-sm transition-colors text-left"
-                >
-                  Technician Network
-                </button>
-              </li>
-              {services.slice(0, 4).map((s) => (
-                <li key={s}>
-                  <button
-                    onClick={() => navigate('services')}
-                    className="text-gray-400 hover:text-gold-400 text-sm transition-colors text-left"
-                  >
-                    {s}
-                  </button>
-                </li>
-              ))}
+            <h4 className="text-xs font-bold uppercase tracking-[.22em] text-orange-400 mb-4">Contact</h4>
+            <ul className="space-y-3 text-sm text-gray-400">
+              <li className="flex items-start gap-3"><Phone size={15} className="mt-0.5 text-orange-400" /><a href="tel:+916374068296" className="hover:text-white">+91 63740 68296</a></li>
+              <li className="flex items-start gap-3"><MessageCircle size={15} className="mt-0.5 text-green-400" /><a href="https://wa.me/918189800757" target="_blank" rel="noreferrer" className="hover:text-white">WhatsApp Support</a></li>
+              <li className="flex items-start gap-3"><Mail size={15} className="mt-0.5 text-orange-400" /><a href="mailto:admin@vattams.net" className="hover:text-white">admin@vattams.net</a></li>
+              <li className="flex items-start gap-3"><MapPin size={15} className="mt-0.5 text-orange-400" /><span>Serving across India</span></li>
             </ul>
-          </div>
-
-          {/* Contact */}
-          <div>
-            <h4 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">Contact Us</h4>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-3">
-                <Phone size={15} className="text-gold-400 mt-0.5 shrink-0" />
-                <a href="tel:+916374068296" className="text-gray-400 hover:text-white text-sm transition-colors">
-                  +91 63740 68296
-                </a>
-              </li>
-              <li className="flex items-start gap-3">
-                <MessageCircle size={15} className="text-green-400 mt-0.5 shrink-0" />
-                <a href="https://wa.me/918189800757" target="_blank" rel="noreferrer"
-                  className="text-gray-400 hover:text-white text-sm transition-colors">
-                  WhatsApp Support
-                </a>
-              </li>
-              <li className="flex items-start gap-3">
-                <Mail size={15} className="text-gold-400 mt-0.5 shrink-0" />
-                <a href="mailto:admin@vattams.net" className="text-gray-400 hover:text-white text-sm transition-colors">
-                  admin@vattams.net
-                </a>
-              </li>
-              <li className="flex items-start gap-3">
-                <MapPin size={15} className="text-red-400 mt-0.5 shrink-0" />
-                <span className="text-gray-400 text-sm">
-                  Serving across India
-                </span>
-              </li>
-            </ul>
-            <div className="mt-5 space-y-2">
-              <button
-                onClick={() => navigate('booking')}
-                className="w-full py-2.5 bg-[#0b1f3a] hover:bg-[#0b1f3a] text-white text-sm font-semibold rounded-lg transition-colors"
-              >
-                Book a Service
-              </button>
-              <button
-                onClick={() => navigate('join-technician')}
-                className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#0b1f3a] hover:bg-[#132d50] text-white text-sm font-semibold rounded-lg transition-colors"
-              >
-                <Briefcase size={15} /> Join as a Technician
-              </button>
-            </div>
+            <button onClick={() => navigate('booking')} className="mt-5 w-full rounded-xl bg-orange-500 py-3 text-sm font-bold text-[#050A17] transition hover:bg-orange-400">Book a Service</button>
           </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-10 pt-6 flex flex-col items-center gap-1 text-center">
-          <span className="text-white font-bold text-sm tracking-wide">VATTAMS</span>
-          <span className="text-gold-400 text-xs font-medium">One Platform. Endless Possibilities.</span>
-        </div>
-
-        <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500">
-          <span>© 2026 VATTAMS. All rights reserved.</span>
-          <span className="italic text-gold-400/80">Home Services</span>
-        </div>
-
-        <div className="mt-4 text-center">
-          <span className="text-gray-500 text-xs">Powered by VATTAMS Home Services</span>
-        </div>
-
-        {/* MSME Trust Badge */}
-        <div className="border-t border-gray-800 mt-6 pt-6">
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 text-center">
-            <div className="inline-flex items-center gap-2 bg-gold-900/30 border border-gold-700/40 rounded-lg px-4 py-2">
-              <span className="text-gold-400 text-xs font-bold uppercase tracking-wider">Govt. of India MSME Registered</span>
-            </div>
-            <p className="text-gray-500 text-xs">
-              Udyam Registration No: <span className="font-bold text-gray-400">UDYAM-TN-02-0274720</span>
-            </p>
-          </div>
+        <div className="mt-10 border-t border-white/10 pt-6 flex flex-col gap-3 text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between">
+          <span>© 2026 VATTAMS Global Technologies Private Limited. All rights reserved.</span>
+          <span className="font-semibold uppercase tracking-[.18em] text-orange-400/80">Home Services</span>
         </div>
       </div>
     </footer>
