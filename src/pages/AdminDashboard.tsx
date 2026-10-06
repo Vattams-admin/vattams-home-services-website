@@ -755,7 +755,7 @@ export default function AdminDashboard() {
             booking.id
           ),
 
-          booking.assigned_technician_id
+          currentBooking.assigned_technician_id
             ? notifyTechnician.jobCancelled(
                 booking.assigned_technician_id,
                 booking.booking_number
