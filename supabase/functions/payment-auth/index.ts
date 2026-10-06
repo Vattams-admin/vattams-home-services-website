@@ -32,30 +32,29 @@ Deno.serve(async (req: Request) => {
 
 async function createPayment(body: Record<string, unknown>) {
   const payeeType = body.payee_type;
-  const payeeId = String(body.payee_id ?? "").trim();
-  const payeeName = body.payee_name ? String(body.payee_name) : null;
-  const amount = Number(body.amount);
-  const purpose = body.purpose;
-  const referenceId = body.reference_id ? String(body.reference_id) : null;
-  const notes = body.notes ? String(body.notes) : null;
+  const payeeId = String(body.payee_id ?? "").replace(/\D/g, "");
+  const referenceId = String(body.reference_id ?? "").replace(/\D/g, "");
+  const payeeName = body.payee_name ? String(body.payee_name).trim().slice(0, 120) : null;
+  const notes = body.notes ? String(body.notes).trim().slice(0, 300) : null;
 
-  if (payeeType !== "customer" && payeeType !== "technician") return json({ error: "Invalid payee type" }, 400);
-  if (!payeeId || !Number.isFinite(amount) || amount <= 0) return json({ error: "Invalid payment details" }, 400);
-  if (!["booking", "registration_fee", "wallet_recharge", "commission"].includes(String(purpose))) {
-    return json({ error: "Invalid payment purpose" }, 400);
+  // This endpoint is currently exposed only for the technician ₹49 joining flow.
+  // Do not allow the browser to mint arbitrary booking/wallet/commission payments.
+  if (payeeType !== "technician" || body.purpose !== "registration_fee" || Number(body.amount) !== 49) {
+    return json({ error: "Only the ₹49 technician registration payment is supported" }, 400);
   }
-  if (purpose === "registration_fee" && (payeeType !== "technician" || amount !== 49)) {
-    return json({ error: "Technician registration fee must be exactly ₹49" }, 400);
+
+  if (!/^\d{10}$/.test(payeeId) || referenceId !== payeeId) {
+    return json({ error: "A valid technician mobile number is required" }, 400);
   }
 
   const { data, error } = await supabase.from("payments").insert({
-    payee_type: payeeType,
+    payee_type: "technician",
     payee_id: payeeId,
     payee_name: payeeName,
     upi_id: "venkatesan04051985-7@okhdfcbank",
-    amount,
-    purpose,
-    reference_id: referenceId,
+    amount: 49,
+    purpose: "registration_fee",
+    reference_id: payeeId,
     status: "pending",
     notes,
   }).select("*").single();
@@ -66,22 +65,24 @@ async function createPayment(body: Record<string, unknown>) {
 
 async function submitUtr(body: Record<string, unknown>) {
   const paymentId = String(body.payment_id ?? "").trim();
+  const actionToken = String(body.payment_action_token ?? "").trim();
   const utr = String(body.utr ?? "").trim();
-  if (!paymentId || utr.length < 6) return json({ error: "Payment ID and valid UTR are required" }, 400);
 
-  const { data: payment, error: readError } = await supabase
-    .from("payments").select("payment_id,status").eq("payment_id", paymentId).maybeSingle();
-
-  if (readError || !payment) return json({ error: "Payment record not found" }, 404);
-  if (payment.status !== "pending") return json({ error: "Only pending payments can receive UTR confirmation" }, 409);
+  if (!paymentId || !actionToken || !utr) {
+    return json({ error: "Payment ID, payment authorization and UTR are required" }, 400);
+  }
+  if (!/^[A-Za-z0-9]{6,32}$/.test(utr)) {
+    return json({ error: "Invalid UTR format" }, 400);
+  }
 
   const { data, error } = await supabase.from("payments")
     .update({ utr, status: "pending" })
     .eq("payment_id", paymentId)
+    .eq("payment_action_token", actionToken)
     .eq("status", "pending")
     .select("*").single();
 
-  if (error || !data) return json({ error: error?.message || "Unable to submit UTR" }, 500);
+  if (error || !data) return json({ error: "Payment is no longer pending or authorization is invalid" }, 409);
   return json({ payment: data });
 }
 
