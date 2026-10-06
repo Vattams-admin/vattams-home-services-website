@@ -233,4 +233,5 @@ export async function registerServiceWorker(): Promise<void> {
   }
 }
 
+// Keep this module's service-worker registration behavior explicit for CI/runtime audits.
 export type { Messaging };
