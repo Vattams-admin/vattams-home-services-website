@@ -49,6 +49,30 @@ Deno.serve(async req=>{
     const row={recipient_type:input.recipientType,recipient_id:String(input.recipientId),title:String(input.title).slice(0,200),message:String(input.message).slice(0,2000),type:String(input.type).slice(0,100),reference_type:input.referenceType?String(input.referenceType).slice(0,100):null,reference_id:input.referenceId?String(input.referenceId):null,channels:Array.isArray(input.channels)?input.channels:["in_app","push"],status:"sent",is_read:false};
     const {data,error}=await db.from("notifications").insert(row).select("*").single();
     if(error) return out({error:"Unable to create notification"},400);
+
+    if (Array.isArray(row.channels) && row.channels.includes("push") && input.recipientType !== "admin") {
+      try {
+        await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-push-notification`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({
+            userType: input.recipientType,
+            userId: String(input.recipientId),
+            title: String(input.title).slice(0, 200),
+            body: String(input.message).slice(0, 2000),
+            data: {
+              type: String(input.type),
+              referenceType: input.referenceType ? String(input.referenceType) : "",
+              referenceId: input.referenceId ? String(input.referenceId) : "",
+            },
+          }),
+        });
+      } catch {}
+    }
+
     return out({notification:data});
   }catch{return out({error:"Unexpected server error"},500)}
 });
