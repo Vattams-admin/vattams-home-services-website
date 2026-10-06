@@ -1,27 +1,9 @@
 /*
 # Create payments table for UPI payment tracking
 
-1. New Tables
-   - `payments`
-     - `id` (uuid, primary key)
-     - `payment_id` (text, unique) — human-readable payment reference like VHP-YYYYMMDD-XXXXXX
-     - `payee_type` (text) — 'customer' | 'technician'
-     - `payee_id` (text) — customer mobile number or technician uuid
-     - `payee_name` (text) — name of the payer
-     - `upi_id` (text) — the UPI ID payment was sent to
-     - `amount` (numeric, not null)
-     - `purpose` (text) — 'booking' | 'registration_fee' | 'wallet_recharge' | 'commission'
-     - `reference_id` (text) — booking_id, technician_id, or recharge_id this payment relates to
-     - `utr` (text) — UTR/transaction reference number entered by payer as confirmation
-     - `status` (text) — 'pending' | 'success' | 'failed'
-     - `notes` (text)
-     - `verified_by` (text) — admin who verified
-     - `created_at` (timestamptz)
-     - `verified_at` (timestamptz)
-
-2. Security
-   - RLS enabled
-   - anon + authenticated CRUD (public app, no Supabase Auth sessions)
+The production project may already contain a legacy `payments` table created
+outside this migration chain. Keep this migration idempotent so the expected
+payment columns exist before indexes/policies are applied.
 */
 
 CREATE TABLE IF NOT EXISTS payments (
@@ -41,6 +23,11 @@ CREATE TABLE IF NOT EXISTS payments (
   created_at timestamptz DEFAULT now(),
   verified_at timestamptz
 );
+
+-- The table can predate this migration in production. In that case
+-- CREATE TABLE IF NOT EXISTS does not alter its existing shape. The
+-- payee_id column is required by the payment-auth service and its index.
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS payee_id text;
 
 CREATE INDEX IF NOT EXISTS idx_payments_payee ON payments(payee_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
