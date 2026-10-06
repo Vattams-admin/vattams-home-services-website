@@ -69,8 +69,17 @@ export async function redeemCoupon(
   customerId: string | null,
   discountAmount: number,
 ): Promise<boolean> {
+  // customerId is retained for API compatibility only. The Edge Function
+  // derives the authoritative customer identity from this server-side token.
+  const sessionToken = sessionStorage.getItem('vattams_customer_session') || '';
   const { data, error } = await supabase.functions.invoke('coupon-ops', {
-    body: { action: 'redeem', coupon_id: couponId, booking_id: bookingId, customer_id: customerId, discount_amount: discountAmount },
+    body: {
+      action: 'redeem',
+      coupon_id: couponId,
+      booking_id: bookingId,
+      customer_session_token: sessionToken,
+      discount_amount: discountAmount,
+    },
   });
   if (error || !data?.success) {
     console.error('[coupons] redemption error:', error || data?.error);
