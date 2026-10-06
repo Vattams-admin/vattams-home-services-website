@@ -6,7 +6,6 @@ import {
   createPaymentRecord, updatePaymentStatus,
   type PaymentPurpose, type PayeeType,
 } from '@/lib/payments';
-import { supabase } from '@/lib/supabase';
 import { formatCurrency } from '@/lib/pricing';
 
 interface PaymentModalProps {
