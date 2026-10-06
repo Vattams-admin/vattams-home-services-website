@@ -31,6 +31,7 @@ export default function PaymentModal({
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [upiLink, setUpiLink] = useState<string>('');
   const [paymentRecordId, setPaymentRecordId] = useState<string | null>(null);
+  const [paymentActionToken, setPaymentActionToken] = useState<string | null>(null);
   const [utr, setUtr] = useState('');
   const [copied, setCopied] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -60,6 +61,7 @@ export default function PaymentModal({
     }
 
     setPaymentRecordId(record.payment_id);
+    setPaymentActionToken(record.payment_action_token);
 
     try {
       const qr = await generateUpiQrCode(amount, note);
@@ -92,7 +94,7 @@ export default function PaymentModal({
     setStep('submitting');
     setErrorMsg('');
 
-    const updated = await updatePaymentStatus(paymentRecordId, 'pending', utr.trim());
+    const updated = await updatePaymentStatus(paymentRecordId, 'pending', utr.trim(), paymentActionToken || undefined);
     if (!updated) {
       setErrorMsg('Could not submit UTR. Please try again.');
       setStep('utr');
@@ -276,16 +278,4 @@ export default function PaymentModal({
       </div>
     </div>
   );
-}
-
-// Helper: check if a payment is successful for a given reference
-export async function checkPaymentSuccess(referenceId: string, purpose: PaymentPurpose): Promise<boolean> {
-  const { data } = await supabase
-    .from('payments')
-    .select('status')
-    .eq('reference_id', referenceId)
-    .eq('purpose', purpose)
-    .eq('status', 'success')
-    .limit(1);
-  return (data?.length ?? 0) > 0;
 }
