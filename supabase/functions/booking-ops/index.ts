@@ -61,11 +61,13 @@ Deno.serve(async (req: Request) => {
       const totalAmount = Math.round((basePrice + gstAmount + platformFee) * 100) / 100;
       let discountAmount = 0;
       let couponCode: string | null = null;
+      let couponId: string | null = null;
       if (b.coupon_code) {
-        const { data: coupon } = await supabase.from("coupons").select("code,discount_type,discount_value,max_uses,used_count,min_order_amount,valid_from,valid_until,is_active").eq("code",String(b.coupon_code).trim().toUpperCase()).eq("is_active",true).maybeSingle();
+        const { data: coupon } = await supabase.from("coupons").select("id,code,discount_type,discount_value,max_uses,used_count,min_order_amount,valid_from,valid_until,is_active").eq("code",String(b.coupon_code).trim().toUpperCase()).eq("is_active",true).maybeSingle();
         if (coupon && (!coupon.valid_from || new Date(coupon.valid_from) <= new Date()) && (!coupon.valid_until || new Date(coupon.valid_until) >= new Date()) && (coupon.max_uses === null || Number(coupon.used_count) < Number(coupon.max_uses)) && totalAmount >= Number(coupon.min_order_amount||0)) {
           discountAmount = coupon.discount_type === "percentage" ? Math.round((totalAmount * Number(coupon.discount_value) / 100) * 100) / 100 : Math.min(totalAmount, Number(coupon.discount_value));
           couponCode = coupon.code;
+          couponId = coupon.id;
         }
       }
       const finalAmount = Math.max(0, Math.round((totalAmount - discountAmount) * 100) / 100);
@@ -102,7 +104,7 @@ Deno.serve(async (req: Request) => {
       // false without consuming anything.
       if (couponCode) {
         const { data: redeemed, error: redeemError } = await supabase.rpc("redeem_coupon_atomic", {
-          p_coupon_id: null,
+          p_coupon_id: couponId,
           p_booking_id: data.id,
           p_customer_id: customerId,
           p_discount_amount: discountAmount,
