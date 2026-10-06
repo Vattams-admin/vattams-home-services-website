@@ -131,7 +131,7 @@ export default function AdminCoupon() {
       description: c.description ?? '',
       discount_type:
         c.discount_type === 'flat'
-          ? 'fixed'
+          ? 'flat'
           : 'percentage',
       discount_value:
         c.discount_value != null
