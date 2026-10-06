@@ -138,7 +138,7 @@ export default function TechnicianDashboard() {
     TechnicianNotification[]
   >([]);
   const [jobNotifications, setJobNotifications] = useState<
-    NotificationRow[]
+    TechnicianNotification[]
   >([]);
 
   const [activeTab, setActiveTab] =
