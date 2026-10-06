@@ -54,7 +54,7 @@ export default function TechnicianApplicationStatus() {
         return;
       }
       const result = await technicianData<{ technician?: Technician }>('account');
-      const data = result.technician;
+      const data = result?.technician;
 
       if (!data) {
         setTechnician(null);
