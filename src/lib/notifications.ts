@@ -188,6 +188,8 @@ export const notifyCustomer = {
     notify('customer', mobile, 'Booking Cancelled', `Booking ${bookingNumber} has been cancelled.`, 'booking_cancelled', bookingId),
   technicianAssigned: (mobile: string, bookingNumber: string, technicianName: string, bookingId: string) =>
     notify('customer', mobile, 'Technician Assigned', `${technicianName} has been assigned to booking ${bookingNumber}.`, 'technician_assigned', bookingId),
+  bookingReceived: (mobile: string, bookingNumber: string, bookingId: string, bookingActionToken?: string) =>
+    createNotification({ recipientType: 'customer', recipientId: mobile, title: 'Booking Received', message: 'Booking ' + bookingNumber + ' has been received.', type: 'booking_received', referenceType: 'booking', referenceId: bookingId, channels: ['in_app', 'push'], bookingActionToken }),
 };
 
 export const notifyTechnician = {
@@ -205,7 +207,10 @@ export const notifyTechnician = {
     notify('technician', technicianId, 'Wallet Recharge Rejected', `Your wallet recharge of ₹${amount} was rejected.`, 'wallet_recharge_rejected'),
 };
 
-export const notifyAdmin = {};
+export const notifyAdmin = {
+  newBooking: (bookingNumber: string, customerName: string, serviceCategory: string, bookingId: string, bookingActionToken?: string) =>
+    createNotification({ recipientType: 'admin', recipientId: 'admin', title: 'New Booking', message: bookingNumber + ' — ' + customerName + ' requested ' + serviceCategory + '.', type: 'new_booking', referenceType: 'booking', referenceId: bookingId, channels: ['in_app', 'push'], bookingActionToken }),
+};
 
 export async function sendAnnouncementToTechnicians(
   recipients: Array<{ id: string }>,
