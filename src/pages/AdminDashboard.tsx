@@ -740,9 +740,9 @@ export default function AdminDashboard() {
         'completed'
       ) {
         await notifyCustomer.serviceCompleted(
-          booking.mobile_number,
-          booking.booking_number,
-          booking.id
+          currentBooking.mobile_number,
+          currentBooking.booking_number,
+          currentBooking.id
         );
       } else if (
         status ===
@@ -750,15 +750,15 @@ export default function AdminDashboard() {
       ) {
         await Promise.all([
           notifyCustomer.bookingCancelled(
-            booking.mobile_number,
-            booking.booking_number,
-            booking.id
+            currentBooking.mobile_number,
+            currentBooking.booking_number,
+            currentBooking.id
           ),
 
           currentBooking.assigned_technician_id
             ? notifyTechnician.jobCancelled(
-                booking.assigned_technician_id,
-                booking.booking_number
+                currentBooking.assigned_technician_id,
+                currentBooking.booking_number
               )
             : null,
         ]);
