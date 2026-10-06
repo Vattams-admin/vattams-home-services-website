@@ -124,7 +124,6 @@ Deno.serve(async (req: Request) => {
           .from("otp_codes")
           .select("*")
           .eq("mobile", mobile)
-          .eq("code", code)
           .eq("purpose", purpose)
           .eq("verified", false)
           .order("created_at", { ascending: false })
@@ -132,12 +131,16 @@ Deno.serve(async (req: Request) => {
           .maybeSingle();
 
         if (!otpRecord) return errorResponse("Invalid OTP code");
-
-        const { data: attempts } = await supabase.from("otp_codes").select("attempt_count").eq("id", otpRecord.id).maybeSingle();
-        if (Number(attempts?.attempt_count || 0) >= 5) return errorResponse("Too many incorrect OTP attempts. Please request a new OTP.", 429);
+        if (Number(otpRecord.attempt_count || 0) >= 5) return errorResponse("Too many incorrect OTP attempts. Please request a new OTP.", 429);
 
         if (new Date(otpRecord.expires_at) < new Date()) {
           return errorResponse("OTP has expired. Please request a new one.");
+        }
+
+        if (String(otpRecord.code) !== String(code)) {
+          const nextAttempts = Number(otpRecord.attempt_count || 0) + 1;
+          await supabase.from("otp_codes").update({ attempt_count: nextAttempts }).eq("id", otpRecord.id).eq("verified", false);
+          return errorResponse(nextAttempts >= 5 ? "Too many incorrect OTP attempts. Please request a new OTP." : "Invalid OTP code", nextAttempts >= 5 ? 429 : 400);
         }
 
         // Mark OTP as verified atomically; a verified OTP cannot be reused.
