@@ -13,7 +13,9 @@ const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 function generateOTP(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  const bytes = new Uint32Array(1);
+  crypto.getRandomValues(bytes);
+  return String(100000 + (bytes[0] % 900000));
 }
 
 function validateMobile(mobile: string): string | null {
@@ -105,7 +107,7 @@ Deno.serve(async (req: Request) => {
         const { mobile, code, purpose, registration_data } = body;
 
         if (!mobile || !code) return errorResponse("Mobile and OTP code are required");
-        if (!purpose) return errorResponse("Purpose is required");
+        if (!purpose || !["registration", "forgot_password"].includes(String(purpose))) return errorResponse("Invalid OTP purpose");
 
         // Find the latest unverified, unexpired OTP
         const { data: otpRecord } = await supabase
@@ -266,10 +268,11 @@ Deno.serve(async (req: Request) => {
         const passErr = validatePassword(new_password);
         if (passErr) return errorResponse(passErr);
 
-        // Check if there's a verified forgot_password OTP
+        // A verified OTP is a one-time password-reset capability. Bind the
+        // reset to the same mobile and consume the capability after success.
         const { data: otpRecord } = await supabase
           .from("otp_codes")
-          .select("*")
+          .select("id,mobile,created_at,expires_at,verified")
           .eq("mobile", mobile)
           .eq("purpose", "forgot_password")
           .eq("verified", true)
@@ -285,6 +288,13 @@ Deno.serve(async (req: Request) => {
           return errorResponse("Verification expired. Please request a new OTP.");
         }
 
+        const { data: resetCustomer } = await supabase
+          .from("customers")
+          .select("id")
+          .eq("mobile", mobile)
+          .maybeSingle();
+        if (!resetCustomer) return errorResponse("No account found with this mobile number");
+
         // Update password
         const salt = bcrypt.genSaltSync(10);
         const passwordHash = bcrypt.hashSync(new_password, salt);
@@ -292,7 +302,7 @@ Deno.serve(async (req: Request) => {
         const { error: updateError } = await supabase
           .from("customers")
           .update({ password_hash: passwordHash, updated_at: new Date().toISOString() })
-          .eq("id", customer.id);
+          .eq("id", resetCustomer.id);
 
         if (updateError) return errorResponse("Failed to reset password. Please try again.");
 
@@ -403,7 +413,17 @@ Deno.serve(async (req: Request) => {
         const { mobile, purpose } = body;
 
         if (!mobile?.trim()) return errorResponse("Mobile number is required");
-        if (!purpose) return errorResponse("Purpose is required");
+        if (!purpose || !["registration", "forgot_password"].includes(String(purpose))) return errorResponse("Invalid OTP purpose");
+
+        const mobileErr = validateMobile(mobile);
+        if (mobileErr) return errorResponse(mobileErr);
+
+        // Resend only for a valid flow. Existing account state is checked for
+        // password recovery; registration is rejected if the account exists.
+        if (purpose === "forgot_password") {
+          const { data: account } = await supabase.from("customers").select("id").eq("mobile", mobile).maybeSingle();
+          if (!account) return errorResponse("No account found with this mobile number");
+        }
 
         // Delete old OTPs
         await supabase.from("otp_codes").delete().eq("mobile", mobile).eq("purpose", purpose);
