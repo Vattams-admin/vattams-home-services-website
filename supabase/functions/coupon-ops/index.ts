@@ -110,22 +110,23 @@ Deno.serve(async req => {
       return new Response(JSON.stringify({ error: "Invalid discount" }), { status: 400, headers });
     }
 
-    const { error: redeemError } = await db
-      .from("coupon_redemptions")
-      .insert({
-        coupon_id,
-        booking_id,
-        customer_id: booking.customer_id,
-        discount_amount: Number(discount_amount),
-      });
+    // Redemption + usage reservation must be one database transaction.
+    // This prevents concurrent requests from exceeding max_uses and prevents
+    // a failed redemption insert from consuming a usage slot.
+    const { data: redeemed, error: redeemError } = await db.rpc("redeem_coupon_atomic", {
+      p_coupon_id: coupon_id,
+      p_booking_id: booking_id,
+      p_customer_id: booking.customer_id,
+      p_discount_amount: Number(discount_amount),
+    });
 
     if (redeemError) {
-      return new Response(JSON.stringify({ error: "Coupon already redeemed or unavailable" }), { status: 400, headers });
+      console.error("[coupon-ops] atomic redemption error:", redeemError);
+      return new Response(JSON.stringify({ error: "Unable to redeem coupon" }), { status: 500, headers });
     }
 
-    const { error: updateError } = await db.rpc("increment_coupon_usage", { coupon_id });
-    if (updateError) {
-      return new Response(JSON.stringify({ error: "Unable to finalize coupon usage" }), { status: 500, headers });
+    if (redeemed !== true) {
+      return new Response(JSON.stringify({ error: "Coupon already redeemed or unavailable" }), { status: 400, headers });
     }
 
     return new Response(JSON.stringify({ success: true }), { headers });
