@@ -4,7 +4,7 @@ import { supabase, ServiceCategory, Customer, ServicePrice } from '@/lib/supabas
 import { useRouter } from '@/lib/router';
 import { notifyCustomer, notifyAdmin } from '@/lib/notifications';
 import { getPricingFromServicePrice, calculatePricing, formatINR, type PricingBreakdown } from '@/lib/pricing';
-import { validateCoupon, redeemCoupon, type Coupon } from '@/lib/coupons';
+import { validateCoupon, type Coupon } from '@/lib/coupons';
 
 const bookingCities = [
   'Chennai', 'Coimbatore', 'Madurai', 'Trichy', 'Salem',
@@ -121,10 +121,6 @@ export default function Booking() {
       return;
     }
     setSuccess({ number: data.booking_number, id: data.id });
-
-    if (couponResult?.valid && couponResult.coupon) {
-      void redeemCoupon(couponResult.coupon.id, data.id, customer?.id ?? null, couponResult.discountAmount);
-    }
 
     await Promise.all([
       notifyCustomer.bookingReceived(form.mobile_number, data.booking_number, data.id, data.booking_action_token),
