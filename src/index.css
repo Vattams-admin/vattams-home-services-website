@@ -25,9 +25,9 @@
 @layer components {
   /* Executive corporate header language */
   header {
-    background: rgba(5, 10, 23, 0.94) !important;
-    border-bottom-color: rgba(212, 175, 55, 0.18) !important;
-    box-shadow: 0 10px 30px rgba(5, 10, 23, 0.14) !important;
+    background: rgba(5, 10, 23, 0.88) !important; backdrop-filter: blur(22px) saturate(140%); -webkit-backdrop-filter: blur(22px) saturate(140%);
+    border-bottom-color: rgba(249, 115, 22, 0.24) !important;
+    box-shadow: 0 14px 50px rgba(0,0,0,.22) !important;
   }
 
   header .text-blue-900 {
@@ -35,7 +35,7 @@
   }
 
   header .text-amber-600 {
-    color: #D4AF37 !important;
+    color: #FB923C !important;
   }
 
   header .text-gray-700 {
@@ -43,12 +43,12 @@
   }
 
   header .bg-blue-600 {
-    background: #D4AF37 !important;
+    background: linear-gradient(135deg,#FB923C,#F97316) !important;
     color: #050A17 !important;
   }
 
   header .bg-blue-600:hover {
-    background: #EBD48A !important;
+    background: #FDBA74 !important;
   }
 
   header .hover\:bg-blue-50:hover {
@@ -103,3 +103,10 @@
   scrollbar-width: thin;
   scrollbar-color: #C9A227 #F2EBDA;
 }
+
+
+/* VATTAMS corporate web shell — Home Services theme */
+header .text-gray-700:hover { color: #fff !important; }
+header button { transition: transform .2s ease, box-shadow .2s ease, background .2s ease, color .2s ease; }
+header button:hover { transform: translateY(-1px); }
+footer { background: radial-gradient(circle at 15% 0%, rgba(249,115,22,.10), transparent 28rem), linear-gradient(180deg,#07101F 0%,#030914 100%) !important; }
