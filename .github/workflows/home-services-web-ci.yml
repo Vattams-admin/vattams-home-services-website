@@ -11,7 +11,9 @@ on:
       - 'package-lock.json'
       - 'vite.config.*'
       - 'tsconfig*.json'
+      - 'supabase/functions/**'
       - '.github/workflows/home-services-web-ci.yml'
+      - '.github/workflows/deploy-supabase-production.yml'
   pull_request:
     branches: [main]
   workflow_dispatch:
