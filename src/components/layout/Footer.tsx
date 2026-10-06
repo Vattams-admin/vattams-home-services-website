@@ -1,4 +1,4 @@
-import { Phone, Mail, MapPin, MessageCircle, Briefcase } from 'lucide-react';
+import { Phone, Mail, MapPin, MessageCircle } from 'lucide-react';
 import { useRouter, Page } from '@/lib/router';
 import SocialLinks from '@/components/SocialLinks';
 
