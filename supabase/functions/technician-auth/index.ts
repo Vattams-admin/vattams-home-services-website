@@ -131,7 +131,7 @@ async function handleRegister(supabase: ReturnType<typeof createClient>, body: R
     Number(registrationPayment.amount) !== 49 ||
     registrationPayment.purpose !== "registration_fee" ||
     !registrationPayment.utr ||
-    registrationPayment.status !== "success"
+    !["pending", "success"].includes(String(registrationPayment.status))
   ) {
     return new Response(
       JSON.stringify({ error: "Valid ₹49 technician joining fee payment confirmation is required." }),
