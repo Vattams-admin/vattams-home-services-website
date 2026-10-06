@@ -11,6 +11,7 @@ export type PayeeType = 'customer' | 'technician';
 export interface PaymentRecord {
   id: string;
   payment_id: string;
+  payment_action_token: string;
   payee_type: PayeeType;
   payee_id: string;
   payee_name: string | null;
@@ -26,10 +27,6 @@ export interface PaymentRecord {
   verified_at: string | null;
 }
 
-/**
- * Generates a UPI deep link per NPCI spec:
- * upi://pay?pa=<payee>&pn=<name>&am=<amount>&tn=<note>&cu=INR
- */
 export function buildUpiLink(amount: number, note: string, upiId: string = DEFAULT_UPI_ID): string {
   const params = new URLSearchParams({
     pa: upiId,
@@ -41,9 +38,6 @@ export function buildUpiLink(amount: number, note: string, upiId: string = DEFAU
   return `upi://pay?${params.toString()}`;
 }
 
-/**
- * Generates a QR code data URL from a UPI link.
- */
 export async function generateUpiQrCode(amount: number, note: string, upiId: string = DEFAULT_UPI_ID): Promise<string> {
   const link = buildUpiLink(amount, note, upiId);
   return QRCode.toDataURL(link, {
@@ -54,10 +48,6 @@ export async function generateUpiQrCode(amount: number, note: string, upiId: str
   });
 }
 
-/**
- * Inserts a payment record into the database with status 'pending'.
- * Returns the created record.
- */
 export async function createPaymentRecord(params: {
   payee_type: PayeeType;
   payee_id: string;
@@ -78,13 +68,11 @@ export async function createPaymentRecord(params: {
   return (data?.payment ?? null) as PaymentRecord | null;
 }
 
-/**
- * Updates a payment record's status (used after UTR submission or admin verification).
- */
 export async function updatePaymentStatus(
   paymentId: string,
   status: PaymentStatus,
   utr?: string,
+  paymentActionToken?: string,
   verifiedBy?: string,
 ): Promise<PaymentRecord | null> {
   const action = status === 'pending' ? 'submit-utr' : 'verify';
@@ -101,6 +89,7 @@ export async function updatePaymentStatus(
     body: {
       action,
       payment_id: paymentId,
+      payment_action_token: paymentActionToken,
       utr,
       status,
       admin_id: adminId,
