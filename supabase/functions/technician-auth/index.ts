@@ -92,7 +92,8 @@ async function handleRegister(supabase: ReturnType<typeof createClient>, body: R
     whatsapp_number, area, pincode, available_days, working_time, has_vehicle, has_tools,
     aadhaar_url, pan_url, dl_url, profile_photo_url, bank_name, bank_holder_name, bank_account_number, bank_ifsc, upi_id, registration_payment_id } = body;
 
-  if (!full_name || !mobile || !city || !password) {
+  const normalizedMobile = String(mobile || "").replace(/\D/g, "");
+  if (!full_name?.trim() || !normalizedMobile || !city?.trim() || !password) {
     return new Response(
       JSON.stringify({ error: "Missing required fields (full_name, mobile, city, password)" }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -145,7 +146,7 @@ async function handleRegister(supabase: ReturnType<typeof createClient>, body: R
     .from("technicians")
     .insert({
       full_name,
-      mobile,
+      mobile: normalizedMobile,
       registration_payment_id,
       email: email || null,
       city,
