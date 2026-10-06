@@ -730,7 +730,7 @@ export default function AdminCoupon() {
                       Percentage
                     </option>
 
-                    <option value="fixed">
+                    <option value="flat">
                       Fixed Amount
                     </option>
 
