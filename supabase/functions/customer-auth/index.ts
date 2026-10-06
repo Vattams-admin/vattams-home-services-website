@@ -79,6 +79,9 @@ Deno.serve(async (req: Request) => {
         }
 
         // Generate and store OTP
+        const recentCutoff = new Date(Date.now() - 60 * 1000).toISOString();
+        const { data: recentOtp } = await supabase.from("otp_codes").select("id").eq("mobile", mobile).eq("purpose", "registration").gte("created_at", recentCutoff).limit(1).maybeSingle();
+        if (recentOtp) return errorResponse("Please wait 60 seconds before requesting another OTP.", 429);
         const otp = generateOTP();
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
@@ -130,12 +133,16 @@ Deno.serve(async (req: Request) => {
 
         if (!otpRecord) return errorResponse("Invalid OTP code");
 
+        const { data: attempts } = await supabase.from("otp_codes").select("attempt_count").eq("id", otpRecord.id).maybeSingle();
+        if (Number(attempts?.attempt_count || 0) >= 5) return errorResponse("Too many incorrect OTP attempts. Please request a new OTP.", 429);
+
         if (new Date(otpRecord.expires_at) < new Date()) {
           return errorResponse("OTP has expired. Please request a new one.");
         }
 
-        // Mark OTP as verified
-        await supabase.from("otp_codes").update({ verified: true }).eq("id", otpRecord.id);
+        // Mark OTP as verified atomically; a verified OTP cannot be reused.
+        const { data: consumedOtp, error: consumeError } = await supabase.from("otp_codes").update({ verified: true, verified_at: new Date().toISOString() }).eq("id", otpRecord.id).eq("verified", false).select("id").maybeSingle();
+        if (consumeError || !consumedOtp) return errorResponse("OTP is no longer valid. Please request a new OTP.", 409);
 
         // If registration, create the customer account
         if (purpose === "registration") {
@@ -245,6 +252,9 @@ Deno.serve(async (req: Request) => {
         if (!customer) return errorResponse("No account found with this mobile number");
 
         // Generate and store OTP
+        const recentCutoff = new Date(Date.now() - 60 * 1000).toISOString();
+        const { data: recentOtp } = await supabase.from("otp_codes").select("id").eq("mobile", mobile).eq("purpose", "forgot_password").gte("created_at", recentCutoff).limit(1).maybeSingle();
+        if (recentOtp) return errorResponse("Please wait 60 seconds before requesting another OTP.", 429);
         const otp = generateOTP();
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
@@ -430,6 +440,10 @@ Deno.serve(async (req: Request) => {
           const { data: account } = await supabase.from("customers").select("id").eq("mobile", mobile).maybeSingle();
           if (!account) return errorResponse("No account found with this mobile number");
         }
+
+        const recentCutoff = new Date(Date.now() - 60 * 1000).toISOString();
+        const { data: recentOtp } = await supabase.from("otp_codes").select("id").eq("mobile", mobile).eq("purpose", purpose).gte("created_at", recentCutoff).limit(1).maybeSingle();
+        if (recentOtp) return errorResponse("Please wait 60 seconds before requesting another OTP.", 429);
 
         // Delete old OTPs
         await supabase.from("otp_codes").delete().eq("mobile", mobile).eq("purpose", purpose);
