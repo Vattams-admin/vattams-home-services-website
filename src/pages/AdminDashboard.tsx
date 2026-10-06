@@ -725,7 +725,7 @@ export default function AdminDashboard() {
         (b) => b.id === id
       );
 
-    if (booking) {
+    if (currentBooking) {
       if (
         status ===
         'in_progress'
