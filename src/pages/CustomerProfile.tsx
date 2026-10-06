@@ -47,7 +47,7 @@ export default function CustomerProfile() {
       if (!result?.customer) throw new Error('Failed to update profile');
       if (result.customer) {
         setCustomer(result.customer);
-        sessionStorage.setItem('vattams_customer', JSON.stringify(data));
+        sessionStorage.setItem('vattams_customer', JSON.stringify(result.customer));
         setMsg({ type: 'success', text: 'Profile updated successfully!' });
       }
     } catch {
