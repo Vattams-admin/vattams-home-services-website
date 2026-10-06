@@ -60,7 +60,11 @@ ALTER TABLE bookings
 ALTER TABLE bookings
   ADD COLUMN IF NOT EXISTS invoice_number text;
 
--- Legacy-table compatibility: the production bookings table may predate the assignment column.\nALTER TABLE bookings\n  ADD COLUMN IF NOT EXISTS assigned_technician_id uuid;\n\n-- =========================================================
+-- Legacy-table compatibility: the production bookings table may predate the assignment column.
+ALTER TABLE bookings
+  ADD COLUMN IF NOT EXISTS assigned_technician_id uuid;
+
+-- =========================================================
 -- 2. TECHNICIANS: Add new columns
 -- =========================================================
 
