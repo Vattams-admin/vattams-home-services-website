@@ -27,52 +27,94 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
   return await Notification.requestPermission();
 }
 
+function sessionFor(userType: UserType): { token: string; id: string } | null {
+  if (typeof sessionStorage === 'undefined') return null;
+  if (userType === 'admin') return {
+    token: sessionStorage.getItem('vattams_admin') || '',
+    id: sessionStorage.getItem('vattams_admin_id') || '',
+  };
+  if (userType === 'technician') return {
+    token: sessionStorage.getItem('vattams_technician_session') || '',
+    id: sessionStorage.getItem('vattams_technician_id') || '',
+  };
+  let id = '';
+  try {
+    const customer = sessionStorage.getItem('vattams_customer');
+    id = customer ? String(JSON.parse(customer).id || '') : '';
+  } catch {}
+  return {
+    token: sessionStorage.getItem('vattams_customer_session') || '',
+    id,
+  };
+}
+
+async function fcmData(body: Record<string, unknown>): Promise<any> {
+  const response = await fetch(\`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fcm-data\`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: \`Bearer \${import.meta.env.VITE_SUPABASE_ANON_KEY}\`,
+    },
+    body: JSON.stringify(body),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || 'FCM request failed');
+  return data;
+}
+
 export async function registerFCMToken(
   userType: UserType,
   userId: string,
   token: string,
   deviceInfo?: string,
 ): Promise<boolean> {
-  const { error } = await supabase.from('fcm_tokens').upsert(
-    {
-      user_type: userType,
-      user_id: userId,
-      token,
-      device_info: deviceInfo ?? null,
-      is_active: true,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: 'user_type,user_id,token' },
-  );
-
-  if (error) {
+  try {
+    const session = sessionFor(userType);
+    if (!session?.token) return false;
+    await fcmData({
+      action: 'register', user_type: userType, user_id: userId, token,
+      device_info: deviceInfo ?? null, session_token: session.token,
+      admin_id: userType === 'admin' ? session.id : undefined,
+    });
+    return true;
+  } catch (error) {
     console.error('[fcm] register token error:', error);
     return false;
   }
-  return true;
 }
 
 export async function unregisterFCMToken(token: string): Promise<boolean> {
-  const { error } = await supabase
-    .from('fcm_tokens')
-    .update({ is_active: false, updated_at: new Date().toISOString() })
-    .eq('token', token);
-  return !error;
+  for (const userType of ['customer', 'technician', 'admin'] as UserType[]) {
+    const session = sessionFor(userType);
+    if (!session?.token) continue;
+    try {
+      await fcmData({
+        action: 'unregister', user_type: userType, token,
+        session_token: session.token,
+        admin_id: userType === 'admin' ? session.id : undefined,
+      });
+      return true;
+    } catch {}
+  }
+  return false;
 }
 
 export async function getTokensForUser(
   userType: UserType,
   userId: string,
 ): Promise<string[]> {
-  const { data, error } = await supabase
-    .from('fcm_tokens')
-    .select('token')
-    .eq('user_type', userType)
-    .eq('user_id', userId)
-    .eq('is_active', true);
-
-  if (error || !data) return [];
-  return data.map((r: { token: string }) => r.token);
+  try {
+    const session = sessionFor(userType);
+    if (!session?.token) return [];
+    const data = await fcmData({
+      action: 'list', user_type: userType, user_id: userId,
+      session_token: session.token,
+      admin_id: userType === 'admin' ? session.id : undefined,
+    });
+    return Array.isArray(data.tokens) ? data.tokens.map((r: { token: string }) => r.token) : [];
+  } catch {
+    return [];
+  }
 }
 
 function getDeviceInfo(): string {
@@ -142,38 +184,30 @@ export function onForegroundMessage(
 export async function unregisterUserFCM(userType: UserType, userId: string): Promise<void> {
   try {
     const messaging = await getMessagingInstance();
-    if (messaging) {
-      await deleteToken(messaging);
-    }
-  } catch {
-    // ignore
+    if (messaging) await deleteToken(messaging);
+  } catch {}
+  const session = sessionFor(userType);
+  if (!session?.token) return;
+  try {
+    await fcmData({
+      action: 'unregister_user', user_type: userType, user_id: userId,
+      session_token: session.token,
+      admin_id: userType === 'admin' ? session.id : undefined,
+    });
+  } catch (error) {
+    console.error('[fcm] unregister user error:', error);
   }
-  await supabase
-    .from('fcm_tokens')
-    .update({ is_active: false, updated_at: new Date().toISOString() })
-    .eq('user_type', userType)
-    .eq('user_id', userId);
 }
 
 export async function sendPushNotification(
-  userType: UserType,
-  userId: string,
-  title: string,
-  body: string,
-  data?: Record<string, string>,
+  _userType: UserType,
+  _userId: string,
+  _title: string,
+  _body: string,
+  _data?: Record<string, string>,
 ): Promise<boolean> {
-  try {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const response = await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userType, userId, title, body, data }),
-    });
-    return response.ok;
-  } catch (err) {
-    console.error('[fcm] send push error:', err);
-    return false;
-  }
+  console.warn('[fcm] direct client push dispatch is disabled; use notification-ops');
+  return false;
 }
 
 export async function registerServiceWorker(): Promise<void> {
