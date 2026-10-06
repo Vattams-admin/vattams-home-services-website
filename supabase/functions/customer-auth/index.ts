@@ -370,7 +370,8 @@ Deno.serve(async (req: Request) => {
 
         if (!booking_id) return errorResponse("Booking ID is required");
         if (!customer_id) return errorResponse("Customer ID is required");
-        const numericRating = Number(rating);\n        if (!Number.isInteger(numericRating) || numericRating < 1 || numericRating > 5) return errorResponse("Rating must be an integer from 1 to 5");
+        const numericRating = Number(rating);
+        if (!Number.isInteger(numericRating) || numericRating < 1 || numericRating > 5) return errorResponse("Rating must be an integer from 1 to 5");
 
         // Check if review already exists
         const { data: existing } = await supabase
@@ -392,7 +393,8 @@ Deno.serve(async (req: Request) => {
         if (booking.customer_id !== customer_id) return errorResponse("You are not authorized to review this booking", 403);
         if (booking.status !== "completed") return errorResponse("You can only review completed bookings");
 
-        const finalTechId = booking.assigned_technician_id;\n        if (technician_id && technician_id !== finalTechId) return errorResponse("Technician does not match the completed booking", 403);
+        const finalTechId = booking.assigned_technician_id;
+        if (technician_id && technician_id !== finalTechId) return errorResponse("Technician does not match the completed booking", 403);
 
         const { data: review, error: reviewError } = await supabase
           .from("reviews")
@@ -407,7 +409,10 @@ Deno.serve(async (req: Request) => {
           .select("*")
           .single();
 
-        if (reviewError) {\n          if (reviewError.code === "23505") return errorResponse("You have already reviewed this booking", 409);\n          return errorResponse("Failed to submit review. Please try again.");\n        }
+        if (reviewError) {
+          if (reviewError.code === "23505") return errorResponse("You have already reviewed this booking", 409);
+          return errorResponse("Failed to submit review. Please try again.");
+        }
 
         // Update technician rating
         if (finalTechId) {
