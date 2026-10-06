@@ -20,6 +20,14 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    const auth = req.headers.get("authorization") || "";
+    const expected = `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""}`;
+    if (!expected || auth !== expected) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { userType, userId, title, body, data } = await req.json() as PushRequest;
 
     if (!userType || !userId || !title || !body) {
