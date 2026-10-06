@@ -1135,7 +1135,7 @@ export default function TechnicianRegister() {
               payeeName={form.full_name}
               referenceId={form.mobile || undefined}
               note={`VATTAMS Technician Joining Fee - ${form.full_name || form.mobile}`}
-              onSuccess={() => {
+              onSuccess={(paymentId) => {
                 setJoinFeePaid(true);
                 setJoinFeePaymentId(paymentId);
                 setShowJoinFeePayment(false);
