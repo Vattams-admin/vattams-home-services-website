@@ -362,7 +362,7 @@ Deno.serve(async (req: Request) => {
       }
 
       case "submit-review": {
-        const { booking_id, customer_id, customer_name, technician_id, rating, review_text, session_token } = body;
+        const { booking_id, customer_id, technician_id, rating, review_text, session_token } = body;
         const { data: session } = await supabase.from("customer_auth_sessions").select("customer_id,expires_at").eq("token", session_token || "").maybeSingle();
         if (!session || new Date(session.expires_at) <= new Date() || session.customer_id !== customer_id) return errorResponse("Unauthorized", 401);
         const { data: reviewCustomer } = await supabase.from("customers").select("id,full_name").eq("id", session.customer_id).maybeSingle();
@@ -370,7 +370,7 @@ Deno.serve(async (req: Request) => {
 
         if (!booking_id) return errorResponse("Booking ID is required");
         if (!customer_id) return errorResponse("Customer ID is required");
-        if (!rating || rating < 1 || rating > 5) return errorResponse("Rating must be between 1 and 5");
+        const numericRating = Number(rating);\n        if (!Number.isInteger(numericRating) || numericRating < 1 || numericRating > 5) return errorResponse("Rating must be an integer from 1 to 5");
 
         // Check if review already exists
         const { data: existing } = await supabase
@@ -392,7 +392,7 @@ Deno.serve(async (req: Request) => {
         if (booking.customer_id !== customer_id) return errorResponse("You are not authorized to review this booking", 403);
         if (booking.status !== "completed") return errorResponse("You can only review completed bookings");
 
-        const finalTechId = technician_id || booking.assigned_technician_id;
+        const finalTechId = booking.assigned_technician_id;\n        if (technician_id && technician_id !== finalTechId) return errorResponse("Technician does not match the completed booking", 403);
 
         const { data: review, error: reviewError } = await supabase
           .from("reviews")
@@ -407,7 +407,7 @@ Deno.serve(async (req: Request) => {
           .select("*")
           .single();
 
-        if (reviewError) return errorResponse("Failed to submit review. Please try again.");
+        if (reviewError) {\n          if (reviewError.code === "23505") return errorResponse("You have already reviewed this booking", 409);\n          return errorResponse("Failed to submit review. Please try again.");\n        }
 
         // Update technician rating
         if (finalTechId) {
