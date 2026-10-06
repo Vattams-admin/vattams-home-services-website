@@ -4,6 +4,7 @@ import SocialLinks from '@/components/SocialLinks';
 
 export default function Footer() {
   const { navigate } = useRouter();
+  const year = new Date().getFullYear();
 
   const quickLinks: { label: string; page: Page }[] = [
     { label: 'Home', page: 'home' },
@@ -78,7 +79,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 border-t border-white/10 pt-6 flex flex-col gap-3 text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between">
-          <span>© 2026 VATTAMS Global Technologies Private Limited. All rights reserved.</span>
+          <span>© {year} VATTAMS Global Technologies Private Limited. All rights reserved.</span>
           <span className="font-semibold uppercase tracking-[.18em] text-orange-400/80">Home Services</span>
         </div>
       </div>
