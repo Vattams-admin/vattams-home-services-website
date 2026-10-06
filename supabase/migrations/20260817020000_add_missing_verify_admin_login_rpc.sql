@@ -47,7 +47,7 @@ and returns a row only when role = 'super_admin' AND is_active = true.
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
-CREATE OR REPLACE FUNCTION verify_admin_login(p_email text, p_password text)
+DROP FUNCTION IF EXISTS verify_admin_login(text, text);\n\nCREATE OR REPLACE FUNCTION verify_admin_login(p_email text, p_password text)
 RETURNS TABLE (
   id uuid,
   email text,
