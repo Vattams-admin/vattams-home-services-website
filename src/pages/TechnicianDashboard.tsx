@@ -172,7 +172,7 @@ export default function TechnicianDashboard() {
   const findTechnician = async () => {
     const session = sessionStorage.getItem('vattams_technician_session');
     if (!session) return null;
-    const result = await technicianData<{ technician: Technician }>('account');
+    const result = await technicianData<{ technician: Technician; jobNotifications?: NotificationRow[] }>('account');
     return result?.technician ?? null;
   };
 
@@ -1855,13 +1855,13 @@ function WalletSection({
                       <div className="min-w-0">
                         <p className="font-bold text-gray-900 text-sm">
                           {transaction.type
-                            .replaceAll(
-                              '_',
+                            .replace(
+                              /_/g,
                               ' '
                             )
                             .replace(
                               /\b\w/g,
-                              (letter) =>
+                              (letter: string) =>
                                 letter.toUpperCase()
                             )}
                         </p>
