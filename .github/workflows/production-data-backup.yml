@@ -1,0 +1,137 @@
+name: Production Data Backup
+
+on:
+  push:
+    branches:
+      - backup/full-project-2026-10-07
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      SUPABASE_PROJECT_REF: nfcibyprftnowaiwlxxc
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - name: Checkout backup branch
+        uses: actions/checkout@v4
+        with:
+          ref: backup/full-project-2026-10-07
+
+      - name: Validate required secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in SUPABASE_DB_URL SUPABASE_ACCESS_TOKEN SUPABASE_SERVICE_ROLE_KEY; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::Missing required repository secret: $name"
+              exit 1
+            fi
+          done
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link production project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_REF" --password ""
+
+      - name: Create database backup
+        run: |
+          set -euo pipefail
+          mkdir -p backup/live-data/database
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/live-data/database/roles.sql --role-only
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/live-data/database/schema.sql
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/live-data/database/data.sql --use-copy --data-only -x "storage.buckets_vectors" -x "storage.vector_indexes"
+
+      - name: Download production Storage objects
+        run: |
+          set -euo pipefail
+          mkdir -p backup/live-data/storage
+          node <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+
+          const baseUrl = 'https://nfcibyprftnowaiwlxxc.supabase.co';
+          const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+          const buckets = ['technician-docs', 'technician-photos'];
+
+          async function listAll(bucket, prefix = '') {
+            const out = [];
+            let offset = 0;
+            while (true) {
+              const res = await fetch(baseUrl + '/storage/v1/object/list/' + bucket, {
+                method: 'POST',
+                headers: {
+                  apikey: serviceKey,
+                  Authorization: 'Bearer ' + serviceKey,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ prefix, limit: 1000, offset, sortBy: { column: 'name', order: 'asc' } })
+              });
+              if (!res.ok) throw new Error(`List failed for ${bucket}/${prefix}: HTTP ${res.status} ${await res.text()}`);
+              const items = await res.json();
+              if (!items.length) break;
+              for (const item of items) {
+                const full = prefix ? prefix + item.name : item.name;
+                if (item.id == null) out.push(...await listAll(bucket, full + '/'));
+                else out.push(full);
+              }
+              if (items.length < 1000) break;
+              offset += items.length;
+            }
+            return out;
+          }
+
+          async function download(bucket, objectPath) {
+            const res = await fetch(baseUrl + '/storage/v1/object/' + bucket + '/' + objectPath.split('/').map(encodeURIComponent).join('/'), {
+              headers: { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey }
+            });
+            if (!res.ok) throw new Error(`Download failed for ${bucket}/${objectPath}: HTTP ${res.status}`);
+            const dest = path.join('backup/live-data/storage', bucket, objectPath);
+            fs.mkdirSync(path.dirname(dest), { recursive: true });
+            fs.writeFileSync(dest, Buffer.from(await res.arrayBuffer()));
+          }
+
+          (async () => {
+            for (const bucket of buckets) {
+              const files = await listAll(bucket);
+              console.log(`Found ${files.length} objects in ${bucket}`);
+              for (const file of files) await download(bucket, file);
+            }
+          })().catch(err => { console.error(err); process.exit(1); });
+          NODE
+
+      - name: Build encrypted backup package
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p backup/package
+          tar -C backup/live-data -czf backup/package/VATTAMS_Home_Services_live_data_2026-10-07.tar.gz .
+          openssl rand -hex 32 > backup/package/session.key
+          openssl enc -aes-256-cbc -salt -pbkdf2             -in backup/package/VATTAMS_Home_Services_live_data_2026-10-07.tar.gz             -out backup/package/VATTAMS_Home_Services_live_data_2026-10-07.tar.gz.enc             -pass file:backup/package/session.key
+          openssl pkeyutl -encrypt -pubin -inkey BACKUP/backup-public.pem             -in backup/package/session.key             -out backup/package/session.key.enc             -pkeyopt rsa_padding_mode:oaep             -pkeyopt rsa_oaep_md:sha256
+          rm -rf backup/live-data backup/package/session.key backup/package/VATTAMS_Home_Services_live_data_2026-10-07.tar.gz
+          sha256sum backup/package/* > backup/package/SHA256SUMS.txt
+          cat > backup/package/RESTORE_INFO.txt <<'EOF'
+          VATTAMS HOME SERVICES — ENCRYPTED PRODUCTION DATA BACKUP
+          Database: Supabase PostgreSQL
+          Storage buckets: technician-docs, technician-photos
+          Encryption: AES-256-CBC + RSA-OAEP-SHA256
+          The private RSA key is NOT stored in GitHub.
+          Keep the private key in a separate secure location.
+          EOF
+
+      - name: Upload encrypted backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VATTAMS_Home_Services_Encrypted_Production_Data_Backup_2026-10-07
+          path: backup/package/
+          retention-days: 90
