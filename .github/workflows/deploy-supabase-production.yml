@@ -25,7 +25,20 @@ jobs:
           test -n "$SUPABASE_ACCESS_TOKEN" || { echo "Missing SUPABASE_ACCESS_TOKEN repository secret"; exit 1; }
 
       - name: Install Supabase CLI
-        run: npm install -g supabase
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Verify Supabase Management API access
+        run: |
+          code="$(curl -sS -o /tmp/supabase-project.json -w "%{http_code}" \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF")"
+          if [ "$code" != "200" ]; then
+            echo "Supabase Management API authorization failed (HTTP $code)."
+            exit 1
+          fi
+          echo "Supabase Management API access verified for the production project."
 
       - name: Link production project
         run: supabase link --project-ref "$SUPABASE_PROJECT_REF"
