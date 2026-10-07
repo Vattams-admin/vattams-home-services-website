@@ -1,0 +1,42 @@
+name: Full Project Backup
+
+on:
+  push:
+    branches:
+      - backup/full-project-2026-10-07
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout full Git history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create A-Z source archive
+        run: |
+          mkdir -p backup
+          tar --exclude='./backup' --exclude='./node_modules' -czf backup/VATTAMS_Home_Services_source_A-Z_2026-10-07.tar.gz .
+          sha256sum backup/VATTAMS_Home_Services_source_A-Z_2026-10-07.tar.gz > backup/SHA256SUMS.txt
+          cat > backup/BACKUP_MANIFEST.txt <<'EOF'
+          VATTAMS HOME SERVICES — A-Z SOURCE BACKUP
+          Repository: Vattams-admin/vattams-home-services-website
+          Branch: backup/full-project-2026-10-07
+          Full Git history: included via fetch-depth: 0
+          node_modules: intentionally excluded (reproducible from package-lock.json)
+          Secrets/API keys/service-account keys: not included
+          Production database/storage/auth data: not included in source archive
+          EOF
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VATTAMS_Home_Services_A-Z_Source_Backup_2026-10-07
+          path: backup/
+          retention-days: 90
