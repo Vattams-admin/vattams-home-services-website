@@ -39,6 +39,23 @@ const KNOWN_PAGES: Page[] = [
   'not-found',
 ];
 
+const CUSTOMER_PROTECTED_PAGES = new Set<Page>([
+  'customer-profile',
+  'customer-bookings',
+  'customer-dashboard',
+  'customer-payments',
+  'customer-reviews',
+  'customer-support',
+]);
+
+const TECHNICIAN_PROTECTED_PAGES = new Set<Page>([
+  'technician-dashboard',
+]);
+
+const ADMIN_PROTECTED_PAGES = new Set<Page>([
+  'admin-dashboard',
+]);
+
 interface RouteState {
   page: Page;
   citySlug?: string;
@@ -49,6 +66,26 @@ interface RouterContextValue extends RouteState {
 }
 
 const RouterContext = createContext<RouterContextValue | undefined>(undefined);
+
+function hasSession(key: string): boolean {
+  return typeof window !== 'undefined' && Boolean(sessionStorage.getItem(key));
+}
+
+function guardRoute(route: RouteState): RouteState {
+  if (CUSTOMER_PROTECTED_PAGES.has(route.page) && !hasSession('vattams_customer_session')) {
+    return { page: 'customer-login' };
+  }
+
+  if (TECHNICIAN_PROTECTED_PAGES.has(route.page) && !hasSession('vattams_technician_session')) {
+    return { page: 'technician-login' };
+  }
+
+  if (ADMIN_PROTECTED_PAGES.has(route.page) && !hasSession('vattams_admin')) {
+    return { page: 'admin-login' };
+  }
+
+  return route;
+}
 
 function parseHash(rawHash: string): RouteState {
   let hash = rawHash.replace(/^#\/?/, '').trim();
@@ -64,7 +101,7 @@ function parseHash(rawHash: string): RouteState {
   }
 
   if ((KNOWN_PAGES as string[]).includes(hash)) {
-    return { page: hash as Page };
+    return guardRoute({ page: hash as Page });
   }
 
   if (hash.startsWith('city-')) {
@@ -97,10 +134,11 @@ export function RouterProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const navigate = (page: Page, slug?: string) => {
-    const nextHash = buildHash(page, slug);
+    const guarded = guardRoute({ page, ...(slug ? { citySlug: slug } : {}) });
+    const nextHash = buildHash(guarded.page, guarded.citySlug);
 
     if (window.location.hash.replace(/^#/, '') === nextHash) {
-      setRoute(parseHash(nextHash));
+      setRoute(guarded);
     } else {
       window.location.hash = nextHash;
     }
