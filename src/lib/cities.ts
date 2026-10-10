@@ -27,7 +27,7 @@ export const SERVICE_CATEGORIES = services;
 function generateFAQs(cityName: string): { q: string; a: string }[] {
   return [
     {
-      q: `How do I book a home service in ${cityName} with VATTAMS?`,
+      q: `How do I book appliance service in ${cityName} with VATTAMS?`,
       a: `Booking a service in ${cityName} is simple. Click the "Book Now" button, fill in your details including your address in ${cityName}, select the service you need, and choose a preferred time slot. Our verified technician in ${cityName} will be assigned to you promptly.`,
     },
     {
@@ -98,8 +98,8 @@ function generateTestimonials(cityName: string, areas: string[]): { name: string
 function generateContentSections(cityName: string, knownFor: string, population: string): { heading: string; body: string }[] {
   return [
     {
-      heading: `Professional Home Services in ${cityName}`,
-      body: `${cityName} is a vibrant city with a growing population of over ${population} residents. As ${cityName} continues to expand, the demand for reliable, professional home services has never been higher. VATTAMS Home Services focuses on doorstep AC, washing machine and refrigerator service in ${cityName}. Whether you need AC repair during ${cityName}'s hot summer months or help with a washing machine or refrigerator, check available appointments through our booking flow.`,
+      heading: `Appliance Service in ${cityName}`, 
+      body: `${cityName} is a vibrant city with a growing population of over ${population} residents. As ${cityName} continues to expand, the need for dependable appliance service remains important. VATTAMS Home Services focuses on doorstep AC, washing machine and refrigerator service in ${cityName}. Whether you need AC repair during ${cityName}'s hot summer months or help with a washing machine or refrigerator, check available appointments through our booking flow.`,
     },
     {
       heading: `Why Choose VATTAMS in ${cityName}?`,
@@ -127,7 +127,7 @@ function generateContentSections(cityName: string, knownFor: string, population:
     },
     {
       heading: `Booking Process for ${cityName} Residents`,
-      body: `Booking a home service in ${cityName} with VATTAMS takes less than 2 minutes. Simply click "Book Now," enter your ${cityName} address, select the service category, describe your issue, and choose a convenient time slot. You'll receive a booking confirmation with your unique booking number. Our system automatically matches your request with the nearest qualified technician in ${cityName}. You can track your booking, chat with your technician, and make payments — all through our platform designed for ${cityName} customers.`,
+      body: `Booking appliance service in ${cityName} with VATTAMS takes less than 2 minutes. Simply click "Book Now," enter your ${cityName} address, select the service category, describe your issue, and choose a convenient time slot. You'll receive a booking confirmation with your unique booking number. Our system automatically matches your request with the nearest qualified technician in ${cityName}. You can track your booking, chat with your technician, and make payments — all through our platform designed for ${cityName} customers.`,
     },
     {
       heading: `Service Areas and Coverage in ${cityName}`,
@@ -135,7 +135,7 @@ function generateContentSections(cityName: string, knownFor: string, population:
     },
     {
       heading: `Customer Satisfaction in ${cityName}`,
-      body: `Our commitment to ${cityName} customers goes beyond just fixing appliances. We believe in building long-term trust with every service call in ${cityName}. After each job, customers can rate their experience and leave reviews, helping us maintain our high service standards. Our ${cityName} customer support team is available via WhatsApp and phone to address any concerns. With hundreds of satisfied customers across ${cityName}, VATTAMS has become the trusted option for appliance care.`,
+      body: `Our commitment to ${cityName} customers goes beyond just fixing appliances. We believe in building long-term trust with every service call in ${cityName}. After each job, customers can rate their experience and leave reviews, helping us maintain our high service standards. Our ${cityName} customer support team is available via WhatsApp and phone to address any concerns. With hundreds of satisfied customers across ${cityName}, VATTAMS aims to make appliance care easier to book.`,
     },
   ];
 }
