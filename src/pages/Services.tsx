@@ -1,14 +1,25 @@
 import { useState, useEffect } from 'react';
-import { Wind, Sparkles, Thermometer, Zap, RotateCw, Flame, Droplets, Wrench, Refrigerator, Camera, ArrowRight, Loader, Check, LucideIcon, Briefcase } from 'lucide-react';
+import { Wind, Refrigerator, WashingMachine, ArrowRight, Loader, Check, LucideIcon, Briefcase } from 'lucide-react';
 import { supabase, ServiceCategory } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import JoinTechnicianButton from '@/components/JoinTechnicianButton';
 import { useSEO } from '@/lib/seo';
 
 const iconMap: Record<string, LucideIcon> = {
-  wind: Wind, sparkles: Sparkles, thermometer: Thermometer, zap: Zap,
-  'rotate-cw': RotateCw, flame: Flame, droplets: Droplets, wrench: Wrench,
-  refrigerator: Refrigerator, camera: Camera,
+  wind: Wind, refrigerator: Refrigerator, 'washing-machine': WashingMachine,
+};
+const isFeaturedApplianceService = (name: string) => {
+  const value = name.trim().toLowerCase();
+  return /(^|\\W)ac(\\W|$)|air\\s*condition/.test(value)
+    || value.includes('washing machine')
+    || value.includes('refrigerator')
+    || value.includes('fridge');
+};
+const getApplianceIcon = (name: string, icon: string | null): LucideIcon => {
+  const value = name.toLowerCase();
+  if (value.includes('washing machine')) return WashingMachine;
+  if (value.includes('refrigerator') || value.includes('fridge')) return Refrigerator;
+  return iconMap[icon ?? 'wind'] ?? Wind;
 };
 
 const colorPalette = [
@@ -21,9 +32,9 @@ export default function Services() {
   const [loading, setLoading] = useState(true);
 
   useSEO({
-    title: 'VATTAMS Home Services | Home Appliance & Professional Services Across India',
+    title: 'VATTAMS Home Services | Premium AC, Washing Machine & Refrigerator Care',
     description:
-      'Book AC Service, Washing Machine Service, Refrigerator Service, CCTV Installation, Plumbing, and Electrical Services with VATTAMS — verified professionals across India.',
+      'Book premium AC, washing machine and refrigerator service with VATTAMS. Convenient doorstep booking and dedicated appliance-care support.',
     path: '/#services',
   });
 
@@ -41,7 +52,7 @@ export default function Services() {
         return;
       }
 
-      setServices(data || []);
+      setServices((data || []).filter((service) => isFeaturedApplianceService(service.name)));
     } catch (err) {
       console.error('Unexpected Error:', err);
       setServices([]);
@@ -62,10 +73,10 @@ export default function Services() {
             Our Services
           </div>
           <h1 className="font-display text-3xl md:text-5xl font-bold text-white mb-4">
-            Professional Home Services
+            Premium Appliance Services
           </h1>
           <p className="text-navy-100 max-w-xl mx-auto text-base md:text-lg">
-            From AC installation to plumbing — we cover all your home appliance needs with certified technicians.
+            Specialist care for air conditioners, washing machines and refrigerators — with a booking experience designed around your home.
           </p>
         </div>
       </section>
@@ -80,7 +91,7 @@ export default function Services() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {services.map((svc, i) => {
-                const Icon = iconMap[svc.icon ?? 'zap'] ?? Zap;
+                const Icon = getApplianceIcon(svc.name, svc.icon);
                 const gradient = colorPalette[i % colorPalette.length];
                 return (
                   <div
