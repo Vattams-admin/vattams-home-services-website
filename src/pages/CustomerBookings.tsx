@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Loader, CheckCircle, XCircle, Calendar, User, Phone, MapPin, Wrench, FileText, Clock, ArrowRight, LogIn, Receipt, LucideIcon, Tag, Briefcase, Sparkles } from 'lucide-react';
 import { supabase, ServiceCategory, Customer, ServicePrice } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
-import { notifyCustomer, notifyAdmin } from '@/lib/notifications';
+import { notifyCustomer } from '@/lib/notifications';
 import { getPricingFromServicePrice, calculatePricing, formatINR, type PricingBreakdown } from '@/lib/pricing';
 import { validateCoupon, type Coupon } from '@/lib/coupons';
 
@@ -124,7 +124,6 @@ export default function Booking() {
 
     await Promise.all([
       notifyCustomer.bookingReceived(form.mobile_number, data.booking_number, data.id, data.booking_action_token),
-      notifyAdmin.newBooking(data.booking_number, form.customer_name, form.service_category, data.id, data.booking_action_token),
     ]);
 
     // Automatically find and assign the best matching technician (no manual
