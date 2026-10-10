@@ -20,7 +20,7 @@ import { refreshSocialLinksCache } from '@/components/SocialLinks';
 import NotificationCenter from '@/components/NotificationCenter';
 import PushNotificationSetup from '@/components/PushNotificationSetup';
 import {
-  notifyCustomer, notifyTechnician, notifyAdmin,
+  notifyCustomer, notifyTechnician,
   sendAnnouncementToTechnicians, sendAnnouncementToCustomers,
   NotificationRow,
 } from '@/lib/notifications';

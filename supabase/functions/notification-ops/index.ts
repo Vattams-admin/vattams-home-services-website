@@ -20,7 +20,10 @@ Deno.serve(async req=>{
 
     let authorized=false;
     const admin=await session(String(b.admin_session_token||""),"admin_auth_sessions");
-    if(admin?.admin_id && String(admin.admin_id)===String(b.admin_id||"")) authorized=true;
+    if(admin?.admin_id && String(admin.admin_id)===String(b.admin_id||"")){
+      const {data:adminUser}=await db.from("admin_users").select("role,is_active").eq("id",admin.admin_id).maybeSingle();
+      if(adminUser?.role==="super_admin" && adminUser.is_active===true) authorized=true;
+    }
 
     if(!authorized){
       const tech=await session(String(b.technician_session_token||""),"technician_auth_sessions");
@@ -38,9 +41,7 @@ Deno.serve(async req=>{
     if(!authorized && b.booking_action_token){
       const {data:booking}=await db.from("bookings").select("id,booking_action_token,mobile_number,customer_id,assigned_technician_id").eq("booking_action_token",b.booking_action_token).maybeSingle();
       if(booking && String(booking.booking_action_token)===String(b.booking_action_token)){
-        if(input.recipientType==="customer" && String(input.recipientId)===String(booking.mobile_number)) authorized=true;
-        if(input.recipientType==="admin" && input.recipientId==="admin") authorized=true;
-        if(input.recipientType==="technician" && booking.assigned_technician_id && String(input.recipientId)===String(booking.assigned_technician_id)) authorized=true;
+        if(input.recipientType==="customer" && input.type==="booking_received" && input.referenceType==="booking" && String(input.referenceId)===String(booking.id) && String(input.recipientId)===String(booking.mobile_number)) authorized=true;
       }
     }
 

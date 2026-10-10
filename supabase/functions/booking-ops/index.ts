@@ -18,6 +18,36 @@ function generateOTP(): string {
   return String(Math.floor(1000 + Math.random() * 9000));
 }
 
+async function dispatchPush(
+  userType: "customer" | "technician" | "admin",
+  userId: string,
+  title: string,
+  body: string,
+  data: Record<string, string>,
+): Promise<void> {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error("[booking-ops] push dispatch skipped: server configuration missing");
+    return;
+  }
+  try {
+    const response = await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${serviceRoleKey}`,
+      },
+      body: JSON.stringify({ userType, userId, title, body, data }),
+    });
+    if (!response.ok) {
+      console.error("[booking-ops] push dispatch failed", { userType, status: response.status });
+    }
+  } catch (error) {
+    console.error("[booking-ops] push dispatch failed", error instanceof Error ? error.message : "unknown");
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
@@ -119,6 +149,34 @@ Deno.serve(async (req: Request) => {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
+      }
+
+      // Create the admin alert server-side. A booking-action token is a customer
+      // capability and must never be used to impersonate an administrator.
+      const adminNotificationTitle = "New Booking";
+      const adminNotificationMessage = `${data.booking_number} — ${row.customer_name} requested ${row.service_category}.`;
+      const { error: adminNotificationError } = await supabase.from("notifications").insert({
+        recipient_type: "admin",
+        recipient_id: "admin",
+        title: adminNotificationTitle,
+        message: adminNotificationMessage,
+        type: "new_booking",
+        reference_type: "booking",
+        reference_id: String(data.id),
+        channels: ["in_app", "push"],
+        status: "sent",
+        is_read: false,
+      });
+      if (adminNotificationError) {
+        console.error("[booking-ops create_booking] admin notification insert failed");
+      } else {
+        const publicAppUrl = Deno.env.get("PUBLIC_APP_URL") || "https://vattams.net";
+        await dispatchPush("admin", "admin", adminNotificationTitle, adminNotificationMessage, {
+          type: "new_booking",
+          referenceType: "booking",
+          referenceId: String(data.id),
+          url: new URL("/#/admin-dashboard", publicAppUrl).toString(),
+        });
       }
 
       return new Response(JSON.stringify({ data }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -273,6 +331,19 @@ Deno.serve(async (req: Request) => {
         console.error("[booking-ops auto_assign] shared notifications (technician) insert error:", sharedTechNotifError);
       } else {
         notificationCreated = true;
+        const publicAppUrl = Deno.env.get("PUBLIC_APP_URL") || "https://vattams.net";
+        await dispatchPush(
+          "technician",
+          chosen.id,
+          "New Job Assigned",
+          `You've been assigned a new ${booking.service_category} job (Booking #${booking.booking_number}). Check your dashboard for details.`,
+          {
+            type: "job_assigned",
+            referenceType: "job",
+            referenceId: String((jobData?.id as string | undefined) ?? ""),
+            url: new URL("/#/technician-dashboard", publicAppUrl).toString(),
+          },
+        );
       }
 
       const { error: customerNotifError } = await supabase.from("notifications").insert({
@@ -291,6 +362,19 @@ Deno.serve(async (req: Request) => {
         console.error("[booking-ops auto_assign] shared notifications (customer) insert error:", customerNotifError);
       } else {
         customerNotificationCreated = true;
+        const publicAppUrl = Deno.env.get("PUBLIC_APP_URL") || "https://vattams.net";
+        await dispatchPush(
+          "customer",
+          String(booking.mobile_number),
+          "Technician Assigned",
+          `${chosen.full_name ?? "A technician"} has been assigned to your booking ${booking.booking_number}.`,
+          {
+            type: "technician_assigned",
+            referenceType: "booking",
+            referenceId: String(booking_id),
+            url: new URL("/#/customer-dashboard", publicAppUrl).toString(),
+          },
+        );
       }
 
       return new Response(JSON.stringify({
