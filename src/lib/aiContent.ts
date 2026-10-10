@@ -100,7 +100,7 @@ export function generateBlogPost(topic: string, service?: string): Omit<ContentD
 
 export function generateCityPage(city: string, services: string[]): Omit<ContentDraft, 'id' | 'created_at' | 'status' | 'platform_url'> {
   const allowedServices = services.filter((s) => /^(AC (Repair|Service)|Washing Machine( Repair| Service)?|Refrigerator( Repair| Service)?)$/i.test(s));
-  const serviceList = allowedServices.map((s) => `- ${s} in ${city}`).join('\\n');
+  const serviceList = allowedServices.map((s) => `- ${s} in ${city}`).join('\n');
   const body = `# Appliance Service in ${city}\n\nVATTAMS focuses on AC, washing machine and refrigerator service in ${city}. Appointment availability depends on local technician coverage.\n\n## Services Available\n\n${serviceList}\n\n## Why Choose VATTAMS in ${city}?\n\n- Local technicians familiar with ${city} neighborhoods\n- Fast response times across ${city}\n- Transparent pricing\n- Quality service guaranteed\n\n## Service Areas in ${city}\n\nWe cover all major areas in ${city}. Book your service today and experience the VATTAMS difference.`;
 
   return {
