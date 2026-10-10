@@ -94,6 +94,8 @@ export function getPricingFromServicePrice(sp: ServicePrice): PricingBreakdown {
     Number(sp.gst_rate),
     Number(sp.platform_fee),
     Number(sp.commission_rate),
+    0,
+    Number(sp.call_rate_fee) || 0,
   );
 }
 
