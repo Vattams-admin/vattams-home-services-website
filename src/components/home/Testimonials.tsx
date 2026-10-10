@@ -54,7 +54,7 @@ export default function Testimonials() {
             What Our Customers Say
           </h2>
           <p className="text-gray-500 max-w-xl mx-auto">
-            Thousands of happy customers across India trust VATTAMS for their home service needs.
+            Discover feedback on AC, washing machine and refrigerator service from VATTAMS customers.
           </p>
         </div>
 
