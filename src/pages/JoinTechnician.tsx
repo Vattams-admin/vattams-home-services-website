@@ -86,21 +86,9 @@ const BENEFITS = [
 ];
 
 const SERVICE_KEYWORDS = [
-  'Electrician Jobs',
-  'Plumber Jobs',
   'AC Technician Jobs',
-  'RO Technician Jobs',
-  'Carpenter Jobs',
-  'Painter Jobs',
-  'House Cleaning Jobs',
-  'CCTV Technician Jobs',
-  'Home Appliance Repair Jobs',
-  'Pest Control Jobs',
-  'Water Tank Cleaning Jobs',
-  'Laundry Jobs',
-  'Gardening Jobs',
-  'Packers & Movers Jobs',
-  'Driver Jobs',
+  'Washing Machine Technician Jobs',
+  'Refrigerator Technician Jobs',
 ];
 
 const CITIES = [
