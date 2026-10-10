@@ -9,6 +9,14 @@ import { cities } from '@/lib/cities';
 
 const bookingCities = [...cities.map((c) => c.name), 'Other'];
 
+const isFeaturedApplianceService = (name: string) => {
+  const value = name.trim().toLowerCase();
+  return /(^|\\W)ac(\\W|$)|air\\s*condition/.test(value)
+    || value.includes('washing machine')
+    || value.includes('refrigerator')
+    || value.includes('fridge');
+};
+
 const timeSlots = ['07:00 - 09:00', '09:00 - 11:00', '11:00 - 13:00', '13:00 - 15:00', '15:00 - 17:00', '17:00 - 19:00', '19:00 - 21:00'];
 
 export default function Booking() {
@@ -50,12 +58,13 @@ export default function Booking() {
       supabase.from('service_prices').select('*').eq('is_active', true),
     ]).then(([catRes, priceRes]) => {
       if (catRes.data) {
-        setServices(catRes.data);
-        if (catRes.data[0]) setForm((f) => ({ ...f, service_category: catRes.data[0].name }));
+        const featuredServices = catRes.data.filter((service) => isFeaturedApplianceService(service.name));
+        setServices(featuredServices);
+        if (featuredServices[0]) setForm((f) => ({ ...f, service_category: featuredServices[0].name }));
       }
       if (priceRes.data) {
         const map: Record<string, ServicePrice> = {};
-        (priceRes.data as ServicePrice[]).forEach((sp) => { map[sp.service_name] = sp; });
+        (priceRes.data as ServicePrice[]).filter((sp) => isFeaturedApplianceService(sp.service_name)).forEach((sp) => { map[sp.service_name] = sp; });
         setServicePrices(map);
       }
       setLoading(false);
@@ -80,6 +89,10 @@ export default function Booking() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isFeaturedApplianceService(form.service_category)) {
+      alert('Please select AC, washing machine, or refrigerator service.');
+      return;
+    }
     setSubmitting(true);
     const { data, error } = await supabase.functions.invoke('booking-ops', {
       body: {
@@ -172,9 +185,9 @@ export default function Booking() {
     <div className="pt-20 md:pt-24">
       <section className="bg-navy-950 py-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-3">Book a Service</h1>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-3">Book Appliance Service</h1>
           <p className="text-navy-100 max-w-lg mx-auto">
-            Fill in the details below and our team will reach out to confirm your booking.
+            Choose AC, washing machine or refrigerator service and tell us how we can help.
           </p>
         </div>
       </section>
