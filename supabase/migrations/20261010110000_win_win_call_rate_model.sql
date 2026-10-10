@@ -1,6 +1,6 @@
 -- Win-win fixed call-rate model for VATTAMS HOME SERVICES.
--- A technician owes one fixed fee only after a booking is completed.
--- No simultaneous customer platform fee or percentage commission.
+-- A technician owes one fixed success fee only after a booking is completed.
+-- A modest customer platform fee is disclosed at checkout; no percentage commission.
 -- Historical bookings keep a zero call-rate snapshot to avoid retroactive charges.
 
 ALTER TABLE public.service_prices
@@ -21,10 +21,10 @@ ALTER TABLE public.technician_jobs
 UPDATE public.service_prices
 SET
   call_rate_fee = CASE
-    WHEN service_name IN ('AC Repair', 'AC Service') THEN 35
-    ELSE 25
+    WHEN service_name IN ('AC Repair', 'AC Service') THEN 49
+    ELSE 39
   END,
-  platform_fee = 0,
+  platform_fee = 30,
   commission_rate = 0,
   updated_at = now()
 WHERE is_active = true
@@ -35,8 +35,8 @@ WHERE is_active = true
   );
 
 ALTER TABLE public.service_prices
-  ALTER COLUMN call_rate_fee SET DEFAULT 25,
-  ALTER COLUMN platform_fee SET DEFAULT 0,
+  ALTER COLUMN call_rate_fee SET DEFAULT 39,
+  ALTER COLUMN platform_fee SET DEFAULT 30,
   ALTER COLUMN commission_rate SET DEFAULT 0;
 
 -- Avoid locking a technician after a single small call-rate fee.
