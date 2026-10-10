@@ -75,7 +75,7 @@ export default function TechnicianLogin() {
             </div>
             <h1 className="text-2xl font-extrabold text-white mb-1">Technician Login</h1>
             <p className="text-[#e8dcc0] text-sm">
-  Login using your registered mobile number or email address and password.
+  Sign in to manage your Call Rate Jobs, assigned service requests and eligible earnings. Use your registered mobile number or email and password.
 </p>
           </div>
 
