@@ -261,7 +261,7 @@ Deno.serve(async (req: Request) => {
         });
       }
 
-      // "Best" match: highest rating first, then most completed jobs (experience) as tiebreaker.
+      // Fair distribution: online technicians first, then lower workload, then rating; total jobs breaks remaining ties.
       free.sort((a, b) => Number(b.is_online === true) - Number(a.is_online === true) || (Number(a.current_workload || 0) - Number(b.current_workload || 0)) || (Number(b.rating || 0) - Number(a.rating || 0)) || (Number(a.total_jobs || 0) - Number(b.total_jobs || 0)));
       const chosen = free[0];
 
