@@ -61,6 +61,8 @@ ALTER TABLE public.wallet_transactions
     'deposit_lock'::text,
     'deposit_release'::text,
     'commission_deduction'::text,
+    'platform_fee_remittance'::text,
+    'gst_remittance'::text,
     'call_rate_fee'::text,
     'recharge_credit'::text,
     'recharge_debit'::text,
@@ -91,22 +93,42 @@ BEGIN
 
     SELECT * INTO settings FROM public.wallet_settings LIMIT 1;
 
-    -- The call rate is a fixed success fee. It is only due after completion;
-    -- rejected, cancelled, or uncompleted bookings are not charged.
-    due_amount := COALESCE(NEW.call_rate_fee, 0);
+    -- The technician remits customer platform fee and tax components, plus
+    -- the fixed call-rate success fee. Only completed bookings create dues.
+    due_amount := COALESCE(NEW.platform_fee, 0)
+      + COALESCE(NEW.gst_amount, 0)
+      + COALESCE(NEW.call_rate_fee, 0);
 
     IF due_amount > 0 THEN
       UPDATE public.technicians
       SET commission_due = commission_due + due_amount
       WHERE id = tech_id;
 
-      INSERT INTO public.wallet_transactions (technician_id, type, amount, booking_id, description)
-      VALUES (tech_id, 'call_rate_fee', due_amount, NEW.id,
-        'Fixed call-rate fee for completed booking ' || NEW.booking_number);
+      IF COALESCE(NEW.platform_fee, 0) > 0 THEN
+        INSERT INTO public.wallet_transactions (technician_id, type, amount, booking_id, description)
+        VALUES (tech_id, 'platform_fee_remittance', NEW.platform_fee, NEW.id,
+          'Customer platform fee remittance for completed booking ' || NEW.booking_number);
+      END IF;
+
+      IF COALESCE(NEW.gst_amount, 0) > 0 THEN
+        INSERT INTO public.wallet_transactions (technician_id, type, amount, booking_id, description)
+        VALUES (tech_id, 'gst_remittance', NEW.gst_amount, NEW.id,
+          'Customer tax component remittance for completed booking ' || NEW.booking_number);
+      END IF;
+
+      IF COALESCE(NEW.call_rate_fee, 0) > 0 THEN
+        INSERT INTO public.wallet_transactions (technician_id, type, amount, booking_id, description)
+        VALUES (tech_id, 'call_rate_fee', NEW.call_rate_fee, NEW.id,
+          'Fixed call-rate fee for completed booking ' || NEW.booking_number);
+      END IF;
 
       INSERT INTO public.technician_notifications (technician_id, type, title, message)
-      VALUES (tech_id, 'call_rate_fee', 'Call Rate Fee Recorded',
-        'Rs ' || due_amount || ' call-rate fee recorded for completed booking ' || NEW.booking_number || '. No call-rate fee applies to incomplete or cancelled jobs.');
+      VALUES (tech_id, 'call_rate_fee', 'Call Rate & Remittance Dues Recorded',
+        'Rs ' || due_amount || ' total is due for completed booking ' || NEW.booking_number
+        || ': customer platform fee Rs ' || COALESCE(NEW.platform_fee, 0)
+        || ', customer tax component Rs ' || COALESCE(NEW.gst_amount, 0)
+        || ', fixed call-rate fee Rs ' || COALESCE(NEW.call_rate_fee, 0)
+        || '. No call-rate fee applies to incomplete or cancelled jobs.');
     END IF;
 
     UPDATE public.technicians
@@ -144,7 +166,7 @@ BEGIN
       IF FOUND THEN
         INSERT INTO public.technician_notifications (technician_id, type, title, message)
         VALUES (tech_id, 'account_locked', 'Account Paused — Call Rate Dues',
-          'Your outstanding call-rate fees exceed Rs ' || settings.lock_threshold || '. Please clear the outstanding balance to receive new jobs.');
+          'Your outstanding call-rate fees exceed Rs ' || settings.lock_threshold || '. Please clear outstanding customer platform-fee, tax-remittance and call-rate dues to receive new jobs.');
       END IF;
     END IF;
 
@@ -206,13 +228,13 @@ BEGIN
       IF FOUND THEN
         INSERT INTO public.technician_notifications (technician_id, type, title, message)
         VALUES (NEW.technician_id, 'account_unlocked', 'Account Unlocked',
-          'Your outstanding call-rate fees are within the allowed limit. You can receive new jobs again.');
+          'Your outstanding platform-fee, tax-remittance and call-rate dues are within the allowed limit. You can receive new jobs again.');
       END IF;
     END IF;
 
     INSERT INTO public.technician_notifications (technician_id, type, title, message)
     VALUES (NEW.technician_id, 'recharge_approved', 'Payment Approved',
-      'Your payment of Rs ' || NEW.amount || ' has been applied to outstanding call-rate fees first. Remaining wallet credit: Rs ' || wallet_credit || '.');
+      'Your payment of Rs ' || NEW.amount || ' has been applied to outstanding platform-fee, tax-remittance and call-rate dues first. Remaining wallet credit: Rs ' || wallet_credit || '.');
 
     PERFORM public.recalc_available_balance(NEW.technician_id);
   END IF;
