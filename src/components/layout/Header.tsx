@@ -168,7 +168,7 @@ export default function Header() {
               onClick={() => goTo('join-technician')}
               className="px-3 py-2 rounded-lg text-sm font-semibold text-[#a47c00] hover:bg-[#f8f4e8]"
             >
-              Join as a Technician
+              Call Rate Jobs • Join
             </button>
           </nav>
 
