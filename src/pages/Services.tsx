@@ -10,7 +10,7 @@ const iconMap: Record<string, LucideIcon> = {
 };
 const isFeaturedApplianceService = (name: string) => {
   const value = name.trim().toLowerCase();
-  return /(^|\\W)ac(\\W|$)|air\\s*condition/.test(value)
+  return /(^|\W)ac(\W|$)|air\s*condition/.test(value)
     || value.includes('washing machine')
     || value.includes('refrigerator')
     || value.includes('fridge');
