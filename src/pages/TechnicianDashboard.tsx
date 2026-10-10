@@ -1528,7 +1528,7 @@ function JobCard({
                   <span className="text-xs font-extrabold uppercase tracking-wide text-[#795d0c]">Fixed call-rate fee</span>
                   <span className="text-sm font-extrabold text-[#0b1f3a]">{formatMoney(Number(job.call_rate_fee))}</span>
                 </div>
-                <p className="mt-1 text-xs leading-5 text-gray-600">Charged only after completion. Rejected, cancelled and uncompleted jobs have no call-rate fee. No percentage commission; the customer platform fee is shown separately at checkout.</p>
+                <p className="mt-1 text-xs leading-5 text-gray-600">The fixed call-rate fee applies only after completion. Rejected, cancelled and uncompleted jobs have no call-rate fee. No percentage commission; customer platform fee and tax are separate checkout components.</p>
               </div>
             )}
 
@@ -1760,7 +1760,7 @@ function WalletSection({
         />
 
         <WalletCard
-          title="Call Rate Dues"
+          title="Platform, Tax & Call-Rate Dues"
           value={formatMoney(
             technician.commission_due
           )}
@@ -1781,7 +1781,7 @@ function WalletSection({
             </h2>
 
             <p className="text-xs text-gray-500">
-              Approved payments clear outstanding call-rate dues first; any remaining amount becomes wallet credit.
+              Approved payments clear customer platform-fee, tax-remittance and call-rate dues first; any remaining amount becomes wallet credit.
             </p>
           </div>
         </div>
