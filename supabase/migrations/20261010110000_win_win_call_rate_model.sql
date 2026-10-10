@@ -35,7 +35,9 @@ WHERE is_active = true
   );
 
 ALTER TABLE public.service_prices
-  ALTER COLUMN call_rate_fee SET DEFAULT 25;
+  ALTER COLUMN call_rate_fee SET DEFAULT 25,
+  ALTER COLUMN platform_fee SET DEFAULT 0,
+  ALTER COLUMN commission_rate SET DEFAULT 0;
 
 -- Avoid locking a technician after a single small call-rate fee.
 UPDATE public.wallet_settings
