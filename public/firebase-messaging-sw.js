@@ -1,11 +1,14 @@
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const targetUrl = (event.notification.data && event.notification.data.url) || '/';
+  const requestedUrl = (event.notification.data && event.notification.data.url) || '/';
+  const targetUrl = new URL(requestedUrl, self.location.origin).href;
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async (clientList) => {
       for (const client of clientList) {
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
-          client.postMessage({ type: 'notification_click', url: targetUrl });
+        if (new URL(client.url).origin === self.location.origin && 'focus' in client) {
+          if ('navigate' in client && client.url !== targetUrl) {
+            await client.navigate(targetUrl);
+          }
           return client.focus();
         }
       }
