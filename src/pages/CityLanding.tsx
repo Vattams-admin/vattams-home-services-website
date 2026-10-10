@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import {
   Phone, MessageCircle, MapPin, Star, ChevronRight, Wrench,
-  Zap, Droplet, Wind, Camera, Snowflake, WashingMachine, Microwave,
+  Wind, Snowflake, WashingMachine,
   CheckCircle, ArrowRight, Clock, ShieldCheck, Award, ThumbsUp, Briefcase,
 } from 'lucide-react';
 import { CityData, SERVICE_CATEGORIES, cities } from '@/lib/cities';
@@ -10,13 +10,8 @@ import { useRouter } from '@/lib/router';
 const serviceIcons: Record<string, typeof Wrench> = {
   'AC Repair': Wind,
   'AC Service': Snowflake,
-  'Electrician': Zap,
-  'Plumbing': Droplet,
   'Washing Machine Repair': WashingMachine,
   'Refrigerator Repair': Snowflake,
-  'RO Water Purifier': Droplet,
-  'Microwave Repair': Microwave,
-  'CCTV Installation': Camera,
 };
 
 function buildSchema(city: CityData) {
@@ -57,7 +52,7 @@ function buildSchema(city: CityData) {
 
   const faqSchema = {
     '@type': 'FAQPage',
-    mainEntity: city.faqs.map((f) => ({
+    mainEntity: city.faqs.filter((f) => !/CCTV|electrical|plumbing|RO water|water purifier|microwave|electrician/i.test(`${f.q} ${f.a}`)).map((f) => ({
       '@type': 'Question',
       name: f.q,
       acceptedAnswer: { '@type': 'Answer', text: f.a },
@@ -86,7 +81,7 @@ function injectMetaTags(city: CityData) {
   const tags: { name?: string; property?: string; content: string; key: string }[] = [
     { name: 'title', content: city.seoTitle, key: 'meta-title' },
     { name: 'description', content: city.metaDescription, key: 'meta-desc' },
-    { name: 'keywords', content: `${city.name} home services, AC repair ${city.name}, electrician ${city.name}, plumbing ${city.name}, washing machine repair ${city.name}, refrigerator repair ${city.name}, RO service ${city.name}, CCTV installation ${city.name}, VATTAMS ${city.name}`, key: 'meta-keywords' },
+    { name: 'keywords', content: `${city.name} appliance service, AC repair ${city.name}, washing machine repair ${city.name}, refrigerator repair ${city.name}, VATTAMS ${city.name}`, key: 'meta-keywords' },
     { property: 'og:title', content: city.seoTitle, key: 'og-title' },
     { property: 'og:description', content: city.metaDescription, key: 'og-desc' },
     { property: 'og:type', content: 'website', key: 'og-type' },
@@ -225,7 +220,7 @@ export default function CityLanding({ city }: { city: CityData }) {
       {/* Content sections */}
       <section className="py-16 md:py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          {city.contentSections.map((sec, idx) => (
+          {city.contentSections.filter((sec) => /AC|Air Conditioner|Washing Machine|Refrigerator|Appliance/i.test(sec.heading)).map((sec, idx) => (
             <div key={idx} className="mb-10">
               <h2 className="font-display text-2xl md:text-3xl font-bold text-[#0b1f3a] mb-4">{sec.heading}</h2>
               <p className="text-gray-600 leading-relaxed text-base">{sec.body}</p>
@@ -311,7 +306,7 @@ export default function CityLanding({ city }: { city: CityData }) {
           <h2 className="font-display text-3xl font-bold text-[#0b1f3a] text-center mb-4">Customer Reviews in {city.name}</h2>
           <p className="text-gray-500 text-center mb-12">Real reviews from {city.name} customers who trusted VATTAMS</p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {city.testimonials.map((t, idx) => (
+            {city.testimonials.filter((t) => /AC|washing machine|refrigerator|appliance/i.test(t.text)).map((t, idx) => (
               <div key={idx} className="bg-white rounded-2xl border border-[#e8e1d2] shadow-sm p-6">
                 <div className="flex items-center gap-1 mb-3">
                   {[...Array(t.rating)].map((_, i) => (
@@ -340,7 +335,7 @@ export default function CityLanding({ city }: { city: CityData }) {
           <h2 className="font-display text-3xl font-bold text-[#0b1f3a] text-center mb-4">Frequently Asked Questions — {city.name}</h2>
           <p className="text-gray-500 text-center mb-12">Everything you need to know about home services in {city.name}</p>
           <div className="space-y-3">
-            {city.faqs.map((faq, idx) => (
+            {city.faqs.filter((faq) => !/CCTV|electrical|plumbing|RO water|water purifier|microwave|electrician/i.test(`${faq.q} ${faq.a}`)).map((faq, idx) => (
               <details key={idx} className="group bg-white rounded-xl border border-[#e8e1d2] shadow-sm overflow-hidden">
                 <summary className="flex items-center justify-between cursor-pointer p-5 font-semibold text-gray-900 text-sm list-none">
                   {faq.q}

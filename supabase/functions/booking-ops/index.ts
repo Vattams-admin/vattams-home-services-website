@@ -14,6 +14,14 @@ interface SupabaseClient {
   };
 }
 
+function isFeaturedApplianceService(name: unknown): boolean {
+  const value = String(name ?? '').trim().toLowerCase();
+  return /(^|\W)ac(\W|$)|air\s*condition/.test(value)
+    || value.includes('washing machine')
+    || value.includes('refrigerator')
+    || value.includes('fridge');
+}
+
 function generateOTP(): string {
   return String(Math.floor(1000 + Math.random() * 9000));
 }
@@ -81,6 +89,9 @@ Deno.serve(async (req: Request) => {
       const b = booking || {};
       if (!b.customer_name || !b.mobile_number || !b.city || !b.address || !b.service_category || !b.problem_description) {
         return new Response(JSON.stringify({ error: "Required booking fields are missing" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      if (!isFeaturedApplianceService(b.service_category)) {
+        return new Response(JSON.stringify({ error: "Only AC, washing machine, and refrigerator services are currently available" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
       const { data: servicePrice } = await supabase.from("service_prices").select("base_price,gst_rate,platform_fee,commission_rate,is_active").eq("service_name",String(b.service_category)).eq("is_active",true).maybeSingle();
       if (!servicePrice) return new Response(JSON.stringify({ error: "Service is unavailable" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });

@@ -1,28 +1,16 @@
 # VATTAMS
 
-> VATTAMS Home Services is a trusted India-wide home services platform connecting customers with professional technicians. Government of India MSME (Udyam) Registered Enterprise — UDYAM-TN-02-0274720.
+> VATTAMS Home Services is a premium appliance-care platform focused on AC, washing machine and refrigerator service. Government of India MSME (Udyam) Registered Enterprise — UDYAM-TN-02-0274720.
 
 ## VATTAMS Home Services
 
-VATTAMS Home Services provides on-demand home maintenance and repair services. Customers book services through our web app or AI assistant, and we automatically assign the nearest available certified technician based on location, rating, availability, and workload.
+VATTAMS Home Services provides doorstep AC, washing machine and refrigerator repair and maintenance. Customers book services through our web app or AI assistant, and we automatically assign the nearest available certified technician based on location, rating, availability, and workload.
 
 ### Services
 
-- AC Repair & Service
-- Refrigerator Repair
-- Washing Machine Repair
-- RO Water Purifier Service
-- Microwave Repair
-- TV Repair
-- Geyser Repair
-- Chimney Repair
-- Electrical Work
-- Plumbing
-- Carpentry
-- Pest Control
-- Deep Cleaning
-- Appliance Installation
-- CCTV Installation
+- AC Service & Maintenance
+- Washing Machine Service & Repair
+- Refrigerator Service & Repair
 
 ### How It Works
 

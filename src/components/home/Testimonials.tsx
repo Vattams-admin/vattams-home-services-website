@@ -40,7 +40,7 @@ const testimonials = [
   { name: 'Suresh Kumar', city: 'Salem', rating: 5, text: 'AC deep cleaning made such a difference in cooling efficiency. Worth every rupee!', service: 'AC Deep Cleaning', avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=100' },
   { name: 'Lakshmi Nair', city: 'Trichy', rating: 5, text: 'Plumbing work done neatly and quickly. No mess left behind. Very impressed with the service.', service: 'Plumbing Services', avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=100' },
   { name: 'Arun Selvam', city: 'Tirunelveli', rating: 5, text: 'Booked RO purifier service online. Smooth process, on-time arrival, great workmanship.', service: 'RO Water Purifier', avatar: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=100' },
-];
+].filter((testimonial) => !['Plumbing Services', 'RO Water Purifier'].includes(testimonial.service));
 
 export default function Testimonials() {
   return (
@@ -54,7 +54,7 @@ export default function Testimonials() {
             What Our Customers Say
           </h2>
           <p className="text-gray-500 max-w-xl mx-auto">
-            Thousands of happy customers across India trust VATTAMS for their home service needs.
+            Discover feedback on AC, washing machine and refrigerator service from VATTAMS customers.
           </p>
         </div>
 

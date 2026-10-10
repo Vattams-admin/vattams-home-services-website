@@ -30,21 +30,20 @@ export default function Hero() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-gold-400/30 rounded-full px-4 py-2 mb-7">
             <Star size={14} className="text-gold-400 fill-gold-400" />
-            <span className="text-white/90 text-xs sm:text-sm font-medium tracking-wide">Trusted Home Service Network</span>
+            <span className="text-white/90 text-xs sm:text-sm font-medium tracking-wide">Premium Appliance Care</span>
           </div>
 
           {/* Headline */}
           <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-bold text-white leading-[1.1] mb-6">
-            Professional Home Services{' '}
+            Expert Appliance Care{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold-300 via-gold-400 to-gold-300">
-              Across India
+              At Your Doorstep
             </span>
           </h1>
 
           {/* Subtitle */}
           <p className="text-navy-100/90 text-base sm:text-lg md:text-xl leading-relaxed mb-10 max-w-2xl">
-            AC, Washing Machine, Refrigerator, Electrical, Plumbing and Home Appliance Services —
-            by verified technicians at your doorstep.
+            Specialist AC, washing machine and refrigerator service, delivered with clear communication, careful workmanship and convenient doorstep booking.
           </p>
 
           {/* CTA Buttons — one primary, one secondary */}
@@ -83,7 +82,7 @@ export default function Hero() {
               {[
                 { icon: ShieldCheck, label: 'Verified Technicians' },
                 { icon: BadgeCheck, label: 'Transparent Pricing' },
-                { icon: Clock3, label: 'Same-Day Service' },
+                { icon: Clock3, label: 'Convenient Booking' },
                 { icon: Sparkles, label: 'Quality Assured' },
               ].map((s, i) => (
                 <div key={s.label} className="flex items-center gap-x-10">

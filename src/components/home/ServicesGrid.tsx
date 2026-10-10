@@ -1,19 +1,23 @@
-import { Wind, Sparkles, Thermometer, Zap, RotateCw, Flame, Droplets, Wrench, Refrigerator, Camera, ArrowRight, Loader, LucideIcon } from 'lucide-react';
+import { Wind, Refrigerator, WashingMachine, ArrowRight, Loader, LucideIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase, ServiceCategory } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 
 const iconMap: Record<string, LucideIcon> = {
-  wind: Wind,
-  sparkles: Sparkles,
-  thermometer: Thermometer,
-  zap: Zap,
-  'rotate-cw': RotateCw,
-  flame: Flame,
-  droplets: Droplets,
-  wrench: Wrench,
-  refrigerator: Refrigerator,
-  camera: Camera,
+  wind: Wind, refrigerator: Refrigerator, 'washing-machine': WashingMachine,
+};
+const isFeaturedApplianceService = (name: string) => {
+  const value = name.trim().toLowerCase();
+  return /(^|\W)ac(\W|$)|air\s*condition/.test(value)
+    || value.includes('washing machine')
+    || value.includes('refrigerator')
+    || value.includes('fridge');
+};
+const getApplianceIcon = (name: string, icon: string | null): LucideIcon => {
+  const value = name.toLowerCase();
+  if (value.includes('washing machine')) return WashingMachine;
+  if (value.includes('refrigerator') || value.includes('fridge')) return Refrigerator;
+  return iconMap[icon ?? 'wind'] ?? Wind;
 };
 
 const colorPalette = [
@@ -29,7 +33,7 @@ export default function ServicesGrid() {
 
   useEffect(() => {
     supabase.from('service_categories').select('*').order('created_at').then(({ data }) => {
-      if (data) setServices(data);
+      if (data) setServices(data.filter((service) => isFeaturedApplianceService(service.name)));
       setLoading(false);
     });
   }, []);
@@ -46,7 +50,7 @@ export default function ServicesGrid() {
             Our Expert Services
           </h2>
           <p className="text-gray-500 max-w-xl mx-auto text-base md:text-lg">
-            Comprehensive home appliance repair and maintenance by certified technicians.
+            Focused expertise in the three appliances your home depends on most.
           </p>
         </div>
 
@@ -55,9 +59,9 @@ export default function ServicesGrid() {
             <Loader className="animate-spin text-navy-700" size={32} />
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {services.map((svc, i) => {
-              const Icon = iconMap[svc.icon ?? 'zap'] ?? Zap;
+              const Icon = getApplianceIcon(svc.name, svc.icon);
               const gradient = colorPalette[i % colorPalette.length];
               return (
                 <button
@@ -92,7 +96,7 @@ export default function ServicesGrid() {
             onClick={() => navigate('services')}
             className="inline-flex items-center gap-2 px-8 py-3.5 bg-navy-900 hover:bg-navy-950 text-white font-semibold rounded-lg transition-colors shadow-lg shadow-navy-900/20 border border-gold-500/20"
           >
-            View All Services <ArrowRight size={16} />
+            Explore Our Services <ArrowRight size={16} />
           </button>
         </div>
       </div>

@@ -16,7 +16,7 @@ export default function Footer() {
     { label: 'Join as a Technician', page: 'join-technician' },
   ];
 
-  const serviceLinks = ['AC Service', 'Refrigerator Repair', 'Washing Machine Repair', 'Electrical Services', 'Plumbing Services'];
+  const serviceLinks = ['AC Service & Maintenance', 'Washing Machine Service', 'Refrigerator Service'];
 
   return (
     <footer className="bg-[#050A17] text-gray-300 border-t border-orange-400/20">
@@ -25,8 +25,8 @@ export default function Footer() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[.28em] text-orange-400">VATTAMS Ecosystem</p>
-              <h2 className="mt-2 text-2xl font-extrabold text-white sm:text-3xl">Reliable technology for everyday life.</h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-400">Home Services is one part of the VATTAMS ecosystem, alongside education and intelligent communication.</p>
+              <h2 className="mt-2 text-2xl font-extrabold text-white sm:text-3xl">Premium care for the appliances your home relies on.</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-400">Focused on three essential appliances: air conditioners, washing machines and refrigerators.</p>
             </div>
             <div className="flex flex-wrap gap-3">
               <a href="https://academia.vattams.net" className="rounded-full border border-blue-400/40 bg-blue-400/10 px-4 py-2 text-sm font-semibold text-blue-200">Academia</a>
@@ -41,7 +41,7 @@ export default function Footer() {
             <button type="button" onClick={() => navigate('home')} className="text-left">
               <img src="/vattams-mark.png" alt="VATTAMS Home Services" className="h-16 w-auto object-contain rounded-xl" />
             </button>
-            <p className="mt-4 max-w-sm text-sm leading-6 text-gray-400">Trusted home appliance and household service solutions delivered through a professional service network.</p>
+            <p className="mt-4 max-w-sm text-sm leading-6 text-gray-400">Dedicated AC, washing machine and refrigerator care — with convenient booking and a professional service network.</p>
             <p className="mt-3 text-xs font-semibold uppercase tracking-[.2em] text-orange-400">Live Easier. Get It Done.</p>
             <SocialLinks variant="footer" />
           </div>

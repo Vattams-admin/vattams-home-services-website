@@ -19,9 +19,7 @@ export interface CityData {
 }
 
 const services = [
-  'AC Repair', 'AC Service', 'Electrician', 'Plumbing',
-  'Washing Machine Repair', 'Refrigerator Repair',
-  'RO Water Purifier', 'Microwave Repair', 'CCTV Installation',
+  'AC Service', 'Washing Machine Service', 'Refrigerator Service',
 ];
 
 export const SERVICE_CATEGORIES = services;
@@ -46,7 +44,7 @@ function generateFAQs(cityName: string): { q: string; a: string }[] {
     },
     {
       q: `Do you offer same-day service in ${cityName}?`,
-      a: `Yes, VATTAMS offers same-day service across ${cityName} for most bookings made before 2 PM. Emergency electrical and plumbing services are available with priority dispatch to ${cityName} residents.`,
+      a: `Yes, VATTAMS offers same-day service across ${cityName} for most bookings made before 2 PM. Priority dispatch options depend on local technician availability.`,
     },
     {
       q: `What is the warranty on repairs done in ${cityName}?`,
@@ -61,8 +59,8 @@ function generateFAQs(cityName: string): { q: string; a: string }[] {
       a: `Customers in ${cityName} can pay via UPI, cash, or online payment after the service is completed. You'll receive a digital invoice with a complete price breakdown including GST.`,
     },
     {
-      q: `Do you provide CCTV installation services for businesses in ${cityName}?`,
-      a: `Yes, we provide professional CCTV installation for both homes and businesses throughout ${cityName}. Our technicians handle everything from site assessment to camera placement, wiring, and configuration.`,
+      q: `Which appliance services can I book in ${cityName}?`,
+      a: `You can request AC, washing machine and refrigerator service in ${cityName}. Availability is confirmed during booking.`,
     },
     {
       q: `What makes VATTAMS different from local repair shops in ${cityName}?`,
@@ -70,7 +68,7 @@ function generateFAQs(cityName: string): { q: string; a: string }[] {
     },
     {
       q: `How quickly can a technician reach my home in ${cityName}?`,
-      a: `Our average response time in ${cityName} is 60–90 minutes for standard bookings. For emergency electrical or plumbing issues, we prioritize dispatch and aim to reach ${cityName} homes within 45 minutes.`,
+      a: `Our average response time in ${cityName} is 60–90 minutes for standard bookings. For appliance issues, available appointment times are shown during booking.`,
     },
     {
       q: `Can I reschedule my booking in ${cityName}?`,
@@ -86,7 +84,7 @@ function generateTestimonials(cityName: string, areas: string[]): { name: string
     `Booked a plumber through VATTAMS and was impressed by how smooth the whole process was. The OTP verification gave me confidence that the job was done properly. Best home service in`,
     `My washing machine stopped working suddenly. VATTAMS sent a technician the same day and he diagnosed and fixed the issue within an hour. Great service for residents of`,
     `Very transparent pricing and professional technicians. The in-app chat feature was very convenient for communicating with the technician. A game-changer for home services in`,
-    `I've used VATTAMS three times now — for AC service, electrical work, and RO repair. Each time the service was excellent. They truly are the best home service provider in`,
+    `I've used VATTAMS for appliance service. The booking experience was convenient and the technician was professional. They are a reliable appliance-care provider in`,
     `The technician who came for my refrigerator repair was very knowledgeable. He explained the problem clearly and didn't overcharge. VATTAMS is reliable for anyone living in`,
   ];
   return texts.slice(0, 6).map((t, i) => ({
@@ -101,7 +99,7 @@ function generateContentSections(cityName: string, knownFor: string, population:
   return [
     {
       heading: `Professional Home Services in ${cityName}`,
-      body: `${cityName} is a vibrant city with a growing population of over ${population} residents. As ${cityName} continues to expand, the demand for reliable, professional home services has never been higher. VATTAMS Home Services brings certified, background-verified technicians directly to your doorstep in ${cityName}, ensuring that your home appliances and electrical and plumbing systems are always in perfect working condition. Whether you need urgent AC repair during ${cityName}'s hot summer months or a routine RO water purifier service, our local ${cityName} technicians are ready to help.`,
+      body: `${cityName} is a vibrant city with a growing population of over ${population} residents. As ${cityName} continues to expand, the demand for reliable, professional home services has never been higher. VATTAMS Home Services focuses on doorstep AC, washing machine and refrigerator service in ${cityName}. Whether you need AC repair during ${cityName}'s hot summer months or help with a washing machine or refrigerator, check available appointments through our booking flow.`,
     },
     {
       heading: `Why Choose VATTAMS in ${cityName}?`,
@@ -112,20 +110,20 @@ function generateContentSections(cityName: string, knownFor: string, population:
       body: `${cityName}'s climate makes air conditioning essential for most of the year. Our AC repair technicians in ${cityName} are trained to handle all major brands including Daikin, LG, Samsung, Voltas, Blue Star, and Carrier. From gas refilling and compressor repair to deep cleaning and installation, VATTAMS provides comprehensive AC services across ${cityName}. Regular AC servicing not only improves cooling efficiency but also reduces electricity bills — a significant benefit for ${cityName} households running ACs for extended periods.`,
     },
     {
-      heading: `Electrical and Plumbing Services in ${cityName}`,
-      body: `Electrical and plumbing issues can disrupt daily life and pose safety risks. VATTAMS provides licensed electricians and experienced plumbers throughout ${cityName} for everything from switchboard repairs and fan installations to pipe leaks and bathroom fitting work. Our ${cityName} technicians arrive with the right tools and genuine spare parts, ensuring lasting solutions rather than temporary fixes. Emergency electrical services in ${cityName} are available with priority dispatch for safety-critical situations.`,
+      heading: `Appliance Service Support in ${cityName}`,
+      body: `VATTAMS focuses on AC, washing machine and refrigerator servicing in ${cityName}. Share your appliance issue and preferred time through the booking page to check local availability.`,
     },
     {
       heading: `Home Appliance Repair in ${cityName}`,
       body: `From washing machines and refrigerators to microwaves and water heaters, VATTAMS covers all major home appliance repairs in ${cityName}. Our technicians are brand-certified and stay updated with the latest appliance technologies. We understand that a broken refrigerator or malfunctioning washing machine can cause significant inconvenience for ${cityName} families, which is why we prioritize same-day service for appliance repairs across ${cityName}.`,
     },
     {
-      heading: `RO Water Purifier Service in ${cityName}`,
+      heading: `Refrigerator Service in ${cityName}`,
       body: `Clean drinking water is essential for every household in ${cityName}. VATTAMS provides comprehensive RO water purifier services including filter replacement, membrane cleaning, tank cleaning, and complete unit servicing. Our ${cityName} technicians service all major RO brands and ensure your water purifier delivers safe, clean water for your family. Regular RO servicing in ${cityName} is recommended every 6 months for optimal performance.`,
     },
     {
-      heading: `CCTV Installation and Security Solutions in ${cityName}`,
-      body: `As ${cityName} grows, home and business security becomes increasingly important. VATTAMS offers professional CCTV installation services across ${cityName}, including site assessment, camera placement planning, wiring, configuration, and mobile app setup. Whether you need a single-camera setup for your ${cityName} apartment or a multi-camera system for your business, our technicians deliver reliable, clean installations with minimal disruption.`,
+      heading: `Washing Machine Service in ${cityName}`,
+      body: `VATTAMS helps customers in ${cityName} request washing machine service and repair. Describe the symptoms and choose an available appointment through the booking form.`,
     },
     {
       heading: `Booking Process for ${cityName} Residents`,
@@ -210,11 +208,11 @@ export const cities: CityData[] = cityConfigs.map((c) => {
     name: c.name,
     state: c.state,
     tier: c.tier,
-    seoTitle: `${c.name} Home Services | AC Repair, Electrician, Plumbing | VATTAMS`,
-    metaDescription: `Professional home services in ${c.name}. AC repair, electrician, plumbing, washing machine, refrigerator, RO, CCTV installation. Verified technicians, same-day service, transparent pricing. Book now!`,
-    h1: `Home Services in ${c.name} — AC Repair, Electrician, Plumbing & More`,
+    seoTitle: `${c.name} Appliance Service | AC, Washing Machine & Refrigerator | VATTAMS`,
+    metaDescription: `Book AC, washing machine and refrigerator service in ${c.name} with VATTAMS. Check appointment availability and request doorstep appliance care.`,
+    h1: `Appliance Service in ${c.name} — AC, Washing Machine & Refrigerator`,
     tagline: `Trusted home appliance repair and maintenance services across ${c.name}`,
-    intro: `VATTAMS brings verified, professional technicians to every neighborhood in ${c.name}. From AC repair to electrical work, plumbing to appliance servicing — get same-day, reliable home services with transparent pricing and a 30-day warranty.`,
+    intro: `VATTAMS focuses on AC, washing machine and refrigerator service in ${c.name}. Request doorstep appliance care and check available appointment times online.`,
     population: c.population,
     districts: c.name,
     knownFor: c.knownFor,
