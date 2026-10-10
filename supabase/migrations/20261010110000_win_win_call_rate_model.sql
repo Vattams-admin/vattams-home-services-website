@@ -41,6 +41,12 @@ ALTER TABLE public.service_prices
 UPDATE public.wallet_settings
 SET lock_threshold = 500, commission_rate = 0, updated_at = now();
 
+-- Existing small balances under the old zero-threshold policy should not
+-- remain locked after the new ₹500 outstanding-fee threshold takes effect.
+UPDATE public.technicians
+SET wallet_locked = false
+WHERE wallet_locked = true AND COALESCE(commission_due, 0) <= 500;
+
 -- Permit the ledger to identify fixed call-rate fees separately from the old
 -- percentage commission type. Keep every historical type available.
 ALTER TABLE public.wallet_transactions
