@@ -22,7 +22,7 @@ async function authorize(userType: string, token: string, adminId: string, reque
     const s = await session("admin_auth_sessions", token);
     if (!s || String(s.admin_id) !== String(adminId)) return null;
     const { data: a } = await db.from("admin_users").select("id,role,is_active").eq("id", s.admin_id).maybeSingle();
-    if (!a?.is_active || a.role !== "super_admin") return null;
+    if (!a?.is_active) return null;
     return String(s.admin_id);
   }
   if (userType === "technician") {
