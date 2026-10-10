@@ -113,3 +113,14 @@ REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER
 DROP POLICY IF EXISTS "anon_select_audit_logs" ON public.audit_logs;
 REVOKE SELECT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER
   ON TABLE public.audit_logs FROM PUBLIC, anon, authenticated;
+
+-- The legacy chat client module is not imported by the current app. Chat records
+-- must not be exposed through anonymous PostgREST/Realtime subscriptions.
+DROP POLICY IF EXISTS "public_delete_chat_messages" ON public.chat_messages;
+DROP POLICY IF EXISTS "public_insert_chat_messages" ON public.chat_messages;
+DROP POLICY IF EXISTS "public_select_chat_messages" ON public.chat_messages;
+DROP POLICY IF EXISTS "public_update_chat_messages" ON public.chat_messages;
+DROP POLICY IF EXISTS "anon_all_chat_attachments" ON public.chat_attachments;
+DROP POLICY IF EXISTS "anon_all_chat_typing" ON public.chat_typing;
+REVOKE ALL PRIVILEGES ON TABLE public.chat_messages, public.chat_attachments, public.chat_typing
+  FROM PUBLIC, anon, authenticated;
