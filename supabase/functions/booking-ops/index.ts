@@ -16,7 +16,7 @@ interface SupabaseClient {
 
 function isFeaturedApplianceService(name: unknown): boolean {
   const value = String(name ?? '').trim().toLowerCase();
-  return /(^|\\W)ac(\\W|$)|air\\s*condition/.test(value)
+  return /(^|\W)ac(\W|$)|air\s*condition/.test(value)
     || value.includes('washing machine')
     || value.includes('refrigerator')
     || value.includes('fridge');
