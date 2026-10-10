@@ -20,7 +20,10 @@ Deno.serve(async req=>{
 
     let authorized=false;
     const admin=await session(String(b.admin_session_token||""),"admin_auth_sessions");
-    if(admin?.admin_id && String(admin.admin_id)===String(b.admin_id||"")) authorized=true;
+    if(admin?.admin_id && String(admin.admin_id)===String(b.admin_id||"")){
+      const {data:adminUser}=await db.from("admin_users").select("role,is_active").eq("id",admin.admin_id).maybeSingle();
+      if(adminUser?.role==="super_admin" && adminUser.is_active===true) authorized=true;
+    }
 
     if(!authorized){
       const tech=await session(String(b.technician_session_token||""),"technician_auth_sessions");
