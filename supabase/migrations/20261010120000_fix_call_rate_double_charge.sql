@@ -82,8 +82,8 @@ BEGIN
 
       IF FOUND THEN
         INSERT INTO public.technician_notifications (technician_id, type, title, message)
-        VALUES (tech_id, 'account_locked', 'Account Paused — Settlement Due',
-          'Your outstanding platform-fee, tax-remittance and call-rate dues exceed Rs ' || settings.lock_threshold || '. Please clear them to receive new jobs.');
+        VALUES (tech_id, 'account_locked', 'Account Paused — Call Rate Dues',
+          'Your outstanding fixed call-rate dues exceed Rs ' || settings.lock_threshold || '. Please clear them to receive new jobs.');
       END IF;
     END IF;
 
