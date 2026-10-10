@@ -41,6 +41,7 @@ export interface Booking {
   city: string;
   address: string;
   service_category: string;
+  service_type: string | null;
   problem_description: string | null;
   preferred_date: string | null;
   preferred_time: string | null;
@@ -142,6 +143,7 @@ export interface TechnicianJob {
   booking_id: string;
   technician_id: string;
   status: JobStatus;
+  service_type: string | null;
   notes: string | null;
   service_photo_urls: string[];
   customer_signature: string | null;

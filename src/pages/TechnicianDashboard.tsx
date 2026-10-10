@@ -1506,6 +1506,12 @@ function JobCard({
               </span>
             </div>
 
+            {job.service_type && (
+              <p className="text-sm font-semibold text-[#0b1f3a] mt-1">
+                Job type: {job.service_type}
+              </p>
+            )}
+
             <p className="text-sm text-gray-500 mt-1">
               Assigned:{' '}
               {formatDateTime(

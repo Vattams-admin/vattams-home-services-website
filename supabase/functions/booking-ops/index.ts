@@ -93,8 +93,20 @@ Deno.serve(async (req: Request) => {
       if (!isFeaturedApplianceService(b.service_category)) {
         return new Response(JSON.stringify({ error: "Only AC, washing machine, and refrigerator services are currently available" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
-      const { data: servicePrice } = await supabase.from("service_prices").select("base_price,gst_rate,platform_fee,commission_rate,call_rate_fee,is_active").eq("service_name",String(b.service_category)).eq("is_active",true).maybeSingle();
+      const { data: servicePrice } = await supabase.from("service_prices").select("base_price,gst_rate,platform_fee,commission_rate,is_active").eq("service_name",String(b.service_category)).eq("is_active",true).maybeSingle();
       if (!servicePrice) return new Response(JSON.stringify({ error: "Service is unavailable" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+      const serviceType = String(b.service_type ?? "").trim();
+      if (!serviceType) return new Response(JSON.stringify({ error: "Please select a specific job type" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const { data: callRate, error: callRateError } = await supabase
+        .from("technician_call_rates")
+        .select("call_rate_fee")
+        .eq("service_category", String(b.service_category))
+        .eq("service_type", serviceType)
+        .eq("is_active", true)
+        .maybeSingle();
+      if (callRateError || !callRate) return new Response(JSON.stringify({ error: "The selected job type is unavailable. Please choose a valid service type." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
       const basePrice = Number(servicePrice.base_price) || 0;
       const gstAmount = Math.round((basePrice * (Number(servicePrice.gst_rate)||0) / 100) * 100) / 100;
       const platformFee = Number(servicePrice.platform_fee) || 0;
@@ -118,6 +130,7 @@ Deno.serve(async (req: Request) => {
         city: String(b.city).slice(0,100),
         address: String(b.address).slice(0,500),
         service_category: String(b.service_category).slice(0,100),
+        service_type: serviceType.slice(0,100),
         problem_description: String(b.problem_description).slice(0,2000),
         preferred_date: b.preferred_date || null,
         preferred_time: b.preferred_time || null,
@@ -126,7 +139,7 @@ Deno.serve(async (req: Request) => {
         gst_amount: gstAmount,
         platform_fee: platformFee,
         commission_amount: commissionAmount,
-        call_rate_fee: Number(servicePrice.call_rate_fee) || 0,
+        call_rate_fee: Number(callRate.call_rate_fee) || 0,
         total_amount: finalAmount,
         coupon_code: couponCode,
         discount_amount: discountAmount,
@@ -284,7 +297,7 @@ Deno.serve(async (req: Request) => {
 
       const { data: jobData } = await supabase
         .from("technician_jobs")
-        .insert({ booking_id, technician_id: chosen.id, status: "assigned", job_amount: Number(booking.base_price ?? 0), call_rate_fee: Number(booking.call_rate_fee) || 0 })
+        .insert({ booking_id, technician_id: chosen.id, status: "assigned", job_amount: Number(booking.base_price ?? 0), call_rate_fee: Number(booking.call_rate_fee) || 0, service_type: String(booking.service_type ?? "") || null })
         .select("*")
         .single() as { data: Record<string, unknown> | null; error: unknown };
 
