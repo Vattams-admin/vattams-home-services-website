@@ -18,6 +18,7 @@ import { ServicePrice } from '@/lib/supabase';
 import { validateSettings, SiteSettings, SiteSettingsInput } from '@/lib/siteSettings';
 import { refreshSocialLinksCache } from '@/components/SocialLinks';
 import NotificationCenter from '@/components/NotificationCenter';
+import PushNotificationSetup from '@/components/PushNotificationSetup';
 import {
   notifyCustomer, notifyTechnician, notifyAdmin,
   sendAnnouncementToTechnicians, sendAnnouncementToCustomers,
@@ -1053,6 +1054,8 @@ export default function AdminDashboard() {
         </header>
 
         <div className="p-4 sm:p-6">
+          <PushNotificationSetup userType="admin" userId={sessionStorage.getItem('vattams_admin_id') || 'admin'} />
+
 
     {/* ===================== BOOKINGS TAB ===================== */}
     {tab === 'bookings' && (

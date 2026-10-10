@@ -159,11 +159,14 @@ export async function initFCM(
   userId: string,
 ): Promise<string | null> {
   try {
-    const messaging = await getMessagingInstance();
-    if (!messaging) return null;
-
+    // Request permission before the first asynchronous wait. This allows the
+    // dashboard's explicit Enable Notifications click to satisfy browsers'
+    // user-gesture requirement for displaying the permission prompt.
     const permission = await requestNotificationPermission();
     if (permission !== 'granted') return null;
+
+    const messaging = await getMessagingInstance();
+    if (!messaging) return null;
 
     const vapidKey = firebaseVapidKey;
     if (!vapidKey) {
