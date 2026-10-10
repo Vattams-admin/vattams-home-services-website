@@ -1528,7 +1528,7 @@ function JobCard({
                   <span className="text-xs font-extrabold uppercase tracking-wide text-[#795d0c]">Fixed call-rate fee</span>
                   <span className="text-sm font-extrabold text-[#0b1f3a]">{formatMoney(Number(job.call_rate_fee))}</span>
                 </div>
-                <p className="mt-1 text-xs leading-5 text-gray-600">Only charged after this job is completed. No call-rate fee for rejected, cancelled or uncompleted jobs. No extra platform fee or percentage commission on this appliance job.</p>
+                <p className="mt-1 text-xs leading-5 text-gray-600">Charged only after completion. Rejected, cancelled and uncompleted jobs have no call-rate fee. No percentage commission; the customer platform fee is shown separately at checkout.</p>
               </div>
             )}
 
