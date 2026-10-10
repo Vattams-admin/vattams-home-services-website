@@ -293,7 +293,12 @@ export default function Booking() {
                   <select required value={form.service_type}
                     onChange={(e) => setForm({ ...form, service_type: e.target.value })}
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all bg-white">
-                    {serviceTypes.map((type) => <option key={type} value={type}>{type}</option>)}
+                    {serviceTypes.map((type) => {
+                      const listedPrice = customerServicePrices[getCustomerPriceKey(form.service_category, type)];
+                      return <option key={type} value={type}>
+                        {type}{listedPrice ? ` — ${formatINR(Number(listedPrice.base_price))}` : ''}
+                      </option>;
+                    })}
                   </select>
                   <p className="mt-1 text-xs text-gray-500">Choose the specific work needed so we can assign the right technician.</p>
                 </Field>
