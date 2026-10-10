@@ -151,7 +151,7 @@ export interface TechnicianJob {
   completed_at: string | null;
 }
 
-export type WalletTxnType = 'registration_fee' | 'deposit_lock' | 'deposit_release' | 'commission_deduction' | 'call_rate_fee' | 'recharge_credit' | 'recharge_debit' | 'adjustment';
+export type WalletTxnType = 'registration_fee' | 'deposit_lock' | 'deposit_release' | 'commission_deduction' | 'platform_fee_remittance' | 'gst_remittance' | 'call_rate_fee' | 'recharge_credit' | 'recharge_debit' | 'adjustment';
 
 export interface WalletTransaction {
   id: string;
