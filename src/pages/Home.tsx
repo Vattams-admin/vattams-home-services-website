@@ -11,9 +11,9 @@ import { useSEO } from '@/lib/seo';
 
 export default function Home() {
   useSEO({
-    title: 'VATTAMS | Home Services Across India',
+    title: 'VATTAMS Home Services | Premium Appliance Care',
     description:
-      'VATTAMS is a trusted home services platform connecting customers with professional service technicians across India.',
+      'Premium doorstep AC, washing machine and refrigerator service from VATTAMS Home Services. Book appliance care with confidence.',
     path: '/',
   });
 
