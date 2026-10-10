@@ -284,7 +284,7 @@ Deno.serve(async (req: Request) => {
 
       const { data: jobData } = await supabase
         .from("technician_jobs")
-        .insert({ booking_id, technician_id: chosen.id, status: "assigned", call_rate_fee: Number(booking.call_rate_fee) || 0 })
+        .insert({ booking_id, technician_id: chosen.id, status: "assigned", job_amount: Number(booking.base_price ?? 0), call_rate_fee: Number(booking.call_rate_fee) || 0 })
         .select("*")
         .single() as { data: Record<string, unknown> | null; error: unknown };
 
