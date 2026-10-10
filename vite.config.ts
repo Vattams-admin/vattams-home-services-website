@@ -3,8 +3,9 @@ import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { loadEnv } from 'vite';
 
-function configureFcmServiceWorker() {
+function configureFcmServiceWorker(env: Record<string, string>) {
   const keys = {
     FIREBASE_API_KEY: 'VITE_FIREBASE_API_KEY',
     FIREBASE_AUTH_DOMAIN: 'VITE_FIREBASE_AUTH_DOMAIN',
@@ -30,7 +31,7 @@ function configureFcmServiceWorker() {
       for (const [workerKey, envKey] of Object.entries(keys)) {
         // Firebase web configuration is public client configuration, not a server secret.
         // Embed the same build-time values used by firebase-config.ts in the worker.
-        const value = JSON.stringify(process.env[envKey] ?? '');
+        const value = JSON.stringify(env[envKey] ?? process.env[envKey] ?? '');
         worker = worker.replaceAll('self.' + workerKey, value);
       }
 
@@ -39,8 +40,10 @@ function configureFcmServiceWorker() {
   };
 }
 
-export default defineConfig({
-  plugins: [react(), configureFcmServiceWorker()],
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  return {
+  plugins: [react(), configureFcmServiceWorker(env)],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
@@ -56,4 +59,5 @@ export default defineConfig({
     port: 4173,
     strictPort: false,
   },
+  };
 });
