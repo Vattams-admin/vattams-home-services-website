@@ -220,7 +220,7 @@ export default function CityLanding({ city }: { city: CityData }) {
       {/* Content sections */}
       <section className="py-16 md:py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          {city.contentSections.map((sec, idx) => (
+          {city.contentSections.filter((sec) => /AC|Air Conditioner|Washing Machine|Refrigerator|Appliance/i.test(sec.heading)).map((sec, idx) => (
             <div key={idx} className="mb-10">
               <h2 className="font-display text-2xl md:text-3xl font-bold text-[#0b1f3a] mb-4">{sec.heading}</h2>
               <p className="text-gray-600 leading-relaxed text-base">{sec.body}</p>
@@ -306,7 +306,7 @@ export default function CityLanding({ city }: { city: CityData }) {
           <h2 className="font-display text-3xl font-bold text-[#0b1f3a] text-center mb-4">Customer Reviews in {city.name}</h2>
           <p className="text-gray-500 text-center mb-12">Real reviews from {city.name} customers who trusted VATTAMS</p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {city.testimonials.map((t, idx) => (
+            {city.testimonials.filter((t) => /AC|washing machine|refrigerator|appliance/i.test(t.text)).map((t, idx) => (
               <div key={idx} className="bg-white rounded-2xl border border-[#e8e1d2] shadow-sm p-6">
                 <div className="flex items-center gap-1 mb-3">
                   {[...Array(t.rating)].map((_, i) => (
@@ -335,7 +335,7 @@ export default function CityLanding({ city }: { city: CityData }) {
           <h2 className="font-display text-3xl font-bold text-[#0b1f3a] text-center mb-4">Frequently Asked Questions — {city.name}</h2>
           <p className="text-gray-500 text-center mb-12">Everything you need to know about home services in {city.name}</p>
           <div className="space-y-3">
-            {city.faqs.map((faq, idx) => (
+            {city.faqs.filter((faq) => !/CCTV|electrical|plumbing|RO water|water purifier|microwave|electrician/i.test(`${faq.q} ${faq.a}`)).map((faq, idx) => (
               <details key={idx} className="group bg-white rounded-xl border border-[#e8e1d2] shadow-sm overflow-hidden">
                 <summary className="flex items-center justify-between cursor-pointer p-5 font-semibold text-gray-900 text-sm list-none">
                   {faq.q}
