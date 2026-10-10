@@ -965,7 +965,7 @@ function Overview({
             View Call Rate Jobs <ChevronRight size={17} />
           </button>
         </div>
-        <div className="relative mt-5 border-t border-white/10 pt-3 text-xs leading-5 text-white/55">Suggested launch rates: AC ₹35 per completed job; washing machine and refrigerator ₹25 per completed job. Admin can adjust rates. Job volume and earnings are not guaranteed.</div>
+        <div className="relative mt-5 border-t border-white/10 pt-3 text-xs leading-5 text-white/55">The fixed fee for each job is shown on its card and is charged only after completion. Job volume and earnings are not guaranteed.</div>
       </section>
       {/* STATS */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1760,7 +1760,7 @@ function WalletSection({
         />
 
         <WalletCard
-          title="Commission Due"
+          title="Call Rate Dues"
           value={formatMoney(
             technician.commission_due
           )}
@@ -1781,7 +1781,7 @@ function WalletSection({
             </h2>
 
             <p className="text-xs text-gray-500">
-              Submit a recharge request for Admin approval.
+              Approved payments clear outstanding call-rate dues first; any remaining amount becomes wallet credit.
             </p>
           </div>
         </div>
