@@ -572,11 +572,11 @@ export default function TechnicianRegister() {
           </div>
 
           <h1 className="text-2xl md:text-3xl font-extrabold mb-2">
-            Join as a Technician
+            Join for Call Rate Jobs
           </h1>
 
           <p className="text-white/90 text-sm">
-            Answer a few questions — our AI guides you step by step
+            Register for AC, washing machine and refrigerator job opportunities. One-time joining fee: ₹49. Our AI guides you step by step
           </p>
 
         </div>
