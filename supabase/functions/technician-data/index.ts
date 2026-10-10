@@ -8,7 +8,7 @@ Deno.serve(async req=>{if(req.method==="OPTIONS")return new Response(null,{statu
 switch(body.action){
 case "account":{const [{data:technician},{data:jobs},{data:transactions},{data:recharges},{data:notifications},{data:jobNotifications}]=await Promise.all([
 supabase.from("technicians").select("id,full_name,mobile,email,city,service_categories,experience_years,status,whatsapp_number,area,pincode,available_days,working_time,has_vehicle,has_tools,profile_photo_url,rating,total_jobs,completed_jobs,is_online,last_active_at,wallet_balance,wallet_locked,created_at,updated_at").eq("id",technicianId).single(),
-supabase.from("technician_jobs").select("id,booking_id,technician_id,status,assigned_at,accepted_at,started_at,completed_at,service_type,customer_name,customer_mobile,customer_address,scheduled_date,scheduled_time,notes,job_amount:amount,call_rate_fee").eq("technician_id",technicianId).order("assigned_at",{ascending:false}),
+supabase.from("technician_jobs").select("id,booking_id,technician_id,status,assigned_at,accepted_at,started_at,completed_at,service_type,customer_name,customer_mobile,customer_address,scheduled_date,scheduled_time,notes,job_amount,call_rate_fee").eq("technician_id",technicianId).order("assigned_at",{ascending:false}),
 supabase.from("wallet_transactions").select("*").eq("technician_id",technicianId).order("created_at",{ascending:false}).limit(20),
 supabase.from("wallet_recharges").select("*").eq("technician_id",technicianId).order("created_at",{ascending:false}).limit(10),
 supabase.from("technician_notifications").select("*").eq("technician_id",technicianId).order("created_at",{ascending:false}).limit(30),
