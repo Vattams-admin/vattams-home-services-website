@@ -117,8 +117,20 @@ export async function markAsRead(notificationId: string): Promise<boolean> {
     if (adminToken) { await adminData('notification_read', { notification_id: notificationId }); return true; }
     const techToken = sessionStorage.getItem('vattams_technician_session');
     if (techToken) {
-      await fetch(`${SUPABASE_URL}/functions/v1/technician-data`, { method:'POST', headers:{'Content-Type':'application/json',Authorization:`Bearer ${SUPABASE_ANON_KEY}`}, body:JSON.stringify({action:'notification_read',session_token:techToken,notification_id:notificationId,source:'job'}) });
-      return true;
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/technician-data`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          action: 'notification_read',
+          session_token: techToken,
+          notification_id: notificationId,
+          source: 'job',
+        }),
+      });
+      return res.ok;
     }
     const customerToken = sessionStorage.getItem('vattams_customer_session');
     if (customerToken) {
