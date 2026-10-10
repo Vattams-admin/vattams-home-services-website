@@ -3,7 +3,7 @@ import { Loader, CheckCircle, XCircle, Calendar, User, Phone, MapPin, Wrench, Fi
 import { supabase, ServiceCategory, Customer, ServicePrice } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { notifyCustomer } from '@/lib/notifications';
-import { getPricingFromServicePrice, calculatePricing, formatINR, type PricingBreakdown } from '@/lib/pricing';
+import { calculatePricing, formatINR, type PricingBreakdown } from '@/lib/pricing';
 import { validateCoupon, type Coupon } from '@/lib/coupons';
 import { cities } from '@/lib/cities';
 
