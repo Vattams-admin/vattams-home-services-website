@@ -132,7 +132,7 @@ async function waitForServiceWorkerActivation(
   const worker = registration.installing ?? registration.waiting ?? registration.active;
   if (!worker) throw new Error('FCM service worker has no active lifecycle worker');
 
-  if (worker.state !== 'activated') {
+  if ((worker.state as string) !== 'activated') {
     await new Promise<void>((resolve, reject) => {
       const onStateChange = () => {
         if ((worker.state as ServiceWorkerState) === 'activated') {
@@ -148,7 +148,7 @@ async function waitForServiceWorkerActivation(
     });
   }
 
-  if (!registration.active || registration.active.state !== 'activated') {
+  if (!registration.active || (registration.active.state as string) !== 'activated') {
     throw new Error('FCM service worker did not become active');
   }
   return registration;
