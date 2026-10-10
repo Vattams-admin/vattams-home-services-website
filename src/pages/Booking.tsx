@@ -13,7 +13,7 @@ const getServiceTypes = (category: string): string[] => {
   const value = category.trim().toLowerCase();
   if (value.includes('washing machine')) return ['Washing Machine Service'];
   if (value.includes('refrigerator') || value.includes('fridge')) return ['Refrigerator Service'];
-  if (/(^|\\W)ac(\\W|$)|air\\s*condition/.test(value)) {
+  if (/(^|\W)ac(\W|$)|air\s*condition/.test(value)) {
     return ['General Service', 'Installation', 'Gas Filling', 'Pump Water Service', 'Coil Service'];
   }
   return [];
