@@ -1,6 +1,6 @@
 import {
   Target, Eye, ShieldCheck, Award, Handshake, MapPin, Wrench, Sparkles, Wind,
-  Refrigerator, Camera, Droplets, Zap, Layers, Search, MousePointerClick, Link2,
+  Refrigerator, Layers, Search, MousePointerClick, Link2,
   PartyPopper, Cpu, Globe2, Lock, ClipboardCheck, UserCheck, HeartHandshake,
   CalendarCheck, LucideIcon,
 } from 'lucide-react';
@@ -11,10 +11,7 @@ import { useSEO } from '@/lib/seo';
 const homeServices: { label: string; icon: LucideIcon }[] = [
   { label: 'AC Service', icon: Wind },
   { label: 'Washing Machine Service', icon: Layers },
-  { label: 'Refrigerator Repair', icon: Refrigerator },
-  { label: 'CCTV', icon: Camera },
-  { label: 'Plumbing', icon: Droplets },
-  { label: 'Electrical', icon: Zap },
+  { label: 'Refrigerator Service', icon: Refrigerator },
 ];
 
 const whyVattams: { title: string; text: string; icon: LucideIcon }[] = [
@@ -43,8 +40,8 @@ export default function About() {
   const { navigate } = useRouter();
 
   useSEO({
-    title: 'About VATTAMS | Home Services',
-    description: 'Learn about VATTAMS Home Services, a trusted platform connecting customers with professional technicians across India.',
+    title: 'About VATTAMS | Premium Appliance Care',
+    description: 'Learn about VATTAMS Home Services, focused on premium AC, washing machine and refrigerator care.'
     path: '/#about',
   });
 
@@ -79,7 +76,7 @@ export default function About() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="font-display text-2xl md:text-4xl font-bold text-[#0b1f3a] mb-6">About VATTAMS</h2>
           <p className="text-gray-600 text-base sm:text-lg leading-relaxed mb-6">
-            VATTAMS is a home-services platform focused on making professional repair, maintenance and installation services easier to discover, book and manage.
+            VATTAMS Home Services focuses on three essential appliances—air conditioners, washing machines and refrigerators—with a convenient booking experience and a professional service network.
           </p>
           <button onClick={() => navigate('services')} className="inline-flex items-center gap-2 text-gold-700 font-semibold hover:text-gold-800 text-sm">
             Explore Home Services →
