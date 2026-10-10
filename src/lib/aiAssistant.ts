@@ -94,7 +94,7 @@ export function getAssistantResponse(
   } else if (step === 'ask_time') {
     extracted.preferredTime = userInput.trim();
     step = 'confirm';
-    reply = `Here's a summary of your booking request:\n\n• Service: ${extracted.service}\n• Problem: ${extracted.problem}\n• Location: ${extracted.location}\n• Preferred Time: ${extracted.preferredTime}\n• Urgency: ${extracted.urgency}\n\nShall I create this booking for you? Reply "yes" to confirm or "no" to start over.`;
+    reply = `Here's a summary of your booking request:\n\n• Service: ${extracted.service}\n• Problem: ${extracted.problem}\n• Location: ${extracted.location}\n• Preferred Time: ${extracted.preferredTime}\n• Urgency: ${extracted.urgency}\n\nWould you like to continue to the Booking page to submit this request? Reply "yes" to confirm or "no" to start over.`;
   } else if (step === 'confirm') {
     if (userInput.toLowerCase().includes('yes') || userInput.toLowerCase().includes('confirm')) {
       step = 'done';
