@@ -41,7 +41,7 @@ export default function About() {
 
   useSEO({
     title: 'About VATTAMS | Premium Appliance Care',
-    description: 'Learn about VATTAMS Home Services, focused on premium AC, washing machine and refrigerator care.'
+    description: 'Learn about VATTAMS Home Services, focused on premium AC, washing machine and refrigerator care.',
     path: '/#about',
   });
 
