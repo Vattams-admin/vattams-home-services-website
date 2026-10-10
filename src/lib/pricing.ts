@@ -5,6 +5,7 @@ export interface PricingBreakdown {
   gstAmount: number;
   platformFee: number;
   commissionAmount: number;
+  callRateFee: number;
   totalAmount: number;
   technicianEarnings: number;
   discountAmount: number;
@@ -17,11 +18,12 @@ export function calculatePricing(
   platformFee: number,
   commissionRate: number,
   discountAmount: number = 0,
+  callRateFee: number = 0,
 ): PricingBreakdown {
   const gstAmount = Math.round((basePrice * gstRate / 100) * 100) / 100;
   const totalAmount = Math.round((basePrice + gstAmount + platformFee) * 100) / 100;
   const commissionAmount = Math.round((basePrice * commissionRate / 100) * 100) / 100;
-  const technicianEarnings = Math.round((basePrice - commissionAmount) * 100) / 100;
+  const technicianEarnings = Math.round((basePrice - commissionAmount - callRateFee) * 100) / 100;
   const finalAmount = Math.max(0, Math.round((totalAmount - discountAmount) * 100) / 100);
 
   return {
@@ -29,6 +31,7 @@ export function calculatePricing(
     gstAmount,
     platformFee,
     commissionAmount,
+    callRateFee,
     totalAmount,
     technicianEarnings,
     discountAmount,
@@ -80,6 +83,8 @@ export async function getPricingForService(serviceName: string): Promise<Pricing
     Number(sp.gst_rate),
     Number(sp.platform_fee),
     Number(sp.commission_rate),
+    0,
+    Number(sp.call_rate_fee) || 0,
   );
 }
 
