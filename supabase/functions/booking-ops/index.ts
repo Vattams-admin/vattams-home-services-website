@@ -107,7 +107,16 @@ Deno.serve(async (req: Request) => {
         .maybeSingle();
       if (callRateError || !callRate) return new Response(JSON.stringify({ error: "The selected job type is unavailable. Please choose a valid service type." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-      const basePrice = Number(servicePrice.base_price) || 0;
+      const { data: customerPrice, error: customerPriceError } = await supabase
+        .from("customer_service_prices")
+        .select("base_price")
+        .eq("service_category", String(b.service_category))
+        .eq("service_type", serviceType)
+        .eq("is_active", true)
+        .maybeSingle();
+      if (customerPriceError || !customerPrice) return new Response(JSON.stringify({ error: "Customer pricing is not configured for this job type yet. Please select another service or contact support." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+      const basePrice = Number(customerPrice.base_price) || 0;
       const gstAmount = Math.round((basePrice * (Number(servicePrice.gst_rate)||0) / 100) * 100) / 100;
       const platformFee = Number(servicePrice.platform_fee) || 0;
       const commissionAmount = Math.round((basePrice * (Number(servicePrice.commission_rate)||0) / 100) * 100) / 100;

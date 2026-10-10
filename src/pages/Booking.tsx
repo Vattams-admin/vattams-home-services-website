@@ -3,11 +3,21 @@ import { Loader, CheckCircle, XCircle, Calendar, User, Phone, MapPin, Wrench, Fi
 import { supabase, ServiceCategory, Customer, ServicePrice } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
 import { notifyCustomer } from '@/lib/notifications';
-import { getPricingFromServicePrice, calculatePricing, formatINR, type PricingBreakdown } from '@/lib/pricing';
+import { calculatePricing, formatINR, type PricingBreakdown } from '@/lib/pricing';
 import { validateCoupon, type Coupon } from '@/lib/coupons';
 import { cities } from '@/lib/cities';
 
 const bookingCities = [...cities.map((c) => c.name), 'Other'];
+
+interface CustomerServicePrice {
+  service_category: string;
+  service_type: string;
+  base_price: number;
+  price_label: string;
+  is_active: boolean;
+}
+
+const getCustomerPriceKey = (category: string, type: string) => `${category}::${type}`;
 
 const getServiceTypes = (category: string): string[] => {
   const value = category.trim().toLowerCase();
@@ -33,6 +43,7 @@ export default function Booking() {
   const { navigate } = useRouter();
   const [services, setServices] = useState<ServiceCategory[]>([]);
   const [servicePrices, setServicePrices] = useState<Record<string, ServicePrice>>({});
+  const [customerServicePrices, setCustomerServicePrices] = useState<Record<string, CustomerServicePrice>>({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [couponCode, setCouponCode] = useState('');
@@ -66,7 +77,8 @@ export default function Booking() {
     Promise.all([
       supabase.from('service_categories').select('*').order('created_at'),
       supabase.from('service_prices').select('*').eq('is_active', true),
-    ]).then(([catRes, priceRes]) => {
+      supabase.from('customer_service_prices').select('*').eq('is_active', true),
+    ]).then(([catRes, priceRes, customerPriceRes]) => {
       if (catRes.data) {
         const featuredServices = catRes.data.filter((service) => isFeaturedApplianceService(service.name));
         setServices(featuredServices);
@@ -77,6 +89,13 @@ export default function Booking() {
         (priceRes.data as ServicePrice[]).filter((sp) => isFeaturedApplianceService(sp.service_name)).forEach((sp) => { map[sp.service_name] = sp; });
         setServicePrices(map);
       }
+      if (customerPriceRes.data) {
+        const map: Record<string, CustomerServicePrice> = {};
+        (customerPriceRes.data as CustomerServicePrice[])
+          .filter((price) => isFeaturedApplianceService(price.service_category))
+          .forEach((price) => { map[getCustomerPriceKey(price.service_category, price.service_type)] = price; });
+        setCustomerServicePrices(map);
+      }
       setLoading(false);
     });
   }, []);
@@ -84,10 +103,10 @@ export default function Booking() {
   const selectedService = services.find((s) => s.name === form.service_category);
   const serviceTypes = getServiceTypes(form.service_category);
   const servicePrice = servicePrices[form.service_category];
-  const basePricing: PricingBreakdown | null = servicePrice ? getPricingFromServicePrice(servicePrice) : null;
+  const customerServicePrice = customerServicePrices[getCustomerPriceKey(form.service_category, form.service_type)];
   const discount = couponResult?.valid ? couponResult.discountAmount : 0;
-  const pricing: PricingBreakdown | null = basePricing
-    ? calculatePricing(basePricing.basePrice, servicePrice?.gst_rate ?? 18, basePricing.platformFee, servicePrice?.commission_rate ?? 10, discount)
+  const pricing: PricingBreakdown | null = servicePrice && customerServicePrice
+    ? calculatePricing(Number(customerServicePrice.base_price), servicePrice.gst_rate ?? 18, servicePrice.platform_fee, servicePrice.commission_rate ?? 0, discount)
     : null;
 
   const handleValidateCoupon = async () => {
@@ -287,7 +306,7 @@ export default function Booking() {
                     </div>
                     <div className="space-y-1.5 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Service Charge</span>
+                        <span className="text-gray-600">{customerServicePrice?.price_label ?? 'Starting service price'}</span>
                         <span className="font-semibold text-gray-800">{formatINR(pricing.basePrice)}</span>
                       </div>
                       <div className="flex justify-between">
@@ -309,6 +328,9 @@ export default function Booking() {
                         <span className="font-extrabold text-gold-700 text-lg">{formatINR(pricing.finalAmount)}</span>
                       </div>
                     </div>
+                    <p className="mt-2 text-xs leading-5 text-gray-500">
+                      This is the starting service price for the selected job. Any spare parts, materials, or model-specific extra work will be quoted separately and requires your approval before work begins.
+                    </p>
                   </div>
                 )}
 
