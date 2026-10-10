@@ -158,7 +158,7 @@ Deno.serve(async (req: Request) => {
                   badge: "/favicon.svg",
                   requireInteraction: true,
                 },
-                fcmOptions: { link: new URL(messageData.url || "/", Deno.env.get("PUBLIC_APP_URL") || "https://vattams.net").toString() },
+                fcm_options: { link: new URL(messageData.url || "/", Deno.env.get("PUBLIC_APP_URL") || "https://vattams.net").toString() },
               },
             },
           }),
