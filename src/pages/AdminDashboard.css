@@ -1,0 +1,198 @@
+/* Premium, responsive executive dashboard — scoped to the Home Services admin area. */
+.vattams-admin-shell {
+  --admin-ink: #0b1729;
+  --admin-ink-soft: #24344a;
+  --admin-gold: #d8b66a;
+  --admin-orange: #f28b35;
+  --admin-canvas: #f5f6f8;
+  --admin-line: #e8ebf0;
+  background: var(--admin-canvas);
+  color: var(--admin-ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  isolation: isolate;
+}
+.vattams-admin-sidebar {
+  background: linear-gradient(180deg, #071426 0%, #0c1b30 56%, #10223a 100%);
+  border-color: rgba(255,255,255,.08);
+  color: #e8edf5;
+  min-height: 100vh;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  box-shadow: 14px 0 40px rgba(6,18,35,.06);
+  z-index: 20;
+}
+.vattams-admin-brand { border-bottom: 1px solid rgba(255,255,255,.09); }
+.vattams-admin-brand img { box-shadow: 0 5px 18px rgba(0,0,0,.16); }
+.vattams-admin-nav { padding-top: 1.1rem; }
+.vattams-admin-nav-item {
+  color: #aab7c9;
+  border: 1px solid transparent;
+  letter-spacing: -.01em;
+  text-align: left;
+}
+.vattams-admin-nav-item:hover {
+  color: #fff;
+  background: rgba(255,255,255,.065);
+  border-color: rgba(255,255,255,.06);
+}
+.vattams-admin-nav-item.is-active {
+  color: #fff;
+  background: linear-gradient(105deg, rgba(216,182,106,.2), rgba(242,139,53,.09));
+  border-color: rgba(216,182,106,.28);
+  box-shadow: inset 3px 0 0 var(--admin-gold), 0 7px 20px rgba(0,0,0,.08);
+}
+.vattams-admin-nav-item.is-active svg { color: var(--admin-gold); }
+.vattams-admin-topbar {
+  background: rgba(255,255,255,.93) !important;
+  color: var(--admin-ink) !important;
+  border-bottom: 1px solid var(--admin-line) !important;
+  box-shadow: 0 6px 24px rgba(15,23,42,.035) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.vattams-admin-topbar h1 { color: var(--admin-ink) !important; letter-spacing: -.035em; }
+.vattams-admin-content { min-width: 0; }
+.vattams-admin-shell .bg-blue-600 {
+  background: linear-gradient(135deg, #d8b66a, #f2a34e) !important;
+  color: #111b2b !important;
+}
+.vattams-admin-shell .hover\:bg-blue-700:hover { background: #e9c77d !important; }
+.vattams-admin-shell .text-blue-600 { color: #a97b23 !important; }
+.vattams-admin-shell .border-blue-200 { border-color: #e7d4a5 !important; }
+.vattams-admin-shell .focus\:border-blue-500:focus { border-color: #c69a3a !important; }
+.vattams-admin-shell .focus\:ring-blue-100:focus { --tw-ring-color: rgb(216 182 106 / .24) !important; }
+.vattams-admin-shell .rounded-2xl.border,
+.vattams-admin-shell .rounded-xl.border {
+  border-color: var(--admin-line);
+}
+.vattams-admin-shell .shadow-sm { box-shadow: 0 5px 20px rgba(17,31,51,.045); }
+.vattams-admin-shell table thead { background: #f8f8f7; }
+.vattams-admin-shell table thead th { color: #788397; font-size: 10px; letter-spacing: .09em; font-weight: 800; }
+.vattams-admin-shell table tbody tr { transition: background .18s ease; }
+.vattams-admin-shell table tbody tr:hover { background: #fbf8f1; }
+.vattams-admin-shell input,
+.vattams-admin-shell select,
+.vattams-admin-shell textarea { accent-color: #c69a3a; }
+.vattams-admin-shell button { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease; }
+.vattams-admin-shell button:active { transform: translateY(1px); }
+.vattams-admin-shell .vattams-admin-primary-action {
+  background: linear-gradient(135deg, #e9c77d, #f4a65b);
+  color: #111b2b;
+  box-shadow: 0 8px 24px rgba(216,182,106,.2);
+}
+.vattams-admin-shell .vattams-admin-primary-action:hover { box-shadow: 0 12px 28px rgba(216,182,106,.3); transform: translateY(-1px); }
+.vattams-admin-shell .vattams-admin-secondary-action {
+  color: #f4f6fa;
+  border: 1px solid rgba(255,255,255,.2);
+  background: rgba(255,255,255,.065);
+}
+.vattams-admin-shell .vattams-admin-secondary-action:hover { background: rgba(255,255,255,.12); }
+.vattams-admin-welcome {
+  position: relative;
+  overflow: hidden;
+  min-height: 250px;
+  display: flex;
+  align-items: center;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  border: 1px solid rgba(216,182,106,.23);
+  border-radius: 1.6rem;
+  background:
+    radial-gradient(circle at 82% 25%, rgba(242,139,53,.16), transparent 18rem),
+    radial-gradient(circle at 65% 100%, rgba(216,182,106,.1), transparent 20rem),
+    linear-gradient(115deg, #071426 0%, #0e2037 58%, #17263a 100%);
+  box-shadow: 0 18px 45px rgba(8,21,39,.13);
+}
+.vattams-admin-welcome-mark {
+  position: absolute;
+  right: clamp(1rem, 5vw, 4rem);
+  top: 50%;
+  width: 210px;
+  height: 210px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  opacity: .9;
+}
+.vattams-admin-orbit {
+  position: absolute;
+  border: 1px solid rgba(216,182,106,.27);
+  border-radius: 50%;
+  inset: 4px;
+  transform: rotate(-22deg) scaleX(.72);
+}
+.vattams-admin-orbit-two { inset: 28px -10px; transform: rotate(42deg) scaleX(.76); border-color: rgba(242,139,53,.28); }
+.vattams-admin-mark-core {
+  position: absolute;
+  inset: 55px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(216,182,106,.38);
+  border-radius: 1.6rem;
+  background: linear-gradient(145deg, rgba(216,182,106,.19), rgba(255,255,255,.035));
+  color: #e8c982;
+  box-shadow: 0 0 60px rgba(216,182,106,.08), inset 0 1px rgba(255,255,255,.09);
+  transform: rotate(-8deg);
+}
+.vattams-admin-eyebrow {
+  color: #a17a2a;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: .16em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+.vattams-admin-kpi {
+  position: relative;
+  min-width: 0;
+  padding: 1.15rem;
+  border: 1px solid #e8ebf0;
+  border-radius: 1.1rem;
+  background: linear-gradient(150deg, #fff 0%, #fdfdfc 100%);
+  box-shadow: 0 8px 25px rgba(16,31,52,.045);
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.vattams-admin-kpi:hover { transform: translateY(-2px); border-color: #e6d7b3; box-shadow: 0 15px 32px rgba(16,31,52,.075); }
+.vattams-admin-kpi-label { color: #6b7789; font-size: 11px; font-weight: 750; letter-spacing: .02em; }
+.vattams-admin-kpi-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  color: #9a742b;
+  background: linear-gradient(145deg, #fbf1d7, #fff9eb);
+  border: 1px solid #f0e1bd;
+}
+.vattams-admin-kpi-icon-warm { color: #b66a2b; background: #fff0df; border-color: #f5dfc5; }
+.vattams-admin-kpi-icon-green { color: #247b65; background: #e8f5ef; border-color: #d4eade; }
+.vattams-admin-kpi-track { height: 3px; margin-top: 15px; overflow: hidden; border-radius: 99px; background: #edf0f4; }
+.vattams-admin-kpi-track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #d8b66a, #f28b35); transition: width .5s ease; }
+.vattams-admin-panel {
+  min-width: 0;
+  padding: 1.35rem;
+  border: 1px solid #e8ebf0;
+  border-radius: 1.2rem;
+  background: #fff;
+  box-shadow: 0 8px 26px rgba(16,31,52,.04);
+}
+.vattams-service-bar-ac { background: linear-gradient(90deg, #d8b66a, #f3a34e); }
+.vattams-service-bar-wash { background: linear-gradient(90deg, #7189b8, #8ca7d9); }
+.vattams-service-bar-fridge { background: linear-gradient(90deg, #5b9c8a, #83c2ae); }
+.vattams-admin-overview table thead { background: #f8f8f7; }
+.vattams-admin-overview table thead th { color: #778294; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+@media (max-width: 1023px) {
+  .vattams-admin-sidebar { min-height: 0; position: relative; width: 100%; }
+  .vattams-admin-brand { padding-top: 1rem; padding-bottom: 1rem; }
+  .vattams-admin-nav { padding-top: .7rem; padding-bottom: .8rem; }
+  .vattams-admin-nav-item { min-height: 42px; }
+}
+@media (max-width: 640px) {
+  .vattams-admin-welcome { min-height: 275px; padding: 1.3rem; }
+  .vattams-admin-welcome-mark { right: -82px; top: auto; bottom: -74px; transform: scale(.78); opacity: .32; }
+  .vattams-admin-welcome h2 { max-width: 100%; font-size: 1.55rem; }
+  .vattams-admin-content { padding: 1rem; }
+  .vattams-admin-kpi { padding: 1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vattams-admin-shell *, .vattams-admin-shell *::before, .vattams-admin-shell *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}

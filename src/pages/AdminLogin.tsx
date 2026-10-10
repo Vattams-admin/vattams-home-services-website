@@ -3,6 +3,7 @@ import { Lock, Loader, AlertCircle, Mail } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase';
 import { initFCM } from '@/lib/fcm';
+import './AdminLogin.css';
 
 export default function AdminLogin() {
   const { navigate } = useRouter();
@@ -75,10 +76,10 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-950 via-blue-900 to-indigo-900 px-4">
+    <div className="vattams-admin-login pt-20 md:pt-24 min-h-screen flex items-center justify-center px-4">
       <div className="max-w-md w-full">
 
-        <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl p-8 shadow-2xl">
+        <div className="vattams-admin-login-card backdrop-blur-lg rounded-3xl p-8 shadow-2xl">
 
           {/* Logo */}
           <div className="text-center mb-8">

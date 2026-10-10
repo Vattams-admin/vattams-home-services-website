@@ -103,15 +103,18 @@ function PageContent() {
 }
 
 function AppShell() {
+  const { page } = useRouter();
+  const isAdminRoute = page === 'admin-login' || page === 'admin-dashboard';
+
   return (
     <div className="min-h-screen flex flex-col">
       <Schema />
-      <Header />
+      {!isAdminRoute && <Header />}
       <main className="flex-1">
         <PageContent />
       </main>
-      <Footer />
-      <AIChatWidget />
+      {!isAdminRoute && <Footer />}
+      {!isAdminRoute && <AIChatWidget />}
     </div>
   );
 }

@@ -1,0 +1,58 @@
+/* Premium admin authentication surface — separate from the public website shell. */
+.vattams-admin-login {
+  --login-gold: #e1bf72;
+  background:
+    radial-gradient(ellipse at 12% 8%, rgba(216,182,106,.16), transparent 30rem),
+    radial-gradient(ellipse at 88% 92%, rgba(242,139,53,.12), transparent 28rem),
+    linear-gradient(135deg, #061121 0%, #0b1b30 52%, #13243a 100%);
+  color: #f8fafc;
+  position: relative;
+  overflow: hidden;
+}
+.vattams-admin-login::before,
+.vattams-admin-login::after {
+  content: "";
+  position: absolute;
+  width: 24rem;
+  height: 24rem;
+  border: 1px solid rgba(225,191,114,.12);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.vattams-admin-login::before { top: -15rem; right: -6rem; box-shadow: 0 0 0 2.5rem rgba(225,191,114,.025), 0 0 0 5rem rgba(225,191,114,.018); }
+.vattams-admin-login::after { bottom: -18rem; left: -9rem; width: 30rem; height: 30rem; }
+.vattams-admin-login > div { position: relative; z-index: 1; }
+.vattams-admin-login-card {
+  background: linear-gradient(145deg, rgba(255,255,255,.105), rgba(255,255,255,.045));
+  border: 1px solid rgba(225,191,114,.25);
+  box-shadow: 0 28px 90px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.1);
+}
+.vattams-admin-login-card img { box-shadow: 0 12px 34px rgba(0,0,0,.2); }
+.vattams-admin-login-card input {
+  background: rgba(5,13,25,.42) !important;
+  border-color: rgba(255,255,255,.16) !important;
+  color: #fff !important;
+  border-radius: 13px;
+}
+.vattams-admin-login-card input::placeholder { color: rgba(220,229,240,.4) !important; }
+.vattams-admin-login-card input:focus {
+  border-color: var(--login-gold) !important;
+  box-shadow: 0 0 0 3px rgba(225,191,114,.12);
+}
+.vattams-admin-login-card button[type="submit"],
+.vattams-admin-login-card .bg-blue-600 {
+  background: linear-gradient(110deg, #e1bf72, #f3a65a) !important;
+  color: #111b2a !important;
+  box-shadow: 0 9px 25px rgba(225,191,114,.16);
+}
+.vattams-admin-login-card button[type="submit"]:hover { filter: brightness(1.06); transform: translateY(-1px); }
+.vattams-admin-login-card .text-blue-200 { color: #d8dfea !important; }
+.vattams-admin-login-card .text-blue-100 { color: #e6ebf2 !important; }
+.vattams-admin-login-card .text-blue-200\/50 { color: rgba(225,191,114,.55) !important; }
+@media (max-width: 480px) {
+  .vattams-admin-login { padding-top: 1rem !important; padding-bottom: 1rem; }
+  .vattams-admin-login-card { padding: 1.4rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vattams-admin-login * { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}

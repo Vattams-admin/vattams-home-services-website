@@ -32,6 +32,7 @@ import AdminAIDashboard from '@/components/admin/AdminAIDashboard';
 import AdminCRM from '@/components/admin/AdminCRM';
 import AdminContent from '@/components/admin/AdminContent';
 import AdminCoupons from '@/components/admin/AdminCoupons';
+import './AdminDashboard.css';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -74,6 +75,7 @@ const statusOptions: BookingStatus[] = [
 ];
 
 type Tab =
+  | 'overview'
   | 'bookings'
   | 'technicians'
   | 'customers'
@@ -91,7 +93,7 @@ type Tab =
 export default function AdminDashboard() {
   const { navigate } = useRouter();
 
-  const [tab, setTab] = useState<Tab>('bookings');
+  const [tab, setTab] = useState<Tab>('overview');
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [loading, setLoading] = useState(true);
@@ -982,6 +984,7 @@ export default function AdminDashboard() {
   };
 
   const navItems: { id: Tab; label: string; icon: LucideIcon }[] = [
+    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'bookings', label: 'Bookings', icon: Briefcase },
     { id: 'technicians', label: 'Technicians', icon: Users },
     { id: 'customers', label: 'Customers', icon: User },
@@ -1006,24 +1009,22 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
+    <div className="vattams-admin-shell min-h-screen flex flex-col lg:flex-row">
       {/* Sidebar */}
-      <aside className="lg:w-60 shrink-0 bg-white border-b lg:border-b-0 lg:border-r border-gray-100">
-        <div className="px-5 py-5 flex items-center gap-2">
-          <LayoutDashboard size={22} className="text-blue-600" />
-          <span className="font-extrabold text-gray-900">Admin Panel</span>
+      <aside className="vattams-admin-sidebar lg:w-64 shrink-0 border-b lg:border-b-0 lg:border-r">
+        <div className="vattams-admin-brand px-5 py-5 flex items-center gap-3">
+          <img src="/logo.svg" alt="VATTAMS HOME SERVICES" className="h-10 w-10 rounded-xl object-contain bg-white/95 p-1" />
+          <div className="min-w-0"><div className="font-extrabold tracking-wide text-white">VATTAMS</div><div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-200">Home Services</div></div>
         </div>
 
-        <nav className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible px-3 pb-4">
+        <nav className="vattams-admin-nav flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible px-3 pb-4">
           {navItems.map((item) => (
             <button
               key={item.id}
               onClick={() => setTab(item.id)}
               className={
-                'flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors shrink-0 ' +
-                (tab === item.id
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-600 hover:bg-gray-100')
+                'vattams-admin-nav-item flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors shrink-0 ' +
+                (tab === item.id ? 'is-active' : '')
               }
             >
               <item.icon size={16} />
@@ -1035,7 +1036,7 @@ export default function AdminDashboard() {
 
       {/* Main content */}
       <div className="flex-1 min-w-0">
-        <header className="bg-white border-b border-gray-100 px-4 sm:px-6 py-4 flex items-center justify-between gap-3 sticky top-0 z-10">
+        <header className="vattams-admin-topbar px-4 sm:px-7 py-4 flex items-center justify-between gap-3 sticky top-0 z-10">
           <h1 className="text-lg font-extrabold text-gray-900 capitalize">
             {tab.replace('-', ' ')}
           </h1>
@@ -1053,9 +1054,64 @@ export default function AdminDashboard() {
           </div>
         </header>
 
-        <div className="p-4 sm:p-6">
+        <div className="vattams-admin-content p-4 sm:p-7">
           <PushNotificationSetup userType="admin" userId={sessionStorage.getItem('vattams_admin_id') || 'admin'} />
 
+
+    {/* ===================== EXECUTIVE OVERVIEW ===================== */}
+    {tab === 'overview' && (
+      <section className="vattams-admin-overview space-y-6">
+        <div className="vattams-admin-welcome">
+          <div className="relative z-10 max-w-2xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-amber-200/30 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-100"><ShieldCheck size={13} /> Executive control centre</div>
+            <h2 className="mt-4 text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Good to see you, {sessionStorage.getItem('vattams_admin_name') || 'Administrator'}.</h2>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">Your operations at a glance. Monitor bookings, support your technicians, and keep every appliance service moving.</p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <button onClick={() => setTab('bookings')} className="vattams-admin-primary-action inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold"><Briefcase size={16} /> Manage bookings <ExternalLink size={14} /></button>
+              <button onClick={() => setTab('technicians')} className="vattams-admin-secondary-action inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold"><Users size={16} /> Technician team</button>
+            </div>
+          </div>
+          <div className="vattams-admin-welcome-mark" aria-hidden="true"><div className="vattams-admin-orbit vattams-admin-orbit-one"/><div className="vattams-admin-orbit vattams-admin-orbit-two"/><div className="vattams-admin-mark-core"><Wrench size={34}/></div></div>
+        </div>
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+          <div><p className="vattams-admin-eyebrow">Performance snapshot</p><h3 className="mt-1 text-xl font-extrabold text-slate-900">Operations overview</h3></div>
+          <p className="text-xs text-slate-500">Live dashboard data · refreshes automatically</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div className="vattams-admin-kpi"><div className="flex items-center justify-between"><span className="vattams-admin-kpi-label">Completed revenue</span><span className="vattams-admin-kpi-icon"><DollarSign size={18}/></span></div><div className="mt-4 text-2xl font-extrabold tracking-tight text-slate-900">{formatINR(stats.revenue)}</div><div className="mt-2 text-xs text-slate-500">From completed jobs</div><div className="vattams-admin-kpi-track"><span style={{width: `${stats.total ? Math.min(100, (stats.completed / stats.total) * 100) : 0}%`}}/></div></div>
+          <div className="vattams-admin-kpi"><div className="flex items-center justify-between"><span className="vattams-admin-kpi-label">Total bookings</span><span className="vattams-admin-kpi-icon"><Calendar size={18}/></span></div><div className="mt-4 text-2xl font-extrabold tracking-tight text-slate-900">{stats.total.toLocaleString('en-IN')}</div><div className="mt-2 text-xs text-slate-500">{stats.completed} completed so far</div><div className="vattams-admin-kpi-track"><span style={{width: `${stats.total ? Math.min(100, (stats.completed / stats.total) * 100) : 0}%`}}/></div></div>
+          <div className="vattams-admin-kpi"><div className="flex items-center justify-between"><span className="vattams-admin-kpi-label">Needs attention</span><span className="vattams-admin-kpi-icon vattams-admin-kpi-icon-warm"><Clock size={18}/></span></div><div className="mt-4 text-2xl font-extrabold tracking-tight text-slate-900">{stats.pending.toLocaleString('en-IN')}</div><div className="mt-2 text-xs text-slate-500">Bookings awaiting action</div><button onClick={() => {setFilter('pending'); setTab('bookings');}} className="mt-3 text-xs font-bold text-amber-700 hover:text-amber-800">Review pending bookings →</button></div>
+          <div className="vattams-admin-kpi"><div className="flex items-center justify-between"><span className="vattams-admin-kpi-label">Active technicians</span><span className="vattams-admin-kpi-icon vattams-admin-kpi-icon-green"><Users size={18}/></span></div><div className="mt-4 text-2xl font-extrabold tracking-tight text-slate-900">{stats.technicians.toLocaleString('en-IN')}</div><div className="mt-2 text-xs text-slate-500">{stats.pendingTechs} applications pending review</div><button onClick={() => {setTechFilter('pending'); setTab('technicians');}} className="mt-3 text-xs font-bold text-amber-700 hover:text-amber-800">Review team →</button></div>
+        </div>
+        <div className="grid grid-cols-1 xl:grid-cols-5 gap-5">
+          <div className="vattams-admin-panel xl:col-span-3">
+            <div className="flex items-start justify-between gap-3"><div><p className="vattams-admin-eyebrow">Booking pipeline</p><h3 className="mt-1 text-base font-extrabold text-slate-900">Status breakdown</h3><p className="mt-1 text-xs text-slate-500">Based on current booking records</p></div><button onClick={() => setTab('bookings')} className="text-xs font-bold text-amber-700 hover:text-amber-800">View all →</button></div>
+            <div className="mt-6 space-y-4">{[
+              {label:'Pending',value:stats.pending,color:'bg-amber-400'},
+              {label:'Assigned',value:stats.assigned,color:'bg-sky-500'},
+              {label:'In progress',value:stats.inProgress,color:'bg-violet-500'},
+              {label:'Completed',value:stats.completed,color:'bg-emerald-500'},
+              {label:'Cancelled',value:stats.cancelled,color:'bg-rose-400'},
+            ].map((item) => <div key={item.label}><div className="mb-2 flex items-center justify-between text-sm"><span className="font-medium text-slate-600">{item.label}</span><span className="font-bold tabular-nums text-slate-900">{item.value} <span className="font-normal text-slate-400">/ {stats.total}</span></span></div><div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className={`h-full rounded-full transition-all duration-700 ${item.color}`} style={{width:`${stats.total ? (item.value / stats.total) * 100 : 0}%`}}/></div></div>)}
+            </div>
+            <div className="mt-6 grid grid-cols-3 gap-3 border-t border-slate-100 pt-5"><div><p className="text-xs text-slate-500">Customers</p><p className="mt-1 text-lg font-extrabold text-slate-900">{customers.length}</p></div><div><p className="text-xs text-slate-500">Team members</p><p className="mt-1 text-lg font-extrabold text-slate-900">{technicians.length}</p></div><div><p className="text-xs text-slate-500">Completed jobs</p><p className="mt-1 text-lg font-extrabold text-slate-900">{stats.completed}</p></div></div>
+          </div>
+          <div className="vattams-admin-panel xl:col-span-2">
+            <div><p className="vattams-admin-eyebrow">Service portfolio</p><h3 className="mt-1 text-base font-extrabold text-slate-900">Appliance service mix</h3><p className="mt-1 text-xs text-slate-500">Bookings across the three active service families</p></div>
+            <div className="mt-6 space-y-5">{[
+              {label:'AC service',count:bookings.filter((b) => /\bac\b|air.?condition/i.test(b.service_category || '')).length,color:'vattams-service-bar-ac'},
+              {label:'Washing machine',count:bookings.filter((b) => /washing.?machine/i.test(b.service_category || '')).length,color:'vattams-service-bar-wash'},
+              {label:'Refrigerator',count:bookings.filter((b) => /refrigerator|fridge/i.test(b.service_category || '')).length,color:'vattams-service-bar-fridge'},
+            ].map((service) => { const total = bookings.filter((b) => /\bac\b|air.?condition|washing.?machine|refrigerator|fridge/i.test(b.service_category || '')).length; return <div key={service.label}><div className="mb-2 flex items-center justify-between gap-2"><span className="text-sm font-semibold text-slate-700">{service.label}</span><span className="text-sm font-extrabold tabular-nums text-slate-900">{service.count}</span></div><div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className={`h-full rounded-full ${service.color}`} style={{width:`${total ? (service.count / total) * 100 : 0}%`}}/></div></div>;})}</div>
+            <div className="mt-7 rounded-xl border border-amber-100 bg-amber-50/70 p-4"><div className="flex items-start gap-3"><div className="rounded-lg bg-white p-2 text-amber-700 shadow-sm"><ShieldCheck size={18}/></div><div><p className="text-sm font-bold text-slate-800">Focused service promise</p><p className="mt-1 text-xs leading-5 text-slate-600">AC, washing machine and refrigerator care — a clear, specialist service portfolio.</p></div></div></div>
+          </div>
+        </div>
+        <div className="vattams-admin-panel overflow-hidden !p-0">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-5"><div><p className="vattams-admin-eyebrow">Recent activity</p><h3 className="mt-1 text-base font-extrabold text-slate-900">Latest bookings</h3></div><button onClick={() => setTab('bookings')} className="self-start sm:self-auto rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 transition hover:border-amber-300 hover:text-amber-800">Open booking manager <ExternalLink size={13} className="ml-1 inline"/></button></div>
+          <div className="overflow-x-auto"><table className="w-full"><thead><tr><th className="px-5 py-3 text-left">Booking</th><th className="px-5 py-3 text-left">Customer</th><th className="px-5 py-3 text-left hidden md:table-cell">Service</th><th className="px-5 py-3 text-left">Status</th><th className="px-5 py-3 text-right">Amount</th></tr></thead><tbody className="divide-y divide-slate-100">{bookings.slice(0,5).map((booking) => <tr key={booking.id}><td className="px-5 py-4 text-sm font-bold text-slate-800">{booking.booking_number}</td><td className="px-5 py-4"><div className="text-sm font-semibold text-slate-800">{booking.customer_name}</div><div className="mt-0.5 text-xs text-slate-400">{booking.mobile_number}</div></td><td className="px-5 py-4 text-sm text-slate-600 hidden md:table-cell">{booking.service_category}</td><td className="px-5 py-4"><span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-bold capitalize ${statusColors[booking.status] ?? 'bg-slate-100 text-slate-600 border-slate-200'}`}>{booking.status.replace('_',' ')}</span></td><td className="px-5 py-4 text-right text-sm font-bold tabular-nums text-slate-800">{formatINR(booking.total_amount ?? booking.amount ?? 0)}</td></tr>)}{bookings.length === 0 && <tr><td colSpan={5} className="px-5 py-10 text-center text-sm text-slate-400">No bookings available yet. New bookings will appear here.</td></tr>}</tbody></table></div>
+        </div>
+      </section>
+    )}
 
     {/* ===================== BOOKINGS TAB ===================== */}
     {tab === 'bookings' && (
