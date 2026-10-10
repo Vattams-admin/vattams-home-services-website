@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { adminData } from './adminData';
 
 export interface CRMReminder {
   id: string;
@@ -13,8 +13,12 @@ export interface CRMReminder {
   status: string;
 }
 
+async function createReminder(input: Record<string, unknown>) {
+  return adminData<{ reminder: CRMReminder }>('crm_reminder_create', { input });
+}
+
 export async function scheduleBookingReminder(bookingId: string, customerMobile: string, customerName: string, scheduledFor: string) {
-  return supabase.from('crm_reminders').insert({
+  return createReminder({
     reminder_type: 'booking_reminder',
     recipient_type: 'customer',
     recipient_id: customerMobile,
@@ -22,11 +26,12 @@ export async function scheduleBookingReminder(bookingId: string, customerMobile:
     title: 'Booking Reminder',
     message: `Dear ${customerName}, this is a reminder for your upcoming VATTAMS booking.`,
     scheduled_for: scheduledFor,
+    metadata: { booking_id: bookingId },
   });
 }
 
 export async function scheduleReviewRequest(bookingId: string, customerMobile: string, customerName: string) {
-  return supabase.from('crm_reminders').insert({
+  return createReminder({
     reminder_type: 'review_request',
     recipient_type: 'customer',
     recipient_id: customerMobile,
@@ -34,11 +39,12 @@ export async function scheduleReviewRequest(bookingId: string, customerMobile: s
     title: 'How was your service?',
     message: `Dear ${customerName}, please rate your recent VATTAMS service experience.`,
     scheduled_for: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+    metadata: { booking_id: bookingId },
   });
 }
 
 export async function scheduleAMCReminder(customerMobile: string, customerName: string, serviceName: string, scheduledFor: string) {
-  return supabase.from('crm_reminders').insert({
+  return createReminder({
     reminder_type: 'amc_reminder',
     recipient_type: 'customer',
     recipient_id: customerMobile,
@@ -50,7 +56,7 @@ export async function scheduleAMCReminder(customerMobile: string, customerName: 
 }
 
 export async function scheduleWarrantyReminder(customerMobile: string, customerName: string, serviceName: string, scheduledFor: string) {
-  return supabase.from('crm_reminders').insert({
+  return createReminder({
     reminder_type: 'warranty_reminder',
     recipient_type: 'customer',
     recipient_id: customerMobile,
@@ -62,7 +68,7 @@ export async function scheduleWarrantyReminder(customerMobile: string, customerN
 }
 
 export async function scheduleFestivalOffer(customerMobile: string, customerName: string, festivalName: string, offerDetails: string) {
-  return supabase.from('crm_reminders').insert({
+  return createReminder({
     reminder_type: 'festival_offer',
     recipient_type: 'customer',
     recipient_id: customerMobile,
@@ -74,7 +80,7 @@ export async function scheduleFestivalOffer(customerMobile: string, customerName
 }
 
 export async function scheduleInactiveFollowup(customerMobile: string, customerName: string, lastBookingDate: string) {
-  return supabase.from('crm_reminders').insert({
+  return createReminder({
     reminder_type: 'inactive_followup',
     recipient_type: 'customer',
     recipient_id: customerMobile,
@@ -86,7 +92,7 @@ export async function scheduleInactiveFollowup(customerMobile: string, customerN
 }
 
 export async function scheduleBirthdayGreeting(customerMobile: string, customerName: string, birthday: string) {
-  return supabase.from('crm_reminders').insert({
+  return createReminder({
     reminder_type: 'birthday_greeting',
     recipient_type: 'customer',
     recipient_id: customerMobile,
@@ -98,7 +104,7 @@ export async function scheduleBirthdayGreeting(customerMobile: string, customerN
 }
 
 export async function scheduleTechnicianRenewal(techId: string, techName: string, renewalDate: string) {
-  return supabase.from('crm_reminders').insert({
+  return createReminder({
     reminder_type: 'technician_renewal',
     recipient_type: 'technician',
     recipient_id: techId,
@@ -110,28 +116,23 @@ export async function scheduleTechnicianRenewal(techId: string, techName: string
 }
 
 export async function fetchPendingReminders(): Promise<CRMReminder[]> {
-  const { data, error } = await supabase
-    .from('crm_reminders')
-    .select('*')
-    .eq('status', 'pending')
-    .order('scheduled_for', { ascending: true });
-  if (error) return [];
-  return (data ?? []) as CRMReminder[];
+  try {
+    const result = await adminData<{ reminders: CRMReminder[] }>('crm_reminders_list', { status: 'pending', limit: 250 });
+    return result.reminders ?? [];
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchAllReminders(limit = 100): Promise<CRMReminder[]> {
-  const { data, error } = await supabase
-    .from('crm_reminders')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(limit);
-  if (error) return [];
-  return (data ?? []) as CRMReminder[];
+  try {
+    const result = await adminData<{ reminders: CRMReminder[] }>('crm_reminders_list', { limit });
+    return result.reminders ?? [];
+  } catch {
+    return [];
+  }
 }
 
 export async function markReminderSent(reminderId: string) {
-  return supabase
-    .from('crm_reminders')
-    .update({ status: 'sent', sent_at: new Date().toISOString() })
-    .eq('id', reminderId);
+  return adminData<{ reminder: CRMReminder }>('crm_reminder_mark_sent', { reminder_id: reminderId });
 }
