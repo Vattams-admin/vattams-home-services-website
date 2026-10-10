@@ -27,6 +27,10 @@ const FAQS = [
     a: 'Earnings depend on the jobs you complete. The fixed call-rate fee is shown on each job and applied only after completion. There is no percentage commission; the customer platform fee is shown separately at checkout. Track completed jobs and call-rate dues in your dashboard.',
   },
   {
+    q: 'How does call-rate pricing work?',
+    a: 'Every eligible job shows its fixed call-rate fee before you accept it. The fee is recorded only after the job is completed; rejected, cancelled, or uncompleted jobs are not charged. There is no percentage commission on these appliance jobs, and the customer platform fee is shown separately at checkout.',
+  },
+  {
     q: 'Which cities does VATTAMS operate in?',
     a: 'VATTAMS operates across India, including Chennai, Coimbatore, Madurai, Tiruchirappalli, Salem, Tirunelveli, Vellore, and more cities as our service network grows.',
   },
