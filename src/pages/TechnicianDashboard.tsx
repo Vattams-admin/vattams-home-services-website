@@ -269,7 +269,7 @@ export default function TechnicianDashboard() {
     () =>
       completedJobs.reduce(
         (total, job) =>
-          total + Number(job.job_amount || 0),
+          total + Math.max(0, Number(job.job_amount || 0) - Number(job.call_rate_fee || 0)),
         0
       ),
     [completedJobs]
@@ -965,7 +965,7 @@ function Overview({
             View Call Rate Jobs <ChevronRight size={17} />
           </button>
         </div>
-        <div className="relative mt-5 border-t border-white/10 pt-3 text-xs leading-5 text-white/55">Job allocation depends on approval, service category, location, availability and matching. Job volume and earnings are not guaranteed.</div>
+        <div className="relative mt-5 border-t border-white/10 pt-3 text-xs leading-5 text-white/55">Suggested launch rates: AC ₹35 per completed job; washing machine and refrigerator ₹25 per completed job. Admin can adjust rates. Job volume and earnings are not guaranteed.</div>
       </section>
       {/* STATS */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1048,13 +1048,12 @@ function Overview({
 
           <p className="text-2xl font-extrabold text-gray-900 mt-1">
             {formatMoney(
-              technician.earnings ||
-                totalJobEarnings
+              totalJobEarnings || technician.earnings || 0
             )}
           </p>
 
           <p className="text-xs text-gray-400 mt-1">
-            From completed jobs
+            After the fixed call-rate fee
           </p>
         </div>
 
@@ -1520,6 +1519,16 @@ function JobCard({
                   Notes:
                 </span>{' '}
                 {job.notes}
+              </div>
+            )}
+
+            {Number(job.call_rate_fee || 0) > 0 && (
+              <div className="mt-3 rounded-xl border border-[#c9a227]/35 bg-[#fffaf0] p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-xs font-extrabold uppercase tracking-wide text-[#795d0c]">Fixed call-rate fee</span>
+                  <span className="text-sm font-extrabold text-[#0b1f3a]">{formatMoney(Number(job.call_rate_fee))}</span>
+                </div>
+                <p className="mt-1 text-xs leading-5 text-gray-600">Only charged after this job is completed. No call-rate fee for rejected, cancelled or uncompleted jobs. No extra platform fee or percentage commission on this appliance job.</p>
               </div>
             )}
 
