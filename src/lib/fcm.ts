@@ -135,7 +135,7 @@ async function waitForServiceWorkerActivation(
   if (worker.state !== 'activated') {
     await new Promise<void>((resolve, reject) => {
       const onStateChange = () => {
-        if (worker.state === 'activated') {
+        if ((worker.state as ServiceWorkerState) === 'activated') {
           worker.removeEventListener('statechange', onStateChange);
           resolve();
         } else if (worker.state === 'redundant') {
