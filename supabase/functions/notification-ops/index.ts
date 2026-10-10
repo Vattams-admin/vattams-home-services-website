@@ -38,7 +38,7 @@ Deno.serve(async req=>{
     if(!authorized && b.booking_action_token){
       const {data:booking}=await db.from("bookings").select("id,booking_action_token,mobile_number,customer_id,assigned_technician_id").eq("booking_action_token",b.booking_action_token).maybeSingle();
       if(booking && String(booking.booking_action_token)===String(b.booking_action_token)){
-        if(input.recipientType==="customer" && String(input.recipientId)===String(booking.mobile_number)) authorized=true;
+        if(input.recipientType==="customer" && input.type==="booking_received" && input.referenceType==="booking" && String(input.referenceId)===String(booking.id) && String(input.recipientId)===String(booking.mobile_number)) authorized=true;
       }
     }
 
