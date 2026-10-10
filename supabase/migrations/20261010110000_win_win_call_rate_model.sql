@@ -39,7 +39,7 @@ ALTER TABLE public.service_prices
 
 -- Avoid locking a technician after a single small call-rate fee.
 UPDATE public.wallet_settings
-SET lock_threshold = 500, updated_at = now();
+SET lock_threshold = 500, commission_rate = 0, updated_at = now();
 
 -- Permit the ledger to identify fixed call-rate fees separately from the old
 -- percentage commission type. Keep every historical type available.
@@ -110,7 +110,9 @@ BEGIN
     INTO completed_count, deposit_released_already, w_balance, c_due, l_deposit
     FROM public.technicians WHERE id = tech_id;
 
-    IF completed_count >= settings.deposit_release_job_threshold AND NOT deposit_released_already THEN
+    IF completed_count >= settings.deposit_release_job_threshold
+       AND NOT deposit_released_already
+       AND COALESCE(l_deposit, 0) > 0 THEN
       UPDATE public.technicians
       SET locked_deposit = 0, deposit_released = true
       WHERE id = tech_id;
@@ -205,6 +207,33 @@ BEGIN
       'Your payment of Rs ' || NEW.amount || ' has been applied to outstanding call-rate fees first. Remaining wallet credit: Rs ' || wallet_credit || '.');
 
     PERFORM public.recalc_available_balance(NEW.technician_id);
+  END IF;
+
+  RETURN NEW;
+END;
+$function$;
+
+
+-- The current ₹49 registration payment is a one-time joining fee, not a
+-- second ₹50 security deposit. Mark it paid after the existing verified-payment
+-- guard runs, but do not fabricate wallet credit or lock an unpaid deposit.
+CREATE OR REPLACE FUNCTION public.lock_deposit_on_approval()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'pg_catalog', 'public', 'pg_temp'
+AS $function$
+BEGIN
+  IF NEW.status = 'active'
+     AND (TG_OP = 'INSERT' OR OLD.status IS DISTINCT FROM NEW.status)
+     AND COALESCE(NEW.registration_fee_paid, false) = false THEN
+    UPDATE public.technicians
+    SET registration_fee_paid = true
+    WHERE id = NEW.id;
+
+    INSERT INTO public.technician_notifications (technician_id, type, title, message)
+    VALUES (NEW.id, 'registration_fee', '₹49 Joining Fee Verified',
+      'Your one-time ₹49 joining fee has been verified. No additional security deposit is required.');
   END IF;
 
   RETURN NEW;
