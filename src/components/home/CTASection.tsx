@@ -12,16 +12,16 @@ export default function CTASection() {
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 className="font-display text-3xl md:text-4xl font-bold text-white mb-4">
-          Reliable Home Services. One Trusted Platform.
+          Premium Appliance Care. One Trusted Platform.
         </h2>
         <p className="text-navy-100/80 text-base md:text-lg mb-10 max-w-xl mx-auto">
-          Book a verified technician for dependable home service, from repair and maintenance to installation.
+          Book AC, washing machine or refrigerator service with a clear, convenient doorstep experience.
         </p>
 
         <div className="max-w-2xl mx-auto bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-8 flex flex-col items-center text-center">
-          <h3 className="text-white font-bold text-lg mb-2">Need a Home Service?</h3>
+          <h3 className="text-white font-bold text-lg mb-2">Need Appliance Care?</h3>
           <p className="text-navy-100/70 text-sm mb-6">
-            Book a verified technician with transparent pricing, dependable service, and a professional service workflow.
+            Choose from our three focused services: AC, washing machine and refrigerator care.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <button
