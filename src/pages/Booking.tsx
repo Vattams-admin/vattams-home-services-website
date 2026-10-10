@@ -9,6 +9,16 @@ import { cities } from '@/lib/cities';
 
 const bookingCities = [...cities.map((c) => c.name), 'Other'];
 
+const getServiceTypes = (category: string): string[] => {
+  const value = category.trim().toLowerCase();
+  if (value.includes('washing machine')) return ['Washing Machine Service'];
+  if (value.includes('refrigerator') || value.includes('fridge')) return ['Refrigerator Service'];
+  if (/(^|\\W)ac(\\W|$)|air\\s*condition/.test(value)) {
+    return ['General Service', 'Installation', 'Gas Filling', 'Pump Water Service', 'Coil Service'];
+  }
+  return [];
+};
+
 const isFeaturedApplianceService = (name: string) => {
   const value = name.trim().toLowerCase();
   return /(^|\W)ac(\W|$)|air\s*condition/.test(value)
@@ -33,7 +43,7 @@ export default function Booking() {
 
   const [form, setForm] = useState({
     customer_name: '', mobile_number: '', city: 'Chennai', address: '',
-    service_category: '', problem_description: '', preferred_date: '', preferred_time: '',
+    service_category: '', service_type: '', problem_description: '', preferred_date: '', preferred_time: '',
   });
 
   useEffect(() => {
@@ -60,7 +70,7 @@ export default function Booking() {
       if (catRes.data) {
         const featuredServices = catRes.data.filter((service) => isFeaturedApplianceService(service.name));
         setServices(featuredServices);
-        if (featuredServices[0]) setForm((f) => ({ ...f, service_category: featuredServices[0].name }));
+        if (featuredServices[0]) setForm((f) => ({ ...f, service_category: featuredServices[0].name, service_type: getServiceTypes(featuredServices[0].name)[0] ?? '' }));
       }
       if (priceRes.data) {
         const map: Record<string, ServicePrice> = {};
@@ -72,6 +82,7 @@ export default function Booking() {
   }, []);
 
   const selectedService = services.find((s) => s.name === form.service_category);
+  const serviceTypes = getServiceTypes(form.service_category);
   const servicePrice = servicePrices[form.service_category];
   const basePricing: PricingBreakdown | null = servicePrice ? getPricingFromServicePrice(servicePrice) : null;
   const discount = couponResult?.valid ? couponResult.discountAmount : 0;
@@ -93,6 +104,10 @@ export default function Booking() {
       alert('Please select AC, washing machine, or refrigerator service.');
       return;
     }
+    if (!form.service_type || !serviceTypes.includes(form.service_type)) {
+      alert('Please select the exact job type.');
+      return;
+    }
     setSubmitting(true);
     const { data, error } = await supabase.functions.invoke('booking-ops', {
       body: {
@@ -103,6 +118,7 @@ export default function Booking() {
         city: form.city,
         address: form.address,
         service_category: form.service_category,
+        service_type: form.service_type,
         problem_description: form.problem_description,
         preferred_date: form.preferred_date || null,
         preferred_time: form.preferred_time || null,
@@ -247,12 +263,21 @@ export default function Booking() {
                   </Field>
                   <Field icon={Wrench} label="Service Category *">
                     <select required value={form.service_category}
-                      onChange={(e) => setForm({ ...form, service_category: e.target.value })}
+                      onChange={(e) => setForm({ ...form, service_category: e.target.value, service_type: getServiceTypes(e.target.value)[0] ?? '' })}
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all bg-white">
                       {services.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
                     </select>
                   </Field>
                 </div>
+
+                <Field icon={Wrench} label="Specific Job Type *">
+                  <select required value={form.service_type}
+                    onChange={(e) => setForm({ ...form, service_type: e.target.value })}
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all bg-white">
+                    {serviceTypes.map((type) => <option key={type} value={type}>{type}</option>)}
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">The selected job type determines the technician's fixed call-rate fee. This is separate from your service bill.</p>
+                </Field>
 
                 {selectedService && pricing && (
                   <div className="bg-ivory rounded-xl p-4 border border-[#e8e1d2]">
