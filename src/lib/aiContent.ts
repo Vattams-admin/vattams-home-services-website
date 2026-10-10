@@ -68,7 +68,7 @@ export function generateSocialContent(
     poster_text: `VATTAMS ${service}\n${offer ?? 'Same-Day Service'}\n${city ?? 'Available near you'}`,
     body_content: null,
     meta_description: `Professional ${service} service${locationTag} by VATTAMS. Certified technicians, same-day service, affordable pricing.`,
-    target_keywords: [service, 'home services', city ?? '', 'VATTAMS', 'repair', 'maintenance'].filter(Boolean),
+    target_keywords: [service, 'appliance service', city ?? '', 'VATTAMS', 'repair', 'maintenance'].filter(Boolean),
   };
 }
 
@@ -105,16 +105,16 @@ export function generateCityPage(city: string, services: string[]): Omit<Content
 
   return {
     content_type: 'city_page',
-    title: `Home Services in ${city} | VATTAMS`,
+    title: `Appliance Service in ${city} | VATTAMS`,
     caption: null,
     hashtags: null,
     voice_over_script: null,
     video_script: null,
-    thumbnail_text: `Home Services in ${city}`,
+    thumbnail_text: `Appliance Service in ${city}`,
     poster_text: `VATTAMS ${city}\nProfessional Home Services`,
     body_content: body,
     meta_description: `AC, washing machine and refrigerator service in ${city} by VATTAMS. Check appointment availability through the booking page.`,
-    target_keywords: [city, 'home services', 'VATTAMS', ...services],
+    target_keywords: [city, 'appliance service', 'VATTAMS', ...allowedServices],
   };
 }
 
@@ -149,7 +149,7 @@ export function generateOfferPoster(festivalName: string, offer: string, service
     content_type: 'festival_poster',
     title: `${festivalName} Special Offer - VATTAMS`,
     caption: `Celebrate ${festivalName} with VATTAMS! ${offer}${service ? ` on all ${service} bookings` : ''}. Book now and save big!`,
-    hashtags: [`#${festivalName.replace(/\s+/g, '')}`, '#VATTAMS', '#FestivalOffer', '#HomeServices', '#SpecialDiscount'],
+    hashtags: [`#${festivalName.replace(/\s+/g, '')}`, '#VATTAMS', '#FestivalOffer', '#ApplianceCare', '#SpecialDiscount'],
     voice_over_script: null,
     video_script: null,
     thumbnail_text: `${festivalName} Offer!`,
