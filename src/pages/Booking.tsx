@@ -282,7 +282,7 @@ export default function Booking() {
                   </Field>
                   <Field icon={Wrench} label="Service Category *">
                     <select required value={form.service_category}
-                      onChange={(e) => setForm({ ...form, service_category: e.target.value, service_type: getServiceTypes(e.target.value)[0] ?? '' })}
+                      onChange={(e) => { setForm({ ...form, service_category: e.target.value, service_type: getServiceTypes(e.target.value)[0] ?? '' }); setCouponResult(null); setCouponCode(''); }}
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all bg-white">
                       {services.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
                     </select>
@@ -291,7 +291,7 @@ export default function Booking() {
 
                 <Field icon={Wrench} label="Specific Job Type *">
                   <select required value={form.service_type}
-                    onChange={(e) => setForm({ ...form, service_type: e.target.value })}
+                    onChange={(e) => { setForm({ ...form, service_type: e.target.value }); setCouponResult(null); setCouponCode(''); }}
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all bg-white">
                     {serviceTypes.map((type) => {
                       const listedPrice = customerServicePrices[getCustomerPriceKey(form.service_category, type)];
