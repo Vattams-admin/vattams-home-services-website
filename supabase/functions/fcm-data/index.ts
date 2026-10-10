@@ -22,15 +22,31 @@ async function authorize(userType: string, token: string, adminId: string, reque
     const s = await session("admin_auth_sessions", token);
     if (!s || String(s.admin_id) !== String(adminId)) return null;
     const { data: a } = await db.from("admin_users").select("id,role,is_active").eq("id", s.admin_id).maybeSingle();
-    if (!a?.is_active || a.role !== "super_admin") return null;
+    if (!a?.is_active) return null;
     return String(s.admin_id);
   }
-  const table = userType === "technician" ? "technician_auth_sessions" : "customer_auth_sessions";
-  const s = await session(table, token);
-  if (!s) return null;
-  const id = String(s[userType === "technician" ? "technician_id" : "customer_id"]);
-  if (requestedId && id !== String(requestedId)) return null;
-  return id;
+  if (userType === "technician") {
+    const s = await session("technician_auth_sessions", token);
+    if (!s) return null;
+    const id = String(s.technician_id || "");
+    if (!id || (requestedId && id !== String(requestedId))) return null;
+    return id;
+  }
+
+  // Customer notifications are addressed by the customer's mobile number throughout
+  // the booking and notification flows. Resolve that public recipient key only from
+  // the authenticated customer's session; never trust a caller-supplied mobile.
+  const s = await session("customer_auth_sessions", token);
+  if (!s?.customer_id) return null;
+  const { data: customer } = await db.from("customers")
+    .select("id,mobile")
+    .eq("id", s.customer_id)
+    .maybeSingle();
+  if (!customer?.mobile) return null;
+  const mobile = String(customer.mobile);
+  const customerId = String(customer.id);
+  if (requestedId && String(requestedId) !== mobile && String(requestedId) !== customerId) return null;
+  return mobile;
 }
 
 Deno.serve(async req => {

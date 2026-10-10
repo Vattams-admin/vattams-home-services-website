@@ -20,6 +20,7 @@ type UserType = 'customer' | 'technician' | 'admin';
 const FCM_SW_SCOPE = '/firebase-cloud-messaging-push-scope';
 
 let foregroundCallback: ((payload: { notification?: { title?: string; body?: string }; data?: Record<string, unknown> }) => void) | null = null;
+let foregroundListenerRegistered = false;
 
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
   if (!('Notification' in window)) return 'denied';
@@ -123,6 +124,36 @@ function getDeviceInfo(): string {
   return `${platform} | ${ua}`.slice(0, 200);
 }
 
+async function waitForServiceWorkerActivation(
+  registration: ServiceWorkerRegistration,
+): Promise<ServiceWorkerRegistration> {
+  if (registration.active?.state === 'activated') return registration;
+
+  const worker = registration.installing ?? registration.waiting ?? registration.active;
+  if (!worker) throw new Error('FCM service worker has no active lifecycle worker');
+
+  if (worker.state !== 'activated') {
+    await new Promise<void>((resolve, reject) => {
+      const onStateChange = () => {
+        if (worker.state === 'activated') {
+          worker.removeEventListener('statechange', onStateChange);
+          resolve();
+        } else if (worker.state === 'redundant') {
+          worker.removeEventListener('statechange', onStateChange);
+          reject(new Error('FCM service worker installation failed'));
+        }
+      };
+      worker.addEventListener('statechange', onStateChange);
+      onStateChange();
+    });
+  }
+
+  if (!registration.active || registration.active.state !== 'activated') {
+    throw new Error('FCM service worker did not become active');
+  }
+  return registration;
+}
+
 export async function initFCM(
   userType: UserType,
   userId: string,
@@ -140,9 +171,19 @@ export async function initFCM(
       return null;
     }
 
-    const fcmRegistration =
-      (await navigator.serviceWorker.getRegistration(FCM_SW_SCOPE)) ??
-      (await navigator.serviceWorker.ready);
+    if (!('serviceWorker' in navigator)) return null;
+
+    // Do not fall back to navigator.serviceWorker.ready: that resolves to the
+    // app's root PWA worker, which is not the dedicated FCM worker.
+    await registerServiceWorker();
+    const registration = await navigator.serviceWorker.getRegistration(
+      new URL(`${FCM_SW_SCOPE}/`, window.location.origin).href,
+    );
+    if (!registration) {
+      console.error('[fcm] dedicated messaging service worker registration is missing');
+      return null;
+    }
+    const fcmRegistration = await waitForServiceWorkerActivation(registration);
 
     const token = await getToken(messaging, {
       vapidKey,
@@ -151,22 +192,30 @@ export async function initFCM(
 
     if (!token) return null;
 
-    await registerFCMToken(userType, userId, token, getDeviceInfo());
+    const registered = await registerFCMToken(userType, userId, token, getDeviceInfo());
+    if (!registered) {
+      console.error('[fcm] token was generated but could not be registered with the backend');
+      return null;
+    }
 
-    onMessage(messaging, (payload) => {
-      if (foregroundCallback) {
-        foregroundCallback(payload);
-      } else {
-        const { title, body } = payload.notification ?? {};
-        if (title) {
-          new Notification(title, {
-            body: body ?? '',
-            icon: '/logo.svg',
-            badge: '/favicon.svg',
-          });
+    // Avoid stacking duplicate foreground handlers after repeated logins.
+    if (!foregroundListenerRegistered) {
+      onMessage(messaging, (payload) => {
+        if (foregroundCallback) {
+          foregroundCallback(payload);
+        } else {
+          const { title, body } = payload.notification ?? {};
+          if (title && Notification.permission === 'granted') {
+            new Notification(title, {
+              body: body ?? '',
+              icon: '/logo.svg',
+              badge: '/favicon.svg',
+            });
+          }
         }
-      }
-    });
+      });
+      foregroundListenerRegistered = true;
+    }
 
     return token;
   } catch (err) {

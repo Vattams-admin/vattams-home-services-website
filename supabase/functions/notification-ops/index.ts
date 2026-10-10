@@ -50,9 +50,16 @@ Deno.serve(async req=>{
     const {data,error}=await db.from("notifications").insert(row).select("*").single();
     if(error) return out({error:"Unable to create notification"},400);
 
-    if (Array.isArray(row.channels) && row.channels.includes("push") && input.recipientType !== "admin") {
+    let pushDelivery: unknown = null;
+    if (Array.isArray(row.channels) && row.channels.includes("push")) {
       try {
-        await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-push-notification`, {
+        const publicAppUrl = Deno.env.get("PUBLIC_APP_URL") || "https://vattams.net";
+        const destination = input.recipientType === "admin"
+          ? "/#/admin-dashboard"
+          : input.recipientType === "technician"
+            ? "/#/technician-dashboard"
+            : "/#/customer-dashboard";
+        const pushResponse = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-push-notification`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -60,19 +67,25 @@ Deno.serve(async req=>{
           },
           body: JSON.stringify({
             userType: input.recipientType,
-            userId: String(input.recipientId),
+            userId: input.recipientType === "admin" ? "admin" : String(input.recipientId),
             title: String(input.title).slice(0, 200),
             body: String(input.message).slice(0, 2000),
             data: {
               type: String(input.type),
               referenceType: input.referenceType ? String(input.referenceType) : "",
               referenceId: input.referenceId ? String(input.referenceId) : "",
+              url: new URL(destination, publicAppUrl).toString(),
             },
           }),
         });
-      } catch {}
+        pushDelivery = await pushResponse.json().catch(() => ({ error: "Invalid push response" }));
+        if (!pushResponse.ok) console.error("[notifications] push delivery request failed", { status: pushResponse.status });
+      } catch (error) {
+        console.error("[notifications] push delivery request failed", error instanceof Error ? error.message : "unknown");
+        pushDelivery = { success: false, error: "Push delivery request failed" };
+      }
     }
 
-    return out({notification:data});
+    return out({ notification: data, pushDelivery });
   }catch{return out({error:"Unexpected server error"},500)}
 });

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Lock, Loader, AlertCircle, Mail } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase';
+import { initFCM } from '@/lib/fcm';
 
 export default function AdminLogin() {
   const { navigate } = useRouter();
@@ -53,6 +54,7 @@ export default function AdminLogin() {
       sessionStorage.setItem('vattams_admin_expires', expiresAt.toISOString());
       sessionStorage.setItem('vattams_admin_role', authData.admin.role);
       if (authData.admin.full_name) sessionStorage.setItem('vattams_admin_name', authData.admin.full_name);
+      void initFCM('admin', authData.admin.id);
 
       /*
        * Go to admin dashboard only after successful RPC
