@@ -41,6 +41,7 @@ export interface Booking {
   city: string;
   address: string;
   service_category: string;
+  service_type: string | null;
   problem_description: string | null;
   preferred_date: string | null;
   preferred_time: string | null;
