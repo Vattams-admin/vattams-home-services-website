@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { adminData } from './adminData';
 
 export interface ContentDraft {
   id: string;
@@ -161,25 +161,22 @@ export function generateOfferPoster(festivalName: string, offer: string, service
 }
 
 export async function saveContentDraft(draft: Omit<ContentDraft, 'id' | 'created_at' | 'status' | 'platform_url'>) {
-  return supabase.from('ai_content_drafts').insert({
-    ...draft,
-    status: 'draft',
-  });
+  return adminData<{ draft: ContentDraft }>('ai_content_draft_create', { input: draft });
 }
 
 export async function fetchContentDrafts(contentType?: string, limit = 50): Promise<ContentDraft[]> {
-  let query = supabase.from('ai_content_drafts').select('*').order('created_at', { ascending: false }).limit(limit);
-  if (contentType) {
-    query = query.eq('content_type', contentType);
+  try {
+    const result = await adminData<{ drafts: ContentDraft[] }>('ai_content_drafts_list', { content_type: contentType, limit });
+    return result.drafts ?? [];
+  } catch {
+    return [];
   }
-  const { data, error } = await query;
-  if (error) return [];
-  return (data ?? []) as ContentDraft[];
 }
 
 export async function updateContentDraftStatus(id: string, status: string, platformUrl?: string) {
-  return supabase
-    .from('ai_content_drafts')
-    .update({ status, platform_url: platformUrl ?? null, updated_at: new Date().toISOString() })
-    .eq('id', id);
+  return adminData<{ draft: ContentDraft }>('ai_content_draft_update', {
+    id,
+    status,
+    platform_url: platformUrl ?? null,
+  });
 }
