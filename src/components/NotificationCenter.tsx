@@ -187,10 +187,12 @@ export default function NotificationCenter({ recipientType, recipientId }: Notif
                               <CheckCheck size={13} />
                             </button>
                           )}
-                          <button onClick={() => handleDelete(n.id)} title="Delete"
-                            className="p-1 rounded hover:bg-red-100 text-red-500">
-                            <Trash2 size={13} />
-                          </button>
+                          {recipientType === 'admin' && (
+                            <button onClick={() => handleDelete(n.id)} title="Delete"
+                              className="p-1 rounded hover:bg-red-100 text-red-500">
+                              <Trash2 size={13} />
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
