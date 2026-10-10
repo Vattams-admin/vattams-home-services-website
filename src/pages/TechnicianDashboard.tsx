@@ -30,6 +30,7 @@ import { useRouter } from '@/lib/router';
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from '@/lib/supabase';
 import { downloadOnboardingLetter } from '@/lib/onboardingLetter';
 import { technicianData } from '@/lib/technicianData';
+import PushNotificationSetup from '@/components/PushNotificationSetup';
 import {
   NotificationRow,
 } from '@/lib/notifications';
@@ -763,6 +764,8 @@ export default function TechnicianDashboard() {
             </div>
           </div>
         </div>
+
+        <PushNotificationSetup userType="technician" userId={technician.id} />
 
         {/* STATUS */}
         {technician.status !==
