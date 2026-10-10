@@ -165,7 +165,7 @@ BEGIN
 
       IF FOUND THEN
         INSERT INTO public.technician_notifications (technician_id, type, title, message)
-        VALUES (tech_id, 'account_locked', 'Account Paused — Call Rate Dues',
+        VALUES (tech_id, 'account_locked', 'Account Paused — Settlement Due',
           'Your outstanding platform-fee, tax-remittance and call-rate dues exceed Rs ' || settings.lock_threshold || '. Please clear them to receive new jobs.');
       END IF;
     END IF;
@@ -219,7 +219,7 @@ BEGIN
 
     INSERT INTO public.wallet_transactions (technician_id, type, amount, recharge_id, description)
     VALUES (NEW.technician_id, 'recharge_credit', NEW.amount, NEW.id,
-      'Approved payment applied to call-rate dues first; remaining wallet credit Rs ' || wallet_credit);
+      'Approved payment applied to platform-fee, tax-remittance and call-rate dues first; remaining wallet credit Rs ' || wallet_credit);
 
     IF due_after <= settings.lock_threshold THEN
       UPDATE public.technicians SET wallet_locked = false
