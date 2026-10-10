@@ -276,7 +276,7 @@ export default function Booking() {
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all bg-white">
                     {serviceTypes.map((type) => <option key={type} value={type}>{type}</option>)}
                   </select>
-                  <p className="mt-1 text-xs text-gray-500">The selected job type determines the technician's fixed call-rate fee. This is separate from your service bill.</p>
+                  <p className="mt-1 text-xs text-gray-500">Choose the specific work needed so we can assign the right technician.</p>
                 </Field>
 
                 {selectedService && pricing && (
