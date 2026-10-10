@@ -52,7 +52,7 @@ function buildSchema(city: CityData) {
 
   const faqSchema = {
     '@type': 'FAQPage',
-    mainEntity: city.faqs.map((f) => ({
+    mainEntity: city.faqs.filter((f) => !/CCTV|electrical|plumbing|RO water|water purifier|microwave|electrician/i.test(`${f.q} ${f.a}`)).map((f) => ({
       '@type': 'Question',
       name: f.q,
       acceptedAnswer: { '@type': 'Answer', text: f.a },
