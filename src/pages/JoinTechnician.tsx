@@ -24,7 +24,7 @@ const FAQS = [
   },
   {
     q: 'How much can I earn as a VATTAMS technician?',
-    a: 'Earnings depend on the jobs you complete. The fixed call-rate fee is shown before you work on each job and is applied only after completion; there is no extra platform fee or percentage commission for these appliance jobs. Track completed jobs and call-rate dues in your dashboard.',
+    a: 'Earnings depend on the jobs you complete. The fixed call-rate fee is shown on each job and applied only after completion. There is no percentage commission; the customer platform fee is shown separately at checkout. Track completed jobs and call-rate dues in your dashboard.',
   },
   {
     q: 'Which cities does VATTAMS operate in?',
