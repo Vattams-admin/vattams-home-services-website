@@ -93,7 +93,7 @@ Deno.serve(async (req: Request) => {
       if (!isFeaturedApplianceService(b.service_category)) {
         return new Response(JSON.stringify({ error: "Only AC, washing machine, and refrigerator services are currently available" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
-      const { data: servicePrice } = await supabase.from("service_prices").select("base_price,gst_rate,platform_fee,commission_rate,is_active").eq("service_name",String(b.service_category)).eq("is_active",true).maybeSingle();
+      const { data: servicePrice } = await supabase.from("service_prices").select("base_price,gst_rate,platform_fee,commission_rate,call_rate_fee,is_active").eq("service_name",String(b.service_category)).eq("is_active",true).maybeSingle();
       if (!servicePrice) return new Response(JSON.stringify({ error: "Service is unavailable" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       const basePrice = Number(servicePrice.base_price) || 0;
       const gstAmount = Math.round((basePrice * (Number(servicePrice.gst_rate)||0) / 100) * 100) / 100;
@@ -126,6 +126,7 @@ Deno.serve(async (req: Request) => {
         gst_amount: gstAmount,
         platform_fee: platformFee,
         commission_amount: commissionAmount,
+        call_rate_fee: Number(servicePrice.call_rate_fee) || 0,
         total_amount: finalAmount,
         coupon_code: couponCode,
         discount_amount: discountAmount,
@@ -283,7 +284,7 @@ Deno.serve(async (req: Request) => {
 
       const { data: jobData } = await supabase
         .from("technician_jobs")
-        .insert({ booking_id, technician_id: chosen.id, status: "assigned" })
+        .insert({ booking_id, technician_id: chosen.id, status: "assigned", call_rate_fee: Number(booking.call_rate_fee) || 0 })
         .select("*")
         .single() as { data: Record<string, unknown> | null; error: unknown };
 
