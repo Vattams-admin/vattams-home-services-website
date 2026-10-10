@@ -20,6 +20,7 @@ type UserType = 'customer' | 'technician' | 'admin';
 const FCM_SW_SCOPE = '/firebase-cloud-messaging-push-scope';
 
 let foregroundCallback: ((payload: { notification?: { title?: string; body?: string }; data?: Record<string, unknown> }) => void) | null = null;
+let foregroundListenerRegistered = false;
 
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
   if (!('Notification' in window)) return 'denied';
@@ -140,9 +141,18 @@ export async function initFCM(
       return null;
     }
 
-    const fcmRegistration =
-      (await navigator.serviceWorker.getRegistration(FCM_SW_SCOPE)) ??
-      (await navigator.serviceWorker.ready);
+    if (!('serviceWorker' in navigator)) return null;
+
+    // Do not fall back to navigator.serviceWorker.ready: that resolves to the
+    // app's root PWA worker, which is not the dedicated FCM worker.
+    await registerServiceWorker();
+    const fcmRegistration = await navigator.serviceWorker.getRegistration(
+      new URL(`${FCM_SW_SCOPE}/`, window.location.origin).href,
+    );
+    if (!fcmRegistration?.active) {
+      console.error('[fcm] dedicated messaging service worker is not active');
+      return null;
+    }
 
     const token = await getToken(messaging, {
       vapidKey,
@@ -151,22 +161,30 @@ export async function initFCM(
 
     if (!token) return null;
 
-    await registerFCMToken(userType, userId, token, getDeviceInfo());
+    const registered = await registerFCMToken(userType, userId, token, getDeviceInfo());
+    if (!registered) {
+      console.error('[fcm] token was generated but could not be registered with the backend');
+      return null;
+    }
 
-    onMessage(messaging, (payload) => {
-      if (foregroundCallback) {
-        foregroundCallback(payload);
-      } else {
-        const { title, body } = payload.notification ?? {};
-        if (title) {
-          new Notification(title, {
-            body: body ?? '',
-            icon: '/logo.svg',
-            badge: '/favicon.svg',
-          });
+    // Avoid stacking duplicate foreground handlers after repeated logins.
+    if (!foregroundListenerRegistered) {
+      onMessage(messaging, (payload) => {
+        if (foregroundCallback) {
+          foregroundCallback(payload);
+        } else {
+          const { title, body } = payload.notification ?? {};
+          if (title && Notification.permission === 'granted') {
+            new Notification(title, {
+              body: body ?? '',
+              icon: '/logo.svg',
+              badge: '/favicon.svg',
+            });
+          }
         }
-      }
-    });
+      });
+      foregroundListenerRegistered = true;
+    }
 
     return token;
   } catch (err) {
