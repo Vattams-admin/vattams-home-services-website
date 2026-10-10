@@ -232,11 +232,11 @@ Deno.serve(async (req: Request) => {
       // account not locked (dues cleared).
       const { data: candidates } = await supabase
         .from("technicians")
-        .select("id, full_name, rating, total_jobs")
+        .select("id, full_name, rating, total_jobs, current_workload, is_online, last_active_at")
         .eq("city", booking.city)
         .eq("status", "active")
         .eq("wallet_locked", false)
-        .contains("service_categories", [booking.service_category]) as { data: { id: string; full_name: string; rating: number; total_jobs: number }[] | null; error: unknown };
+        .contains("service_categories", [booking.service_category]) as { data: { id: string; full_name: string; rating: number; total_jobs: number; current_workload: number; is_online: boolean; last_active_at: string | null }[] | null; error: unknown };
 
       if (!candidates || candidates.length === 0) {
         return new Response(JSON.stringify({ success: true, assigned: false, reason: "no_eligible_technician" }), {
@@ -262,7 +262,7 @@ Deno.serve(async (req: Request) => {
       }
 
       // "Best" match: highest rating first, then most completed jobs (experience) as tiebreaker.
-      free.sort((a, b) => (b.rating - a.rating) || (b.total_jobs - a.total_jobs));
+      free.sort((a, b) => Number(b.is_online === true) - Number(a.is_online === true) || (Number(a.current_workload || 0) - Number(b.current_workload || 0)) || (Number(b.rating || 0) - Number(a.rating || 0)) || (Number(a.total_jobs || 0) - Number(b.total_jobs || 0)));
       const chosen = free[0];
 
       const { data: claimedBooking, error: claimError } = await supabase.from("bookings")
