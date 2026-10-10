@@ -2,7 +2,7 @@ import { Briefcase, ArrowRight, TrendingUp, Clock, Wallet, ShieldCheck } from 'l
 import { useRouter } from '@/lib/router';
 
 const perks = [
-  { icon: TrendingUp, text: 'Steady stream of verified service leads' },
+  { icon: TrendingUp, text: 'Eligible customer service leads' },
   { icon: Wallet, text: 'Transparent, on-time payouts' },
   { icon: Clock, text: 'Flexible working hours' },
   { icon: ShieldCheck, text: 'Professional network & support' },

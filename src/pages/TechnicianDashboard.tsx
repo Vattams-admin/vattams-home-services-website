@@ -269,7 +269,7 @@ export default function TechnicianDashboard() {
     () =>
       completedJobs.reduce(
         (total, job) =>
-          total + Number(job.job_amount || 0),
+          total + Math.max(0, Number(job.job_amount || 0) - Number(job.call_rate_fee || 0)),
         0
       ),
     [completedJobs]
@@ -965,7 +965,7 @@ function Overview({
             View Call Rate Jobs <ChevronRight size={17} />
           </button>
         </div>
-        <div className="relative mt-5 border-t border-white/10 pt-3 text-xs leading-5 text-white/55">Job allocation depends on approval, service category, location, availability and matching. Job volume and earnings are not guaranteed.</div>
+        <div className="relative mt-5 border-t border-white/10 pt-3 text-xs leading-5 text-white/55">The fixed fee for each job is shown on its card and is charged only after completion. Job volume and earnings are not guaranteed.</div>
       </section>
       {/* STATS */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1048,13 +1048,12 @@ function Overview({
 
           <p className="text-2xl font-extrabold text-gray-900 mt-1">
             {formatMoney(
-              technician.earnings ||
-                totalJobEarnings
+              totalJobEarnings || technician.earnings || 0
             )}
           </p>
 
           <p className="text-xs text-gray-400 mt-1">
-            From completed jobs
+            After the fixed call-rate fee
           </p>
         </div>
 
@@ -1523,6 +1522,16 @@ function JobCard({
               </div>
             )}
 
+            {Number(job.call_rate_fee || 0) > 0 && (
+              <div className="mt-3 rounded-xl border border-[#c9a227]/35 bg-[#fffaf0] p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-xs font-extrabold uppercase tracking-wide text-[#795d0c]">Fixed call-rate fee</span>
+                  <span className="text-sm font-extrabold text-[#0b1f3a]">{formatMoney(Number(job.call_rate_fee))}</span>
+                </div>
+                <p className="mt-1 text-xs leading-5 text-gray-600">The fixed call-rate fee applies only after completion. Rejected, cancelled and uncompleted jobs have no call-rate fee. No percentage commission; customer platform fee and tax are separate checkout components.</p>
+              </div>
+            )}
+
             {detailed && (
               <div className="flex flex-wrap gap-4 mt-3 text-xs text-gray-500">
                 <span className="flex items-center gap-1">
@@ -1751,7 +1760,7 @@ function WalletSection({
         />
 
         <WalletCard
-          title="Commission Due"
+          title="Platform, Tax & Call-Rate Dues"
           value={formatMoney(
             technician.commission_due
           )}
@@ -1772,7 +1781,7 @@ function WalletSection({
             </h2>
 
             <p className="text-xs text-gray-500">
-              Submit a recharge request for Admin approval.
+              Approved payments clear customer platform-fee, tax-remittance and call-rate dues first; any remaining amount becomes wallet credit.
             </p>
           </div>
         </div>

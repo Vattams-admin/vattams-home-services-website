@@ -24,7 +24,11 @@ const FAQS = [
   },
   {
     q: 'How much can I earn as a VATTAMS technician?',
-    a: 'Earnings depend on the number of jobs you accept and your service category. Technicians keep the majority of the service fee, with a small platform commission. You can track your earnings through your technician dashboard.',
+    a: 'Earnings depend on the jobs you complete. The fixed call-rate fee is shown on each job and applied only after completion. There is no percentage commission; the customer platform fee is shown separately at checkout. Track completed jobs and call-rate dues in your dashboard.',
+  },
+  {
+    q: 'How does call-rate pricing work?',
+    a: 'Every eligible job shows its fixed call-rate fee before you accept it. The fee is recorded only after the job is completed; rejected, cancelled, or uncompleted jobs are not charged. There is no percentage commission on these appliance jobs, and the customer platform fee is shown separately at checkout.',
   },
   {
     q: 'Which cities does VATTAMS operate in?',
@@ -318,7 +322,7 @@ export default function JoinTechnician() {
               {
                 num: '4',
                 title: 'Get Paid',
-                desc: 'Receive eligible payments through your registered bank account or UPI after completed services.',
+                desc: 'Collect the customer-approved service amount under the job terms. VATTAMS applies the disclosed fixed call-rate fee only after the job is completed.',
               },
             ].map((step) => (
               <div

@@ -93,7 +93,7 @@ Deno.serve(async (req: Request) => {
       if (!isFeaturedApplianceService(b.service_category)) {
         return new Response(JSON.stringify({ error: "Only AC, washing machine, and refrigerator services are currently available" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
-      const { data: servicePrice } = await supabase.from("service_prices").select("base_price,gst_rate,platform_fee,commission_rate,is_active").eq("service_name",String(b.service_category)).eq("is_active",true).maybeSingle();
+      const { data: servicePrice } = await supabase.from("service_prices").select("base_price,gst_rate,platform_fee,commission_rate,call_rate_fee,is_active").eq("service_name",String(b.service_category)).eq("is_active",true).maybeSingle();
       if (!servicePrice) return new Response(JSON.stringify({ error: "Service is unavailable" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       const basePrice = Number(servicePrice.base_price) || 0;
       const gstAmount = Math.round((basePrice * (Number(servicePrice.gst_rate)||0) / 100) * 100) / 100;
@@ -126,6 +126,7 @@ Deno.serve(async (req: Request) => {
         gst_amount: gstAmount,
         platform_fee: platformFee,
         commission_amount: commissionAmount,
+        call_rate_fee: Number(servicePrice.call_rate_fee) || 0,
         total_amount: finalAmount,
         coupon_code: couponCode,
         discount_amount: discountAmount,
@@ -231,11 +232,11 @@ Deno.serve(async (req: Request) => {
       // account not locked (dues cleared).
       const { data: candidates } = await supabase
         .from("technicians")
-        .select("id, full_name, rating, total_jobs")
+        .select("id, full_name, rating, total_jobs, current_workload, is_online, last_active_at")
         .eq("city", booking.city)
         .eq("status", "active")
         .eq("wallet_locked", false)
-        .contains("service_categories", [booking.service_category]) as { data: { id: string; full_name: string; rating: number; total_jobs: number }[] | null; error: unknown };
+        .contains("service_categories", [booking.service_category]) as { data: { id: string; full_name: string; rating: number; total_jobs: number; current_workload: number; is_online: boolean; last_active_at: string | null }[] | null; error: unknown };
 
       if (!candidates || candidates.length === 0) {
         return new Response(JSON.stringify({ success: true, assigned: false, reason: "no_eligible_technician" }), {
@@ -260,8 +261,8 @@ Deno.serve(async (req: Request) => {
         });
       }
 
-      // "Best" match: highest rating first, then most completed jobs (experience) as tiebreaker.
-      free.sort((a, b) => (b.rating - a.rating) || (b.total_jobs - a.total_jobs));
+      // Fair distribution: online technicians first, then lower workload, then rating; total jobs breaks remaining ties.
+      free.sort((a, b) => Number(b.is_online === true) - Number(a.is_online === true) || (Number(a.current_workload || 0) - Number(b.current_workload || 0)) || (Number(b.rating || 0) - Number(a.rating || 0)) || (Number(a.total_jobs || 0) - Number(b.total_jobs || 0)));
       const chosen = free[0];
 
       const { data: claimedBooking, error: claimError } = await supabase.from("bookings")
@@ -283,7 +284,7 @@ Deno.serve(async (req: Request) => {
 
       const { data: jobData } = await supabase
         .from("technician_jobs")
-        .insert({ booking_id, technician_id: chosen.id, status: "assigned" })
+        .insert({ booking_id, technician_id: chosen.id, status: "assigned", job_amount: Number(booking.base_price ?? 0), call_rate_fee: Number(booking.call_rate_fee) || 0 })
         .select("*")
         .single() as { data: Record<string, unknown> | null; error: unknown };
 
@@ -421,7 +422,7 @@ Deno.serve(async (req: Request) => {
         });
       }
 
-      // Block technicians who owe platform fee + GST + commission from a previous job
+      // Legacy first-accept path is disabled below; new appliance jobs use fixed call-rate dues.
       const { data: techRow, error: techError } = await supabase
         .from("technicians")
         .select("full_name, wallet_locked, commission_due")
@@ -436,7 +437,7 @@ Deno.serve(async (req: Request) => {
 
       if (techRow.wallet_locked) {
         return new Response(JSON.stringify({
-          error: `Account locked. Please pay Rs ${techRow.commission_due} (platform fee + GST + commission) from your last job before accepting a new one.`,
+          error: `Account paused. Please clear Rs ${techRow.commission_due} in outstanding call-rate dues before accepting a new job.`,
         }), {
           status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });

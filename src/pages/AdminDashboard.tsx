@@ -260,7 +260,7 @@ export default function AdminDashboard() {
           base_price: string;
           gst_rate: string;
           platform_fee: string;
-          commission_rate: string;
+          call_rate_fee: string;
           is_active: boolean;
         }
       >
@@ -398,13 +398,13 @@ export default function AdminDashboard() {
   const loadServicePrices = async () => {
     const { prices } = await adminData<{ prices: ServicePrice[] }>('service_prices');
     setServicePrices(prices ?? []);
-    const edits: Record<string, { base_price: string; gst_rate: string; platform_fee: string; commission_rate: string; is_active: boolean }> = {};
+    const edits: Record<string, { base_price: string; gst_rate: string; platform_fee: string; call_rate_fee: string; is_active: boolean }> = {};
     (prices ?? []).forEach((p) => {
       edits[p.id] = {
         base_price: String(p.base_price),
         gst_rate: String(p.gst_rate),
-        platform_fee: String(p.platform_fee),
-        commission_rate: String(p.commission_rate),
+        platform_fee: String(p.platform_fee ?? 0),
+        call_rate_fee: String(p.call_rate_fee ?? 0),
         is_active: p.is_active,
       };
     });
@@ -2703,8 +2703,7 @@ export default function AdminDashboard() {
               Service Pricing
             </h2>
             <p className="text-gray-500 text-sm">
-              Edit base price, GST, platform fee, and commission for each service.
-              Changes take effect immediately for new bookings.
+              Set the service price, clearly disclosed customer platform fee, and fixed technician call rate. Call-rate fees are charged only after completion; appliance jobs have no percentage commission.
             </p>
           </div>
 
@@ -2751,10 +2750,10 @@ export default function AdminDashboard() {
                       GST %
                     </th>
                     <th className="text-right px-4 py-3 text-xs font-bold text-gray-500 uppercase">
-                      Platform Fee
+                      Customer Fee
                     </th>
                     <th className="text-right px-4 py-3 text-xs font-bold text-gray-500 uppercase">
-                      Commission %
+                      Call Rate Fee
                     </th>
                     <th className="text-center px-4 py-3 text-xs font-bold text-gray-500 uppercase">
                       Active
@@ -2777,8 +2776,8 @@ export default function AdminDashboard() {
                         priceEdits[p.id] ?? {
                           base_price: String(p.base_price),
                           gst_rate: String(p.gst_rate),
-                          platform_fee: String(p.platform_fee),
-                          commission_rate: String(p.commission_rate),
+                          platform_fee: String(p.platform_fee ?? 0),
+                          call_rate_fee: String(p.call_rate_fee ?? 0),
                           is_active: p.is_active,
                         };
 
@@ -2789,10 +2788,9 @@ export default function AdminDashboard() {
                             Number(edit.base_price) || 0,
                           gst_rate:
                             Number(edit.gst_rate) || 0,
-                          platform_fee:
-                            Number(edit.platform_fee) || 0,
-                          commission_rate:
-                            Number(edit.commission_rate) || 0,
+                          platform_fee: Number(edit.platform_fee) || 0,
+                          commission_rate: 0,
+                          call_rate_fee: Number(edit.call_rate_fee) || 0,
                         });
 
                       return (
@@ -2842,6 +2840,9 @@ export default function AdminDashboard() {
                           <td className="px-4 py-3">
                             <input
                               type="number"
+                              min="0"
+                              step="1"
+                              aria-label={`Customer platform fee for ${p.service_name}`}
                               value={edit.platform_fee}
                               onChange={(e) =>
                                 setPriceEdits((prev) => ({
@@ -2854,25 +2855,28 @@ export default function AdminDashboard() {
                               }
                               className="w-24 px-2 py-1.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-100 outline-none text-sm text-right"
                             />
+                            <p className="mt-1 text-[10px] text-gray-400 text-right">Shown at checkout</p>
                           </td>
 
                           <td className="px-4 py-3">
                             <input
                               type="number"
-                              step="0.01"
-                              value={edit.commission_rate}
+                              min="0"
+                              step="1"
+                              aria-label={`Call rate fee for ${p.service_name}`}
+                              value={edit.call_rate_fee}
                               onChange={(e) =>
                                 setPriceEdits((prev) => ({
                                   ...prev,
                                   [p.id]: {
                                     ...edit,
-                                    commission_rate:
-                                      e.target.value,
+                                    call_rate_fee: e.target.value,
                                   },
                                 }))
                               }
-                              className="w-20 px-2 py-1.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-100 outline-none text-sm text-right"
+                              className="w-24 px-2 py-1.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-100 outline-none text-sm text-right"
                             />
+                            <p className="mt-1 text-[10px] text-gray-400 text-right">On completion</p>
                           </td>
 
                           <td className="px-4 py-3 text-center">

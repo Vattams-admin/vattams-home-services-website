@@ -53,6 +53,7 @@ export interface Booking {
   gst_amount: number | null;
   platform_fee: number | null;
   commission_amount: number | null;
+  call_rate_fee: number;
   total_amount: number | null;
   start_otp: string | null;
   complete_otp: string | null;
@@ -145,11 +146,12 @@ export interface TechnicianJob {
   service_photo_urls: string[];
   customer_signature: string | null;
   job_amount: number | null;
+  call_rate_fee: number;
   assigned_at: string;
   completed_at: string | null;
 }
 
-export type WalletTxnType = 'registration_fee' | 'deposit_lock' | 'deposit_release' | 'commission_deduction' | 'recharge_credit' | 'recharge_debit' | 'adjustment';
+export type WalletTxnType = 'registration_fee' | 'deposit_lock' | 'deposit_release' | 'commission_deduction' | 'platform_fee_remittance' | 'gst_remittance' | 'call_rate_fee' | 'recharge_credit' | 'recharge_debit' | 'adjustment';
 
 export interface WalletTransaction {
   id: string;
@@ -207,6 +209,7 @@ export interface ServicePrice {
   gst_rate: number;
   platform_fee: number;
   commission_rate: number;
+  call_rate_fee: number;
   is_active: boolean;
   updated_at: string;
   created_at: string;
