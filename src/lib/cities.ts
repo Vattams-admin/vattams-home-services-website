@@ -81,7 +81,7 @@ function generateTestimonials(cityName: string, areas: string[]): { name: string
   const names = ['Rajesh Kumar', 'Priya Sundaram', 'Murugan S', 'Lakshmi N', 'Karthik R', 'Deepa V', 'Senthil Kumar', 'Anitha R'];
   const texts = [
     `Excellent service! The technician arrived on time and fixed my AC quickly. Very professional and the pricing was transparent. Highly recommend VATTAMS for anyone in`,
-    `Booked a plumber through VATTAMS and was impressed by how smooth the whole process was. The OTP verification gave me confidence that the job was done properly. Best home service in`,
+    `Booked washing machine service through VATTAMS and was impressed by how smooth the whole process was. The OTP verification gave me confidence that the job was done properly. Great appliance service in`,
     `My washing machine stopped working suddenly. VATTAMS sent a technician the same day and he diagnosed and fixed the issue within an hour. Great service for residents of`,
     `Very transparent pricing and professional technicians. The in-app chat feature was very convenient for communicating with the technician. A game-changer for home services in`,
     `I've used VATTAMS for appliance service. The booking experience was convenient and the technician was professional. They are a reliable appliance-care provider in`,
@@ -103,7 +103,7 @@ function generateContentSections(cityName: string, knownFor: string, population:
     },
     {
       heading: `Why Choose VATTAMS in ${cityName}?`,
-      body: `VATTAMS stands apart from local repair shops in ${cityName} through our commitment to transparency, quality, and customer satisfaction. Every technician serving ${cityName} undergoes a rigorous verification process including ID proof checks, skill assessments, and background screening. Our unique OTP-based job verification system ensures that both the start and completion of your service in ${cityName} are properly documented. With transparent pricing that includes GST, a 30-day service warranty, and dedicated customer support, ${cityName} residents can trust VATTAMS for all their home service needs.`,
+      body: `VATTAMS stands apart from local repair shops in ${cityName} through our commitment to transparency, quality, and customer satisfaction. Every technician serving ${cityName} undergoes a rigorous verification process including ID proof checks, skill assessments, and background screening. Our unique OTP-based job verification system ensures that both the start and completion of your service in ${cityName} are properly documented. With transparent pricing that includes GST, a 30-day service warranty, and dedicated customer support, ${cityName} residents can trust VATTAMS for AC, washing machine and refrigerator service needs.`,
     },
     {
       heading: `AC Repair and Service in ${cityName}`,
@@ -114,12 +114,12 @@ function generateContentSections(cityName: string, knownFor: string, population:
       body: `VATTAMS focuses on AC, washing machine and refrigerator servicing in ${cityName}. Share your appliance issue and preferred time through the booking page to check local availability.`,
     },
     {
-      heading: `Home Appliance Repair in ${cityName}`,
-      body: `From washing machines and refrigerators to microwaves and water heaters, VATTAMS covers all major home appliance repairs in ${cityName}. Our technicians are brand-certified and stay updated with the latest appliance technologies. We understand that a broken refrigerator or malfunctioning washing machine can cause significant inconvenience for ${cityName} families, which is why we prioritize same-day service for appliance repairs across ${cityName}.`,
+      heading: `Appliance Care in ${cityName}`,
+      body: `VATTAMS focuses on three appliance categories in ${cityName}: ACs, washing machines and refrigerators. Describe your appliance issue and check available appointments through our booking flow. Appointment options depend on local technician availability.`,
     },
     {
       heading: `Refrigerator Service in ${cityName}`,
-      body: `Clean drinking water is essential for every household in ${cityName}. VATTAMS provides comprehensive RO water purifier services including filter replacement, membrane cleaning, tank cleaning, and complete unit servicing. Our ${cityName} technicians service all major RO brands and ensure your water purifier delivers safe, clean water for your family. Regular RO servicing in ${cityName} is recommended every 6 months for optimal performance.`,
+      body: `VATTAMS helps customers in ${cityName} request refrigerator service for cooling issues, unusual noises, leaks and other common faults. Describe the symptoms and choose an available appointment through the booking form.`,
     },
     {
       heading: `Washing Machine Service in ${cityName}`,
@@ -135,7 +135,7 @@ function generateContentSections(cityName: string, knownFor: string, population:
     },
     {
       heading: `Customer Satisfaction in ${cityName}`,
-      body: `Our commitment to ${cityName} customers goes beyond just fixing appliances. We believe in building long-term trust with every service call in ${cityName}. After each job, customers can rate their experience and leave reviews, helping us maintain our high service standards. Our ${cityName} customer support team is available via WhatsApp and phone to address any concerns. With hundreds of satisfied customers across ${cityName}, VATTAMS has become the trusted name in home services.`,
+      body: `Our commitment to ${cityName} customers goes beyond just fixing appliances. We believe in building long-term trust with every service call in ${cityName}. After each job, customers can rate their experience and leave reviews, helping us maintain our high service standards. Our ${cityName} customer support team is available via WhatsApp and phone to address any concerns. With hundreds of satisfied customers across ${cityName}, VATTAMS has become the trusted option for appliance care.`,
     },
   ];
 }
