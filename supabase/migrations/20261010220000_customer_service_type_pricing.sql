@@ -17,6 +17,7 @@ CREATE POLICY customer_service_prices_public_read
   ON public.customer_service_prices
   FOR SELECT TO anon, authenticated
   USING (is_active = true);
+GRANT SELECT ON public.customer_service_prices TO anon, authenticated;
 
 -- Initial customer price schedule. GST (18%) and the existing ₹30 customer
 -- platform fee are shown separately at checkout. Materials/spares require approval.
