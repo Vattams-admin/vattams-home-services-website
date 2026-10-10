@@ -44,7 +44,7 @@ export function generateSocialContent(
     facebook_post: `Need reliable ${service}${locationTag}? VATTAMS brings you certified technicians at your doorstep.${offerText} Book your service today!`,
     youtube_short: `${service} Quick Fix!${offerText} Watch our technician solve a common ${service} problem in under 60 seconds. Subscribe for more home service tips!`,
     linkedin_post: `VATTAMS is focused on professional appliance care with ${service}${locationTag}.${offerText} Our certified technicians ensure quality, safety, and customer satisfaction. Connect with us for B2B service partnerships.`,
-    x_post: `Need ${service}${locationTag}? VATTAMS has you covered!${offerText} Book now: https://vattams.net #HomeServices`,
+    x_post: `Need ${service}${locationTag}? VATTAMS has you covered!${offerText} Book now: https://vattams.net #ApplianceCare`,
   };
 
   const voiceOverScripts: Record<string, string> = {
@@ -94,14 +94,14 @@ export function generateBlogPost(topic: string, service?: string): Omit<ContentD
     poster_text: title,
     body_content: body,
     meta_description: `Learn about ${topic.toLowerCase()} and how VATTAMS professional ${service ?? 'home'} services can help.`,
-    target_keywords: [topic, service ?? 'home services', 'VATTAMS', 'repair', 'guide', 'tips'],
+    target_keywords: [topic, service ?? 'appliance care', 'VATTAMS', 'repair', 'guide', 'tips'],
   };
 }
 
 export function generateCityPage(city: string, services: string[]): Omit<ContentDraft, 'id' | 'created_at' | 'status' | 'platform_url'> {
   const allowedServices = services.filter((s) => /^(AC (Repair|Service)|Washing Machine( Repair| Service)?|Refrigerator( Repair| Service)?)$/i.test(s));
   const serviceList = allowedServices.map((s) => `- ${s} in ${city}`).join('\\n');
-  const body = `# Home Services in ${city}\n\nVATTAMS focuses on AC, washing machine and refrigerator service in ${city}. Appointment availability depends on local technician coverage.\n\n## Services Available\n\n${serviceList}\n\n## Why Choose VATTAMS in ${city}?\n\n- Local technicians familiar with ${city} neighborhoods\n- Fast response times across ${city}\n- Transparent pricing\n- Quality service guaranteed\n\n## Service Areas in ${city}\n\nWe cover all major areas in ${city}. Book your service today and experience the VATTAMS difference.`;
+  const body = `# Appliance Service in ${city}\n\nVATTAMS focuses on AC, washing machine and refrigerator service in ${city}. Appointment availability depends on local technician coverage.\n\n## Services Available\n\n${serviceList}\n\n## Why Choose VATTAMS in ${city}?\n\n- Local technicians familiar with ${city} neighborhoods\n- Fast response times across ${city}\n- Transparent pricing\n- Quality service guaranteed\n\n## Service Areas in ${city}\n\nWe cover all major areas in ${city}. Book your service today and experience the VATTAMS difference.`;
 
   return {
     content_type: 'city_page',
@@ -111,7 +111,7 @@ export function generateCityPage(city: string, services: string[]): Omit<Content
     voice_over_script: null,
     video_script: null,
     thumbnail_text: `Appliance Service in ${city}`,
-    poster_text: `VATTAMS ${city}\nProfessional Home Services`,
+    poster_text: `VATTAMS ${city}\nPremium Appliance Care`,
     body_content: body,
     meta_description: `AC, washing machine and refrigerator service in ${city} by VATTAMS. Check appointment availability through the booking page.`,
     target_keywords: [city, 'appliance service', 'VATTAMS', ...allowedServices],
@@ -156,7 +156,7 @@ export function generateOfferPoster(festivalName: string, offer: string, service
     poster_text: `${festivalName} Special!\n${offer}\n${service ? `${service} - ` : ''}Book Now!\nVATTAMS Home Services`,
     body_content: null,
     meta_description: `${festivalName} special offer from VATTAMS. ${offer} on AC, washing machine or refrigerator service.`,
-    target_keywords: [festivalName, 'offer', 'discount', 'VATTAMS', service ?? 'home services'],
+    target_keywords: [festivalName, 'offer', 'discount', 'VATTAMS', service ?? 'appliance service'],
   };
 }
 
