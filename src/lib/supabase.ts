@@ -30,6 +30,7 @@ export interface ServiceCategory {
   gst_rate: number;
   platform_fee: number;
   commission_rate: number;
+  call_rate_fee: number;
   created_at: string;
 }
 
@@ -207,6 +208,7 @@ export interface ServicePrice {
   gst_rate: number;
   platform_fee: number;
   commission_rate: number;
+  call_rate_fee: number;
   is_active: boolean;
   updated_at: string;
   created_at: string;
