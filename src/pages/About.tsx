@@ -65,9 +65,9 @@ export default function About() {
             <span className="text-white/90 text-xs sm:text-sm font-medium tracking-widest uppercase">About Us</span>
           </div>
           <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-bold text-white leading-tight mb-6">VATTAMS Home Services</h1>
-          <p className="text-transparent bg-clip-text bg-gradient-to-r from-gold-300 via-gold-400 to-gold-300 text-xl sm:text-2xl md:text-3xl font-bold mb-8 tracking-wide">One Trusted Platform for Home Services</p>
+          <p className="text-transparent bg-clip-text bg-gradient-to-r from-gold-300 via-gold-400 to-gold-300 text-xl sm:text-2xl md:text-3xl font-bold mb-8 tracking-wide">Premium Appliance Care</p>
           <p className="text-navy-100/80 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto">
-            VATTAMS connects customers with professional technicians for dependable home repair, maintenance and installation services across India.
+            VATTAMS focuses on AC, washing machine and refrigerator service, with clear booking and professional doorstep support.
           </p>
         </div>
       </section>
@@ -92,7 +92,7 @@ export default function About() {
               <div className="w-12 h-12 rounded-xl bg-[#0b1f3a] flex items-center justify-center shrink-0"><Wrench size={22} className="text-white" aria-hidden="true" /></div>
               <h3 className="font-display font-bold text-[#0b1f3a] text-xl">VATTAMS Home Services</h3>
             </div>
-            <p className="text-gray-500 text-sm leading-relaxed mb-6">Reliable professional services when you need them.</p>
+            <p className="text-gray-500 text-sm leading-relaxed mb-6">Focused care for three essential appliances: ACs, washing machines and refrigerators.</p>
             <ul className="grid grid-cols-2 gap-3 mb-6">
               {homeServices.map((service) => { const Icon = service.icon; return (
                 <li key={service.label} className="flex items-center gap-2 bg-gold-50 rounded-xl px-3 py-2.5 text-sm text-gray-700">
@@ -111,12 +111,12 @@ export default function About() {
             <div className="bg-[#f7f4ed] rounded-2xl border border-[#e8e1d2] shadow-sm p-8 text-center">
               <div className="w-14 h-14 rounded-xl bg-[#0b1f3a] flex items-center justify-center mx-auto mb-4"><Eye size={26} className="text-white" /></div>
               <h3 className="font-display font-bold text-[#0b1f3a] text-lg mb-2">Our Vision</h3>
-              <p className="text-gray-500 text-sm leading-relaxed">To build a trusted home-services network that makes dependable professional help accessible across India.</p>
+              <p className="text-gray-500 text-sm leading-relaxed">To make dependable AC, washing machine and refrigerator care easier to discover and book.</p>
             </div>
             <div className="bg-[#f7f4ed] rounded-2xl border border-[#e8e1d2] shadow-sm p-8 text-center">
               <div className="w-14 h-14 rounded-xl bg-gold-600 flex items-center justify-center mx-auto mb-4"><Target size={26} className="text-white" /></div>
               <h3 className="font-display font-bold text-[#0b1f3a] text-lg mb-2">Our Mission</h3>
-              <p className="text-gray-500 text-sm leading-relaxed">To make home-service discovery, booking, technician assignment and support simple and reliable.</p>
+              <p className="text-gray-500 text-sm leading-relaxed">To make appliance-service discovery, booking, technician assignment and support simple and reliable.</p>
             </div>
           </div>
         </div>
@@ -174,7 +174,7 @@ export default function About() {
       <section className="py-16 md:py-24 bg-[#f7f4ed]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="font-display text-2xl md:text-4xl font-bold text-[#0b1f3a] text-center mb-3">Cities We Serve</h2>
-          <p className="text-gray-500 text-center mb-10 max-w-xl mx-auto">VATTAMS Home Services operates in {cities.length}+ cities across India — tap a city to see local services.</p>
+          <p className="text-gray-500 text-center mb-10 max-w-xl mx-auto">VATTAMS Home Services lists {cities.length}+ city pages for AC, washing machine and refrigerator care — tap a city to explore availability.</p>
           <div className="space-y-8 max-w-5xl mx-auto">
             {Object.entries(citiesByState).map(([state, list]) => (
               <div key={state}>

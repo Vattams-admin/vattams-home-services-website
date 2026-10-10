@@ -20,9 +20,9 @@ const CONTENT_TYPES = [
 ];
 
 const SERVICES = [
-  'AC Repair', 'Refrigerator Repair', 'Washing Machine Repair', 'Plumbing',
-  'Electrical Work', 'Deep Cleaning', 'Pest Control', 'RO Water Purifier',
-  'Microwave Repair', 'TV Repair', 'Geyser Repair', 'Carpentry',
+  'AC Service',
+  'Washing Machine Service',
+  'Refrigerator Service',
 ];
 
 export default function AdminContent() {

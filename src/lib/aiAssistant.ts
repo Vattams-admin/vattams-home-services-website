@@ -18,20 +18,9 @@ export interface ExtractedBookingData {
 }
 
 const SERVICE_KEYWORDS: Record<string, string[]> = {
-  'AC Repair': ['ac', 'air conditioner', 'cooling', 'aircon', 'split ac', 'window ac'],
-  'Refrigerator Repair': ['fridge', 'refrigerator', 'cooling', 'freezer', 'frost'],
-  'Washing Machine Repair': ['washing machine', 'washer', 'laundry', 'spin'],
-  'RO Water Purifier': ['ro', 'water purifier', 'filter', 'water', 'purifier'],
-  'Microwave Repair': ['microwave', 'oven', 'heating', 'microwaves'],
-  'TV Repair': ['tv', 'television', 'display', 'screen', 'led tv', 'lcd tv'],
-  'Geyser Repair': ['geyser', 'water heater', 'heating', 'hot water'],
-  'Chimney Repair': ['chimney', 'kitchen chimney', 'exhaust'],
-  'Electrical Work': ['electrical', 'wiring', 'switch', 'light', 'fan', 'socket', 'short circuit'],
-  'Plumbing': ['plumbing', 'tap', 'leak', 'pipe', 'drain', 'toilet', 'flush', 'water tank'],
-  'Carpentry': ['carpenter', 'carpentry', 'door', 'window', 'furniture', 'wood', 'hinge'],
-  'Pest Control': ['pest', 'cockroach', 'termite', 'bedbug', 'mosquito', 'rat', 'rodent'],
-  'Deep Cleaning': ['cleaning', 'deep clean', 'bathroom cleaning', 'kitchen cleaning', 'sofa cleaning'],
-  'Appliance Installation': ['install', 'installation', 'setup', 'mount', 'uninstall'],
+  'AC Repair': ['ac', 'air conditioner', 'air conditioning', 'aircon', 'split ac', 'window ac'],
+  'Washing Machine Repair': ['washing machine', 'washer', 'spin cycle', 'washer drum'],
+  'Refrigerator Repair': ['fridge', 'refrigerator', 'freezer', 'fridge cooling'],
 };
 
 const URGENCY_KEYWORDS: Record<string, string[]> = {
@@ -95,7 +84,7 @@ export function getAssistantResponse(
       step = 'ask_location';
       reply = `I see you need help with ${service}. I've noted the issue: "${extracted.problem}". Could you please share your city or area so I can find the nearest technician?`;
     } else {
-      reply = "I'd be happy to help you book a service! Could you describe what issue you're facing? For example: 'My AC is not cooling' or 'My kitchen tap is leaking'.";
+      reply = "I'd be happy to help you book a service! Could you describe the appliance issue? For example: 'My AC is not cooling', 'My washing machine won't spin', or 'My refrigerator is not cold'.";
     }
   } else if (step === 'ask_location') {
     extracted.location = userInput.trim();
@@ -105,11 +94,11 @@ export function getAssistantResponse(
   } else if (step === 'ask_time') {
     extracted.preferredTime = userInput.trim();
     step = 'confirm';
-    reply = `Here's a summary of your booking request:\n\n• Service: ${extracted.service}\n• Problem: ${extracted.problem}\n• Location: ${extracted.location}\n• Preferred Time: ${extracted.preferredTime}\n• Urgency: ${extracted.urgency}\n\nShall I create this booking for you? Reply "yes" to confirm or "no" to start over.`;
+    reply = `Here's a summary of your booking request:\n\n• Service: ${extracted.service}\n• Problem: ${extracted.problem}\n• Location: ${extracted.location}\n• Preferred Time: ${extracted.preferredTime}\n• Urgency: ${extracted.urgency}\n\nWould you like to continue to the Booking page to submit this request? Reply "yes" to confirm or "no" to start over.`;
   } else if (step === 'confirm') {
     if (userInput.toLowerCase().includes('yes') || userInput.toLowerCase().includes('confirm')) {
       step = 'done';
-      reply = 'Your booking has been created! A technician will be assigned automatically. You can track your booking in the Customer Dashboard.';
+      reply = 'Your appliance-service request is ready to submit. Please open the Booking page to confirm the service details and create your booking.';
     } else {
       step = 'initial';
       extracted.service = undefined;

@@ -234,7 +234,7 @@ export default function CityLanding({ city }: { city: CityData }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="font-display text-3xl font-bold text-[#0b1f3a] text-center mb-4">Our Services in {city.name}</h2>
           <p className="text-gray-500 text-center mb-12 max-w-2xl mx-auto">
-            Comprehensive home repair and maintenance services by certified technicians across {city.name}
+            Premium AC, washing machine and refrigerator service in {city.name}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {SERVICE_CATEGORIES.map((svc) => {
@@ -288,7 +288,7 @@ export default function CityLanding({ city }: { city: CityData }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="font-display text-3xl font-bold text-[#0b1f3a] text-center mb-4">Areas We Cover in {city.name}</h2>
           <p className="text-gray-500 text-center mb-12 max-w-2xl mx-auto">
-            VATTAMS provides home services across all neighborhoods and surrounding areas of {city.name}
+            VATTAMS offers appliance-service booking for {city.name}; appointment availability is confirmed during booking.
           </p>
           <div className="flex flex-wrap justify-center gap-3 max-w-4xl mx-auto">
             {city.nearbyAreas.map((area) => (
@@ -333,7 +333,7 @@ export default function CityLanding({ city }: { city: CityData }) {
       <section className="bg-[#f7f4ed] py-16 md:py-20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="font-display text-3xl font-bold text-[#0b1f3a] text-center mb-4">Frequently Asked Questions — {city.name}</h2>
-          <p className="text-gray-500 text-center mb-12">Everything you need to know about home services in {city.name}</p>
+          <p className="text-gray-500 text-center mb-12">Everything you need to know about appliance service in {city.name}</p>
           <div className="space-y-3">
             {city.faqs.filter((faq) => !/CCTV|electrical|plumbing|RO water|water purifier|microwave|electrician/i.test(`${faq.q} ${faq.a}`)).map((faq, idx) => (
               <details key={idx} className="group bg-white rounded-xl border border-[#e8e1d2] shadow-sm overflow-hidden">
@@ -353,7 +353,7 @@ export default function CityLanding({ city }: { city: CityData }) {
       <section className="py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="font-display text-3xl font-bold text-[#0b1f3a] text-center mb-4">Also Serving Other Cities in {city.state}</h2>
-          <p className="text-gray-500 text-center mb-12">VATTAMS provides home services across {city.state}</p>
+          <p className="text-gray-500 text-center mb-12">Explore AC, washing machine and refrigerator service availability across {city.state}</p>
           <div className="flex flex-wrap justify-center gap-3">
             {otherCities.map((c) => (
               <button key={c.slug} onClick={() => { window.location.hash = `city-${c.slug}`; window.scrollTo({ top: 0, behavior: 'smooth' }); }}

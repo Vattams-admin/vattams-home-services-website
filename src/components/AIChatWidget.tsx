@@ -38,9 +38,9 @@ function buildReply(userText: string, prices: Record<string, ServicePrice>): str
   if (has('service', 'what do you offer', 'what services')) {
     const activeServices = Object.keys(prices);
     if (activeServices.length > 0) {
-      return `We offer: ${activeServices.join(', ')}. Which one are you interested in?`;
+      return `We focus on three services: AC service, washing machine service and refrigerator service. Which one are you interested in?`;
     }
-    return `We offer a range of home appliance and repair services. Which one are you interested in?`;
+    return `We focus on AC service, washing machine service and refrigerator service. Which one are you interested in?`;
   }
 
   if (has('price', 'cost', 'charge', 'fee', 'how much')) {
@@ -78,7 +78,7 @@ function buildReply(userText: string, prices: Record<string, ServicePrice>): str
   }
 
   if (has('same day', 'urgent', 'emergency', 'today', 'fast')) {
-    return `Yes — same-day service is available for most bookings made before 2 PM. Emergency electrical/plumbing issues get priority dispatch.`;
+    return `Same-day appointments may be available for bookings made before 2 PM, depending on local technician availability. Please check the Booking page for available slots.`;
   }
 
   if (has('support', 'contact', 'phone', 'call', 'whatsapp', 'help')) {

@@ -38,9 +38,7 @@ const testimonials = [
   { name: 'Karthik Murali', city: 'Coimbatore', rating: 5, text: 'Used VATTAMS for washing machine repair. Transparent pricing, genuine parts. Highly recommend!', service: 'Washing Machine Repair', avatar: 'https://images.pexels.com/photos/1212984/pexels-photo-1212984.jpeg?auto=compress&cs=tinysrgb&w=100' },
   { name: 'Meena Sundaram', city: 'Madurai', rating: 5, text: 'Same-day service for refrigerator repair. The technician was very knowledgeable and polite. 5 stars!', service: 'Refrigerator Repair', avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100' },
   { name: 'Suresh Kumar', city: 'Salem', rating: 5, text: 'AC deep cleaning made such a difference in cooling efficiency. Worth every rupee!', service: 'AC Deep Cleaning', avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=100' },
-  { name: 'Lakshmi Nair', city: 'Trichy', rating: 5, text: 'Plumbing work done neatly and quickly. No mess left behind. Very impressed with the service.', service: 'Plumbing Services', avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=100' },
-  { name: 'Arun Selvam', city: 'Tirunelveli', rating: 5, text: 'Booked RO purifier service online. Smooth process, on-time arrival, great workmanship.', service: 'RO Water Purifier', avatar: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=100' },
-].filter((testimonial) => !['Plumbing Services', 'RO Water Purifier'].includes(testimonial.service));
+ ];
 
 export default function Testimonials() {
   return (
