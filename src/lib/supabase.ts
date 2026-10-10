@@ -143,6 +143,7 @@ export interface TechnicianJob {
   booking_id: string;
   technician_id: string;
   status: JobStatus;
+  service_type: string | null;
   notes: string | null;
   service_photo_urls: string[];
   customer_signature: string | null;
