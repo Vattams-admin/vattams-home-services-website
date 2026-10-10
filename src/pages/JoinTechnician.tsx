@@ -202,14 +202,13 @@ export default function JoinTechnician() {
           </div>
 
           <h1 className="font-display text-4xl md:text-5xl font-bold mb-4 leading-tight">
-            Join as a Technician
+            Call Rate Jobs for Technicians
             <br />
-            Earn on Your Own Schedule
+            Grow with VATTAMS
           </h1>
 
           <p className="text-lg md:text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-            Become a VATTAMS service professional. Get matched with suitable
-            nearby jobs, earn per service, and grow your career.
+            Join the VATTAMS technician network for eligible call-rate job opportunities in AC, washing machine and refrigerator services. Manage assigned requests and track eligible earnings in your dashboard.
           </p>
 
           <div className="flex flex-wrap gap-4 justify-center">
@@ -219,7 +218,7 @@ export default function JoinTechnician() {
               }
               className="group flex items-center gap-2 px-8 py-4 bg-gold-500 hover:bg-gold-400 text-[#071426] font-extrabold rounded-xl shadow-2xl transition-all duration-300 hover:scale-105"
             >
-              Start Registration
+              Join for ₹49
               <ArrowRight
                 size={18}
                 className="group-hover:translate-x-1 transition-transform"
@@ -248,7 +247,7 @@ export default function JoinTechnician() {
 
             <div className="flex items-center gap-2">
               <CheckCircle size={18} />
-              ₹49 One-Time Fee
+              ₹49 One-Time Joining Fee
             </div>
           </div>
         </div>
@@ -357,7 +356,7 @@ export default function JoinTechnician() {
           </h2>
 
           <p className="text-gray-500 text-center mb-10">
-            Choose from 15+ service categories
+            Choose the appliance categories that match your skills
           </p>
 
           <div className="flex flex-wrap gap-3 justify-center">
@@ -431,8 +430,7 @@ export default function JoinTechnician() {
           </h2>
 
           <p className="text-white/90 mb-8">
-            Join technicians working with VATTAMS and start building your
-            professional service career.
+            Register for the VATTAMS technician network to be considered for eligible AC, washing machine and refrigerator call-rate jobs.
           </p>
 
           <button
