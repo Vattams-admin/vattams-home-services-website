@@ -132,6 +132,7 @@ export async function markAsRead(notificationId: string): Promise<boolean> {
       });
       return res.ok;
     }
+    const customerToken = sessionStorage.getItem('vattams_customer_session');
     if (customerToken) {
       const res=await fetch(`${SUPABASE_URL}/functions/v1/customer-data`, { method:'POST', headers:{'Content-Type':'application/json',Authorization:`Bearer ${SUPABASE_ANON_KEY}`}, body:JSON.stringify({action:'notification_read',session_token:customerToken,notification_id:notificationId}) });
       return res.ok;
