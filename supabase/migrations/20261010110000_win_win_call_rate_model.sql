@@ -166,7 +166,7 @@ BEGIN
       IF FOUND THEN
         INSERT INTO public.technician_notifications (technician_id, type, title, message)
         VALUES (tech_id, 'account_locked', 'Account Paused — Call Rate Dues',
-          'Your outstanding call-rate fees exceed Rs ' || settings.lock_threshold || '. Please clear outstanding customer platform-fee, tax-remittance and call-rate dues to receive new jobs.');
+          'Your outstanding platform-fee, tax-remittance and call-rate dues exceed Rs ' || settings.lock_threshold || '. Please clear them to receive new jobs.');
       END IF;
     END IF;
 
@@ -188,7 +188,7 @@ END;
 $function$;
 
 
--- Apply technician recharge to outstanding call-rate dues first. Only any
+-- Apply technician recharge to outstanding platform/tax/call-rate dues first. Only any
 -- amount remaining after dues are cleared becomes wallet credit.
 CREATE OR REPLACE FUNCTION public.process_recharge_approval()
 RETURNS trigger
