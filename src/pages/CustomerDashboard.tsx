@@ -5,6 +5,7 @@ import { Booking, Customer } from '@/lib/supabase';
 import { customerData } from '@/lib/customerData';
 import { formatCurrency } from '@/lib/pricing';
 import CommunicationCenter from '@/components/CommunicationCenter';
+import PushNotificationSetup from '@/components/PushNotificationSetup';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -80,6 +81,8 @@ export default function CustomerDashboard() {
             </div>
           </div>
         </div>
+
+        <PushNotificationSetup userType="customer" userId={customer.mobile} />
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
