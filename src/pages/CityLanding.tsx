@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import {
   Phone, MessageCircle, MapPin, Star, ChevronRight, Wrench,
-  Zap, Droplet, Wind, Camera, Snowflake, WashingMachine, Microwave,
+  Wind, Snowflake, WashingMachine,
   CheckCircle, ArrowRight, Clock, ShieldCheck, Award, ThumbsUp, Briefcase,
 } from 'lucide-react';
 import { CityData, SERVICE_CATEGORIES, cities } from '@/lib/cities';
@@ -10,13 +10,8 @@ import { useRouter } from '@/lib/router';
 const serviceIcons: Record<string, typeof Wrench> = {
   'AC Repair': Wind,
   'AC Service': Snowflake,
-  'Electrician': Zap,
-  'Plumbing': Droplet,
   'Washing Machine Repair': WashingMachine,
   'Refrigerator Repair': Snowflake,
-  'RO Water Purifier': Droplet,
-  'Microwave Repair': Microwave,
-  'CCTV Installation': Camera,
 };
 
 function buildSchema(city: CityData) {
@@ -86,7 +81,7 @@ function injectMetaTags(city: CityData) {
   const tags: { name?: string; property?: string; content: string; key: string }[] = [
     { name: 'title', content: city.seoTitle, key: 'meta-title' },
     { name: 'description', content: city.metaDescription, key: 'meta-desc' },
-    { name: 'keywords', content: `${city.name} home services, AC repair ${city.name}, electrician ${city.name}, plumbing ${city.name}, washing machine repair ${city.name}, refrigerator repair ${city.name}, RO service ${city.name}, CCTV installation ${city.name}, VATTAMS ${city.name}`, key: 'meta-keywords' },
+    { name: 'keywords', content: `${city.name} appliance service, AC repair ${city.name}, washing machine repair ${city.name}, refrigerator repair ${city.name}, VATTAMS ${city.name}`, key: 'meta-keywords' },
     { property: 'og:title', content: city.seoTitle, key: 'og-title' },
     { property: 'og:description', content: city.metaDescription, key: 'og-desc' },
     { property: 'og:type', content: 'website', key: 'og-type' },
