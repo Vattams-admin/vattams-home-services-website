@@ -19,16 +19,15 @@ export interface ContentDraft {
 }
 
 const SERVICE_HASHTAGS: Record<string, string[]> = {
-  'AC Repair': ['#ACRepair', '#AirConditioner', '#CoolingSolution', '#HomeServices', '#VATTAMS', '#ACService', '#SummerReady'],
-  'Refrigerator Repair': ['#FridgeRepair', '#RefrigeratorService', '#ApplianceRepair', '#VATTAMS', '#HomeServices'],
-  'Washing Machine Repair': ['#WashingMachineRepair', '#LaundrySolutions', '#ApplianceRepair', '#VATTAMS', '#HomeServices'],
-  'Plumbing': ['#Plumbing', '#Plumber', '#LeakRepair', '#HomeServices', '#VATTAMS', '#PlumbingSolutions'],
-  'Electrical Work': ['#ElectricalWork', '#Electrician', '#Wiring', '#HomeServices', '#VATTAMS', '#ElectricalSafety'],
-  'Deep Cleaning': ['#DeepCleaning', '#HomeCleaning', '#Sanitization', '#VATTAMS', '#CleanHome'],
-  'Pest Control': ['#PestControl', '#PestFree', '#TermiteControl', '#VATTAMS', '#HealthyHome'],
+  'AC Service': ['#ACService', '#ACRepair', '#ApplianceCare', '#VATTAMS'],
+  'AC Repair': ['#ACService', '#ACRepair', '#ApplianceCare', '#VATTAMS'],
+  'Refrigerator Service': ['#RefrigeratorService', '#FridgeRepair', '#ApplianceCare', '#VATTAMS'],
+  'Refrigerator Repair': ['#RefrigeratorService', '#FridgeRepair', '#ApplianceCare', '#VATTAMS'],
+  'Washing Machine Service': ['#WashingMachineService', '#WashingMachineRepair', '#ApplianceCare', '#VATTAMS'],
+  'Washing Machine Repair': ['#WashingMachineService', '#WashingMachineRepair', '#ApplianceCare', '#VATTAMS'],
 };
 
-const COMMON_HASHTAGS = ['#VATTAMS', '#HomeServices', '#India', '#HomeMaintenance', '#ProfessionalService'];
+const COMMON_HASHTAGS = ['#VATTAMS', '#ApplianceCare', '#ACService', '#WashingMachineService', '#RefrigeratorService'];
 
 export function generateSocialContent(
   contentType: string,
@@ -44,7 +43,7 @@ export function generateSocialContent(
     instagram_reel: `Is your ${service} giving trouble${locationTag}? Watch how our VATTAMS experts fix it in minutes!${offerText} Book now and get same-day service. #ReelItFeelIt`,
     facebook_post: `Need reliable ${service}${locationTag}? VATTAMS brings you certified technicians at your doorstep.${offerText} Book your service today!`,
     youtube_short: `${service} Quick Fix!${offerText} Watch our technician solve a common ${service} problem in under 60 seconds. Subscribe for more home service tips!`,
-    linkedin_post: `VATTAMS is revolutionizing home services with professional ${service}${locationTag}.${offerText} Our certified technicians ensure quality, safety, and customer satisfaction. Connect with us for B2B service partnerships.`,
+    linkedin_post: `VATTAMS is focused on professional appliance care with ${service}${locationTag}.${offerText} Our certified technicians ensure quality, safety, and customer satisfaction. Connect with us for B2B service partnerships.`,
     x_post: `Need ${service}${locationTag}? VATTAMS has you covered!${offerText} Book now: https://vattams.net #HomeServices`,
   };
 
@@ -80,7 +79,7 @@ export function generateBlogPost(topic: string, service?: string): Omit<ContentD
     `## Why ${topic} Matters\n\nRegular maintenance of your ${service ?? 'home appliances'} ensures longevity, efficiency, and safety. Neglecting small issues can lead to costly repairs down the line.`,
     `## Common Issues\n\nSome of the most frequent problems include unusual noises, reduced efficiency, and complete breakdowns. VATTAMS technicians are trained to diagnose and fix these issues quickly.`,
     `## DIY vs Professional Service\n\nWhile some minor issues can be handled yourself, professional service ensures the job is done right the first time. Our certified technicians use genuine parts and follow safety protocols.`,
-    `## Why Choose VATTAMS?\n\n- Certified and background-verified technicians\n- Same-day service available\n- Transparent pricing with no hidden charges\n- Service warranty on all repairs\n- 24/7 customer support`,
+    `## Why Choose VATTAMS?\n\n- Certified and background-verified technicians\n- Same-day service available\n- Transparent pricing with no hidden charges\n- Appliance-service warranty details are provided with the booking\n- Contact support for assistance`,
   ];
   const body = `${intro}\n\n${sections.join('\n\n')}\n\n## Conclusion\n\nDon't wait for small problems to become big ones. Book your ${service ?? 'service'} with VATTAMS today and experience hassle-free home maintenance.`;
 
@@ -100,8 +99,9 @@ export function generateBlogPost(topic: string, service?: string): Omit<ContentD
 }
 
 export function generateCityPage(city: string, services: string[]): Omit<ContentDraft, 'id' | 'created_at' | 'status' | 'platform_url'> {
-  const serviceList = services.map((s) => `- ${s} in ${city}`).join('\n');
-  const body = `# Home Services in ${city}\n\nVATTAMS brings professional home services to ${city} and surrounding areas. Our certified technicians are available for same-day service across the city.\n\n## Services Available\n\n${serviceList}\n\n## Why Choose VATTAMS in ${city}?\n\n- Local technicians familiar with ${city} neighborhoods\n- Fast response times across ${city}\n- Transparent pricing\n- Quality service guaranteed\n\n## Service Areas in ${city}\n\nWe cover all major areas in ${city}. Book your service today and experience the VATTAMS difference.`;
+  const allowedServices = services.filter((s) => /^(AC (Repair|Service)|Washing Machine( Repair| Service)?|Refrigerator( Repair| Service)?)$/i.test(s));
+  const serviceList = allowedServices.map((s) => `- ${s} in ${city}`).join('\\n');
+  const body = `# Home Services in ${city}\n\nVATTAMS focuses on AC, washing machine and refrigerator service in ${city}. Appointment availability depends on local technician coverage.\n\n## Services Available\n\n${serviceList}\n\n## Why Choose VATTAMS in ${city}?\n\n- Local technicians familiar with ${city} neighborhoods\n- Fast response times across ${city}\n- Transparent pricing\n- Quality service guaranteed\n\n## Service Areas in ${city}\n\nWe cover all major areas in ${city}. Book your service today and experience the VATTAMS difference.`;
 
   return {
     content_type: 'city_page',
@@ -113,7 +113,7 @@ export function generateCityPage(city: string, services: string[]): Omit<Content
     thumbnail_text: `Home Services in ${city}`,
     poster_text: `VATTAMS ${city}\nProfessional Home Services`,
     body_content: body,
-    meta_description: `Professional home services in ${city} by VATTAMS. AC repair, plumbing, electrical, cleaning, and more. Same-day service available.`,
+    meta_description: `AC, washing machine and refrigerator service in ${city} by VATTAMS. Check appointment availability through the booking page.`,
     target_keywords: [city, 'home services', 'VATTAMS', ...services],
   };
 }
@@ -155,7 +155,7 @@ export function generateOfferPoster(festivalName: string, offer: string, service
     thumbnail_text: `${festivalName} Offer!`,
     poster_text: `${festivalName} Special!\n${offer}\n${service ? `${service} - ` : ''}Book Now!\nVATTAMS Home Services`,
     body_content: null,
-    meta_description: `${festivalName} special offer from VATTAMS. ${offer} on professional home services.`,
+    meta_description: `${festivalName} special offer from VATTAMS. ${offer} on AC, washing machine or refrigerator service.`,
     target_keywords: [festivalName, 'offer', 'discount', 'VATTAMS', service ?? 'home services'],
   };
 }
