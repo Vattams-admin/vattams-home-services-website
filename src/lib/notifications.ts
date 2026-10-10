@@ -207,10 +207,6 @@ export const notifyTechnician = {
     notify('technician', technicianId, 'Wallet Recharge Rejected', `Your wallet recharge of ₹${amount} was rejected.`, 'wallet_recharge_rejected'),
 };
 
-export const notifyAdmin = {
-  newBooking: (bookingNumber: string, customerName: string, serviceCategory: string, bookingId: string, bookingActionToken?: string) =>
-    createNotification({ recipientType: 'admin', recipientId: 'admin', title: 'New Booking', message: bookingNumber + ' — ' + customerName + ' requested ' + serviceCategory + '.', type: 'new_booking', referenceType: 'booking', referenceId: bookingId, channels: ['in_app', 'push'], bookingActionToken }),
-};
 
 export async function sendAnnouncementToTechnicians(
   recipients: Array<{ id: string }>,
