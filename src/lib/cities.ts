@@ -19,9 +19,7 @@ export interface CityData {
 }
 
 const services = [
-  'AC Repair', 'AC Service', 'Electrician', 'Plumbing',
-  'Washing Machine Repair', 'Refrigerator Repair',
-  'RO Water Purifier', 'Microwave Repair', 'CCTV Installation',
+  'AC Service', 'Washing Machine Service', 'Refrigerator Service',
 ];
 
 export const SERVICE_CATEGORIES = services;
@@ -46,7 +44,7 @@ function generateFAQs(cityName: string): { q: string; a: string }[] {
     },
     {
       q: `Do you offer same-day service in ${cityName}?`,
-      a: `Yes, VATTAMS offers same-day service across ${cityName} for most bookings made before 2 PM. Emergency electrical and plumbing services are available with priority dispatch to ${cityName} residents.`,
+      a: `Yes, VATTAMS offers same-day service across ${cityName} for most bookings made before 2 PM. Priority dispatch options depend on local technician availability.`,
     },
     {
       q: `What is the warranty on repairs done in ${cityName}?`,
@@ -61,8 +59,8 @@ function generateFAQs(cityName: string): { q: string; a: string }[] {
       a: `Customers in ${cityName} can pay via UPI, cash, or online payment after the service is completed. You'll receive a digital invoice with a complete price breakdown including GST.`,
     },
     {
-      q: `Do you provide CCTV installation services for businesses in ${cityName}?`,
-      a: `Yes, we provide professional CCTV installation for both homes and businesses throughout ${cityName}. Our technicians handle everything from site assessment to camera placement, wiring, and configuration.`,
+      q: `Which appliance services can I book in ${cityName}?`,
+      a: `You can request AC, washing machine and refrigerator service in ${cityName}. Availability is confirmed during booking.`,
     },
     {
       q: `What makes VATTAMS different from local repair shops in ${cityName}?`,
@@ -70,7 +68,7 @@ function generateFAQs(cityName: string): { q: string; a: string }[] {
     },
     {
       q: `How quickly can a technician reach my home in ${cityName}?`,
-      a: `Our average response time in ${cityName} is 60–90 minutes for standard bookings. For emergency electrical or plumbing issues, we prioritize dispatch and aim to reach ${cityName} homes within 45 minutes.`,
+      a: `Our average response time in ${cityName} is 60–90 minutes for standard bookings. For appliance issues, available appointment times are shown during booking.`,
     },
     {
       q: `Can I reschedule my booking in ${cityName}?`,
