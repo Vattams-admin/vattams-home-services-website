@@ -69,6 +69,24 @@ ALTER TABLE public.wallet_transactions
     'adjustment'::text
   ]));
 
+-- The notification table also constrains event types; allow the new
+-- completion-based call-rate event while preserving all existing event types.
+ALTER TABLE public.technician_notifications
+  DROP CONSTRAINT IF EXISTS technician_notifications_type_check;
+
+ALTER TABLE public.technician_notifications
+  ADD CONSTRAINT technician_notifications_type_check
+  CHECK (type = ANY (ARRAY[
+    'registration_fee'::text,
+    'deposit_released'::text,
+    'wallet_low'::text,
+    'account_locked'::text,
+    'account_unlocked'::text,
+    'recharge_approved'::text,
+    'commission_deducted'::text,
+    'call_rate_fee'::text
+  ]));
+
 CREATE OR REPLACE FUNCTION public.process_booking_completion()
 RETURNS trigger
 LANGUAGE plpgsql
