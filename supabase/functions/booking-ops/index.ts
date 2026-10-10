@@ -422,7 +422,7 @@ Deno.serve(async (req: Request) => {
         });
       }
 
-      // Block technicians who owe platform fee + GST + commission from a previous job
+      // Legacy first-accept path is disabled below; new appliance jobs use fixed call-rate dues.
       const { data: techRow, error: techError } = await supabase
         .from("technicians")
         .select("full_name, wallet_locked, commission_due")
@@ -437,7 +437,7 @@ Deno.serve(async (req: Request) => {
 
       if (techRow.wallet_locked) {
         return new Response(JSON.stringify({
-          error: `Account locked. Please pay Rs ${techRow.commission_due} (platform fee + GST + commission) from your last job before accepting a new one.`,
+          error: `Account paused. Please clear Rs ${techRow.commission_due} in outstanding call-rate dues before accepting a new job.`,
         }), {
           status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
