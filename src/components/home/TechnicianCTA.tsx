@@ -19,24 +19,24 @@ export default function TechnicianCTA() {
           <div className="grid lg:grid-cols-5">
             <div className="lg:col-span-3 p-8 md:p-12 lg:p-14">
               <div className="inline-flex items-center gap-2 bg-gold-400/10 text-gold-300 border border-gold-400/20 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-[0.18em] mb-6">
-                Technician Network
+                CALL RATE JOBS • TECHNICIAN NETWORK
               </div>
               <h2 className="font-display text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">
-                Build your service business with VATTAMS.
+                Get Call Rate Jobs with VATTAMS.
               </h2>
               <p className="text-navy-100/75 text-base md:text-lg leading-relaxed mb-7 max-w-xl">
-                Join a professional home-service network built around verified customer demand, transparent payouts, and dependable operational support.
+                Receive eligible call-rate opportunities for AC, washing machine and refrigerator service requests. Manage assigned jobs and track eligible earnings in your technician dashboard.
               </p>
               <button
                 onClick={() => navigate('join-technician')}
                 className="group inline-flex items-center gap-2 px-7 py-3.5 bg-gold-400 hover:bg-gold-300 text-navy-950 font-bold text-sm rounded-xl shadow-lg shadow-gold-900/20 transition-all duration-300"
               >
                 <Briefcase size={17} />
-                Join the Network
+                Join for ₹49
                 <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
               </button>
               <p className="mt-4 text-xs text-navy-100/45">
-                Professional onboarding • ₹49 registration fee
+                ₹49 one-time joining fee • Job availability depends on eligibility and matching
               </p>
             </div>
 

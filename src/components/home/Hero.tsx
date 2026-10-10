@@ -70,7 +70,7 @@ export default function Hero() {
             onClick={() => navigate('join-technician')}
             className="text-gold-300/90 hover:text-gold-200 text-sm font-medium underline underline-offset-4 decoration-gold-400/40 mb-10 transition-colors"
           >
-            Are you a skilled technician? Join our network →
+            Technicians: Get Call Rate Jobs • Join for ₹49 →
           </button>
 
           {/* Social Links */}

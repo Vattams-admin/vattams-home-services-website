@@ -53,7 +53,7 @@ export default function Footer() {
                 <li key={label}><button onClick={() => navigate('services')} className="hover:text-white transition-colors">{label}</button></li>
               ))}
               <li><button onClick={() => navigate('booking')} className="hover:text-white transition-colors">Book a Service</button></li>
-              <li><button onClick={() => navigate('join-technician')} className="hover:text-white transition-colors">Join as a Technician</button></li>
+              <li><button onClick={() => navigate('join-technician')} className="hover:text-white transition-colors">Call Rate Jobs • Join for ₹49</button></li>
             </ul>
           </div>
 

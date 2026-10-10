@@ -521,7 +521,7 @@ export default function TechnicianDashboard() {
                     : 'text-gray-600 hover:bg-[#f7f4ed]'
                 }`}
               >
-                Jobs
+                Call Rate Jobs
               </button>
 
               <button
@@ -600,7 +600,7 @@ export default function TechnicianDashboard() {
             <div className="md:hidden border-t border-[#e8e1d2] py-3 space-y-1">
               {[
                 ['overview', 'Overview'],
-                ['jobs', 'Jobs'],
+                ['jobs', 'Call Rate Jobs'], 
                 ['wallet', 'Wallet'],
                 ['profile', 'Profile'],
                 [
@@ -946,6 +946,27 @@ function Overview({
 
   return (
     <div className="space-y-6">
+      {/* PROMINENT CALL RATE JOBS MESSAGE */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#071426] via-[#102744] to-[#071426] border border-[#c9a227]/35 p-6 md:p-8 text-white shadow-xl shadow-[#071426]/15">
+        <div className="absolute -right-12 -top-16 h-48 w-48 rounded-full border border-[#c9a227]/20" />
+        <div className="absolute -right-4 -top-8 h-32 w-32 rounded-full border border-[#c9a227]/15" />
+        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+          <div className="flex items-start gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-[#c9a227]/15 border border-[#c9a227]/35 flex items-center justify-center shrink-0">
+              <Phone size={23} className="text-[#f0d681]" />
+            </div>
+            <div>
+              <p className="text-[11px] font-extrabold uppercase tracking-[.22em] text-[#f0d681]">VATTAMS Technician Network</p>
+              <h2 className="text-2xl md:text-3xl font-extrabold mt-1">CALL RATE JOBS</h2>
+              <p className="text-sm md:text-base leading-6 text-white/75 mt-2 max-w-2xl">Receive eligible service requests for AC, washing machines and refrigerators. Manage assigned jobs, customer details, job status and eligible earnings from your dashboard.</p>
+            </div>
+          </div>
+          <button onClick={onJobs} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#e7c75f] hover:bg-[#f0d681] text-[#071426] px-5 py-3 font-extrabold text-sm shadow-lg shadow-black/15 shrink-0">
+            View Call Rate Jobs <ChevronRight size={17} />
+          </button>
+        </div>
+        <div className="relative mt-5 border-t border-white/10 pt-3 text-xs leading-5 text-white/55">Job allocation depends on approval, service category, location, availability and matching. Job volume and earnings are not guaranteed.</div>
+      </section>
       {/* STATS */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
@@ -1347,14 +1368,28 @@ function JobsSection({
 
   return (
     <div className="space-y-6">
+      <div className="rounded-3xl bg-gradient-to-br from-[#071426] via-[#102744] to-[#071426] border border-[#c9a227]/35 p-6 md:p-8 text-white shadow-xl shadow-[#071426]/15">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="shrink-0 w-12 h-12 rounded-2xl bg-[#c9a227]/15 border border-[#c9a227]/35 flex items-center justify-center">
+              <Phone size={23} className="text-[#f0d681]" />
+            </div>
+            <div>
+              <p className="text-[11px] font-extrabold uppercase tracking-[.22em] text-[#f0d681]">Technician Opportunity Network</p>
+              <h1 className="mt-1 text-2xl md:text-3xl font-extrabold">Call Rate Jobs</h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/75">Get eligible AC, washing machine and refrigerator service requests through VATTAMS. Review assigned job details, update progress and track eligible earnings in one place.</p>
+            </div>
+          </div>
+          <div className="shrink-0 rounded-2xl border border-white/15 bg-white/5 px-4 py-3 sm:min-w-40">
+            <p className="text-xs text-white/60">Your job workspace</p>
+            <p className="mt-1 text-sm font-bold text-[#f0d681]">Calls • Jobs • Earnings</p>
+          </div>
+        </div>
+        <p className="mt-4 border-t border-white/10 pt-3 text-xs leading-5 text-white/55">Job availability depends on service category, service area, profile approval, availability and matching. Jobs are not guaranteed.</p>
+      </div>
       <div>
-        <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900">
-          My Jobs
-        </h1>
-
-        <p className="text-gray-500 text-sm mt-1">
-          Manage assigned jobs and update job progress.
-        </p>
+        <h2 className="text-xl font-extrabold text-gray-900">My Assigned Jobs</h2>
+        <p className="text-gray-500 text-sm mt-1">Review call-rate service requests assigned to you and update job progress.</p>
       </div>
 
       <section>

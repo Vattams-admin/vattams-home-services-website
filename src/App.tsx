@@ -1,4 +1,5 @@
 import { RouterProvider, useRouter } from '@/lib/router';
+import './styles/PremiumExperience.css';
 import { getCityBySlug } from '@/lib/cities';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -110,7 +111,7 @@ function AppShell() {
     <div className="min-h-screen flex flex-col">
       <Schema />
       {!isAdminRoute && <Header />}
-      <main className="flex-1">
+      <main className={isAdminRoute ? 'flex-1' : 'flex-1 premium-experience'}>
         <PageContent />
       </main>
       {!isAdminRoute && <Footer />}

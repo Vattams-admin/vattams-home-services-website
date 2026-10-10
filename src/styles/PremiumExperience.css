@@ -1,0 +1,82 @@
+/* VATTAMS HOME SERVICES — shared premium experience across public, customer and technician pages */
+main.premium-experience {
+  background: #f7f4ed;
+  color: #111827;
+  isolation: isolate;
+}
+.premium-experience section {
+  scroll-margin-top: 6rem;
+}
+.premium-experience h1,
+.premium-experience h2,
+.premium-experience h3 {
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+.premium-experience button,
+.premium-experience a {
+  -webkit-tap-highlight-color: transparent;
+}
+.premium-experience button {
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background-color .2s ease, color .2s ease;
+}
+.premium-experience button:hover:not(:disabled) {
+  filter: saturate(1.04);
+}
+.premium-experience button:active:not(:disabled) {
+  transform: translateY(1px) scale(.99);
+}
+.premium-experience input:not([type="checkbox"]):not([type="radio"]),
+.premium-experience select,
+.premium-experience textarea {
+  border-color: #ded6c5;
+  border-radius: .8rem;
+  transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+}
+.premium-experience input:not([type="checkbox"]):not([type="radio"]):focus,
+.premium-experience select:focus,
+.premium-experience textarea:focus {
+  border-color: #c9a227;
+  box-shadow: 0 0 0 4px rgba(201, 162, 39, .14);
+  outline: none;
+}
+.premium-experience input:disabled,
+.premium-experience select:disabled,
+.premium-experience textarea:disabled {
+  cursor: not-allowed;
+  opacity: .72;
+}
+.premium-experience [class*="rounded-2xl"][class*="border"],
+.premium-experience [class*="rounded-3xl"][class*="border"] {
+  border-color: rgba(201, 162, 39, .2);
+  box-shadow: 0 12px 32px rgba(7, 20, 38, .055);
+}
+.premium-experience details {
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.premium-experience details[open] {
+  border-color: rgba(201, 162, 39, .5);
+  box-shadow: 0 12px 30px rgba(7, 20, 38, .06);
+}
+.premium-experience ::placeholder {
+  color: #9ca3af;
+}
+@media (max-width: 640px) {
+  .premium-experience section {
+    scroll-margin-top: 5rem;
+  }
+  .premium-experience button,
+  .premium-experience a {
+    touch-action: manipulation;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .premium-experience *,
+  .premium-experience *::before,
+  .premium-experience *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
