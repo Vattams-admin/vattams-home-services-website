@@ -114,12 +114,17 @@ Deno.serve(async (req: Request) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     if (!supabaseUrl) return json({ error: "Supabase URL is not configured" }, 503);
     const supabase = createClient(supabaseUrl, serviceRoleKey);
-    const { data: tokens, error } = await supabase
+    let tokenQuery = supabase
       .from("fcm_tokens")
       .select("id,token")
       .eq("user_type", userType)
-      .eq("user_id", userId)
       .eq("is_active", true);
+    // Admin announcements use the shared recipient key "admin", while each
+    // admin device token is securely stored under that admin's own ID.
+    if (userType !== "admin" || userId !== "admin") {
+      tokenQuery = tokenQuery.eq("user_id", userId);
+    }
+    const { data: tokens, error } = await tokenQuery;
 
     if (error) {
       console.error("[push] token lookup failed", error.message);
@@ -153,7 +158,7 @@ Deno.serve(async (req: Request) => {
                   badge: "/favicon.svg",
                   requireInteraction: true,
                 },
-                fcmOptions: { link: messageData.url || "/" },
+                fcmOptions: { link: new URL(messageData.url || "/", Deno.env.get("PUBLIC_APP_URL") || "https://vattams.net").toString() },
               },
             },
           }),
