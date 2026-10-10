@@ -124,6 +124,36 @@ function getDeviceInfo(): string {
   return `${platform} | ${ua}`.slice(0, 200);
 }
 
+async function waitForServiceWorkerActivation(
+  registration: ServiceWorkerRegistration,
+): Promise<ServiceWorkerRegistration> {
+  if (registration.active?.state === 'activated') return registration;
+
+  const worker = registration.installing ?? registration.waiting ?? registration.active;
+  if (!worker) throw new Error('FCM service worker has no active lifecycle worker');
+
+  if (worker.state !== 'activated') {
+    await new Promise<void>((resolve, reject) => {
+      const onStateChange = () => {
+        if (worker.state === 'activated') {
+          worker.removeEventListener('statechange', onStateChange);
+          resolve();
+        } else if (worker.state === 'redundant') {
+          worker.removeEventListener('statechange', onStateChange);
+          reject(new Error('FCM service worker installation failed'));
+        }
+      };
+      worker.addEventListener('statechange', onStateChange);
+      onStateChange();
+    });
+  }
+
+  if (!registration.active || registration.active.state !== 'activated') {
+    throw new Error('FCM service worker did not become active');
+  }
+  return registration;
+}
+
 export async function initFCM(
   userType: UserType,
   userId: string,
@@ -146,13 +176,14 @@ export async function initFCM(
     // Do not fall back to navigator.serviceWorker.ready: that resolves to the
     // app's root PWA worker, which is not the dedicated FCM worker.
     await registerServiceWorker();
-    const fcmRegistration = await navigator.serviceWorker.getRegistration(
+    const registration = await navigator.serviceWorker.getRegistration(
       new URL(`${FCM_SW_SCOPE}/`, window.location.origin).href,
     );
-    if (!fcmRegistration?.active) {
-      console.error('[fcm] dedicated messaging service worker is not active');
+    if (!registration) {
+      console.error('[fcm] dedicated messaging service worker registration is missing');
       return null;
     }
+    const fcmRegistration = await waitForServiceWorkerActivation(registration);
 
     const token = await getToken(messaging, {
       vapidKey,
