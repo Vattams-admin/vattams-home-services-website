@@ -32,7 +32,7 @@ const FAQS = [
   },
   {
     q: 'What services can I offer?',
-    a: 'You can register for multiple service categories including Electrician, Plumber, AC Technician, RO Technician, Carpenter, Painter, House Cleaning, CCTV, Home Appliance Repair, Pest Control, Water Tank Cleaning, Laundry, Gardening, Packers & Movers, and Driver services.',
+    a: 'You can register for AC service, washing machine service, or refrigerator service. Select the appliance categories that match your skills.',
   },
   {
     q: 'Do I need my own vehicle and tools?',
@@ -131,7 +131,7 @@ export default function JoinTechnician() {
           '@type': 'JobPosting',
           title: 'Home Service Technician — Join VATTAMS',
           description:
-            'Join VATTAMS as a home service technician. Work flexibly across India providing AC repair, plumbing, electrical, cleaning, and other home services. Earn per job with secure payments.',
+            'Join VATTAMS as an appliance service technician. Work flexibly on AC, washing machine and refrigerator service requests, with secure payments.',
           hiringOrganization: {
             '@type': 'Organization',
             name: 'VATTAMS Home Services',
@@ -185,7 +185,7 @@ export default function JoinTechnician() {
     }
 
     metaDesc.content =
-      'Join VATTAMS as a technician. Electrician jobs, plumber jobs, AC technician jobs, and home service jobs across India. One-time ₹49 joining fee, flexible hours, and secure payments.';
+      'Join VATTAMS for AC, washing machine and refrigerator technician opportunities. One-time ₹49 joining fee, flexible hours, and secure payments.';
 
     return () => {
       document.getElementById(schemaId)?.remove();
