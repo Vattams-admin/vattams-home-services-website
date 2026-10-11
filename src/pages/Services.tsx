@@ -45,14 +45,14 @@ export default function Services() {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
-              'Free doorstep inspection',
-              'Genuine spare parts with warranty',
-              'Up to 30-day service warranty',
-              'Transparent upfront pricing',
-              'Background-verified technicians',
-              'Real-time booking status updates',
-              'Same-day service available',
-              'Pay after service completion',
+              'Listed base prices for supported job types',
+              'Applicable GST and platform fee shown at checkout',
+              'Choose the exact appliance job type',
+              'Appointment options based on your address',
+              'Booking status updates through the platform',
+              'OTP verification at supported job checkpoints',
+              'Separate quote for parts or additional work',
+              'Support through the website contact options',
             ].map((item) => (
               <div key={item} className="flex items-center gap-3 p-4 bg-gold-50 rounded-xl">
                 <div className="w-8 h-8 rounded-full bg-royal-800 flex items-center justify-center shrink-0">
