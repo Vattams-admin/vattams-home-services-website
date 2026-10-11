@@ -1,51 +1,29 @@
-# VATTAMS
+# VATTAMS Home Services
 
-> VATTAMS Home Services is a premium appliance-care platform focused on AC, washing machine and refrigerator service. Government of India MSME (Udyam) Registered Enterprise — UDYAM-TN-02-0274720.
+> VATTAMS Home Services helps customers request AC, washing machine and refrigerator service. Customers can review listed base prices, see applicable checkout charges and check appointment options for their address.
 
-## VATTAMS Home Services
+## Website
+- Home: https://vattams.net/
+- Service categories and current listed prices: https://vattams.net/services
+- Booking: https://vattams.net/booking
+- Contact: https://vattams.net/contact
+- Technician registration: https://vattams.net/join-technician
 
-VATTAMS Home Services provides doorstep AC, washing machine and refrigerator repair and maintenance. Customers book services through our web app or AI assistant, and we automatically assign the nearest available certified technician based on location, rating, availability, and workload.
+## Supported job types
+- AC: General Service, Installation, Gas Filling, Pump Water Service, Coil Service
+- Washing machine: Washing Machine Service
+- Refrigerator: Refrigerator Service
 
-### Services
+## Pricing and booking
+- Prices shown on the Services page are base prices for listed job types.
+- Applicable GST and platform fees are shown in the checkout breakdown before a customer confirms a booking.
+- Parts and additional work are separate from the listed base service; customers should request a quote and approve extra work before it proceeds.
+- Appointment availability depends on the address, selected job type and technician schedule. Availability should be confirmed through the booking flow.
+- Do not assume a city or neighbourhood is currently bookable solely because a city information page exists.
 
-- AC Service & Maintenance
-- Washing Machine Service & Repair
-- Refrigerator Service & Repair
-
-### How It Works
-
-1. Customer describes their problem (via chat or AI assistant)
-2. Our AI system identifies the service category and urgency
-3. The nearest available technician is automatically assigned
-4. Technician arrives and verifies Start OTP with customer
-5. Work is performed
-6. End OTP verification completes the job
-7. Payment is processed securely
-
-### Key Features
-
-- AI Booking Assistant for natural language booking
-- AI Price Calculator with transparent pricing (base price, GST, platform fee, commission)
-- AI Technician Assignment based on proximity, rating, and availability
-- Secure OTP verification (Start & End) for every job
-- Real-time chat between customers, technicians, and admin
-- Wallet system for technicians with commission tracking
-- CRM automation for reminders and follow-ups
-- Push notifications for all booking events
-- Communication Center routing all calls through VATTAMS support
-
-### Coverage
-
-VATTAMS Home Services has strong roots and dense coverage across Tamil Nadu (Chennai, Coimbatore, Madurai, Trichy, Salem, Erode, Tiruppur, Vellore, Hosur, Tirunelveli, Thanjavur, Dindigul, Cuddalore, and more) and is expanding service availability to additional cities across India.
-
-## Contact
-
-- Website: https://vattams.net
-- Support Phone: +91 81898 00757
-- WhatsApp: +91 81898 00757
+## Customer support
+- Phone and WhatsApp: +91 63740 68296
 - Email: support@vattams.net
 
-## MSME Registration
-
-Government of India MSME (Udyam) Registered Enterprise
-Udyam Registration Number: UDYAM-TN-02-0274720
+## Business information
+VATTAMS Home Services focuses on AC, washing machine and refrigerator service requests. The website includes booking status and job verification features. Do not infer unlisted warranty periods, guaranteed arrival times, customer ratings, or technician credentials unless VATTAMS publishes verified details for them.
