@@ -4,34 +4,18 @@ const BASE_URL = 'https://vattams.net';
 const DEFAULT_IMAGE = `${BASE_URL}/icons/icon-512.png`;
 
 export interface SEOConfig {
-  /** Document <title> and og:title/twitter:title. */
   title: string;
-  /** Meta description and og:description/twitter:description. */
   description: string;
-  /** Optional meta keywords (comma-separated). Used sparingly. */
   keywords?: string;
-  /**
-   * Canonical path relative to the site, e.g. '/#city-chennai' or
-   * '/#city-chennai'. Combined with BASE_URL to form the full canonical
-   * and og:url. Defaults to the current hash location if omitted.
-   */
   path?: string;
-  /** Absolute image URL for social sharing. Defaults to the VATTAMS logo icon. */
   image?: string;
-  /** og:type — defaults to 'website'. */
   type?: string;
 }
 
 /**
- * Injects/updates per-page <title>, meta description/keywords, canonical
- * link, and Open Graph/Twitter tags for the lifetime of the mounted page,
- * then removes them on unmount so the next page (or the static index.html
- * defaults) takes over cleanly.
- *
- * Mirrors the existing tag-injection pattern already used for city landing
- * pages, generalized for reuse across Home Services and Home Services
- * pages. Uses a shared `data-seo` attribute namespace distinct from
- * `data-city` so both can coexist without conflicting.
+ * Updates the existing document metadata instead of adding duplicate title,
+ * description, Open Graph or canonical tags. Original static metadata is
+ * restored when the route unmounts.
  */
 export function useSEO(config: SEOConfig) {
   useEffect(() => {
@@ -51,40 +35,90 @@ export function useSEO(config: SEOConfig) {
       { name: 'twitter:description', content: config.description, key: 'tw-desc' },
       { name: 'twitter:image', content: image, key: 'tw-image' },
     ];
+    if (config.keywords) tags.push({ name: 'keywords', content: config.keywords, key: 'meta-keywords' });
 
-    if (config.keywords) {
-      tags.push({ name: 'keywords', content: config.keywords, key: 'meta-keywords' });
-    }
+    const changed: Array<{
+      element: HTMLMetaElement;
+      created: boolean;
+      content: string | null;
+      name: string | null;
+      property: string | null;
+      dataSeo: string | null;
+    }> = [];
 
-    tags.forEach((t) => {
-      let el = document.head.querySelector(`meta[data-seo="${t.key}"]`) as HTMLMetaElement | null;
-      if (!el) {
-        el = document.createElement('meta');
-        el.setAttribute('data-seo', t.key);
-        document.head.appendChild(el);
+    tags.forEach((tag) => {
+      let element = document.head.querySelector(`meta[data-seo="${tag.key}"]`) as HTMLMetaElement | null;
+      let created = false;
+      if (!element) {
+        const selector = tag.name
+          ? `meta[name="${tag.name}"]`
+          : `meta[property="${tag.property}"]`;
+        element = document.head.querySelector(selector) as HTMLMetaElement | null;
       }
-      if (t.name) el.setAttribute('name', t.name);
-      if (t.property) el.setAttribute('property', t.property);
-      el.setAttribute('content', t.content);
+      if (!element) {
+        element = document.createElement('meta');
+        created = true;
+        document.head.appendChild(element);
+      }
+
+      changed.push({
+        element,
+        created,
+        content: element.getAttribute('content'),
+        name: element.getAttribute('name'),
+        property: element.getAttribute('property'),
+        dataSeo: element.getAttribute('data-seo'),
+      });
+      element.setAttribute('data-seo', tag.key);
+      if (tag.name) element.setAttribute('name', tag.name);
+      if (tag.property) element.setAttribute('property', tag.property);
+      element.setAttribute('content', tag.content);
     });
 
     const prevTitle = document.title;
     document.title = config.title;
 
-    let canonicalEl = document.head.querySelector('link[data-seo="canonical"]') as HTMLLinkElement | null;
-    if (!canonicalEl) {
-      canonicalEl = document.createElement('link');
-      canonicalEl.setAttribute('data-seo', 'canonical');
-      canonicalEl.setAttribute('rel', 'canonical');
-      document.head.appendChild(canonicalEl);
+    let canonical = document.head.querySelector('link[data-seo="canonical"]') as HTMLLinkElement | null;
+    let canonicalCreated = false;
+    if (!canonical) canonical = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.rel = 'canonical';
+      document.head.appendChild(canonical);
+      canonicalCreated = true;
     }
-    canonicalEl.setAttribute('href', url);
+    const previousCanonicalHref = canonical.getAttribute('href');
+    const previousCanonicalDataSeo = canonical.getAttribute('data-seo');
+    canonical.setAttribute('data-seo', 'canonical');
+    canonical.setAttribute('rel', 'canonical');
+    canonical.setAttribute('href', url);
 
     return () => {
-      document.head.querySelectorAll('[data-seo]').forEach((el) => el.remove());
+      changed.forEach((entry) => {
+        if (entry.created) {
+          entry.element.remove();
+          return;
+        }
+        if (entry.content === null) entry.element.removeAttribute('content');
+        else entry.element.setAttribute('content', entry.content);
+        if (entry.name === null) entry.element.removeAttribute('name');
+        else entry.element.setAttribute('name', entry.name);
+        if (entry.property === null) entry.element.removeAttribute('property');
+        else entry.element.setAttribute('property', entry.property);
+        if (entry.dataSeo === null) entry.element.removeAttribute('data-seo');
+        else entry.element.setAttribute('data-seo', entry.dataSeo);
+      });
+
+      if (canonicalCreated) {
+        canonical.remove();
+      } else {
+        if (previousCanonicalHref === null) canonical.removeAttribute('href');
+        else canonical.setAttribute('href', previousCanonicalHref);
+        if (previousCanonicalDataSeo === null) canonical.removeAttribute('data-seo');
+        else canonical.setAttribute('data-seo', previousCanonicalDataSeo);
+      }
       document.title = prevTitle;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config.title, config.description, config.keywords, config.path, config.image, config.type]);
 }
 
@@ -93,9 +127,9 @@ export function buildBreadcrumbSchema(items: { name: string; path: string }[]) {
   return {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
-    itemListElement: items.map((item, i) => ({
+    itemListElement: items.map((item, index) => ({
       '@type': 'ListItem',
-      position: i + 1,
+      position: index + 1,
       name: item.name,
       item: `${BASE_URL}${item.path}`,
     })),

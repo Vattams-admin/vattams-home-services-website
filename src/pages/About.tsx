@@ -15,10 +15,10 @@ const homeServices: { label: string; icon: LucideIcon }[] = [
 ];
 
 const whyVattams: { title: string; text: string; icon: LucideIcon }[] = [
-  { title: 'Trusted Network', text: 'A single platform built around verified professionals and structured onboarding.', icon: ShieldCheck },
+  { title: 'Trusted Network', text: 'A single platform built around appliance service requests and structured technician onboarding.', icon: ShieldCheck },
   { title: 'Technology Driven', text: 'Every booking, assignment and update runs through a modern digital workflow.', icon: Cpu },
   { title: 'Customer Focused', text: 'Designed around clear service discovery, booking and support.', icon: HeartHandshake },
-  { title: 'Professional Network', text: 'Connecting verified technicians with people who need reliable home services.', icon: Handshake },
+  { title: 'Professional Network', text: 'Connecting onboarded technicians with people requesting appliance service.', icon: Handshake },
   { title: 'Built for India', text: 'Designed with an India-wide vision, growing step by step and responsibly.', icon: Globe2 },
 ];
 
@@ -42,17 +42,16 @@ export default function About() {
   useSEO({
     title: 'About VATTAMS | Premium Appliance Care',
     description: 'Learn about VATTAMS Home Services, focused on premium AC, washing machine and refrigerator care.',
-    path: '/#about',
+    path: '/about',
   });
 
-  const citiesByState = cities.reduce((acc, city) => {
+  const citiesByState = cities.filter((city) => city.isCurrentlyServed).reduce((acc, city) => {
     (acc[city.state] ||= []).push(city);
     return acc;
   }, {} as Record<string, typeof cities>);
 
   const goToCity = (slug: string) => {
-    window.location.hash = `city-${slug}`;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    navigate('city-landing', slug);
   };
 
   return (
@@ -173,8 +172,8 @@ export default function About() {
 
       <section className="py-16 md:py-24 bg-[#f7f4ed]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="font-display text-2xl md:text-4xl font-bold text-[#0b1f3a] text-center mb-3">Cities We Serve</h2>
-          <p className="text-gray-500 text-center mb-10 max-w-xl mx-auto">VATTAMS Home Services lists {cities.length}+ city pages for AC, washing machine and refrigerator care — tap a city to explore availability.</p>
+          <h2 className="font-display text-2xl md:text-4xl font-bold text-[#0b1f3a] text-center mb-3">Current Booking Areas</h2>
+          <p className="text-gray-500 text-center mb-10 max-w-xl mx-auto">Active technician records currently show Chennai and Coimbatore. Tap a city for service information; actual appointment options are confirmed for your address during booking.</p>
           <div className="space-y-8 max-w-5xl mx-auto">
             {Object.entries(citiesByState).map(([state, list]) => (
               <div key={state}>

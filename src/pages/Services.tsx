@@ -7,10 +7,10 @@ import { useSEO } from '@/lib/seo';
 export default function Services() {
   const { navigate } = useRouter();
     useSEO({
-    title: 'VATTAMS Home Services | Premium AC, Washing Machine & Refrigerator Care',
+    title: 'AC, Washing Machine & Refrigerator Service Prices | VATTAMS',
     description:
-      'Book premium AC, washing machine and refrigerator service with VATTAMS. Convenient doorstep booking and dedicated appliance-care support.',
-    path: '/#services',
+      'Explore listed base prices for AC service, installation, gas filling, coil service, washing machine service and refrigerator service. Check appointment availability and checkout charges before confirming with VATTAMS.',
+    path: '/services',
   });
 
   return (
@@ -41,18 +41,18 @@ export default function Services() {
       <section className="py-16 bg-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="font-display text-2xl md:text-3xl font-bold text-navy-900 text-center mb-10">
-            What's Included in Every Service
+            Before You Confirm Your Booking
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
-              'Free doorstep inspection',
-              'Genuine spare parts with warranty',
-              'Up to 30-day service warranty',
-              'Transparent upfront pricing',
-              'Background-verified technicians',
-              'Real-time booking status updates',
-              'Same-day service available',
-              'Pay after service completion',
+              'Listed base prices for supported job types',
+              'Applicable GST and platform fee shown at checkout',
+              'Choose the exact appliance job type',
+              'Appointment options based on your address',
+              'Booking status updates through the platform',
+              'OTP verification at supported job checkpoints',
+              'Separate quote for parts or additional work',
+              'Support through the website contact options',
             ].map((item) => (
               <div key={item} className="flex items-center gap-3 p-4 bg-gold-50 rounded-xl">
                 <div className="w-8 h-8 rounded-full bg-royal-800 flex items-center justify-center shrink-0">

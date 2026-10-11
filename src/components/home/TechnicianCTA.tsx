@@ -3,7 +3,7 @@ import { useRouter } from '@/lib/router';
 
 const perks = [
   { icon: TrendingUp, text: 'Eligible customer service leads' },
-  { icon: Wallet, text: 'Transparent, on-time payouts' },
+  { icon: Wallet, text: 'Track eligible earnings and call-rate dues' },
   { icon: Clock, text: 'Flexible working hours' },
   { icon: ShieldCheck, text: 'Professional network & support' },
 ];

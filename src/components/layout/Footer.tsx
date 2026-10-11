@@ -70,9 +70,9 @@ export default function Footer() {
             <h4 className="text-xs font-bold uppercase tracking-[.22em] text-orange-400 mb-4">Contact</h4>
             <ul className="space-y-3 text-sm text-gray-400">
               <li className="flex items-start gap-3"><Phone size={15} className="mt-0.5 text-orange-400" /><a href="tel:+916374068296" className="hover:text-white">+91 63740 68296</a></li>
-              <li className="flex items-start gap-3"><MessageCircle size={15} className="mt-0.5 text-green-400" /><a href="https://wa.me/918189800757" target="_blank" rel="noreferrer" className="hover:text-white">WhatsApp Support</a></li>
+              <li className="flex items-start gap-3"><MessageCircle size={15} className="mt-0.5 text-green-400" /><a href="https://wa.me/916374068296" target="_blank" rel="noreferrer" className="hover:text-white">WhatsApp Support</a></li>
               <li className="flex items-start gap-3"><Mail size={15} className="mt-0.5 text-orange-400" /><a href="mailto:admin@vattams.net" className="hover:text-white">admin@vattams.net</a></li>
-              <li className="flex items-start gap-3"><MapPin size={15} className="mt-0.5 text-orange-400" /><span>Serving across India</span></li>
+              <li className="flex items-start gap-3"><MapPin size={15} className="mt-0.5 text-orange-400" /><span>Appointment availability varies by location; check when booking.</span></li>
             </ul>
             <button onClick={() => navigate('booking')} className="mt-5 w-full rounded-xl bg-orange-500 py-3 text-sm font-bold text-[#050A17] transition hover:bg-orange-400">Book a Service</button>
           </div>

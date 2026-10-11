@@ -1,9 +1,17 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageSquareText, X, Send, Sparkles } from 'lucide-react';
 import { useRouter } from '@/lib/router';
-import { supabase, ServicePrice } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { formatINR } from '@/lib/pricing';
 import { cities } from '@/lib/cities';
+
+interface CustomerServicePrice {
+  service_category: string;
+  service_type: string;
+  base_price: number;
+  price_label: string;
+  is_active: boolean;
+}
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -12,7 +20,7 @@ interface ChatMessage {
 
 const WELCOME: ChatMessage = {
   role: 'assistant',
-  content: "Hi! I'm the VATTAMS Assistant. Ask me about our services, pricing, coverage areas, warranty, or how booking works.",
+  content: "Hi! I'm the VATTAMS Assistant. Ask me about our services, pricing, appointment availability, or how booking works.",
 };
 
 const SUGGESTIONS = [
@@ -23,10 +31,10 @@ const SUGGESTIONS = [
 ];
 
 const FALLBACK =
-  "I'm not fully sure about that one — for anything specific, our support team can help directly. Call +91 81898 00757 or WhatsApp us, or use the buttons below.";
+  "I'm not fully sure about that one — for anything specific, our support team can help directly. Call +91 63740 68296 or WhatsApp us, or use the buttons below.";
 
 // Rule-based intent matcher — no external AI/LLM, no API cost, works fully offline-capable.
-function buildReply(userText: string, prices: Record<string, ServicePrice>): string {
+function buildReply(userText: string, prices: CustomerServicePrice[]): string {
   const t = userText.toLowerCase();
 
   const has = (...words: string[]) => words.some((w) => t.includes(w));
@@ -44,49 +52,67 @@ function buildReply(userText: string, prices: Record<string, ServicePrice>): str
   }
 
   if (has('price', 'cost', 'charge', 'fee', 'how much')) {
-    const activeServices = Object.keys(prices);
-    const match = activeServices.find((s) => t.includes(s.toLowerCase().split(' ')[0]));
-    if (match && prices[match]) {
-      const p = prices[match];
-      return `${match} starts from ${formatINR(p.base_price)} (+${p.gst_rate}% GST). Final price depends on the issue and parts needed — you'll see the full breakdown before confirming your booking.`;
+    const requested = [
+      { type: 'Gas Filling', words: ['gas filling', 'gas refill', 'refrigerant'] },
+      { type: 'Coil Service', words: ['coil service', 'coil cleaning', 'coil'] },
+      { type: 'Pump Water Service', words: ['pump water', 'water pump', 'pump service'] },
+      { type: 'Installation', words: ['installation', 'install', 'fitting'] },
+      { type: 'General Service', words: ['general service', 'ac service', 'ac repair', 'air conditioner'] },
+      { type: 'Washing Machine Service', words: ['washing machine', 'washer'] },
+      { type: 'Refrigerator Service', words: ['refrigerator', 'fridge'] },
+    ].find((item) => item.words.some((word) => t.includes(word)));
+    const matched = requested ? prices.find((price) => price.service_type === requested.type) : undefined;
+    if (matched) {
+      return `${matched.service_type} has a listed base price of ${formatINR(Number(matched.base_price))}. Applicable GST and platform fees are shown at checkout. Parts or extra work are quoted separately for approval.`;
     }
-    const anyPrice = Object.values(prices)[0];
-    return anyPrice
-      ? `Prices vary by service, starting around ${formatINR(anyPrice.base_price)}. Open the Booking page and select a service to see exact live pricing with GST breakdown.`
-      : `Pricing depends on the service — please check the Booking page for live rates.`;
+    const minimum = (category: string) => {
+      const values = prices.filter((price) => price.service_category === category);
+      return values.length ? Math.min(...values.map((price) => Number(price.base_price))) : null;
+    };
+    const ac = minimum('AC Service');
+    const washing = minimum('Washing Machine');
+    const refrigerator = minimum('Refrigerator');
+    const summary = [
+      ac !== null ? `AC from ${formatINR(ac)}` : null,
+      washing !== null ? `washing machine from ${formatINR(washing)}` : null,
+      refrigerator !== null ? `refrigerator from ${formatINR(refrigerator)}` : null,
+    ].filter(Boolean).join('; ');
+    return summary
+      ? `Current listed base prices: ${summary}. Applicable GST and platform fees are shown at checkout. Open Service Prices for the exact job type.`
+      : `Current prices are temporarily unavailable. Open the Services page or contact VATTAMS to check the latest listed rates.`;
   }
 
   if (has('city', 'cities', 'area', 'location', 'operate', 'available in', 'cover')) {
-    const sample = cities.slice(0, 8).map((c) => c.name).join(', ');
-    return `We currently serve ${sample} and more — expanding to new cities regularly. Check the Booking page to see if we're live in your city yet.`;
+    const currentCities = cities.filter((city) => city.isCurrentlyServed).map((city) => city.name);
+    return `Current active technician coverage is recorded in ${currentCities.join(' and ')}. Appointment availability still depends on your address, job type and technician schedule. Check the Booking page for your location.`;
   }
 
   if (has('book', 'booking', 'schedule', 'appointment')) {
-    return `Booking takes under 2 minutes: tap "Book Service", enter your details and issue, pick a time slot, and confirm. You'll get a booking number to track it.`;
+    return `Tap Book Service, select the appliance and exact job type, enter your address and preferred time, then review the price breakdown before submitting. You'll receive a booking number if the request succeeds.`;
   }
 
   if (has('warranty', 'guarantee')) {
-    return `Every repair comes with a 30-day service warranty. If the same issue happens again within 30 days, we fix it free.`;
+    return `Warranty terms can vary by job and are not guaranteed for every service. Please ask support or the assigned technician for the applicable terms before approving the work.`;
   }
 
   if (has('payment', 'pay', 'upi', 'cash')) {
-    return `You can pay via UPI, cash, or online — payment is collected after the service is completed. You'll get a digital invoice with GST breakdown.`;
+    return `Please review the payment options and total shown in the booking or checkout flow. Applicable GST and platform fees are shown in the price breakdown before you confirm.`;
   }
 
   if (has('technician', 'verified', 'background', 'trust', 'safe')) {
-    return `All VATTAMS technicians are background-verified, ID-checked, and skill-assessed before they can accept jobs. Job start and completion are OTP-verified for your safety.`;
+    return `Check the assigned technician and booking details in your account. The supported job workflow uses OTP verification at job checkpoints; contact support if you need help confirming an assignment.`;
   }
 
   if (has('same day', 'urgent', 'emergency', 'today', 'fast')) {
-    return `Same-day appointments may be available for bookings made before 2 PM, depending on local technician availability. Please check the Booking page for available slots.`;
+    return `Appointment availability varies by address, job type and technician schedule. Please check the Booking page for the current options available for your request.`;
   }
 
   if (has('support', 'contact', 'phone', 'call', 'whatsapp', 'help')) {
-    return `Reach us anytime: call +91 81898 00757, or WhatsApp us — both linked in the buttons below.`;
+    return `Call or WhatsApp VATTAMS at +91 63740 68296 using the contact buttons below, or visit the Contact page for support options.`;
   }
 
   if (has('technician job', 'join as', 'work with you', 'become a technician', 'hiring')) {
-    return `We're hiring technicians across India! Tap "Join as a Technician" in the menu to register — the one-time joining fee is ₹49 and registration takes about 5 minutes.`;
+    return `Interested in joining as a technician? Open Join as a Technician to review the current eligibility and registration terms. Job availability depends on your service area and demand.`;
   }
 
   if (has('thank', 'thanks', 'ok', 'okay', 'great')) {
@@ -101,19 +127,16 @@ export default function AIChatWidget() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME]);
   const [input, setInput] = useState('');
-  const [prices, setPrices] = useState<Record<string, ServicePrice>>({});
+  const [prices, setPrices] = useState<CustomerServicePrice[]>([]);
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     supabase
-      .from('service_prices')
-      .select('*')
+      .from('customer_service_prices')
+      .select('service_category,service_type,base_price,price_label,is_active')
       .eq('is_active', true)
       .then(({ data }) => {
-        if (!data) return;
-        const map: Record<string, ServicePrice> = {};
-        (data as ServicePrice[]).forEach((p) => { map[p.service_name] = p; });
-        setPrices(map);
+        if (data) setPrices(data as CustomerServicePrice[]);
       });
   }, []);
 

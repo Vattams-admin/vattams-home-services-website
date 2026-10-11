@@ -16,11 +16,12 @@ import {
 } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import JoinTechnicianButton from '@/components/JoinTechnicianButton';
+import { useSEO } from '@/lib/seo';
 
 const FAQS = [
   {
     q: 'How do I join VATTAMS as a technician?',
-    a: 'Click the "Join as a Technician" button and complete the AI-guided registration with your personal details, service categories, experience, availability, and payment details. Our Admin Team will review your application within 24-48 hours.',
+    a: 'Click the "Join as a Technician" button and complete the guided registration with your personal details, service categories, experience, availability, and payment details. The admin team reviews applications; timing can vary.',
   },
   {
     q: 'How much can I earn as a VATTAMS technician?',
@@ -31,8 +32,8 @@ const FAQS = [
     a: 'Every eligible job shows its fixed call-rate fee before you accept it. The fee is recorded only after the job is completed; rejected, cancelled, or uncompleted jobs are not charged. There is no percentage commission on these appliance jobs, and the customer platform fee is shown separately at checkout.',
   },
   {
-    q: 'Which cities does VATTAMS operate in?',
-    a: 'VATTAMS operates across India, including Chennai, Coimbatore, Madurai, Tiruchirappalli, Salem, Tirunelveli, Vellore, and more cities as our service network grows.',
+    q: 'Which cities currently have technician coverage?',
+    a: 'Active technician records currently show coverage in Chennai and Coimbatore. Applicants from other cities may register as the network expands, but customer appointment availability must be confirmed for each address during booking.',
   },
   {
     q: 'What services can I offer?',
@@ -44,7 +45,7 @@ const FAQS = [
   },
   {
     q: 'How does the job assignment work?',
-    a: 'Our system matches customer bookings with suitable technicians based on service category, location, availability, rating, and workload. Eligible technicians receive job notifications through the platform.',
+    a: 'The platform matches requests based on service category, location, availability, rating and workload. Eligible technicians receive job notifications through the platform.',
   },
   {
     q: 'What is the technician joining fee?',
@@ -52,7 +53,7 @@ const FAQS = [
   },
   {
     q: 'How long does approval take?',
-    a: 'Our Admin Team normally reviews technician applications within 24-48 hours. Once approved, you can access your technician account and start receiving eligible service requests.',
+    a: 'The admin team reviews applications. Once approved, you can access your technician account; eligible job requests depend on service area, availability and demand.',
   },
 ];
 
@@ -64,13 +65,13 @@ const BENEFITS = [
   },
   {
     icon: TrendingUp,
-    title: 'AI Job Matching',
-    desc: 'Our smart system helps match suitable jobs based on your service category and location.',
+    title: 'Job Matching',
+    desc: 'The platform matches eligible requests based on service category and location.',
   },
   {
     icon: Shield,
     title: 'Secure Payments',
-    desc: 'Receive your eligible earnings through your registered bank account or UPI.',
+    desc: 'Review eligible earnings and call-rate dues in your dashboard; payout details are handled through the platform.',
   },
   {
     icon: Star,
@@ -85,7 +86,7 @@ const BENEFITS = [
   {
     icon: Award,
     title: 'Training & Support',
-    desc: 'Get access to platform support and resources to help you grow your service business.',
+    desc: 'Use platform support and booking updates as you manage assigned requests.',
   },
 ];
 
@@ -108,82 +109,28 @@ const CITIES = [
 export default function JoinTechnician() {
   const { navigate } = useRouter();
 
+  useSEO({
+    title: 'Appliance Technician Network Registration | VATTAMS',
+    description: 'Join the VATTAMS technician network for AC, washing machine and refrigerator job requests. One-time ₹49 registration fee; job availability depends on location, eligibility and demand.',
+    path: '/join-technician',
+  });
+
   useEffect(() => {
     const schemaId = 'join-technician-schema';
-
     const script = document.createElement('script');
-
     script.type = 'application/ld+json';
     script.id = schemaId;
-
     script.text = JSON.stringify({
       '@context': 'https://schema.org',
-      '@graph': [
-        {
-          '@type': 'JobPosting',
-          title: 'Home Service Technician — Join VATTAMS',
-          description:
-            'Join VATTAMS as an appliance service technician. Work flexibly on AC, washing machine and refrigerator service requests, with secure payments.',
-          hiringOrganization: {
-            '@type': 'Organization',
-            name: 'VATTAMS Home Services',
-            sameAs: 'https://vattams.net',
-          },
-          jobLocation: {
-            '@type': 'Place',
-            address: {
-              '@type': 'PostalAddress',
-              addressCountry: 'IN',
-            },
-          },
-          employmentType: 'CONTRACTOR',
-          datePosted: new Date().toISOString(),
-          validThrough: new Date(
-            Date.now() + 90 * 86400000
-          ).toISOString(),
-        },
-        {
-          '@type': 'FAQPage',
-          mainEntity: FAQS.map((faq) => ({
-            '@type': 'Question',
-            name: faq.q,
-            acceptedAnswer: {
-              '@type': 'Answer',
-              text: faq.a,
-            },
-          })),
-        },
-      ],
+      '@type': 'FAQPage',
+      mainEntity: FAQS.map((faq) => ({
+        '@type': 'Question',
+        name: faq.q,
+        acceptedAnswer: { '@type': 'Answer', text: faq.a },
+      })),
     });
-
     document.head.appendChild(script);
-
-    const oldTitle = document.title;
-
-    document.title =
-      'Join as a Technician — Technician Jobs in India | VATTAMS';
-
-    const metaId = 'join-technician-meta';
-
-    let metaDesc = document.getElementById(
-      metaId
-    ) as HTMLMetaElement | null;
-
-    if (!metaDesc) {
-      metaDesc = document.createElement('meta');
-      metaDesc.id = metaId;
-      metaDesc.name = 'description';
-      document.head.appendChild(metaDesc);
-    }
-
-    metaDesc.content =
-      'Join VATTAMS for AC, washing machine and refrigerator technician opportunities. One-time ₹49 joining fee, flexible hours, and secure payments.';
-
-    return () => {
-      document.getElementById(schemaId)?.remove();
-      document.getElementById(metaId)?.remove();
-      document.title = oldTitle;
-    };
+    return () => document.getElementById(schemaId)?.remove();
   }, []);
 
   return (
@@ -202,7 +149,7 @@ export default function JoinTechnician() {
         <div className="relative max-w-5xl mx-auto px-4 py-16 md:py-24 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/20 rounded-full text-sm font-semibold mb-6">
             <Briefcase size={16} />
-            Now Hiring Across India
+            Expanding the Technician Network
           </div>
 
           <h1 className="font-display text-4xl md:text-5xl font-bold mb-4 leading-tight">
@@ -379,9 +326,10 @@ export default function JoinTechnician() {
       {/* CITIES */}
       <section className="py-12 bg-[#f7f4ed]">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-2xl font-extrabold text-gray-900 mb-6">
-            Technician Jobs in India
+          <h2 className="text-2xl font-extrabold text-gray-900 mb-3">
+            Technician Applications by City
           </h2>
+          <p className="text-sm text-gray-600 mb-6">You may register from these cities as the network expands. Customer appointment coverage is confirmed separately and depends on active technician availability.</p>
 
           <div className="flex flex-wrap gap-3 justify-center">
             {CITIES.map((city) => (

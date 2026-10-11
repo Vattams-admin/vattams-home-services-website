@@ -40,9 +40,9 @@ export default function Contact() {
               <div className="space-y-4">
                 {[
                   { icon: Phone, label: 'Call Us', value: '+91 63740 68296', href: 'tel:+916374068296', color: 'bg-[#0b1f3a]' },
-                  { icon: MessageCircle, label: 'WhatsApp', value: 'Chat with us', href: 'https://wa.me/918189800757', color: 'bg-green-500' },
+                  { icon: MessageCircle, label: 'WhatsApp', value: 'Chat with us', href: 'https://wa.me/916374068296', color: 'bg-green-500' },
                   { icon: Mail, label: 'Email', value: 'admin@vattams.net', href: 'mailto:admin@vattams.net', color: 'bg-gold-600' },
-                  { icon: MapPin, label: 'Service Area', value: 'Across India', href: '#', color: 'bg-[#0b1f3a]' },
+                  { icon: MapPin, label: 'Service Area', value: 'Availability confirmed during booking', href: '#', color: 'bg-[#0b1f3a]' },
                 ].map((c) => {
                   const Icon = c.icon;
                   return (
@@ -122,7 +122,7 @@ export default function Contact() {
                       type="tel" required value={form.phone}
                       onChange={(e) => setForm({ ...form, phone: e.target.value })}
                       className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all"
-                      placeholder="+91 81898 00757"
+                      placeholder="+91 63740 68296"
                     />
                   </div>
                 </div>

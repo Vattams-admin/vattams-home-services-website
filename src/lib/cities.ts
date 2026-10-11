@@ -1,5 +1,6 @@
 export interface CityData {
   slug: string;
+  isCurrentlyServed: boolean;
   name: string;
   state: string;
   tier: 'metropolitan' | 'metro' | 'urban' | 'semi-urban';
@@ -24,118 +25,74 @@ const services = [
 
 export const SERVICE_CATEGORIES = services;
 
+// Current active technician records support these city pages for indexing.
+// Update this set as active coverage changes; booking availability is still checked per address.
+export const CURRENTLY_SERVED_CITY_SLUGS = new Set(['chennai', 'coimbatore']);
+
 function generateFAQs(cityName: string): { q: string; a: string }[] {
   return [
     {
       q: `How do I book appliance service in ${cityName} with VATTAMS?`,
-      a: `Booking a service in ${cityName} is simple. Click the "Book Now" button, fill in your details including your address in ${cityName}, select the service you need, and choose a preferred time slot. Our verified technician in ${cityName} will be assigned to you promptly.`,
+      a: `Choose Book Now, select your appliance category and job type, enter your service address in ${cityName}, and choose from the appointment options shown. Availability is confirmed through the booking flow.`,
     },
     {
-      q: `Are VATTAMS technicians in ${cityName} verified and background-checked?`,
-      a: `Yes, every technician serving ${cityName} undergoes a thorough background verification, identity check, and skill assessment. We verify their ID proofs, check their experience, and ensure they meet our quality standards before they can accept bookings in ${cityName}.`,
+      q: `Which appliance services can I request in ${cityName}?`,
+      a: `VATTAMS accepts requests for AC general service, installation, gas filling, pump water service and coil service, plus washing machine and refrigerator service. The exact options shown during booking determine what you can request.`,
     },
     {
-      q: `What areas of ${cityName} does VATTAMS cover?`,
-      a: `VATTAMS covers all major residential and commercial areas within ${cityName} and its surrounding neighborhoods. Our technicians are locally based, ensuring quick response times across the entire ${cityName} region.`,
+      q: `How much does appliance service cost in ${cityName}?`,
+      a: `View the current listed base prices on the Services page. The checkout displays the applicable GST and platform fee before you confirm. Any parts or additional work should be quoted separately for your approval.`,
     },
     {
-      q: `How much does AC repair cost in ${cityName}?`,
-      a: `AC repair costs in ${cityName} start from ₹299 for basic servicing. The final price depends on the issue, parts needed, and the type of AC unit. You'll receive a transparent price breakdown before any work begins, with no hidden charges.`,
+      q: `Is service available at my address in ${cityName}?`,
+      a: `Enter your address and preferred time in the booking form to check the available appointment options. Availability can vary by neighbourhood, job type and technician schedule.`,
     },
     {
-      q: `Do you offer same-day service in ${cityName}?`,
-      a: `Yes, VATTAMS offers same-day service across ${cityName} for most bookings made before 2 PM. Priority dispatch options depend on local technician availability.`,
+      q: `Can I book same-day appliance service in ${cityName}?`,
+      a: `Same-day appointments depend on technician availability. Check the date and time options shown during booking for the latest availability at your address.`,
     },
     {
-      q: `What is the warranty on repairs done in ${cityName}?`,
-      a: `All repairs performed by VATTAMS technicians in ${cityName} come with a 30-day service warranty. If the same issue recurs within the warranty period, we'll fix it free of charge.`,
+      q: `Will I know the price before extra work is started?`,
+      a: `The website lists base prices for supported job types and shows applicable checkout charges. Parts and additional work are separate; ask for a quote and approve it before the extra work begins.`,
     },
     {
-      q: `Can I get a washing machine repaired on weekends in ${cityName}?`,
-      a: `Absolutely. VATTAMS operates 7 days a week in ${cityName}, including weekends and public holidays. You can book a weekend slot that suits your convenience.`,
-    },
-    {
-      q: `How do I pay for services in ${cityName}?`,
-      a: `Customers in ${cityName} can pay via UPI, cash, or online payment after the service is completed. You'll receive a digital invoice with a complete price breakdown including GST.`,
-    },
-    {
-      q: `Which appliance services can I book in ${cityName}?`,
-      a: `You can request AC, washing machine and refrigerator service in ${cityName}. Availability is confirmed during booking.`,
-    },
-    {
-      q: `What makes VATTAMS different from local repair shops in ${cityName}?`,
-      a: `VATTAMS brings verified technicians, transparent pricing with GST invoices, a 30-day service warranty, OTP-verified job start and completion, in-app chat with your technician, and dedicated customer support — all designed for ${cityName} residents who value reliability and professionalism.`,
-    },
-    {
-      q: `How quickly can a technician reach my home in ${cityName}?`,
-      a: `Our average response time in ${cityName} is 60–90 minutes for standard bookings. For appliance issues, available appointment times are shown during booking.`,
-    },
-    {
-      q: `Can I reschedule my booking in ${cityName}?`,
-      a: `Yes, you can reschedule any booking in ${cityName} through your customer dashboard or by contacting our support team via WhatsApp. We offer flexible rescheduling with no penalty if done at least 2 hours before the scheduled time.`,
+      q: `How can I follow my booking after I submit it?`,
+      a: `Use the booking details and customer account features available on VATTAMS to follow status updates. For help, contact the support team using the contact options on the website.`,
     },
   ];
 }
 
-function generateTestimonials(cityName: string, areas: string[]): { name: string; area: string; rating: number; text: string }[] {
-  const names = ['Rajesh Kumar', 'Priya Sundaram', 'Murugan S', 'Lakshmi N', 'Karthik R', 'Deepa V', 'Senthil Kumar', 'Anitha R'];
-  const texts = [
-    `Excellent service! The technician arrived on time and fixed my AC quickly. Very professional and the pricing was transparent. Highly recommend VATTAMS for anyone in`,
-    `Booked washing machine service through VATTAMS and was impressed by how smooth the whole process was. The OTP verification gave me confidence that the job was done properly. Great appliance service in`,
-    `My washing machine stopped working suddenly. VATTAMS sent a technician the same day and he diagnosed and fixed the issue within an hour. Great service for residents of`,
-    `Very transparent pricing and professional technicians. The in-app chat feature was very convenient for communicating with the technician. A game-changer for home services in`,
-    `I've used VATTAMS for appliance service. The booking experience was convenient and the technician was professional. They are a reliable appliance-care provider in`,
-    `The technician who came for my refrigerator repair was very knowledgeable. He explained the problem clearly and didn't overcharge. VATTAMS is reliable for anyone living in`,
-  ];
-  return texts.slice(0, 6).map((t, i) => ({
-    name: names[i],
-    area: areas[i % areas.length],
-    rating: 5,
-    text: t + ` ${cityName}.`,
-  }));
+function generateTestimonials(_cityName: string, _areas: string[]): { name: string; area: string; rating: number; text: string }[] {
+  // Never invent customer identities, ratings or testimonials for SEO pages.
+  // The section remains data-driven and can be populated from approved real reviews later.
+  return [];
 }
 
-function generateContentSections(cityName: string, knownFor: string, population: string): { heading: string; body: string }[] {
+function generateContentSections(cityName: string, _knownFor: string, _population: string): { heading: string; body: string }[] {
   return [
     {
-      heading: `Appliance Service in ${cityName}`, 
-      body: `${cityName} is a vibrant city with a growing population of over ${population} residents. As ${cityName} continues to expand, the need for dependable appliance service remains important. VATTAMS Home Services focuses on doorstep AC, washing machine and refrigerator service in ${cityName}. Whether you need AC repair during ${cityName}'s hot summer months or help with a washing machine or refrigerator, check available appointments through our booking flow.`,
+      heading: `Appliance Service in ${cityName}`,
+      body: `VATTAMS Home Services lets residents in ${cityName} request doorstep service for air conditioners, washing machines and refrigerators. Select the appliance and describe the issue to check the appointment options currently available for your address.`,
     },
     {
-      heading: `Why Choose VATTAMS in ${cityName}?`,
-      body: `VATTAMS stands apart from local repair shops in ${cityName} through our commitment to transparency, quality, and customer satisfaction. Every technician serving ${cityName} undergoes a rigorous verification process including ID proof checks, skill assessments, and background screening. Our unique OTP-based job verification system ensures that both the start and completion of your service in ${cityName} are properly documented. With transparent pricing that includes GST, a 30-day service warranty, and dedicated customer support, ${cityName} residents can trust VATTAMS for AC, washing machine and refrigerator service needs.`,
-    },
-    {
-      heading: `AC Repair and Service in ${cityName}`,
-      body: `${cityName}'s climate makes air conditioning essential for most of the year. Our AC repair technicians in ${cityName} are trained to handle all major brands including Daikin, LG, Samsung, Voltas, Blue Star, and Carrier. From gas refilling and compressor repair to deep cleaning and installation, VATTAMS provides comprehensive AC services across ${cityName}. Regular AC servicing not only improves cooling efficiency but also reduces electricity bills — a significant benefit for ${cityName} households running ACs for extended periods.`,
-    },
-    {
-      heading: `Appliance Service Support in ${cityName}`,
-      body: `VATTAMS focuses on AC, washing machine and refrigerator servicing in ${cityName}. Share your appliance issue and preferred time through the booking page to check local availability.`,
-    },
-    {
-      heading: `Appliance Care in ${cityName}`,
-      body: `VATTAMS focuses on three appliance categories in ${cityName}: ACs, washing machines and refrigerators. Describe your appliance issue and check available appointments through our booking flow. Appointment options depend on local technician availability.`,
-    },
-    {
-      heading: `Refrigerator Service in ${cityName}`,
-      body: `VATTAMS helps customers in ${cityName} request refrigerator service for cooling issues, unusual noises, leaks and other common faults. Describe the symptoms and choose an available appointment through the booking form.`,
+      heading: `AC Service and Repair in ${cityName}`,
+      body: `For AC service in ${cityName}, available job types include general service, installation, gas filling, pump water service and coil service. Choose the exact job type in the booking form so the request can be routed correctly. Final diagnosis and any extra parts or work should be discussed before additional charges are approved.`,
     },
     {
       heading: `Washing Machine Service in ${cityName}`,
-      body: `VATTAMS helps customers in ${cityName} request washing machine service and repair. Describe the symptoms and choose an available appointment through the booking form.`,
+      body: `Residents of ${cityName} can submit washing machine service requests through VATTAMS. Describe the symptoms—such as drainage, spinning, noise or starting issues—and select an available appointment. Parts and repair work beyond the listed service are quoted separately.`,
     },
     {
-      heading: `Booking Process for ${cityName} Residents`,
-      body: `Booking appliance service in ${cityName} with VATTAMS takes less than 2 minutes. Simply click "Book Now," enter your ${cityName} address, select the service category, describe your issue, and choose a convenient time slot. You'll receive a booking confirmation with your unique booking number. Our system automatically matches your request with the nearest qualified technician in ${cityName}. You can track your booking, chat with your technician, and make payments — all through our platform designed for ${cityName} customers.`,
+      heading: `Refrigerator Service in ${cityName}`,
+      body: `Use VATTAMS to request refrigerator service in ${cityName} for cooling problems, unusual noises, leaks or other appliance issues. Provide a clear description and check appointment availability for your address. A technician may need to inspect the appliance before confirming any additional repair cost.`,
     },
     {
-      heading: `Service Areas and Coverage in ${cityName}`,
-      body: `VATTAMS proudly serves all neighborhoods and surrounding areas of ${cityName}. Our technicians are strategically located across ${cityName} to ensure quick response times wherever you are. From the city center to the outskirts of ${cityName}, we cover residential apartments, independent houses, commercial establishments, and industrial areas. Our coverage of ${cityName} is continuously expanding as we onboard more verified technicians.`,
+      heading: `Service Pricing in ${cityName}`,
+      body: `VATTAMS publishes base prices for supported appliance job types on its Services page. Applicable GST and the platform fee are displayed in the checkout breakdown. If diagnosis reveals parts or additional work are needed, request a separate quote and approve it before proceeding.`,
     },
     {
-      heading: `Customer Satisfaction in ${cityName}`,
-      body: `Our commitment to ${cityName} customers goes beyond just fixing appliances. We believe in building long-term trust with every service call in ${cityName}. After each job, customers can rate their experience and leave reviews, helping us maintain our high service standards. Our ${cityName} customer support team is available via WhatsApp and phone to address any concerns. With hundreds of satisfied customers across ${cityName}, VATTAMS aims to make appliance care easier to book.`,
+      heading: `How to Book Appliance Service in ${cityName}`,
+      body: `Start from the booking page, select AC, washing machine or refrigerator, choose the specific job type where available, enter your address and preferred time, and submit the request. Appointment options depend on local technician availability and the selected work.`,
     },
   ];
 }
@@ -205,6 +162,7 @@ export const cities: CityData[] = cityConfigs.map((c) => {
   const slug = c.name.toLowerCase().replace(/\s+/g, '-');
   return {
     slug,
+    isCurrentlyServed: CURRENTLY_SERVED_CITY_SLUGS.has(slug),
     name: c.name,
     state: c.state,
     tier: c.tier,
