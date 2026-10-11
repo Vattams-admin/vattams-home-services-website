@@ -1,7 +1,7 @@
 import { Phone, MessageCircle } from 'lucide-react';
 
 export const SUPPORT_PHONE = '+916374068296';
-export const SUPPORT_WHATSAPP = '918189800757';
+export const SUPPORT_WHATSAPP = '916374068296';
 
 export interface CommunicationCenterProps {
   bookingNumber?: string;
