@@ -12,7 +12,7 @@ interface ChatMessage {
 
 const WELCOME: ChatMessage = {
   role: 'assistant',
-  content: "Hi! I'm the VATTAMS Assistant. Ask me about our services, pricing, coverage areas, warranty, or how booking works.",
+  content: "Hi! I'm the VATTAMS Assistant. Ask me about our services, pricing, appointment availability, or how booking works.",
 };
 
 const SUGGESTIONS = [
@@ -66,27 +66,27 @@ function buildReply(userText: string, prices: Record<string, ServicePrice>): str
   }
 
   if (has('warranty', 'guarantee')) {
-    return `Every repair comes with a 30-day service warranty. If the same issue happens again within 30 days, we fix it free.`;
+    return `Warranty terms can vary by job and are not guaranteed for every service. Please ask support or the assigned technician for the applicable terms before approving the work.`;
   }
 
   if (has('payment', 'pay', 'upi', 'cash')) {
-    return `You can pay via UPI, cash, or online — payment is collected after the service is completed. You'll get a digital invoice with GST breakdown.`;
+    return `Please review the payment options and total shown in the booking or checkout flow. Applicable GST and platform fees are shown in the price breakdown before you confirm.`;
   }
 
   if (has('technician', 'verified', 'background', 'trust', 'safe')) {
-    return `All VATTAMS technicians are background-verified, ID-checked, and skill-assessed before they can accept jobs. Job start and completion are OTP-verified for your safety.`;
+    return `Check the assigned technician and booking details in your account. The supported job workflow uses OTP verification at job checkpoints; contact support if you need help confirming an assignment.`;
   }
 
   if (has('same day', 'urgent', 'emergency', 'today', 'fast')) {
-    return `Same-day appointments may be available for bookings made before 2 PM, depending on local technician availability. Please check the Booking page for available slots.`;
+    return `Appointment availability varies by address, job type and technician schedule. Please check the Booking page for the current options available for your request.`;
   }
 
   if (has('support', 'contact', 'phone', 'call', 'whatsapp', 'help')) {
-    return `Reach us anytime: call +91 81898 00757, or WhatsApp us — both linked in the buttons below.`;
+    return `Call or WhatsApp VATTAMS at +91 63740 68296 using the contact buttons below, or visit the Contact page for support options.`;
   }
 
   if (has('technician job', 'join as', 'work with you', 'become a technician', 'hiring')) {
-    return `We're hiring technicians across India! Tap "Join as a Technician" in the menu to register — the one-time joining fee is ₹49 and registration takes about 5 minutes.`;
+    return `Interested in joining as a technician? Open Join as a Technician to review the current eligibility and registration terms. Job availability depends on your service area and demand.`;
   }
 
   if (has('thank', 'thanks', 'ok', 'okay', 'great')) {
