@@ -82,7 +82,7 @@ function prerenderSeoPages() {
 
       const baseUrl = 'https://vattams.net';
       const serviceLinks = '<nav aria-label="Primary"><a href="/">Home</a> · <a href="/services">Service prices</a> · <a href="/booking">Book a service</a> · <a href="/contact">Contact</a></nav>';
-      for (const city of cities.filter((item) => item.isCurrentlyServed)) {
+      for (const city of cities) {
         const canonical = `${baseUrl}/areas/${city.slug}`;
         const providerId = `${baseUrl}/#organization`;
         const schema = {
@@ -96,16 +96,18 @@ function prerenderSeoPages() {
               logo: `${baseUrl}/VATTAMS_HOME_SERVICES_logo.svg`,
               telephone: '+91-63740-68296',
               email: 'support@vattams.net',
-              areaServed: { '@type': 'City', name: city.name, containedInPlace: { '@type': 'State', name: city.state } },
+              ...(city.isCurrentlyServed ? {
+                areaServed: { '@type': 'City', name: city.name, containedInPlace: { '@type': 'State', name: city.state } },
+              } : {}),
             },
-            ...['AC Service', 'Washing Machine Service', 'Refrigerator Service'].map((serviceName) => ({
+            ...(city.isCurrentlyServed ? ['AC Service', 'Washing Machine Service', 'Refrigerator Service'].map((serviceName) => ({
               '@type': 'Service',
               name: `${serviceName} in ${city.name}`,
               serviceType: serviceName,
               provider: { '@id': providerId },
               areaServed: { '@type': 'City', name: city.name },
               url: canonical,
-            })),
+            })) : []),
             {
               '@type': 'FAQPage',
               mainEntity: city.faqs.map((faq) => ({
@@ -125,7 +127,10 @@ function prerenderSeoPages() {
           <section><h2>Frequently Asked Questions</h2>${city.faqs.map((faq) => `<details><summary>${escapeHtml(faq.q)}</summary><p>${escapeHtml(faq.a)}</p></details>`).join('')}</section>
           <section><h2>Neighbourhood references</h2><p>${escapeHtml(city.nearbyAreas.join(', '))}. Availability for any address is confirmed during booking.</p></section>
           <p><a href="/booking">Book appliance service</a></p></main><footer><a href="/contact">Contact VATTAMS</a></footer>`;
-        const pageHtml = renderPage({ title: city.seoTitle, description: city.metaDescription, canonical, body, schema });
+        let pageHtml = renderPage({ title: city.seoTitle, description: city.metaDescription, canonical, body, schema });
+        if (!city.isCurrentlyServed) {
+          pageHtml = pageHtml.replace('</head>', '<meta name="robots" content="noindex,follow" />\n</head>');
+        }
         const cityDir = resolve(outputDir, 'areas', city.slug);
         mkdirSync(cityDir, { recursive: true });
         writeFileSync(resolve(cityDir, 'index.html'), pageHtml, 'utf8');
