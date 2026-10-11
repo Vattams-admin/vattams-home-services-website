@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import {
   Phone, MessageCircle, MapPin, Star, ChevronRight, Wrench,
   Wind, Snowflake, WashingMachine,
@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { CityData, SERVICE_CATEGORIES, cities } from '@/lib/cities';
 import { useRouter } from '@/lib/router';
+import { useSEO } from '@/lib/seo';
 
 const serviceIcons: Record<string, typeof Wrench> = {
   'AC Repair': Wind,
@@ -66,77 +67,47 @@ function buildSchema(city: CityData) {
   };
 }
 
-function injectMetaTags(city: CityData) {
-  const baseUrl = 'https://vattams.net';
-  const cityUrl = `${baseUrl}/areas/${city.slug}`;
-
-  const tags: { name?: string; property?: string; content: string; key: string }[] = [
-    
-    { name: 'description', content: city.metaDescription, key: 'meta-desc' },
-    { name: 'robots', content: city.isCurrentlyServed ? 'index,follow' : 'noindex,follow', key: 'meta-robots' },
-    { name: 'keywords', content: `${city.name} appliance service, AC repair ${city.name}, washing machine repair ${city.name}, refrigerator repair ${city.name}, VATTAMS ${city.name}`, key: 'meta-keywords' },
-    { property: 'og:title', content: city.seoTitle, key: 'og-title' },
-    { property: 'og:description', content: city.metaDescription, key: 'og-desc' },
-    { property: 'og:type', content: 'website', key: 'og-type' },
-    { property: 'og:url', content: cityUrl, key: 'og-url' },
-    { property: 'og:image', content: `${baseUrl}/icons/icon-512.png`, key: 'og-image' },
-    { name: 'twitter:card', content: 'summary_large_image', key: 'tw-card' },
-    { name: 'twitter:title', content: city.seoTitle, key: 'tw-title' },
-    { name: 'twitter:description', content: city.metaDescription, key: 'tw-desc' },
-    { name: 'twitter:image', content: `${baseUrl}/icons/icon-512.png`, key: 'tw-image' },
-  ];
-
-  tags.forEach((t) => {
-    let el = document.head.querySelector(`meta[data-city="${t.key}"]`) as HTMLMetaElement | null;
-    if (!el) {
-      el = document.createElement('meta');
-      el.setAttribute('data-city', t.key);
-      document.head.appendChild(el);
-    }
-    if (t.name) el.setAttribute('name', t.name);
-    if (t.property) el.setAttribute('property', t.property);
-    el.setAttribute('content', t.content);
-  });
-
-  let titleEl = document.head.querySelector('title[data-city="page-title"]') as HTMLTitleElement | null;
-  if (!titleEl) {
-    titleEl = document.createElement('title');
-    titleEl.setAttribute('data-city', 'page-title');
-    document.head.appendChild(titleEl);
-  }
-  titleEl.textContent = city.seoTitle;
-
-  let canonicalEl = document.head.querySelector('link[data-city="canonical"]') as HTMLLinkElement | null;
-  if (!canonicalEl) {
-    canonicalEl = document.createElement('link');
-    canonicalEl.setAttribute('data-city', 'canonical');
-    canonicalEl.setAttribute('rel', 'canonical');
-    document.head.appendChild(canonicalEl);
-  }
-  canonicalEl.setAttribute('href', cityUrl);
-}
-
-function cleanupMetaTags() {
-  document.head.querySelectorAll('[data-city]').forEach((el) => el.remove());
-}
-
 export default function CityLanding({ city }: { city: CityData }) {
   const { navigate } = useRouter();
 
-  useEffect(() => {
-    injectMetaTags(city);
-    return () => cleanupMetaTags();
-  }, [city]);
+  useSEO({
+    title: city.seoTitle,
+    description: city.metaDescription,
+    keywords: `${city.name} AC service, washing machine service, refrigerator service`,
+    path: `/areas/${city.slug}`,
+  });
 
-  const schema = useMemo(() => buildSchema(city), [city]);
+  useEffect(() => {
+    let robots = document.head.querySelector('meta[data-city-robots]') as HTMLMetaElement | null;
+    if (!robots) robots = document.head.querySelector('meta[name="robots"]') as HTMLMetaElement | null;
+    if (!robots) {
+      robots = document.createElement('meta');
+      robots.name = 'robots';
+      document.head.appendChild(robots);
+    }
+    robots.setAttribute('data-city-robots', 'true');
+    robots.content = city.isCurrentlyServed ? 'index,follow' : 'noindex,follow';
+
+    let schemaScript = document.head.querySelector('script[data-prerender-schema="city"]') as HTMLScriptElement | null;
+    if (!schemaScript) schemaScript = document.head.querySelector('script[data-city-schema]') as HTMLScriptElement | null;
+    if (!schemaScript) {
+      schemaScript = document.createElement('script');
+      schemaScript.type = 'application/ld+json';
+      schemaScript.setAttribute('data-city-schema', 'true');
+      document.head.appendChild(schemaScript);
+    }
+    schemaScript.textContent = JSON.stringify(buildSchema(city));
+
+    return () => {
+      robots?.remove();
+      schemaScript?.remove();
+    };
+  }, [city]);
 
   const otherCities = cities.filter((c) => c.slug !== city.slug && c.state === city.state).slice(0, 12);
 
   return (
     <div className="pt-16 md:pt-20">
-      {/* Schema */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
-
       {/* Breadcrumb */}
       <nav className="bg-[#f7f4ed] border-b border-[#e8e1d2]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
