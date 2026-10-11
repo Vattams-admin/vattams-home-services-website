@@ -61,6 +61,7 @@ function prerenderSeoPages() {
         canonical: string;
         body: string;
         schema?: unknown;
+        schemaKey?: string;
       }) => {
         const attr = (value: string) => escapeHtml(value);
         let html = template
@@ -75,7 +76,7 @@ function prerenderSeoPages() {
           .replace(/<div id="root"><\/div>/i, `<div id="root">${options.body}</div>`);
         if (options.schema) {
           const json = JSON.stringify(options.schema).replaceAll('<', '\\u003c');
-          html = html.replace('</head>', `<script type="application/ld+json">${json}</script>\n</head>`);
+          html = html.replace('</head>', `<script type="application/ld+json" data-prerender-schema="${options.schemaKey ?? 'page'}">${json}</script>\n</head>`);
         }
         return html;
       };
@@ -127,7 +128,7 @@ function prerenderSeoPages() {
           <section><h2>Frequently Asked Questions</h2>${city.faqs.map((faq) => `<details><summary>${escapeHtml(faq.q)}</summary><p>${escapeHtml(faq.a)}</p></details>`).join('')}</section>
           <section><h2>Neighbourhood references</h2><p>${escapeHtml(city.nearbyAreas.join(', '))}. Availability for any address is confirmed during booking.</p></section>
           <p><a href="/booking">Book appliance service</a></p></main><footer><a href="/contact">Contact VATTAMS</a></footer>`;
-        let pageHtml = renderPage({ title: city.seoTitle, description: city.metaDescription, canonical, body, schema });
+        let pageHtml = renderPage({ title: city.seoTitle, description: city.metaDescription, canonical, body, schema, schemaKey: 'city' });
         if (!city.isCurrentlyServed) {
           pageHtml = pageHtml.replace('</head>', '<meta name="robots" content="noindex,follow" />\n</head>');
         }
@@ -162,6 +163,7 @@ function prerenderSeoPages() {
         canonical: servicesCanonical,
         body: servicesBody,
         schema: servicesSchema,
+        schemaKey: 'services',
       }), 'utf8');
 
       const technicianCanonical = `${baseUrl}/join-technician`;
