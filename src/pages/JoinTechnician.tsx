@@ -31,8 +31,8 @@ const FAQS = [
     a: 'Every eligible job shows its fixed call-rate fee before you accept it. The fee is recorded only after the job is completed; rejected, cancelled, or uncompleted jobs are not charged. There is no percentage commission on these appliance jobs, and the customer platform fee is shown separately at checkout.',
   },
   {
-    q: 'Which cities does VATTAMS operate in?',
-    a: 'VATTAMS operates across India, including Chennai, Coimbatore, Madurai, Tiruchirappalli, Salem, Tirunelveli, Vellore, and more cities as our service network grows.',
+    q: 'Which cities currently have technician coverage?',
+    a: 'Active technician records currently show coverage in Chennai and Coimbatore. Applicants from other cities may register as the network expands, but customer appointment availability must be confirmed for each address during booking.',
   },
   {
     q: 'What services can I offer?',
@@ -202,7 +202,7 @@ export default function JoinTechnician() {
         <div className="relative max-w-5xl mx-auto px-4 py-16 md:py-24 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/20 rounded-full text-sm font-semibold mb-6">
             <Briefcase size={16} />
-            Now Hiring Across India
+            Expanding the Technician Network
           </div>
 
           <h1 className="font-display text-4xl md:text-5xl font-bold mb-4 leading-tight">
