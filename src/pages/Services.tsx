@@ -1,68 +1,17 @@
-import { useState, useEffect } from 'react';
-import { Wind, Refrigerator, WashingMachine, ArrowRight, Loader, Check, LucideIcon, Briefcase } from 'lucide-react';
-import { supabase, ServiceCategory } from '@/lib/supabase';
+import { ArrowRight, Check, Briefcase } from 'lucide-react';
+import CustomerServicePriceCards from '@/components/CustomerServicePriceCards';
 import { useRouter } from '@/lib/router';
 import JoinTechnicianButton from '@/components/JoinTechnicianButton';
 import { useSEO } from '@/lib/seo';
 
-const iconMap: Record<string, LucideIcon> = {
-  wind: Wind, refrigerator: Refrigerator, 'washing-machine': WashingMachine,
-};
-const isFeaturedApplianceService = (name: string) => {
-  const value = name.trim().toLowerCase();
-  return /(^|\W)ac(\W|$)|air\s*condition/.test(value)
-    || value.includes('washing machine')
-    || value.includes('refrigerator')
-    || value.includes('fridge');
-};
-const getApplianceIcon = (name: string, icon: string | null): LucideIcon => {
-  const value = name.toLowerCase();
-  if (value.includes('washing machine')) return WashingMachine;
-  if (value.includes('refrigerator') || value.includes('fridge')) return Refrigerator;
-  return iconMap[icon ?? 'wind'] ?? Wind;
-};
-
-const colorPalette = [
-  'from-royal-700 to-royal-900', 'from-gold-500 to-gold-700', 'from-royal-600 to-royal-800',
-];
-
 export default function Services() {
   const { navigate } = useRouter();
-  const [services, setServices] = useState<ServiceCategory[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useSEO({
+    useSEO({
     title: 'VATTAMS Home Services | Premium AC, Washing Machine & Refrigerator Care',
     description:
       'Book premium AC, washing machine and refrigerator service with VATTAMS. Convenient doorstep booking and dedicated appliance-care support.',
     path: '/#services',
   });
-
-  useEffect(() => {
-  const loadServices = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('service_categories')
-        .select('*')
-        .order('created_at');
-
-      if (error) {
-        console.error('Service Load Error:', error);
-        setServices([]);
-        return;
-      }
-
-      setServices((data || []).filter((service) => isFeaturedApplianceService(service.name)));
-    } catch (err) {
-      console.error('Unexpected Error:', err);
-      setServices([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  loadServices();
-}, []);
 
   return (
     <div className="pt-20 md:pt-24">
@@ -84,43 +33,7 @@ export default function Services() {
       {/* Services List */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {loading ? (
-            <div className="flex justify-center py-16">
-              <Loader className="animate-spin text-navy-700" size={32} />
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {services.map((svc, i) => {
-                const Icon = getApplianceIcon(svc.name, svc.icon);
-                const gradient = colorPalette[i % colorPalette.length];
-                return (
-                  <div
-                    key={svc.id}
-                    className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl p-6 transition-all duration-300 hover:-translate-y-1"
-                  >
-                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center mb-4 shadow-lg`}>
-                      <Icon size={26} className="text-white" />
-                    </div>
-                    <h3 className="font-bold text-gray-900 text-lg mb-2">{svc.name}</h3>
-                    <p className="text-gray-500 text-sm leading-relaxed mb-4">{svc.description}</p>
-                    <div className="flex items-center justify-between">
-                      {svc.price_range && (
-                        <span className="bg-gold-50 text-gold-700 text-sm font-semibold px-3 py-1.5 rounded-full">
-                          {svc.price_range}
-                        </span>
-                      )}
-                      <button
-                        onClick={() => navigate('booking')}
-                        className="flex items-center gap-1.5 text-gold-700 hover:text-gold-800 text-sm font-semibold"
-                      >
-                        Book Now <ArrowRight size={14} />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          <CustomerServicePriceCards variant="page" />
         </div>
       </section>
 

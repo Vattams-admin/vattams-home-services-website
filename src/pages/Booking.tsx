@@ -19,6 +19,11 @@ interface CustomerServicePrice {
 
 const getCustomerPriceKey = (category: string, type: string) => `${category}::${type}`;
 
+const customerCategoryOrder = ['AC Service', 'Washing Machine', 'Refrigerator'];
+const isCustomerBookingCategory = (name: string) => customerCategoryOrder.includes(name);
+const getCustomerCategoryLabel = (name: string) => name === 'AC Service' ? 'Air Conditioner (AC)' : name;
+
+
 const getServiceTypes = (category: string): string[] => {
   const value = category.trim().toLowerCase();
   if (value.includes('washing machine')) return ['Washing Machine Service'];
@@ -80,7 +85,9 @@ export default function Booking() {
       supabase.from('customer_service_prices').select('*').eq('is_active', true),
     ]).then(([catRes, priceRes, customerPriceRes]) => {
       if (catRes.data) {
-        const featuredServices = catRes.data.filter((service) => isFeaturedApplianceService(service.name));
+        const featuredServices = catRes.data
+          .filter((service) => isCustomerBookingCategory(service.name))
+          .sort((a, b) => customerCategoryOrder.indexOf(a.name) - customerCategoryOrder.indexOf(b.name));
         setServices(featuredServices);
         if (featuredServices[0]) setForm((f) => ({ ...f, service_category: featuredServices[0].name, service_type: getServiceTypes(featuredServices[0].name)[0] ?? '' }));
       }
@@ -284,7 +291,7 @@ export default function Booking() {
                     <select required value={form.service_category}
                       onChange={(e) => { setForm({ ...form, service_category: e.target.value, service_type: getServiceTypes(e.target.value)[0] ?? '' }); setCouponResult(null); setCouponCode(''); }}
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all bg-white">
-                      {services.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
+                      {services.map((s) => <option key={s.id} value={s.name}>{getCustomerCategoryLabel(s.name)}</option>)}
                     </select>
                   </Field>
                 </div>
