@@ -54,11 +54,14 @@ export default function CustomerServicePriceCards({ variant = 'home' }: { varian
 
   useEffect(() => {
     let active = true;
-    supabase
-      .from('customer_service_prices')
-      .select('service_category,service_type,base_price,price_label,is_active')
-      .eq('is_active', true)
-      .then(({ data, error }) => {
+
+    const loadPrices = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('customer_service_prices')
+          .select('service_category,service_type,base_price,price_label,is_active')
+          .eq('is_active', true);
+
         if (!active) return;
         if (error || !data) {
           setLoadFailed(true);
@@ -66,13 +69,16 @@ export default function CustomerServicePriceCards({ variant = 'home' }: { varian
         } else {
           setPrices(data as CustomerServicePrice[]);
         }
-        setLoading(false);
-      })
-      .catch(() => {
+      } catch {
         if (!active) return;
         setLoadFailed(true);
-        setLoading(false);
-      });
+        setPrices([]);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    void loadPrices();
     return () => { active = false; };
   }, []);
 
