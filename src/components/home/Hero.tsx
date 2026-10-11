@@ -80,8 +80,8 @@ export default function Hero() {
           <div className="mt-10 pt-8 border-t border-white/10">
             <div className="flex flex-wrap gap-x-10 gap-y-6">
               {[
-                { icon: ShieldCheck, label: 'Verified Technicians' },
-                { icon: BadgeCheck, label: 'Transparent Pricing' },
+                { icon: ShieldCheck, label: 'OTP Job Checks' },
+                { icon: BadgeCheck, label: 'Clear Price Breakdown' },
                 { icon: Clock3, label: 'Convenient Booking' },
                 { icon: Sparkles, label: 'Quality Assured' },
               ].map((s, i) => (
