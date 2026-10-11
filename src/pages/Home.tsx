@@ -11,9 +11,9 @@ import { useSEO } from '@/lib/seo';
 
 export default function Home() {
   useSEO({
-    title: 'VATTAMS Home Services | Premium Appliance Care',
+    title: 'AC Service, Washing Machine Repair & Refrigerator Service | VATTAMS',
     description:
-      'Premium doorstep AC, washing machine and refrigerator service from VATTAMS Home Services. Book appliance care with confidence.',
+      'Request AC service, washing machine service and refrigerator service with VATTAMS Home Services. Review listed base prices, see checkout charges and check appointment options for your address.',
     path: '/',
   });
 
