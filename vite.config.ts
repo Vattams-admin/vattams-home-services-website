@@ -75,14 +75,14 @@ function prerenderSeoPages() {
           .replace(/<div id="root"><\/div>/i, `<div id="root">${options.body}</div>`);
         if (options.schema) {
           const json = JSON.stringify(options.schema).replaceAll('<', '\\u003c');
-          html = html.replace('</head>', `<script type="application/ld+json">${json}</script>\\n</head>`);
+          html = html.replace('</head>', `<script type="application/ld+json">${json}</script>\n</head>`);
         }
         return html;
       };
 
       const baseUrl = 'https://vattams.net';
       const serviceLinks = '<nav aria-label="Primary"><a href="/">Home</a> · <a href="/services">Service prices</a> · <a href="/booking">Book a service</a> · <a href="/contact">Contact</a></nav>';
-      for (const city of cities) {
+      for (const city of cities.filter((item) => item.isCurrentlyServed)) {
         const canonical = `${baseUrl}/areas/${city.slug}`;
         const providerId = `${baseUrl}/#organization`;
         const schema = {
