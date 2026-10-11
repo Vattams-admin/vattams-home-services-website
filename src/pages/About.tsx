@@ -15,10 +15,10 @@ const homeServices: { label: string; icon: LucideIcon }[] = [
 ];
 
 const whyVattams: { title: string; text: string; icon: LucideIcon }[] = [
-  { title: 'Trusted Network', text: 'A single platform built around verified professionals and structured onboarding.', icon: ShieldCheck },
+  { title: 'Trusted Network', text: 'A single platform built around appliance service requests and structured technician onboarding.', icon: ShieldCheck },
   { title: 'Technology Driven', text: 'Every booking, assignment and update runs through a modern digital workflow.', icon: Cpu },
   { title: 'Customer Focused', text: 'Designed around clear service discovery, booking and support.', icon: HeartHandshake },
-  { title: 'Professional Network', text: 'Connecting verified technicians with people who need reliable home services.', icon: Handshake },
+  { title: 'Professional Network', text: 'Connecting onboarded technicians with people requesting appliance service.', icon: Handshake },
   { title: 'Built for India', text: 'Designed with an India-wide vision, growing step by step and responsibly.', icon: Globe2 },
 ];
 
