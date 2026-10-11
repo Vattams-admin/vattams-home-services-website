@@ -12,7 +12,7 @@ export default function Schema() {
         image: `${baseUrl}/icons/icon-512.png`,
         description: 'VATTAMS Home Services helps customers request AC, washing machine and refrigerator service, with listed base prices and appointment options confirmed during booking.',
         telephone: '+91-63740-68296',
-        email: 'support@vattams.net',
+        email: 'admin@vattams.net',
         areaServed: [
           { '@type': 'City', name: 'Chennai', containedInPlace: { '@type': 'State', name: 'Tamil Nadu' } },
           { '@type': 'City', name: 'Coimbatore', containedInPlace: { '@type': 'State', name: 'Tamil Nadu' } },
