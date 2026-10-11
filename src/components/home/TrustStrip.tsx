@@ -2,9 +2,9 @@ import { ShieldCheck, BadgeCheck, MapPin, HeartHandshake, LucideIcon } from 'luc
 import IconBadge from '@/components/IconBadge';
 
 const values: { icon: LucideIcon; label: string; desc: string }[] = [
-  { icon: ShieldCheck, label: 'Verified Technicians', desc: 'Background-checked professionals' },
-  { icon: BadgeCheck, label: 'Transparent Pricing', desc: 'No hidden charges' },
-  { icon: MapPin, label: 'Multi-City Coverage', desc: 'Expanding across India' },
+  { icon: ShieldCheck, label: 'OTP Job Checks', desc: 'At supported checkpoints' },
+  { icon: BadgeCheck, label: 'Clear Price Breakdown', desc: 'Base price and checkout fees' },
+  { icon: MapPin, label: 'Current Booking Areas', desc: 'Chennai and Coimbatore' },
   { icon: HeartHandshake, label: 'Customer-First Service', desc: 'Support at every step' },
 ];
 
@@ -20,7 +20,7 @@ export default function TrustStrip() {
             </h2>
           </div>
           <p className="text-gray-500 text-sm md:text-base max-w-xl lg:text-right">
-            Professional appliance services with verified service partners and a structured customer experience.
+            Appliance service requests with clear job selection, listed base prices and appointment options checked for your address.
           </p>
         </div>
 
