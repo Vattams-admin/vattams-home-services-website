@@ -28,17 +28,19 @@ function buildSchema(city: CityData) {
     image: `${baseUrl}/VATTAMS_HOME_SERVICES_logo.svg`,
     telephone: '+91-63740-68296',
     email: 'support@vattams.net',
-    areaServed: { '@type': 'City', name: city.name, containedInPlace: { '@type': 'State', name: city.state } },
+    ...(city.isCurrentlyServed ? {
+      areaServed: { '@type': 'City', name: city.name, containedInPlace: { '@type': 'State', name: city.state } },
+    } : {}),
   };
 
-  const serviceSchema = SERVICE_CATEGORIES.map((serviceName) => ({
+  const serviceSchema = city.isCurrentlyServed ? SERVICE_CATEGORIES.map((serviceName) => ({
     '@type': 'Service',
     name: `${serviceName} in ${city.name}`,
     serviceType: serviceName,
     provider: { '@id': providerId },
     areaServed: { '@type': 'City', name: city.name },
     url: cityUrl,
-  }));
+  })) : [];
 
   const faqSchema = {
     '@type': 'FAQPage',
@@ -71,6 +73,7 @@ function injectMetaTags(city: CityData) {
   const tags: { name?: string; property?: string; content: string; key: string }[] = [
     
     { name: 'description', content: city.metaDescription, key: 'meta-desc' },
+    { name: 'robots', content: city.isCurrentlyServed ? 'index,follow' : 'noindex,follow', key: 'meta-robots' },
     { name: 'keywords', content: `${city.name} appliance service, AC repair ${city.name}, washing machine repair ${city.name}, refrigerator repair ${city.name}, VATTAMS ${city.name}`, key: 'meta-keywords' },
     { property: 'og:title', content: city.seoTitle, key: 'og-title' },
     { property: 'og:description', content: city.metaDescription, key: 'og-desc' },
@@ -154,7 +157,7 @@ export default function CityLanding({ city }: { city: CityData }) {
             <div className="flex flex-wrap items-center gap-2 mb-6">
               <div className="inline-flex items-center gap-2 bg-white/10 border border-gold-400/30 rounded-full px-4 py-1.5">
                 <MapPin size={14} className="text-gold-400" />
-                <span className="text-sm font-medium text-gold-100">Serving {city.name}, {city.state}</span>
+                <span className="text-sm font-medium text-gold-100">{city.isCurrentlyServed ? `Current booking area: ${city.name}` : `Check appointment availability: ${city.name}`}</span>
               </div>
               <span className="inline-flex items-center bg-gold-500/20 border border-gold-400/30 rounded-full px-3 py-1.5 text-xs font-semibold text-gold-200 capitalize">
                 {city.tier} city
@@ -276,9 +279,9 @@ export default function CityLanding({ city }: { city: CityData }) {
       {/* Nearby areas */}
       <section className="bg-[#f7f4ed] py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="font-display text-3xl font-bold text-[#0b1f3a] text-center mb-4">Areas We Cover in {city.name}</h2>
+          <h2 className="font-display text-3xl font-bold text-[#0b1f3a] text-center mb-4">Neighbourhood References in {city.name}</h2>
           <p className="text-gray-500 text-center mb-12 max-w-2xl mx-auto">
-            VATTAMS offers appliance-service booking for {city.name}; appointment availability is confirmed during booking.
+            These neighbourhood names help identify your location. Service availability for your exact address is confirmed during booking.
           </p>
           <div className="flex flex-wrap justify-center gap-3 max-w-4xl mx-auto">
             {city.nearbyAreas.map((area) => (
@@ -346,8 +349,8 @@ export default function CityLanding({ city }: { city: CityData }) {
       {otherCities.length > 0 && (
       <section className="py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="font-display text-3xl font-bold text-[#0b1f3a] text-center mb-4">Also Serving Other Cities in {city.state}</h2>
-          <p className="text-gray-500 text-center mb-12">Explore AC, washing machine and refrigerator service availability across {city.state}</p>
+          <h2 className="font-display text-3xl font-bold text-[#0b1f3a] text-center mb-4">Explore Availability in Other Cities in {city.state}</h2>
+          <p className="text-gray-500 text-center mb-12">Select a city to read service information; appointment availability is checked for the address during booking.</p>
           <div className="flex flex-wrap justify-center gap-3">
             {otherCities.map((c) => (
               <button key={c.slug} onClick={() => { navigate('city-landing', c.slug); }}
@@ -363,8 +366,8 @@ export default function CityLanding({ city }: { city: CityData }) {
       {/* CTA */}
       <section className="bg-gradient-to-br from-royal-950 to-royal-800 py-16 md:py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">Ready to Book a Service in {city.name}?</h2>
-          <p className="text-[#e8dcc0] mb-8 text-lg">Request AC, washing machine or refrigerator service in {city.name}. Check available appointments and current pricing before you confirm.</p>
+          <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">{city.isCurrentlyServed ? `Ready to Request a Service in ${city.name}?` : `Check Service Availability in ${city.name}`}</h2>
+          <p className="text-[#e8dcc0] mb-8 text-lg">{city.isCurrentlyServed ? `Request AC, washing machine or refrigerator service in ${city.name}. Check available appointments and current pricing before you confirm.` : `Enter your address and preferred time to check whether a technician is available for your request in ${city.name}.`}</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button onClick={() => navigate('booking')}
               className="flex items-center justify-center gap-2 px-8 py-4 bg-gold-500 hover:bg-gold-400 text-[#071426] font-bold rounded-xl transition-colors shadow-lg">
