@@ -167,7 +167,7 @@ export default function CityLanding({ city }: { city: CityData }) {
                 className="flex items-center justify-center gap-2 px-6 py-3.5 bg-gold-500 hover:bg-gold-400 text-[#071426] font-bold rounded-xl transition-colors shadow-lg shadow-gold-500/20">
                 Book Now <ArrowRight size={18} />
               </button>
-              <a href="https://wa.me/918189800757" target="_blank" rel="noreferrer"
+              <a href="https://wa.me/916374068296" target="_blank" rel="noreferrer"
                 className="flex items-center justify-center gap-2 px-6 py-3.5 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl transition-colors">
                 <MessageCircle size={18} /> WhatsApp
               </a>
@@ -374,7 +374,7 @@ export default function CityLanding({ city }: { city: CityData }) {
               className="flex items-center justify-center gap-2 px-8 py-4 bg-[#0b1f3a] hover:bg-[#132d50] text-white font-bold rounded-xl transition-colors shadow-lg">
               <Briefcase size={18} /> Join as Technician
             </button>
-            <a href="https://wa.me/918189800757" target="_blank" rel="noreferrer"
+            <a href="https://wa.me/916374068296" target="_blank" rel="noreferrer"
               className="flex items-center justify-center gap-2 px-8 py-4 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl transition-colors">
               <MessageCircle size={18} /> WhatsApp Us
             </a>
