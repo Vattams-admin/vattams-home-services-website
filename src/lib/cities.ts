@@ -1,5 +1,6 @@
 export interface CityData {
   slug: string;
+  isCurrentlyServed: boolean;
   name: string;
   state: string;
   tier: 'metropolitan' | 'metro' | 'urban' | 'semi-urban';
@@ -23,6 +24,10 @@ const services = [
 ];
 
 export const SERVICE_CATEGORIES = services;
+
+// Current active technician records support these city pages for indexing.
+// Update this set as active coverage changes; booking availability is still checked per address.
+export const CURRENTLY_SERVED_CITY_SLUGS = new Set(['chennai', 'coimbatore']);
 
 function generateFAQs(cityName: string): { q: string; a: string }[] {
   return [
@@ -157,6 +162,7 @@ export const cities: CityData[] = cityConfigs.map((c) => {
   const slug = c.name.toLowerCase().replace(/\s+/g, '-');
   return {
     slug,
+    isCurrentlyServed: CURRENTLY_SERVED_CITY_SLUGS.has(slug),
     name: c.name,
     state: c.state,
     tier: c.tier,
