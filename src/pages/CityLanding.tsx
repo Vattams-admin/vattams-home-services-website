@@ -16,81 +16,71 @@ const serviceIcons: Record<string, typeof Wrench> = {
 
 function buildSchema(city: CityData) {
   const baseUrl = 'https://vattams.net';
-  const cityUrl = `${baseUrl}/#city-${city.slug}`;
+  const cityUrl = `${baseUrl}/areas/${city.slug}`;
+  const providerId = `${baseUrl}/#organization`;
 
-  const localBusinessSchema = {
-    '@type': 'LocalBusiness',
-    '@id': `${cityUrl}#business`,
-    name: `VATTAMS Home Services — ${city.name}`,
-    url: cityUrl,
-    logo: `${baseUrl}/logo.svg`,
-    image: `${baseUrl}/logo.svg`,
-    telephone: '+91-81898-00757',
-    email: 'admin@vattams.net',
-    priceRange: '₹₹',
-    address: {
-      '@type': 'PostalAddress',
-      addressLocality: city.name,
-      addressRegion: city.state,
-      addressCountry: 'IN',
-    },
-    geo: {
-      '@type': 'GeoCoordinates',
-      latitude: city.geo.lat,
-      longitude: city.geo.lng,
-    },
-    areaServed: city.nearbyAreas.map((a) => ({ '@type': 'Place', name: `${a}, ${city.name}` })),
-    sameAs: [],
+  const organizationSchema = {
+    '@type': 'Organization',
+    '@id': providerId,
+    name: 'VATTAMS Home Services',
+    url: baseUrl,
+    logo: `${baseUrl}/VATTAMS_HOME_SERVICES_logo.svg`,
+    image: `${baseUrl}/VATTAMS_HOME_SERVICES_logo.svg`,
+    telephone: '+91-63740-68296',
+    email: 'support@vattams.net',
+    areaServed: { '@type': 'City', name: city.name, containedInPlace: { '@type': 'State', name: city.state } },
   };
 
-  const serviceSchema = SERVICE_CATEGORIES.map((svc) => ({
+  const serviceSchema = SERVICE_CATEGORIES.map((serviceName) => ({
     '@type': 'Service',
-    name: `${svc} in ${city.name}`,
-    provider: { '@type': 'LocalBusiness', '@id': `${cityUrl}#business` },
+    name: `${serviceName} in ${city.name}`,
+    serviceType: serviceName,
+    provider: { '@id': providerId },
     areaServed: { '@type': 'City', name: city.name },
+    url: cityUrl,
   }));
 
   const faqSchema = {
     '@type': 'FAQPage',
-    mainEntity: city.faqs.filter((f) => !/CCTV|electrical|plumbing|RO water|water purifier|microwave|electrician/i.test(`${f.q} ${f.a}`)).map((f) => ({
+    mainEntity: city.faqs.map((faq) => ({
       '@type': 'Question',
-      name: f.q,
-      acceptedAnswer: { '@type': 'Answer', text: f.a },
+      name: faq.q,
+      acceptedAnswer: { '@type': 'Answer', text: faq.a },
     })),
   };
 
   const breadcrumbSchema = {
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: `${baseUrl}/#home` },
-      { '@type': 'ListItem', position: 2, name: 'Services', item: `${baseUrl}/#services` },
+      { '@type': 'ListItem', position: 1, name: 'Home', item: baseUrl },
+      { '@type': 'ListItem', position: 2, name: 'Services', item: `${baseUrl}/services` },
       { '@type': 'ListItem', position: 3, name: city.name, item: cityUrl },
     ],
   };
 
   return {
     '@context': 'https://schema.org',
-    '@graph': [localBusinessSchema, ...serviceSchema, faqSchema, breadcrumbSchema],
+    '@graph': [organizationSchema, ...serviceSchema, faqSchema, breadcrumbSchema],
   };
 }
 
 function injectMetaTags(city: CityData) {
   const baseUrl = 'https://vattams.net';
-  const cityUrl = `${baseUrl}/#city-${city.slug}`;
+  const cityUrl = `${baseUrl}/areas/${city.slug}`;
 
   const tags: { name?: string; property?: string; content: string; key: string }[] = [
-    { name: 'title', content: city.seoTitle, key: 'meta-title' },
+    
     { name: 'description', content: city.metaDescription, key: 'meta-desc' },
     { name: 'keywords', content: `${city.name} appliance service, AC repair ${city.name}, washing machine repair ${city.name}, refrigerator repair ${city.name}, VATTAMS ${city.name}`, key: 'meta-keywords' },
     { property: 'og:title', content: city.seoTitle, key: 'og-title' },
     { property: 'og:description', content: city.metaDescription, key: 'og-desc' },
     { property: 'og:type', content: 'website', key: 'og-type' },
     { property: 'og:url', content: cityUrl, key: 'og-url' },
-    { property: 'og:image', content: `${baseUrl}/logo.svg`, key: 'og-image' },
+    { property: 'og:image', content: `${baseUrl}/icons/icon-512.png`, key: 'og-image' },
     { name: 'twitter:card', content: 'summary_large_image', key: 'tw-card' },
     { name: 'twitter:title', content: city.seoTitle, key: 'tw-title' },
     { name: 'twitter:description', content: city.metaDescription, key: 'tw-desc' },
-    { name: 'twitter:image', content: `${baseUrl}/logo.svg`, key: 'tw-image' },
+    { name: 'twitter:image', content: `${baseUrl}/icons/icon-512.png`, key: 'tw-image' },
   ];
 
   tags.forEach((t) => {
@@ -262,8 +252,8 @@ export default function CityLanding({ city }: { city: CityData }) {
       {/* Embedded map */}
       <section className="py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="font-display text-3xl font-bold text-[#0b1f3a] text-center mb-4">Find Us in {city.name}</h2>
-          <p className="text-gray-500 text-center mb-8">VATTAMS technicians serve all areas of {city.name}</p>
+          <h2 className="font-display text-3xl font-bold text-[#0b1f3a] text-center mb-4">Service Area Reference: {city.name}</h2>
+          <p className="text-gray-500 text-center mb-8">Map reference for {city.name}. Actual appointment availability is checked for your address during booking.</p>
           <div className="relative rounded-2xl overflow-hidden border border-gray-200 shadow-sm h-80">
             <iframe
               title={`Map of ${city.name}`}
@@ -300,34 +290,38 @@ export default function CityLanding({ city }: { city: CityData }) {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-16 md:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="font-display text-3xl font-bold text-[#0b1f3a] text-center mb-4">Customer Reviews in {city.name}</h2>
-          <p className="text-gray-500 text-center mb-12">Real reviews from {city.name} customers who trusted VATTAMS</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {city.testimonials.filter((t) => /AC|washing machine|refrigerator|appliance/i.test(t.text)).map((t, idx) => (
-              <div key={idx} className="bg-white rounded-2xl border border-[#e8e1d2] shadow-sm p-6">
-                <div className="flex items-center gap-1 mb-3">
-                  {[...Array(t.rating)].map((_, i) => (
-                    <Star key={i} size={16} className="text-gold-500 fill-gold-500" />
-                  ))}
-                </div>
-                <p className="text-gray-600 text-sm leading-relaxed mb-4">"{t.text}"</p>
-                <div className="flex items-center gap-3 pt-3 border-t border-gray-50">
-                  <div className="w-10 h-10 rounded-full bg-royal-100 flex items-center justify-center font-bold text-[#0b1f3a]">
-                    {t.name.charAt(0)}
+      {/* Only render genuine reviews when approved review data exists. */}
+      {city.testimonials.length > 0 && (
+        <section className="py-16 md:py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="font-display text-3xl font-bold text-[#0b1f3a] text-center mb-4">Customer Feedback in {city.name}</h2>
+            <p className="text-gray-500 text-center mb-12">Customer experiences shared with VATTAMS</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {city.testimonials.filter((t) => /AC|washing machine|refrigerator|appliance/i.test(t.text)).map((t, idx) => (
+                <div key={idx} className="bg-white rounded-2xl border border-[#e8e1d2] shadow-sm p-6">
+                  <div className="flex items-center gap-1 mb-3">
+                    {[...Array(t.rating)].map((_, i) => (
+                      <Star key={i} size={16} className="text-gold-500 fill-gold-500" />
+                    ))}
                   </div>
-                  <div>
-                    <div className="font-bold text-gray-900 text-sm">{t.name}</div>
-                    <div className="text-xs text-gray-400">{t.area}, {city.name}</div>
+                  <p className="text-gray-600 text-sm leading-relaxed mb-4">"{t.text}"</p>
+                  <div className="flex items-center gap-3 pt-3 border-t border-gray-50">
+                    <div className="w-10 h-10 rounded-full bg-royal-100 flex items-center justify-center font-bold text-[#0b1f3a]">
+                      {t.name.charAt(0)}
+                    </div>
+                    <div>
+                      <div className="font-bold text-gray-900 text-sm">{t.name}</div>
+                      <div className="text-xs text-gray-400">{t.area}, {city.name}</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+  
+  
+      )}
 
       {/* FAQ */}
       <section className="bg-[#f7f4ed] py-16 md:py-20">
@@ -356,7 +350,7 @@ export default function CityLanding({ city }: { city: CityData }) {
           <p className="text-gray-500 text-center mb-12">Explore AC, washing machine and refrigerator service availability across {city.state}</p>
           <div className="flex flex-wrap justify-center gap-3">
             {otherCities.map((c) => (
-              <button key={c.slug} onClick={() => { window.location.hash = `city-${c.slug}`; window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              <button key={c.slug} onClick={() => { navigate('city-landing', c.slug); }}
                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-white rounded-full border border-gray-200 text-sm text-gray-700 shadow-sm hover:border-gold-300 hover:text-gold-700 transition-colors">
                 <MapPin size={12} className="text-gold-600" /> {c.name}
               </button>
@@ -370,7 +364,7 @@ export default function CityLanding({ city }: { city: CityData }) {
       <section className="bg-gradient-to-br from-royal-950 to-royal-800 py-16 md:py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">Ready to Book a Service in {city.name}?</h2>
-          <p className="text-[#e8dcc0] mb-8 text-lg">Get verified technicians at your doorstep in {city.name} with transparent pricing and a 30-day warranty.</p>
+          <p className="text-[#e8dcc0] mb-8 text-lg">Request AC, washing machine or refrigerator service in {city.name}. Check available appointments and current pricing before you confirm.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button onClick={() => navigate('booking')}
               className="flex items-center justify-center gap-2 px-8 py-4 bg-gold-500 hover:bg-gold-400 text-[#071426] font-bold rounded-xl transition-colors shadow-lg">
