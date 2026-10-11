@@ -185,10 +185,10 @@ export default function CityLanding({ city }: { city: CityData }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { icon: ShieldCheck, label: 'Verified Technicians', desc: 'Background-checked' },
-              { icon: Clock, label: 'Same-Day Service', desc: 'Book before 2 PM' },
-              { icon: Award, label: '30-Day Warranty', desc: 'On all repairs' },
-              { icon: ThumbsUp, label: 'Customer-First Service', desc: 'Pay after satisfaction' },
+              { icon: ShieldCheck, label: 'OTP Job Checks', desc: 'At supported checkpoints' },
+              { icon: Clock, label: 'Appointment Options', desc: 'Check local availability' },
+              { icon: Award, label: 'Price Breakdown', desc: 'See charges before confirming' },
+              { icon: ThumbsUp, label: 'Extra Work Approval', desc: 'Request a quote first' },
             ].map((t) => {
               const Icon = t.icon;
               return (
