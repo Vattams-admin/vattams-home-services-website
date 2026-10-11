@@ -1,12 +1,12 @@
 import { ShieldCheck, BadgeCheck, Clock, Package, Star, Radio } from 'lucide-react';
 
 const features = [
-  { icon: ShieldCheck, title: 'Verified Technicians', description: 'All our technicians are background-verified, trained, and certified.', gradient: 'from-gold-500 to-gold-700' },
-  { icon: BadgeCheck, title: 'Transparent Pricing', description: 'No hidden charges. Get clear pricing before work begins.', gradient: 'from-gold-400 to-gold-600' },
-  { icon: Clock, title: 'Same Day Service', description: 'Book now and get service on the same day in most cities.', gradient: 'from-gold-500 to-gold-700' },
-  { icon: Package, title: 'Genuine Spare Parts', description: 'We use only OEM-grade spare parts for all repairs.', gradient: 'from-gold-400 to-gold-600' },
-  { icon: Star, title: 'Service Warranty', description: '30-day service warranty on all repairs and installations.', gradient: 'from-gold-500 to-gold-700' },
-  { icon: Radio, title: 'Live Booking Status', description: 'Track your booking status in real-time from your phone.', gradient: 'from-gold-400 to-gold-600' },
+  { icon: ShieldCheck, title: 'OTP Job Checkpoints', description: 'Job start and completion use OTP verification in the supported booking workflow.', gradient: 'from-gold-500 to-gold-700' },
+  { icon: BadgeCheck, title: 'Clear Price Breakdown', description: 'Review listed base prices and applicable GST and platform fees before confirming.', gradient: 'from-gold-400 to-gold-600' },
+  { icon: Clock, title: 'Appointment Options', description: 'Check the available dates and times for your address and selected job type.', gradient: 'from-gold-500 to-gold-700' },
+  { icon: Package, title: 'Extra Work by Approval', description: 'Parts and additional repairs are separate; request a quote and approve before proceeding.', gradient: 'from-gold-400 to-gold-600' },
+  { icon: Star, title: 'Choose the Exact Job', description: 'Select AC service type, washing machine service or refrigerator service when booking.', gradient: 'from-gold-500 to-gold-700' },
+  { icon: Radio, title: 'Booking Status Updates', description: 'Follow your booking status through the website and customer account features.', gradient: 'from-gold-400 to-gold-600' },
 ];
 
 export default function Features() {
