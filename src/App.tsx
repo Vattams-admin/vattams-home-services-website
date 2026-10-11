@@ -5,6 +5,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import AIChatWidget from '@/components/AIChatWidget';
 import Schema from '@/components/Schema';
+import MarketingAnalytics from '@/components/MarketingAnalytics';
 
 import Home from '@/pages/Home';
 import Services from '@/pages/Services';
@@ -110,6 +111,7 @@ function AppShell() {
   return (
     <div className="min-h-screen flex flex-col">
       <Schema />
+      <MarketingAnalytics />
       {!isAdminRoute && <Header />}
       <main className={isAdminRoute ? 'flex-1' : 'flex-1 premium-experience'}>
         <PageContent />
