@@ -60,23 +60,31 @@ export default function NotificationCenter({ recipientType, recipientId }: Notif
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     const [notifs, count] = await Promise.all([
       fetchNotifications(recipientType, recipientId, 50),
       fetchUnreadCount(recipientType, recipientId),
     ]);
     setNotifications(notifs);
     setUnreadCount(count);
-    setLoading(false);
+    if (showLoading) setLoading(false);
   }, [recipientType, recipientId]);
 
   useEffect(() => {
     load();
     const unsubscribe = subscribeToNotifications(recipientType, recipientId, () => {
-      load();
+      load(false);
     });
-    return () => { if (unsubscribe) unsubscribe(); };
+    // The app uses custom session authentication, so client Realtime is
+    // intentionally disabled. Poll quietly so the badge stays current.
+    const refreshInterval = window.setInterval(() => {
+      load(false);
+    }, 30000);
+    return () => {
+      if (unsubscribe) unsubscribe();
+      window.clearInterval(refreshInterval);
+    };
   }, [load, recipientType, recipientId]);
 
   useEffect(() => {
@@ -121,7 +129,7 @@ export default function NotificationCenter({ recipientType, recipientId }: Notif
         ref={buttonRef}
         onClick={() => { setOpen(!open); if (!open) load(); }}
         className="relative p-2 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 transition-colors"
-        aria-label="Notifications"
+        aria-label="Notifications" aria-expanded={open}
       >
         <Bell size={18} className="text-gray-600" />
         {unreadCount > 0 && (
@@ -132,7 +140,7 @@ export default function NotificationCenter({ recipientType, recipientId }: Notif
       </button>
 
       {open && (
-        <div ref={dropdownRef} className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 max-h-[70vh] flex flex-col">
+        <div ref={dropdownRef} className="absolute right-0 mt-2 w-[min(24rem,calc(100vw-2rem))] bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 max-h-[70vh] flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
             <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
@@ -180,15 +188,15 @@ export default function NotificationCenter({ recipientType, recipientId }: Notif
                       <div className="text-gray-500 text-xs mt-0.5 leading-relaxed">{n.message}</div>
                       <div className="flex items-center justify-between mt-1.5">
                         <span className="text-xs text-gray-400">{timeAgo(n.created_at)}</span>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-1">
                           {!n.is_read && (
-                            <button onClick={() => handleMarkRead(n.id)} title="Mark as read"
+                            <button onClick={() => handleMarkRead(n.id)} title="Mark as read" aria-label="Mark notification as read"
                               className="p-1 rounded hover:bg-blue-100 text-blue-600">
                               <CheckCheck size={13} />
                             </button>
                           )}
                           {recipientType === 'admin' && (
-                            <button onClick={() => handleDelete(n.id)} title="Delete"
+                            <button onClick={() => handleDelete(n.id)} title="Delete" aria-label="Delete notification"
                               className="p-1 rounded hover:bg-red-100 text-red-500">
                               <Trash2 size={13} />
                             </button>
