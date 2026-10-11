@@ -41,7 +41,7 @@ export default function Services() {
       <section className="py-16 bg-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="font-display text-2xl md:text-3xl font-bold text-navy-900 text-center mb-10">
-            What's Included in Every Service
+            Before You Confirm Your Booking
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
