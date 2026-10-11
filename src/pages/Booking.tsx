@@ -104,6 +104,13 @@ export default function Booking() {
   const serviceTypes = getServiceTypes(form.service_category);
   const servicePrice = servicePrices[form.service_category];
   const customerServicePrice = customerServicePrices[getCustomerPriceKey(form.service_category, form.service_type)];
+  const getCategoryStartingPrice = (category: string): number | null => {
+    const prices = Object.values(customerServicePrices)
+      .filter((price) => price.service_category === category && price.is_active)
+      .map((price) => Number(price.base_price))
+      .filter((price) => Number.isFinite(price) && price >= 0);
+    return prices.length ? Math.min(...prices) : null;
+  };
   const discount = couponResult?.valid ? couponResult.discountAmount : 0;
   const pricing: PricingBreakdown | null = servicePrice && customerServicePrice
     ? calculatePricing(Number(customerServicePrice.base_price), servicePrice.gst_rate ?? 18, servicePrice.platform_fee, servicePrice.commission_rate ?? 0, discount)
@@ -284,7 +291,14 @@ export default function Booking() {
                     <select required value={form.service_category}
                       onChange={(e) => { setForm({ ...form, service_category: e.target.value, service_type: getServiceTypes(e.target.value)[0] ?? '' }); setCouponResult(null); setCouponCode(''); }}
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all bg-white">
-                      {services.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
+                      {services.map((s) => {
+                        const startingPrice = getCategoryStartingPrice(s.name);
+                        return (
+                          <option key={s.id} value={s.name}>
+                            {s.name}{startingPrice !== null ? ` — from ${formatINR(startingPrice)}` : ' — price unavailable'}
+                          </option>
+                        );
+                      })}
                     </select>
                   </Field>
                 </div>
