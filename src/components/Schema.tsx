@@ -13,7 +13,10 @@ export default function Schema() {
         description: 'VATTAMS Home Services helps customers request AC, washing machine and refrigerator service, with listed base prices and appointment options confirmed during booking.',
         telephone: '+91-63740-68296',
         email: 'support@vattams.net',
-        areaServed: { '@type': 'State', name: 'Tamil Nadu' },
+        areaServed: [
+          { '@type': 'City', name: 'Chennai', containedInPlace: { '@type': 'State', name: 'Tamil Nadu' } },
+          { '@type': 'City', name: 'Coimbatore', containedInPlace: { '@type': 'State', name: 'Tamil Nadu' } },
+        ],
       },
       {
         '@type': 'WebSite',
@@ -22,15 +25,12 @@ export default function Schema() {
         name: 'VATTAMS Home Services',
         alternateName: 'VATTAMS',
         publisher: { '@id': `${baseUrl}/#organization` },
-        inLanguage: ['en-IN', 'ta-IN'],
+        inLanguage: 'en-IN',
       },
     ],
   };
 
   return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-    />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
   );
 }
