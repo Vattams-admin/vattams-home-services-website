@@ -14,6 +14,10 @@
 - Washing machine: Washing Machine Service
 - Refrigerator: Refrigerator Service
 
+## Current booking coverage
+- Active technician records currently support Chennai and Coimbatore; exact appointment availability still depends on the address, selected job type and technician schedule.
+- Other city pages are informational and should not be interpreted as confirmation that a technician is available there.
+
 ## Pricing and booking
 - Prices shown on the Services page are base prices for listed job types.
 - Applicable GST and platform fees are shown in the checkout breakdown before a customer confirms a booking.
