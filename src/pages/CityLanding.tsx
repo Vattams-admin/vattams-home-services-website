@@ -28,7 +28,7 @@ function buildSchema(city: CityData) {
     logo: `${baseUrl}/VATTAMS_HOME_SERVICES_logo.svg`,
     image: `${baseUrl}/VATTAMS_HOME_SERVICES_logo.svg`,
     telephone: '+91-63740-68296',
-    email: 'support@vattams.net',
+    email: 'admin@vattams.net',
     ...(city.isCurrentlyServed ? {
       areaServed: { '@type': 'City', name: city.name, containedInPlace: { '@type': 'State', name: city.state } },
     } : {}),
