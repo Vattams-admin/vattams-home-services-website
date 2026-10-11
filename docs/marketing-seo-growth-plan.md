@@ -99,7 +99,7 @@ Use Tamil voiceover/subtitles plus concise English captions. End with one clear 
 
 ## Measurement
 
-The website now emits or is being configured to emit:
+The website now emits these privacy-conscious GA4 events:
 - page_view
 - view_service_prices
 - booking_start
