@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Briefcase, X } from 'lucide-react';
-import { useRouter, type Page } from '@/lib/router';
+import { useRouter } from '@/lib/router';
 
 export default function FloatingJoinButton() {
-  const { page } = useRouter();
+  const { page, navigate } = useRouter();
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
@@ -30,7 +30,7 @@ export default function FloatingJoinButton() {
             <X size={14} />
           </button>
           <button
-            onClick={() => { (window.location.hash = 'join-technician'); }}
+            onClick={() => navigate('join-technician')}
             className="flex items-center gap-2 px-5 py-3.5 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-2xl shadow-2xl shadow-orange-900/40 transition-all duration-300 hover:scale-105"
           >
             <Briefcase size={20} />
