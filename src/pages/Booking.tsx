@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Loader, CheckCircle, XCircle, Calendar, User, Phone, MapPin, Wrench, FileText, Clock, ArrowRight, LogIn, Receipt, LucideIcon, Tag, Briefcase, Sparkles } from 'lucide-react';
 import { supabase, ServiceCategory, Customer, ServicePrice } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
+import { trackMarketingEvent } from '@/lib/marketingAnalytics';
 import { notifyCustomer } from '@/lib/notifications';
 import { calculatePricing, formatINR, type PricingBreakdown } from '@/lib/pricing';
 import { validateCoupon, type Coupon } from '@/lib/coupons';
@@ -146,6 +147,7 @@ export default function Booking() {
       alert('Pricing is not available for this service yet. Please choose another service or contact VATTAMS.');
       return;
     }
+    trackMarketingEvent('booking_request_attempt', { service_category: form.service_category, service_type: form.service_type });
     setSubmitting(true);
     const { data, error } = await supabase.functions.invoke('booking-ops', {
       body: {
@@ -181,6 +183,7 @@ export default function Booking() {
       alert('Booking failed. Please try again or call us.');
       return;
     }
+    trackMarketingEvent('generate_lead', { service_category: form.service_category, service_type: form.service_type });
     setSuccess({ number: data.booking_number, id: data.id });
 
     await Promise.all([
