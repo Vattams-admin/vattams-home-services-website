@@ -1,53 +1,36 @@
 export default function Schema() {
+  const baseUrl = 'https://vattams.net';
   const schema = {
-    "@context": "https://schema.org",
-    "@graph": [
+    '@context': 'https://schema.org',
+    '@graph': [
       {
-        "@type": "Organization",
-        "@id": "https://vattams.net/#organization",
-        "name": "VATTAMS",
-        "url": "https://vattams.net",
-        "logo": "https://vattams.net/icons/icon-512.png",
-        "description": "VATTAMS Home Services connects customers with professional home service technicians across India.",
-        "department": [
-          { "@id": "https://vattams.net/#business" }
-        ],
-        "sameAs": []
+        '@type': 'Organization',
+        '@id': `${baseUrl}/#organization`,
+        name: 'VATTAMS Home Services',
+        url: baseUrl,
+        logo: `${baseUrl}/VATTAMS_HOME_SERVICES_logo.svg`,
+        image: `${baseUrl}/icons/icon-512.png`,
+        description: 'VATTAMS Home Services helps customers request AC, washing machine and refrigerator service, with listed base prices and appointment options confirmed during booking.',
+        telephone: '+91-63740-68296',
+        email: 'support@vattams.net',
+        areaServed: { '@type': 'State', name: 'Tamil Nadu' },
       },
       {
-        "@type": "LocalBusiness",
-        "@id": "https://vattams.net/#business",
-        "name": "VATTAMS Home Services",
-        "url": "https://vattams.net/#home",
-        "logo": "https://vattams.net/logo.svg",
-        "image": "https://vattams.net/logo.svg",
-        "telephone": "+91-63740-68296",
-        "email": "support@vattams.net",
-        "priceRange": "₹₹",
-        "parentOrganization": { "@id": "https://vattams.net/#organization" },
-        "areaServed": {
-          "@type": "Country",
-          "name": "India"
-        },
-        "sameAs": []
+        '@type': 'WebSite',
+        '@id': `${baseUrl}/#website`,
+        url: baseUrl,
+        name: 'VATTAMS Home Services',
+        alternateName: 'VATTAMS',
+        publisher: { '@id': `${baseUrl}/#organization` },
+        inLanguage: ['en-IN', 'ta-IN'],
       },
-      {
-        "@type": "WebSite",
-        "@id": "https://vattams.net/#website",
-        "url": "https://vattams.net",
-        "name": "VATTAMS",
-        "alternateName": "VATTAMS Home Services",
-        "publisher": { "@id": "https://vattams.net/#organization" }
-      }
-    ]
+    ],
   };
 
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{
-        __html: JSON.stringify(schema),
-      }}
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
     />
   );
 }
