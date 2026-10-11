@@ -239,7 +239,7 @@ export default function CityLanding({ city }: { city: CityData }) {
                   </div>
                   <h3 className="font-bold text-gray-900 text-lg mb-2">{svc} in {city.name}</h3>
                   <p className="text-sm text-gray-500 mb-4">
-                    Professional {svc.toLowerCase()} services in {city.name} by verified, experienced technicians. Transparent pricing with GST invoice.
+                    Request {svc.toLowerCase()} in {city.name}. Review listed base prices and check appointment availability for your address.
                   </p>
                   <button onClick={() => navigate('booking')}
                     className="text-gold-700 font-semibold text-sm flex items-center gap-1 hover:gap-2 transition-all">
