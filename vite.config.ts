@@ -163,6 +163,24 @@ function prerenderSeoPages() {
         body: servicesBody,
         schema: servicesSchema,
       }), 'utf8');
+
+      const technicianCanonical = `${baseUrl}/join-technician`;
+      const technicianBody = `<header><a href="/">VATTAMS Home Services</a>${serviceLinks}</header><main>
+        <h1>Join the VATTAMS Appliance Technician Network</h1>
+        <p>Apply for eligible AC, washing machine and refrigerator service requests. Job availability depends on service area, eligibility, technician schedule and customer demand.</p>
+        <h2>Supported appliance work</h2><ul><li>AC general service, installation, gas filling, pump water service and coil service</li><li>Washing machine service</li><li>Refrigerator service</li></ul>
+        <h2>How call-rate fees work</h2><p>The fixed technician-paid platform call-rate depends on the exact job type and applies only after an eligible job is completed. Customer service prices and checkout charges are separate.</p>
+        <p>Technician registration has a one-time ₹49 joining fee. Review the registration terms before payment.</p>
+        <p><a href="/join-technician">Open technician registration</a> · <a href="tel:+916374068296">Call +91 63740 68296</a></p>
+        </main>`;
+      const technicianDir = resolve(outputDir, 'join-technician');
+      mkdirSync(technicianDir, { recursive: true });
+      writeFileSync(resolve(technicianDir, 'index.html'), renderPage({
+        title: 'Appliance Technician Network Registration | VATTAMS',
+        description: 'Join the VATTAMS technician network for AC, washing machine and refrigerator job requests. One-time ₹49 registration fee; job availability depends on location, eligibility and demand.',
+        canonical: technicianCanonical,
+        body: technicianBody,
+      }), 'utf8');
     },
   };
 }
