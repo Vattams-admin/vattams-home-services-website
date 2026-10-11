@@ -134,6 +134,10 @@ export default function Booking() {
       alert('Please select the exact job type.');
       return;
     }
+    if (!servicePrice || !customerServicePrice || !pricing) {
+      alert('Pricing is not available for this service yet. Please choose another service or contact VATTAMS.');
+      return;
+    }
     setSubmitting(true);
     const { data, error } = await supabase.functions.invoke('booking-ops', {
       body: {
@@ -310,6 +314,13 @@ export default function Booking() {
                   <p className="mt-1 text-xs text-gray-500">Choose the specific work needed so we can assign the right technician.</p>
                 </Field>
 
+                {selectedService && (!customerServicePrice || !servicePrice) && (
+                  <div role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+                    <p className="font-bold">Price unavailable for this selection</p>
+                    <p className="mt-1">We will not accept a booking until the customer price and tax settings are available. Please choose another job type or contact VATTAMS support.</p>
+                  </div>
+                )}
+
                 {selectedService && pricing && (
                   <div className="bg-ivory rounded-xl p-4 border border-[#e8e1d2]">
                     <div className="flex items-center gap-2 mb-3">
@@ -404,8 +415,8 @@ export default function Booking() {
                   </Field>
                 </div>
 
-                <button type="submit" disabled={submitting}
-                  className="w-full flex items-center justify-center gap-2 py-4 bg-navy-900 hover:bg-navy-800 disabled:opacity-60 text-white font-bold rounded-xl transition-colors shadow-lg shadow-[#d8c58c]">
+                <button type="submit" disabled={submitting || !servicePrice || !customerServicePrice || !pricing}
+                  className="w-full flex items-center justify-center gap-2 py-4 bg-navy-900 hover:bg-navy-800 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors shadow-lg shadow-[#d8c58c]">
                   {submitting ? (
                     <><Loader size={18} className="animate-spin" /> Confirming...</>
                   ) : (
