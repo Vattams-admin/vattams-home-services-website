@@ -7,10 +7,10 @@ import { useSEO } from '@/lib/seo';
 export default function Services() {
   const { navigate } = useRouter();
     useSEO({
-    title: 'VATTAMS Home Services | Premium AC, Washing Machine & Refrigerator Care',
+    title: 'AC, Washing Machine & Refrigerator Service Prices | VATTAMS',
     description:
-      'Book premium AC, washing machine and refrigerator service with VATTAMS. Convenient doorstep booking and dedicated appliance-care support.',
-    path: '/#services',
+      'Explore listed base prices for AC service, installation, gas filling, coil service, washing machine service and refrigerator service. Check appointment availability and checkout charges before confirming with VATTAMS.',
+    path: '/services',
   });
 
   return (
