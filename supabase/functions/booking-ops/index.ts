@@ -316,11 +316,40 @@ Deno.serve(async (req: Request) => {
         });
       }
 
-      const { data: jobData } = await supabase
+      const { data: jobData, error: jobInsertError } = await supabase
         .from("technician_jobs")
         .insert({ booking_id, technician_id: chosen.id, status: "assigned", job_amount: Number(booking.base_price ?? 0), call_rate_fee: Number(booking.call_rate_fee) || 0, service_type: String(booking.service_type ?? "") || null })
         .select("*")
         .single() as { data: Record<string, unknown> | null; error: unknown };
+
+      // Do not leave a booking marked assigned when the corresponding job
+      // record failed to persist. Restore it to pending only if this request
+      // still owns the assignment, so we cannot undo a concurrent admin change.
+      if (jobInsertError || !jobData) {
+        const { error: rollbackError } = await supabase
+          .from("bookings")
+          .update({
+            assigned_technician_id: null,
+            status: "pending",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", booking_id)
+          .eq("assigned_technician_id", chosen.id)
+          .eq("status", "assigned");
+        if (rollbackError) {
+          console.error("[booking-ops auto_assign] job insert failed and booking rollback failed");
+        } else {
+          console.error("[booking-ops auto_assign] job insert failed; booking returned to pending");
+        }
+        return new Response(JSON.stringify({
+          success: false,
+          assigned: false,
+          reason: "job_creation_failed",
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
       // Two notification writes here:
       //  1. `technician_notifications` — preserved as-is; TechnicianDashboard
