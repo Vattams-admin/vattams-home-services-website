@@ -91,19 +91,6 @@ export default function TechnicianRegister() {
   // device). Runs once on mount, before the default-first-question effect
   // below, so we don't flash the "Welcome" question if a draft exists.
   useEffect(() => {
-    try {
-      const rawPayment = window.localStorage.getItem(paymentDraftKey);
-      if (rawPayment) {
-        const savedPayment = JSON.parse(rawPayment);
-        if (savedPayment?.mobile && savedPayment.mobile === form.mobile && typeof savedPayment.paymentId === 'string') {
-          setJoinFeePaid(true);
-          setJoinFeePaymentId(savedPayment.paymentId);
-        }
-      }
-    } catch {
-      // Ignore unavailable or malformed payment-draft metadata.
-    }
-
     const draft = loadRegistrationDraft();
 
     if (draft && draft.stepIndex > 0 && draft.stepIndex < STEPS.length) {
@@ -113,6 +100,20 @@ export default function TechnicianRegister() {
         Array.isArray(draft.chatHistory) ? draft.chatHistory : []
       );
       setResumedDraft(true);
+    }
+
+    try {
+      const rawPayment = window.localStorage.getItem(paymentDraftKey);
+      if (rawPayment) {
+        const savedPayment = JSON.parse(rawPayment);
+        const draftMobile = String(draft?.form?.mobile || '');
+        if (draftMobile && savedPayment?.mobile === draftMobile && typeof savedPayment.paymentId === 'string') {
+          setJoinFeePaid(true);
+          setJoinFeePaymentId(savedPayment.paymentId);
+        }
+      }
+    } catch {
+      // Ignore unavailable or malformed payment-draft metadata.
     }
 
     setHydrated(true);
