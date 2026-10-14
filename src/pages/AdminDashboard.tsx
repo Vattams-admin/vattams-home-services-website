@@ -1586,7 +1586,7 @@ export default function AdminDashboard() {
                               if (!reason || reason.trim().length < 20) return;
                               setPaymentUpdating(true);
                               try {
-                                const reconciled = await reconcileLegacyTechnicianPayment(p.payment_id, p.utr!, reason.trim());
+                                const reconciled = await reconcileLegacyTechnicianPayment(p.payment_id, p.payee_id, p.utr!, reason.trim());
                                 if (reconciled) {
                                   setPayments((await adminData<{ payments: PaymentRecord[] }>('payments')).payments ?? []);
                                 }
