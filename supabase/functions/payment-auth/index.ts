@@ -208,6 +208,8 @@ async function reconcileLegacyPayment(body: Record<string, unknown>) {
   if (lookupError || !payment) return json({ error: "Payment not found" }, 404);
   if (
     payment.payee_type !== "technician" ||
+    payment.payee_id !== String(body.technician_mobile ?? "").replace(/\D/g, "") ||
+    !/^\d{10}$/.test(String(body.technician_mobile ?? "").replace(/\D/g, "")) ||
     String(payment.payee_id ?? "").replace(/\\D/g, "") !== expectedPayeeId ||
     Number(payment.amount) !== 49 ||
     payment.purpose !== "registration_fee" ||
