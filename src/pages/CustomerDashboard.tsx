@@ -10,10 +10,36 @@ import PushNotificationSetup from '@/components/PushNotificationSetup';
 const statusColors: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-700 border-amber-200',
   confirmed: 'bg-blue-100 text-blue-700 border-gold-200',
+  assigned: 'bg-cyan-100 text-cyan-700 border-cyan-200',
+  accepted: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+  on_the_way: 'bg-sky-100 text-sky-700 border-sky-200',
   in_progress: 'bg-purple-100 text-purple-700 border-purple-200',
+  job_started: 'bg-violet-100 text-violet-700 border-violet-200',
+  job_completed: 'bg-teal-100 text-teal-700 border-teal-200',
   completed: 'bg-green-100 text-green-700 border-green-200',
   cancelled: 'bg-red-100 text-red-700 border-red-200',
 };
+
+const statusLabels: Record<string, string> = {
+  pending: 'Awaiting assignment',
+  confirmed: 'Confirmed',
+  assigned: 'Technician assigned',
+  accepted: 'Accepted',
+  on_the_way: 'On the way',
+  in_progress: 'In progress',
+  job_started: 'Work started',
+  job_completed: 'Awaiting completion confirmation',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+};
+
+function getBookingProgressIndex(status: string): number {
+  if (status === 'pending') return 0;
+  if (['confirmed', 'assigned', 'accepted', 'on_the_way'].includes(status)) return 1;
+  if (['in_progress', 'job_started', 'job_completed'].includes(status)) return 2;
+  if (status === 'completed') return 3;
+  return -1;
+}
 
 const statusSteps = ['pending', 'confirmed', 'in_progress', 'completed'];
 
@@ -49,7 +75,7 @@ export default function CustomerDashboard() {
     return <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-ivory-50"><Loader className="animate-spin text-gold-700" size={32} /></div>;
   }
 
-  const activeBookings = bookings.filter((b) => ['pending', 'confirmed', 'in_progress'].includes(b.status));
+  const activeBookings = bookings.filter((b) => ['pending', 'confirmed', 'assigned', 'accepted', 'on_the_way', 'in_progress', 'job_started', 'job_completed'].includes(b.status));
   const completedBookings = bookings.filter((b) => b.status === 'completed');
   const upcomingBooking = activeBookings.find((b) => b.preferred_date) ?? activeBookings[0];
   const unreadCount = notifications.filter((n) => !n.is_read).length;
@@ -118,7 +144,7 @@ export default function CustomerDashboard() {
             ) : (
               <div className="space-y-3">
                 {activeBookings.slice(0, 3).map((b) => {
-                  const stepIndex = statusSteps.indexOf(b.status);
+                  const stepIndex = getBookingProgressIndex(b.status);
                   return (
                     <div key={b.id} onClick={() => setSelected(b)}
                       className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow cursor-pointer">
@@ -128,7 +154,7 @@ export default function CustomerDashboard() {
                           <div className="font-extrabold text-gray-900 mt-0.5">{b.service_category}</div>
                         </div>
                         <span className={`px-2.5 py-1 rounded-full text-xs font-semibold capitalize border ${statusColors[b.status]}`}>
-                          {b.status.replace('_', ' ')}
+                          {statusLabels[b.status] ?? b.status.replace('_', ' ')}
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-3">
