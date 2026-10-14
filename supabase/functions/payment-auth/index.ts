@@ -175,12 +175,13 @@ async function verifyPayment(body: Record<string, unknown>) {
 async function reconcileLegacyPayment(body: Record<string, unknown>) {
   const paymentId = String(body.payment_id ?? "").trim();
   const expectedUtr = String(body.utr ?? "").trim();
+  const expectedPayeeId = String(body.expected_payee_id ?? "").replace(/\\D/g, "");
   const reason = String(body.reconciliation_reason ?? "").trim();
   const adminId = String(body.admin_id ?? "").trim();
   const adminSessionToken = String(body.admin_session_token ?? "").trim();
 
-  if (!paymentId || !expectedUtr || reason.length < 20 || !adminId || !adminSessionToken) {
-    return json({ error: "Payment ID, matching UTR, a reconciliation reason (at least 20 characters), and admin authorization are required" }, 400);
+  if (!paymentId || !expectedUtr || !/^\\d{10}$/.test(expectedPayeeId) || reason.length < 20 || !adminId || !adminSessionToken) {
+    return json({ error: "Payment ID, matching UTR, expected 10-digit technician mobile, a reconciliation reason (at least 20 characters), and admin authorization are required" }, 400);
   }
 
   const { data: session, error: sessionError } = await supabase
@@ -207,6 +208,7 @@ async function reconcileLegacyPayment(body: Record<string, unknown>) {
   if (lookupError || !payment) return json({ error: "Payment not found" }, 404);
   if (
     payment.payee_type !== "technician" ||
+    String(payment.payee_id ?? "").replace(/\\D/g, "") !== expectedPayeeId ||
     Number(payment.amount) !== 49 ||
     payment.purpose !== "registration_fee" ||
     payment.status !== "success" ||
@@ -215,7 +217,7 @@ async function reconcileLegacyPayment(body: Record<string, unknown>) {
     payment.verified_by ||
     payment.verified_at
   ) {
-    return json({ error: "Payment is not eligible for legacy reconciliation; status, amount, purpose, UTR, or verification metadata does not match" }, 409);
+    return json({ error: "Payment is not eligible for legacy reconciliation; technician mobile, status, amount, purpose, UTR, or verification metadata does not match" }, 409);
   }
 
   const auditNote = "[Legacy payment reconciliation by super-admin " + adminId + " at " + new Date().toISOString() + "] " + reason;
