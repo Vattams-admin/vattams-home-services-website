@@ -111,14 +111,25 @@ export default function Booking() {
             : requested.includes('refrigerator') || requested.includes('fridge')
               ? 'Refrigerator'
               : '';
+        const draftLocation = String(aiDraft.city ?? '').trim();
+        const normalizedLocation = draftLocation.toLowerCase();
+        const matchedCity = bookingCities.find((city) =>
+          normalizedLocation === city.toLowerCase() || normalizedLocation.includes(city.toLowerCase())
+        );
+        const draftCity = matchedCity ?? (draftLocation && normalizedLocation !== 'other' ? 'Other' : undefined);
+        const draftAddress = draftLocation && (!matchedCity || normalizedLocation !== matchedCity.toLowerCase())
+          ? draftLocation
+          : '';
+
         if (mappedCategory && featuredServices.some((service) => service.name === mappedCategory)) {
           setForm((f) => ({
             ...f,
             service_category: mappedCategory,
             service_type: getServiceTypes(mappedCategory)[0] ?? '',
-            problem_description: String(aiDraft?.problem_description ?? f.problem_description),
-            city: bookingCities.includes(String(aiDraft?.city ?? '')) ? String(aiDraft?.city) : f.city,
-            preferred_time: timeSlots.includes(String(aiDraft?.preferred_time ?? '')) ? String(aiDraft?.preferred_time) : f.preferred_time,
+            problem_description: String(aiDraft.problem_description ?? f.problem_description),
+            city: draftCity ?? f.city,
+            address: draftAddress || f.address,
+            preferred_time: timeSlots.includes(String(aiDraft.preferred_time ?? '')) ? String(aiDraft.preferred_time) : f.preferred_time,
           }));
         }
         sessionStorage.removeItem('vattams_ai_booking_draft');
