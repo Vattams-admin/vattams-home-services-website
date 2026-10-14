@@ -35,7 +35,7 @@ export default function AIAssistant() {
     const userText = (text ?? input).trim();
     if (!userText || state.step === 'done') return;
 
-    const { reply, newState } = getAssistantResponse(state, userText);
+    const { newState } = getAssistantResponse(state, userText);
     setState(newState);
     setInput('');
 
