@@ -34,6 +34,14 @@ import AdminContent from '@/components/admin/AdminContent';
 import AdminCoupons from '@/components/admin/AdminCoupons';
 import './AdminDashboard.css';
 
+type TechnicianCallRateAdmin = {
+  id: number | string;
+  service_category: string;
+  service_type: string;
+  call_rate_fee: number;
+  is_active: boolean;
+};
+
 type CustomerServicePriceAdmin = {
   id: number | string;
   service_category: string;
@@ -255,6 +263,17 @@ export default function AdminDashboard() {
       text: string;
     } | null>(null);
 
+  const [technicianCallRates, setTechnicianCallRates] =
+    useState<TechnicianCallRateAdmin[]>([]);
+
+  const [technicianCallRateEdits, setTechnicianCallRateEdits] =
+    useState<Record<string, { call_rate_fee: string; is_active: boolean }>>({});
+
+  const [technicianCallRateSaving, setTechnicianCallRateSaving] = useState(false);
+
+  const [technicianCallRateMsg, setTechnicianCallRateMsg] =
+    useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
   const [customerServicePrices, setCustomerServicePrices] =
     useState<CustomerServicePriceAdmin[]>([]);
 
@@ -405,6 +424,7 @@ export default function AdminDashboard() {
 
       await loadSiteSettings();
       await loadServicePrices();
+      await loadTechnicianCallRates();
       await loadCustomerServicePrices();
     } catch (error) {
       console.error('[AdminDashboard] secure load failed:', error);
@@ -430,6 +450,20 @@ export default function AdminDashboard() {
       };
     });
     setPriceEdits(edits);
+  };
+
+  const loadTechnicianCallRates = async () => {
+    const { rates } = await adminData<{ rates: TechnicianCallRateAdmin[] }>('technician_call_rates');
+    const rows = rates ?? [];
+    setTechnicianCallRates(rows);
+    const edits: Record<string, { call_rate_fee: string; is_active: boolean }> = {};
+    rows.forEach((rate) => {
+      edits[String(rate.id)] = {
+        call_rate_fee: String(rate.call_rate_fee),
+        is_active: Boolean(rate.is_active),
+      };
+    });
+    setTechnicianCallRateEdits(edits);
   };
 
   const loadCustomerServicePrices = async () => {
@@ -2789,7 +2823,7 @@ export default function AdminDashboard() {
                       Customer Fee
                     </th>
                     <th className="text-right px-4 py-3 text-xs font-bold text-gray-500 uppercase">
-                      Call Rate Fee
+                      Legacy Category Fee
                     </th>
                     <th className="text-center px-4 py-3 text-xs font-bold text-gray-500 uppercase">
                       Active
@@ -2912,7 +2946,7 @@ export default function AdminDashboard() {
                               }
                               className="w-24 px-2 py-1.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-100 outline-none text-sm text-right"
                             />
-                            <p className="mt-1 text-[10px] text-gray-400 text-right">On completion</p>
+                            <p className="mt-1 text-[10px] text-gray-400 text-right">Legacy field</p>
                           </td>
 
                           <td className="px-4 py-3 text-center">
@@ -2994,6 +3028,113 @@ export default function AdminDashboard() {
 
             Save Changes
           </button>
+
+          <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 md:p-6 space-y-4">
+            <div>
+              <h3 className="text-lg font-extrabold text-gray-900">Technician Call-Rate Fees</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                These are the job-specific fees technicians pay to the platform after a job is completed. They are not customer prices.
+              </p>
+            </div>
+
+            {technicianCallRateMsg && (
+              <div className={'rounded-xl p-3 text-sm ' + (technicianCallRateMsg.type === 'success'
+                ? 'bg-green-50 text-green-700 border border-green-200'
+                : 'bg-red-50 text-red-700 border border-red-200')}>
+                {technicianCallRateMsg.text}
+              </div>
+            )}
+
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px]">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-100">
+                    <th className="text-left px-3 py-3 text-xs font-bold text-gray-500 uppercase">Category</th>
+                    <th className="text-left px-3 py-3 text-xs font-bold text-gray-500 uppercase">Job Type</th>
+                    <th className="text-right px-3 py-3 text-xs font-bold text-gray-500 uppercase">Technician Fee (₹)</th>
+                    <th className="text-center px-3 py-3 text-xs font-bold text-gray-500 uppercase">Active</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {technicianCallRates.map((rate) => {
+                    const key = String(rate.id);
+                    const edit = technicianCallRateEdits[key] ?? {
+                      call_rate_fee: String(rate.call_rate_fee),
+                      is_active: Boolean(rate.is_active),
+                    };
+                    return (
+                      <tr key={key} className="border-b border-gray-50 hover:bg-gray-50/50">
+                        <td className="px-3 py-3 text-sm font-semibold text-gray-900">{rate.service_category}</td>
+                        <td className="px-3 py-3 text-sm text-gray-700">{rate.service_type}</td>
+                        <td className="px-3 py-3 text-right">
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            aria-label={`Technician fee for ${rate.service_category} — ${rate.service_type}`}
+                            value={edit.call_rate_fee}
+                            onChange={(e) => setTechnicianCallRateEdits((prev) => ({
+                              ...prev,
+                              [key]: { ...edit, call_rate_fee: e.target.value },
+                            }))}
+                            className="w-28 px-2 py-1.5 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-100 outline-none text-sm text-right"
+                          />
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          <button
+                            type="button"
+                            aria-label={`${edit.is_active ? 'Deactivate' : 'Activate'} technician fee for ${rate.service_category} — ${rate.service_type}`}
+                            onClick={() => setTechnicianCallRateEdits((prev) => ({
+                              ...prev,
+                              [key]: { ...edit, is_active: !edit.is_active },
+                            }))}
+                            className={'w-10 h-6 rounded-full transition-colors ' + (edit.is_active ? 'bg-green-500' : 'bg-gray-300')}
+                          >
+                            <span className={'block w-4 h-4 bg-white rounded-full transition-transform ' + (edit.is_active ? 'translate-x-5' : 'translate-x-1')} />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {technicianCallRates.length === 0 && (
+                    <tr><td colSpan={4} className="px-4 py-8 text-center text-sm text-gray-500">No technician call-rate rows were returned.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <button
+              type="button"
+              onClick={async () => {
+                setTechnicianCallRateSaving(true);
+                setTechnicianCallRateMsg(null);
+                try {
+                  await adminData('save_technician_call_rates', {
+                    updates: technicianCallRates.map((rate) => ({
+                      id: rate.id,
+                      service_category: rate.service_category,
+                      service_type: rate.service_type,
+                      ...technicianCallRateEdits[String(rate.id)],
+                    })),
+                  });
+                  setTechnicianCallRateMsg({ type: 'success', text: 'Technician call-rate fees saved successfully.' });
+                  await loadTechnicianCallRates();
+                } catch (error) {
+                  setTechnicianCallRateMsg({
+                    type: 'error',
+                    text: error instanceof Error ? error.message : 'Failed to save technician fees.',
+                  });
+                } finally {
+                  setTechnicianCallRateSaving(false);
+                }
+              }}
+              disabled={technicianCallRateSaving || technicianCallRates.length === 0}
+              className="flex items-center gap-2 px-6 py-3 bg-navy-900 hover:bg-navy-800 disabled:opacity-50 text-white font-bold rounded-xl transition-colors"
+            >
+              {technicianCallRateSaving ? <Loader size={16} className="animate-spin" /> : <Save size={16} />}
+              Save Technician Fees
+            </button>
+          </section>
 
           <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 md:p-6 space-y-4">
             <div>
