@@ -107,12 +107,12 @@ async function handleRegister(supabase: ReturnType<typeof createClient>, body: R
     );
   }
 
-  // Technician applications require the one-time ₹49 joining fee.
+  // Technician applications require the one-time ₹50 joining fee.
   // The payment must be linked to this mobile number and have a UTR
   // confirmation before the application can be created.
   if (!registration_payment_id) {
     return new Response(
-      JSON.stringify({ error: "₹49 technician joining fee payment is required before submitting your application." }),
+      JSON.stringify({ error: "₹50 technician joining fee payment is required before submitting your application." }),
       { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
@@ -128,13 +128,13 @@ async function handleRegister(supabase: ReturnType<typeof createClient>, body: R
     !registrationPayment ||
     registrationPayment.payee_type !== "technician" ||
     registrationPayment.payee_id !== normalizedMobile ||
-    Number(registrationPayment.amount) !== 49 ||
+    Number(registrationPayment.amount) !== 50 ||
     registrationPayment.purpose !== "registration_fee" ||
     !registrationPayment.utr ||
     !["pending", "success"].includes(String(registrationPayment.status))
   ) {
     return new Response(
-      JSON.stringify({ error: "Valid ₹49 technician joining fee payment confirmation is required." }),
+      JSON.stringify({ error: "Valid ₹50 technician joining fee payment confirmation is required." }),
       { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
