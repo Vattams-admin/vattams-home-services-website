@@ -14,10 +14,10 @@ const INITIAL_STATE: AIAssistantState = {
 const SUGGESTIONS = [
   'My AC is not cooling',
   'My refrigerator is not working',
-  'Kitchen tap is leaking',
+  'Need AC gas filling',
   'My washing machine is making noise',
-  'Need electrical wiring fixed',
-  'My TV screen is blank',
+  'Need AC installation',
+  'My washing machine is making noise',
 ];
 
 export default function AIAssistant() {
