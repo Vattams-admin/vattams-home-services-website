@@ -102,7 +102,7 @@ BEGIN
   IF NEW.status = 'active'
      AND (TG_OP = 'INSERT' OR OLD.status IS DISTINCT FROM NEW.status) THEN
     IF NEW.registration_payment_id IS NULL OR NEW.registration_payment_id = '' THEN
-      RAISE EXCEPTION 'Technician cannot be activated without a verified ₹50 registration payment';
+      RAISE EXCEPTION 'Technician cannot be activated without an admin-verified registration payment';
     END IF;
 
     SELECT status INTO payment_status
@@ -110,13 +110,18 @@ BEGIN
     WHERE payment_id = NEW.registration_payment_id
       AND payee_type = 'technician'
       AND payee_id = NEW.mobile
-      AND amount = 50
+      AND (
+        amount = 50
+        OR (amount = 49 AND verified_by IS NOT NULL AND verified_at IS NOT NULL)
+      )
       AND purpose = 'registration_fee'
       AND utr IS NOT NULL
+      AND verified_by IS NOT NULL
+      AND verified_at IS NOT NULL
     LIMIT 1;
 
     IF payment_status IS DISTINCT FROM 'success' THEN
-      RAISE EXCEPTION 'Technician cannot be activated until the ₹50 registration payment is verified';
+      RAISE EXCEPTION 'Technician cannot be activated until the registration payment is verified';
     END IF;
   END IF;
 
