@@ -423,9 +423,6 @@ export default function AdminDashboard() {
       setNotifLogs(notificationData.notifications ?? []);
 
       await loadSiteSettings();
-      await loadServicePrices();
-      await loadTechnicianCallRates();
-      await loadCustomerServicePrices();
     } catch (error) {
       console.error('[AdminDashboard] secure load failed:', error);
       if (error instanceof Error && /Unauthorized|expired/i.test(error.message)) {
@@ -485,6 +482,19 @@ export default function AdminDashboard() {
     const { notifications } = await adminData<{ notifications: NotificationRow[] }>('notifications', { limit: 100 });
     setNotifLogs(notifications ?? []);
   };
+
+  // Load editable pricing only when the pricing tab is opened. The dashboard
+  // polls bookings/technicians every 20 seconds; reloading edit state during
+  // that poll would overwrite unsaved price changes while an admin is typing.
+  useEffect(() => {
+    if (tab !== 'pricing') return;
+    void Promise.all([
+      loadServicePrices(),
+      loadTechnicianCallRates(),
+      loadCustomerServicePrices(),
+    ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
 
   // Re-fetch the latest notification records from the database every time
   // the admin opens/switches to the Notifications tab, so newly-created
