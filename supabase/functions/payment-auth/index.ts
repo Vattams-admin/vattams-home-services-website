@@ -109,7 +109,7 @@ async function createPayment(body: Record<string, unknown>) {
 async function submitUtr(body: Record<string, unknown>) {
   const paymentId = String(body.payment_id ?? "").trim();
   const actionToken = String(body.payment_action_token ?? "").trim();
-  const utr = String(body.utr ?? "").trim();
+  const utr = String(body.utr ?? "").trim().toUpperCase();
 
   if (!paymentId || !actionToken || !utr) {
     return json({ error: "Payment ID, payment authorization and UTR are required" }, 400);
@@ -120,7 +120,7 @@ async function submitUtr(body: Record<string, unknown>) {
 
   const { data: duplicateUtr, error: duplicateUtrError } = await supabase.from("payments")
     .select("payment_id")
-    .eq("utr", utr)
+    .ilike("utr", utr)
     .neq("payment_id", paymentId)
     .limit(1)
     .maybeSingle();
