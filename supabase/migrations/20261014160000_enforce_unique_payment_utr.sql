@@ -2,5 +2,5 @@
 -- duplicate check safe against concurrent submissions as well as ordinary retries.
 -- The current production audit found no duplicate non-empty UTR values.
 CREATE UNIQUE INDEX IF NOT EXISTS payments_utr_unique_nonempty_idx
-  ON public.payments (utr)
+  ON public.payments (lower(btrim(utr)))
   WHERE utr IS NOT NULL AND btrim(utr) <> '';
