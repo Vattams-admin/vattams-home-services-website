@@ -18,7 +18,7 @@ interface PaymentModalProps {
   payeeName?: string;
   referenceId?: string;
   note: string;
-  onSuccess?: (paymentId: string) => void;
+  onSuccess?: (paymentId: string, paymentActionToken: string) => void;
 }
 
 type Step = 'qr' | 'utr' | 'submitting' | 'success' | 'error';
@@ -110,7 +110,7 @@ export default function PaymentModal({
     }
 
     setStep('success');
-    onSuccess?.(paymentRecordId);
+    if (paymentActionToken) onSuccess?.(paymentRecordId, paymentActionToken);
   };
 
   const handleIHavePaid = () => {
