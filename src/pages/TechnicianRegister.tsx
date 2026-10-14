@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import PaymentModal from '@/components/PaymentModal';
+import { checkPaymentStatus } from '@/lib/payments';
 
 import {
   STEPS,
@@ -67,8 +68,13 @@ export default function TechnicianRegister() {
   const [hydrated, setHydrated] = useState(false);
   const [resumedDraft, setResumedDraft] = useState(false);
   const [showJoinFeePayment, setShowJoinFeePayment] = useState(false);
-  const [joinFeePaid, setJoinFeePaid] = useState(false);
+  const [joinFeeSubmitted, setJoinFeePaid] = useState(false);
   const [joinFeePaymentId, setJoinFeePaymentId] = useState<string | null>(null);
+  const [joinFeePaymentActionToken, setJoinFeePaymentActionToken] = useState<string | null>(null);
+
+  // Preserve the payment reference across refreshes so a completed payment
+  // does not become detached from the same-device registration draft.
+  const paymentDraftKey = 'vattams_technician_registration_payment_v1';
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -96,6 +102,21 @@ export default function TechnicianRegister() {
         Array.isArray(draft.chatHistory) ? draft.chatHistory : []
       );
       setResumedDraft(true);
+    }
+
+    try {
+      const rawPayment = window.localStorage.getItem(paymentDraftKey);
+      if (rawPayment) {
+        const savedPayment = JSON.parse(rawPayment);
+        const draftMobile = String(draft?.form?.mobile || '');
+        if (draftMobile && savedPayment?.mobile === draftMobile && typeof savedPayment.paymentId === 'string' && typeof savedPayment.paymentActionToken === 'string') {
+          setJoinFeePaid(true);
+          setJoinFeePaymentId(savedPayment.paymentId);
+          setJoinFeePaymentActionToken(savedPayment.paymentActionToken);
+        }
+      }
+    } catch {
+      // Ignore unavailable or malformed payment-draft metadata.
     }
 
     setHydrated(true);
@@ -459,7 +480,7 @@ export default function TechnicianRegister() {
   };
 
   const handleSubmit = async () => {
-    if (!joinFeePaid) {
+    if (!joinFeeSubmitted) {
       setShowJoinFeePayment(true);
       return;
     }
@@ -470,9 +491,33 @@ export default function TechnicianRegister() {
     setError('');
 
     try {
-      await submitTechnicianApplication(form, joinFeePaymentId || undefined);
+      if (!joinFeePaymentId || !joinFeePaymentActionToken) {
+        throw new Error('Your payment reference could not be recovered. Keep this registration draft and reopen payment support before paying again.');
+      }
+
+      const payment = await checkPaymentStatus(joinFeePaymentId, joinFeePaymentActionToken);
+      if (
+        !payment ||
+        payment.payee_type !== 'technician' ||
+        payment.payee_id !== form.mobile.replace(/\\D/g, '') ||
+        payment.purpose !== 'registration_fee' ||
+        ![49, 50].includes(Number(payment.amount)) ||
+        !payment.utr ||
+        payment.status !== 'success' ||
+        !payment.verified_by ||
+        !payment.verified_at
+      ) {
+        throw new Error('UTR received — payment verification is still pending. Your profile has not been created. Keep this page or return after an admin confirms the funds in the bank/UPI record; do not pay again.');
+      }
+
+      await submitTechnicianApplication(form, joinFeePaymentId);
 
       clearRegistrationDraft();
+      try {
+        window.localStorage.removeItem(paymentDraftKey);
+      } catch {
+        // Ignore unavailable local storage.
+      }
       setSuccess(true);
     } catch (err: any) {
       console.error('Registration Error:', err);
@@ -576,7 +621,7 @@ export default function TechnicianRegister() {
           </h1>
 
           <p className="text-white/90 text-sm">
-            Register for AC, washing machine and refrigerator job opportunities. One-time joining fee: ₹49. Our AI guides you step by step
+            Register for AC, washing machine and refrigerator job opportunities. One-time joining fee: ₹50. Our AI guides you step by step
           </p>
 
         </div>
@@ -1100,8 +1145,13 @@ export default function TechnicianRegister() {
                 )}
 
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800">
-                  <div className="font-bold">Technician Joining Fee: ₹49</div>
+                  <div className="font-bold">Technician Joining Fee: ₹50</div>
                   <div className="mt-1">One-time joining fee. Pay by UPI QR and submit your UTR for verification.</div>
+                  {joinFeeSubmitted && (
+                    <div className="mt-2 font-semibold text-amber-900" role="status">
+                      UTR received on this device. This is not proof of settlement or payment approval; the application can proceed only after the server verifies the payment.
+                    </div>
+                  )}
                 </div>
 
                 <button
@@ -1117,7 +1167,7 @@ export default function TechnicianRegister() {
                   ) : (
                     <>
                       <CheckCircle size={18} />
-                      {joinFeePaid ? 'Submit Application' : 'Pay ₹49 & Continue'}
+                      {joinFeeSubmitted ? 'UTR Submitted — Verification Pending' : 'Pay ₹50 & Continue'}
                     </>
                   )}
                 </button>
@@ -1128,16 +1178,27 @@ export default function TechnicianRegister() {
             <PaymentModal
               open={showJoinFeePayment}
               onClose={() => setShowJoinFeePayment(false)}
-              amount={49}
+              amount={50}
               purpose="registration_fee"
               payeeType="technician"
               payeeId={form.mobile || 'technician-registration'}
               payeeName={form.full_name}
               referenceId={form.mobile || undefined}
               note={`VATTAMS Technician Joining Fee - ${form.full_name || form.mobile}`}
-              onSuccess={(paymentId) => {
+              onSuccess={(paymentId, paymentActionToken) => {
                 setJoinFeePaid(true);
                 setJoinFeePaymentId(paymentId);
+                setJoinFeePaymentActionToken(paymentActionToken);
+                try {
+                  window.localStorage.setItem(paymentDraftKey, JSON.stringify({
+                    mobile: form.mobile,
+                    paymentId,
+                    paymentActionToken,
+                    savedAt: Date.now(),
+                  }));
+                } catch {
+                  // Registration remains usable if local storage is unavailable.
+                }
                 setShowJoinFeePayment(false);
               }}
             />
