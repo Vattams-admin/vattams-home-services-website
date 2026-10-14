@@ -492,7 +492,12 @@ export default function AdminDashboard() {
       loadServicePrices(),
       loadTechnicianCallRates(),
       loadCustomerServicePrices(),
-    ]);
+    ]).catch((error) => {
+      setPriceMsg({
+        type: 'error',
+        text: error instanceof Error ? error.message : 'Unable to load pricing settings.',
+      });
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
