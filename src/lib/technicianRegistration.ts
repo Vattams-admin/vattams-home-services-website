@@ -1,21 +1,11 @@
 import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase';
 
 export const TECHNICIAN_SERVICES = [
-  'Electrician',
-  'Plumber',
-  'AC Technician',
-  'RO Technician',
-  'Carpenter',
-  'Painter',
-  'House Cleaning',
-  'CCTV',
-  'Home Appliance Repair',
-  'Pest Control',
-  'Water Tank Cleaning',
-  'Laundry',
-  'Gardening',
-  'Packers & Movers',
-  'Driver',
+  // Keep registration values identical to customer booking categories so
+  // automatic job matching can reliably match technicians to appliance jobs.
+  'AC Service',
+  'Washing Machine',
+  'Refrigerator',
 ];
 
 export const AVAILABLE_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
