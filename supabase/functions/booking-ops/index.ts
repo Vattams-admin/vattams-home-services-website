@@ -254,20 +254,32 @@ Deno.serve(async (req: Request) => {
       // account not locked (dues cleared).
       const { data: candidates } = await supabase
         .from("technicians")
-        .select("id, full_name, rating, total_jobs, current_workload, is_online, last_active_at")
+        .select("id, full_name, rating, total_jobs, current_workload, is_online, last_active_at, service_categories")
         .eq("city", booking.city)
         .eq("status", "active")
         .eq("wallet_locked", false)
-        .contains("service_categories", [booking.service_category]) as { data: { id: string; full_name: string; rating: number; total_jobs: number; current_workload: number; is_online: boolean; last_active_at: string | null }[] | null; error: unknown };
+         as { data: { id: string; full_name: string; rating: number; total_jobs: number; current_workload: number; is_online: boolean; last_active_at: string | null; service_categories: string[] | null }[] | null; error: unknown };
 
-      if (!candidates || candidates.length === 0) {
+      const categoryAliases: Record<string, string[]> = {
+        "ac service": ["ac service", "ac technician", "ac repair", "air conditioner service"],
+        "washing machine": ["washing machine", "washing machine repair", "washing machine technician", "home appliance repair"],
+        "refrigerator": ["refrigerator", "refrigerator repair", "fridge", "home appliance repair"],
+      };
+      const requestedCategory = String(booking.service_category ?? "").trim().toLowerCase();
+      const acceptedCategories = categoryAliases[requestedCategory] ?? [requestedCategory];
+      const eligibleCandidates = (candidates ?? []).filter((candidate) =>
+        (candidate.service_categories ?? []).some((category) =>
+          acceptedCategories.includes(String(category).trim().toLowerCase())
+        )
+      );
+      if (eligibleCandidates.length === 0) {
         return new Response(JSON.stringify({ success: true, assigned: false, reason: "no_eligible_technician" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
       // Exclude technicians who already have an active job.
-      const candidateIds = candidates.map((c) => c.id);
+      const candidateIds = eligibleCandidates.map((c) => c.id);
       const { data: busy } = await supabase
         .from("technician_jobs")
         .select("technician_id")
@@ -275,7 +287,7 @@ Deno.serve(async (req: Request) => {
         .in("status", ["assigned", "accepted", "on_the_way", "in_progress", "job_started"]) as { data: { technician_id: string }[] | null; error: unknown };
 
       const busyIds = new Set((busy ?? []).map((b) => b.technician_id));
-      const free = candidates.filter((c) => !busyIds.has(c.id));
+      const free = eligibleCandidates.filter((c) => !busyIds.has(c.id));
 
       if (free.length === 0) {
         return new Response(JSON.stringify({ success: true, assigned: false, reason: "all_technicians_busy" }), {
