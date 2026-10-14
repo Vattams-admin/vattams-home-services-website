@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import PaymentModal from '@/components/PaymentModal';
+import { checkPaymentStatus } from '@/lib/payments';
 
 import {
   STEPS,
@@ -69,6 +70,7 @@ export default function TechnicianRegister() {
   const [showJoinFeePayment, setShowJoinFeePayment] = useState(false);
   const [joinFeeSubmitted, setJoinFeePaid] = useState(false);
   const [joinFeePaymentId, setJoinFeePaymentId] = useState<string | null>(null);
+  const [joinFeePaymentActionToken, setJoinFeePaymentActionToken] = useState<string | null>(null);
 
   // Preserve the payment reference across refreshes so a completed payment
   // does not become detached from the same-device registration draft.
@@ -107,9 +109,10 @@ export default function TechnicianRegister() {
       if (rawPayment) {
         const savedPayment = JSON.parse(rawPayment);
         const draftMobile = String(draft?.form?.mobile || '');
-        if (draftMobile && savedPayment?.mobile === draftMobile && typeof savedPayment.paymentId === 'string') {
+        if (draftMobile && savedPayment?.mobile === draftMobile && typeof savedPayment.paymentId === 'string' && typeof savedPayment.paymentActionToken === 'string') {
           setJoinFeePaid(true);
           setJoinFeePaymentId(savedPayment.paymentId);
+          setJoinFeePaymentActionToken(savedPayment.paymentActionToken);
         }
       }
     } catch {
@@ -488,7 +491,26 @@ export default function TechnicianRegister() {
     setError('');
 
     try {
-      await submitTechnicianApplication(form, joinFeePaymentId || undefined);
+      if (!joinFeePaymentId || !joinFeePaymentActionToken) {
+        throw new Error('Your payment reference could not be recovered. Keep this registration draft and reopen payment support before paying again.');
+      }
+
+      const payment = await checkPaymentStatus(joinFeePaymentId, joinFeePaymentActionToken);
+      if (
+        !payment ||
+        payment.payee_type !== 'technician' ||
+        payment.payee_id !== form.mobile.replace(/\\D/g, '') ||
+        payment.purpose !== 'registration_fee' ||
+        ![49, 50].includes(Number(payment.amount)) ||
+        !payment.utr ||
+        payment.status !== 'success' ||
+        !payment.verified_by ||
+        !payment.verified_at
+      ) {
+        throw new Error('UTR received — payment verification is still pending. Your profile has not been created. Keep this page or return after an admin confirms the funds in the bank/UPI record; do not pay again.');
+      }
+
+      await submitTechnicianApplication(form, joinFeePaymentId);
 
       clearRegistrationDraft();
       try {
@@ -1163,13 +1185,15 @@ export default function TechnicianRegister() {
               payeeName={form.full_name}
               referenceId={form.mobile || undefined}
               note={`VATTAMS Technician Joining Fee - ${form.full_name || form.mobile}`}
-              onSuccess={(paymentId) => {
+              onSuccess={(paymentId, paymentActionToken) => {
                 setJoinFeePaid(true);
                 setJoinFeePaymentId(paymentId);
+                setJoinFeePaymentActionToken(paymentActionToken);
                 try {
                   window.localStorage.setItem(paymentDraftKey, JSON.stringify({
                     mobile: form.mobile,
                     paymentId,
+                    paymentActionToken,
                     savedAt: Date.now(),
                   }));
                 } catch {
