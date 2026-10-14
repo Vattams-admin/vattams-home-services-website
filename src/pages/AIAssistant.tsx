@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { ArrowRight, Send, Sparkles } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import { getAssistantResponse, type AIAssistantState } from '@/lib/aiAssistant';
+import CommunicationCenter from '@/components/CommunicationCenter';
 
 const INITIAL_STATE: AIAssistantState = {
   step: 'initial',
@@ -123,11 +124,10 @@ export default function AIAssistant() {
               onKeyDown={(e) => { if (e.key === 'Enter') handleSend(); }}
               placeholder="Type your message..."
               className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm"
-              disabled={creating}
             />
             <button
               onClick={() => handleSend()}
-              disabled={!input.trim() || creating}
+              disabled={!input.trim()}
               className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-xl transition-colors"
             >
               <Send size={18} />
