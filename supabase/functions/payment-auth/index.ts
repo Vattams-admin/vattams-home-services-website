@@ -12,7 +12,7 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
 
-type Action = "create" | "submit-utr" | "verify" | "reconcile-legacy";
+type Action = "create" | "submit-utr" | "verify" | "status" | "reconcile-legacy";
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: corsHeaders });
@@ -23,6 +23,7 @@ Deno.serve(async (req: Request) => {
     if (action === "create") return await createPayment(body);
     if (action === "submit-utr") return await submitUtr(body);
     if (action === "verify") return await verifyPayment(body);
+    if (action === "status") return await getPaymentStatus(body);
     if (action === "reconcile-legacy") return await reconcileLegacyPayment(body);
 
     return json({ error: "Unknown payment action" }, 400);
@@ -166,6 +167,24 @@ async function verifyPayment(body: Record<string, unknown>) {
     .select("*").single();
 
   if (error || !data) return json({ error: error?.message || "Payment is no longer pending or could not be updated" }, 409);
+  return json({ payment: data });
+}
+
+
+async function getPaymentStatus(body: Record<string, unknown>) {
+  const paymentId = String(body.payment_id ?? "").trim();
+  const actionToken = String(body.payment_action_token ?? "").trim();
+  if (!paymentId || !actionToken) {
+    return json({ error: "Payment ID and payment authorization are required" }, 400);
+  }
+
+  const { data, error } = await supabase.from("payments")
+    .select("payment_id,payee_type,payee_id,amount,purpose,utr,status,verified_by,verified_at")
+    .eq("payment_id", paymentId)
+    .eq("payment_action_token", actionToken)
+    .maybeSingle();
+
+  if (error || !data) return json({ error: "Payment not found or authorization is invalid" }, 404);
   return json({ payment: data });
 }
 
