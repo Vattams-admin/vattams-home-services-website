@@ -50,8 +50,8 @@ async function createPayment(body: Record<string, unknown>) {
   const { data, error } = await supabase.from("payments").insert({
     payee_type: "technician",
     payee_id: payeeId,
-    payee_name: payeeName,
-    upi_id: "venkatesan04051985-7@okhdfcbank",
+    payee_name: payeeName || 'VATTAMS Global Technologies Private Limited',
+    upi_id: "venkatesan04051985-5@oksbi",
     amount: 50,
     purpose: "registration_fee",
     reference_id: payeeId,
