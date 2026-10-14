@@ -135,3 +135,23 @@ export async function reconcileLegacyTechnicianPayment(
   }
   return (data?.payment ?? null) as PaymentRecord | null;
 }
+
+
+export async function checkPaymentStatus(
+  paymentId: string,
+  paymentActionToken: string
+): Promise<Pick<PaymentRecord, 'payment_id' | 'payee_type' | 'payee_id' | 'amount' | 'purpose' | 'utr' | 'status' | 'verified_by' | 'verified_at'> | null> {
+  const { data, error } = await supabase.functions.invoke('payment-auth', {
+    body: {
+      action: 'status',
+      payment_id: paymentId,
+      payment_action_token: paymentActionToken,
+    },
+  });
+
+  if (error) {
+    console.error('Failed to check payment verification:', error);
+    return null;
+  }
+  return (data?.payment ?? null) as Pick<PaymentRecord, 'payment_id' | 'payee_type' | 'payee_id' | 'amount' | 'purpose' | 'utr' | 'status' | 'verified_by' | 'verified_at'> | null;
+}
