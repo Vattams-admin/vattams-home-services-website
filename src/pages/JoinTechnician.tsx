@@ -21,7 +21,7 @@ import { useSEO } from '@/lib/seo';
 const FAQS = [
   {
     q: 'How do I join VATTAMS as a technician?',
-    a: 'Click the "Join as a Technician" button and complete the guided registration with your personal details, service categories, experience, availability, and payment details. The admin team reviews applications; timing can vary.',
+    a: 'Click the "Join as a Technician" button and complete the guided registration with your personal details, service categories, experience and availability. Registration is free; payout details can be provided securely for approved work. The admin team reviews applications; timing can vary.',
   },
   {
     q: 'How much can I earn as a VATTAMS technician?',
@@ -48,8 +48,8 @@ const FAQS = [
     a: 'The platform matches requests based on service category, location, availability, rating and workload. Eligible technicians receive job notifications through the platform.',
   },
   {
-    q: 'What is the technician joining fee?',
-    a: 'Technician registration requires a one-time ₹49 joining fee, payable by UPI QR. Submit the UTR/reference number after payment; the application is then sent for Admin review.',
+    q: 'Is technician registration free?',
+    a: 'Yes. Joining the VATTAMS technician network and submitting an application is free. No registration or joining fee is collected. Job-specific call-rate fees are disclosed before you accept an eligible job and apply only after completion.',
   },
   {
     q: 'How long does approval take?',
@@ -110,8 +110,8 @@ export default function JoinTechnician() {
   const { navigate } = useRouter();
 
   useSEO({
-    title: 'Appliance Technician Network Registration | VATTAMS',
-    description: 'Join the VATTAMS technician network for AC, washing machine and refrigerator job requests. One-time ₹49 registration fee; job availability depends on location, eligibility and demand.',
+    title: 'Free Appliance Technician Registration | VATTAMS Home Services',
+    description: 'Register free with VATTAMS Home Services for AC, washing machine and refrigerator job opportunities. No joining fee. Job availability depends on location, eligibility and demand.',
     path: '/join-technician',
   });
 
@@ -149,17 +149,17 @@ export default function JoinTechnician() {
         <div className="relative max-w-5xl mx-auto px-4 py-16 md:py-24 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/20 rounded-full text-sm font-semibold mb-6">
             <Briefcase size={16} />
-            Expanding the Technician Network
+            No Joining Fee · Clear Job Fees
           </div>
 
           <h1 className="font-display text-4xl md:text-5xl font-bold mb-4 leading-tight">
-            Call Rate Jobs for Technicians
+            Free Technician Registration
             <br />
             Grow with VATTAMS
           </h1>
 
           <p className="text-lg md:text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-            Join the VATTAMS technician network for eligible call-rate job opportunities in AC, washing machine and refrigerator services. Manage assigned requests and track eligible earnings in your dashboard.
+            Join the VATTAMS technician network at no registration cost. Apply for eligible AC, washing machine and refrigerator jobs, see the fixed call-rate fee before accepting, and track completed work in your dashboard.
           </p>
 
           <div className="flex flex-wrap gap-4 justify-center">
