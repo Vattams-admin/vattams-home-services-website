@@ -112,7 +112,7 @@ export async function updatePaymentStatus(
  */
 export async function reconcileLegacyTechnicianPayment(
   paymentId: string,
-  expectedPayeeId: string,
+  technicianMobile: string,
   utr: string,
   reconciliationReason: string,
 ): Promise<PaymentRecord | null> {
@@ -122,7 +122,7 @@ export async function reconcileLegacyTechnicianPayment(
     body: {
       action: 'reconcile-legacy',
       payment_id: paymentId,
-      expected_payee_id: expectedPayeeId,
+      technician_mobile: technicianMobile,
       utr,
       reconciliation_reason: reconciliationReason,
       admin_id: adminId,
