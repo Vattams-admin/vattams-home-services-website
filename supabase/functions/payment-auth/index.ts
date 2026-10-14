@@ -37,10 +37,10 @@ async function createPayment(body: Record<string, unknown>) {
   const payeeName = body.payee_name ? String(body.payee_name).trim().slice(0, 120) : null;
   const notes = body.notes ? String(body.notes).trim().slice(0, 300) : null;
 
-  // This endpoint is currently exposed only for the technician ₹49 joining flow.
+  // This endpoint is currently exposed only for the technician ₹50 joining flow.
   // Do not allow the browser to mint arbitrary booking/wallet/commission payments.
-  if (payeeType !== "technician" || body.purpose !== "registration_fee" || Number(body.amount) !== 49) {
-    return json({ error: "Only the ₹49 technician registration payment is supported" }, 400);
+  if (payeeType !== "technician" || body.purpose !== "registration_fee" || Number(body.amount) !== 50) {
+    return json({ error: "Only the ₹50 technician registration payment is supported" }, 400);
   }
 
   if (!/^\d{10}$/.test(payeeId) || referenceId !== payeeId) {
@@ -52,7 +52,7 @@ async function createPayment(body: Record<string, unknown>) {
     payee_id: payeeId,
     payee_name: payeeName,
     upi_id: "venkatesan04051985-7@okhdfcbank",
-    amount: 49,
+    amount: 50,
     purpose: "registration_fee",
     reference_id: payeeId,
     status: "pending",
