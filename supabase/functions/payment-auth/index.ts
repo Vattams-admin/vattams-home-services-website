@@ -12,7 +12,7 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
 
-type Action = "create" | "submit-utr" | "verify";
+type Action = "create" | "submit-utr" | "verify" | "reconcile-legacy";
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: corsHeaders });
@@ -23,6 +23,7 @@ Deno.serve(async (req: Request) => {
     if (action === "create") return await createPayment(body);
     if (action === "submit-utr") return await submitUtr(body);
     if (action === "verify") return await verifyPayment(body);
+    if (action === "reconcile-legacy") return await reconcileLegacyPayment(body);
 
     return json({ error: "Unknown payment action" }, 400);
   } catch (err) {
@@ -166,6 +167,74 @@ async function verifyPayment(body: Record<string, unknown>) {
 
   if (error || !data) return json({ error: error?.message || "Payment is no longer pending or could not be updated" }, 409);
   return json({ payment: data });
+}
+
+// Explicit, audited recovery path for legacy ₹49 payments already marked success
+// before verification metadata was introduced. This never proves settlement by itself:
+// a super-admin must independently reconcile the UTR against bank/UPI evidence.
+async function reconcileLegacyPayment(body: Record<string, unknown>) {
+  const paymentId = String(body.payment_id ?? "").trim();
+  const expectedUtr = String(body.utr ?? "").trim();
+  const reason = String(body.reconciliation_reason ?? "").trim();
+  const adminId = String(body.admin_id ?? "").trim();
+  const adminSessionToken = String(body.admin_session_token ?? "").trim();
+
+  if (!paymentId || !expectedUtr || reason.length < 20 || !adminId || !adminSessionToken) {
+    return json({ error: "Payment ID, matching UTR, a reconciliation reason (at least 20 characters), and admin authorization are required" }, 400);
+  }
+
+  const { data: session, error: sessionError } = await supabase
+    .from("admin_auth_sessions")
+    .select("admin_id,expires_at")
+    .eq("token", adminSessionToken)
+    .maybeSingle();
+  if (sessionError || !session || session.admin_id !== adminId || new Date(session.expires_at).getTime() <= Date.now()) {
+    return json({ error: "Not authorized" }, 401);
+  }
+
+  const { data: admin, error: adminError } = await supabase
+    .from("admin_users").select("id,role,is_active").eq("id", adminId).maybeSingle();
+  if (adminError || !admin || admin.role !== "super_admin" || admin.is_active !== true) {
+    return json({ error: "Only an active super-admin can reconcile legacy payments" }, 401);
+  }
+
+  const { data: payment, error: lookupError } = await supabase
+    .from("payments")
+    .select("payment_id,payee_type,payee_id,amount,purpose,utr,status,verified_by,verified_at,notes")
+    .eq("payment_id", paymentId)
+    .maybeSingle();
+
+  if (lookupError || !payment) return json({ error: "Payment not found" }, 404);
+  if (
+    payment.payee_type !== "technician" ||
+    Number(payment.amount) !== 49 ||
+    payment.purpose !== "registration_fee" ||
+    payment.status !== "success" ||
+    !payment.utr ||
+    payment.utr !== expectedUtr ||
+    payment.verified_by ||
+    payment.verified_at
+  ) {
+    return json({ error: "Payment is not eligible for legacy reconciliation; status, amount, purpose, UTR, or verification metadata does not match" }, 409);
+  }
+
+  const auditNote = "[Legacy payment reconciliation by super-admin " + adminId + " at " + new Date().toISOString() + "] " + reason;
+  const { data, error } = await supabase.from("payments")
+    .update({
+      verified_by: adminId,
+      verified_at: new Date().toISOString(),
+      notes: [payment.notes, auditNote].filter(Boolean).join("\n").slice(0, 2000),
+    })
+    .eq("payment_id", paymentId)
+    .eq("status", "success")
+    .is("verified_by", null)
+    .is("verified_at", null)
+    .eq("utr", expectedUtr)
+    .select("payment_id,payee_type,payee_id,amount,purpose,utr,status,verified_by,verified_at,notes")
+    .maybeSingle();
+
+  if (error || !data) return json({ error: "Payment changed concurrently or could not be reconciled" }, 409);
+  return json({ payment: data, message: "Legacy payment metadata recorded. This action must only be used after independent bank/UPI settlement confirmation." });
 }
 
 function json(data: Record<string, unknown>, status = 200) {
