@@ -67,7 +67,7 @@ export default function TechnicianRegister() {
   const [hydrated, setHydrated] = useState(false);
   const [resumedDraft, setResumedDraft] = useState(false);
   const [showJoinFeePayment, setShowJoinFeePayment] = useState(false);
-  const [joinFeePaid, setJoinFeePaid] = useState(false);
+  const [joinFeeSubmitted, setJoinFeePaid] = useState(false);
   const [joinFeePaymentId, setJoinFeePaymentId] = useState<string | null>(null);
 
   // Preserve the payment reference across refreshes so a completed payment
@@ -477,7 +477,7 @@ export default function TechnicianRegister() {
   };
 
   const handleSubmit = async () => {
-    if (!joinFeePaid) {
+    if (!joinFeeSubmitted) {
       setShowJoinFeePayment(true);
       return;
     }
@@ -1125,6 +1125,11 @@ export default function TechnicianRegister() {
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800">
                   <div className="font-bold">Technician Joining Fee: ₹50</div>
                   <div className="mt-1">One-time joining fee. Pay by UPI QR and submit your UTR for verification.</div>
+                  {joinFeeSubmitted && (
+                    <div className="mt-2 font-semibold text-amber-900" role="status">
+                      UTR received on this device. This is not proof of settlement or payment approval; the application can proceed only after the server verifies the payment.
+                    </div>
+                  )}
                 </div>
 
                 <button
@@ -1140,7 +1145,7 @@ export default function TechnicianRegister() {
                   ) : (
                     <>
                       <CheckCircle size={18} />
-                      {joinFeePaid ? 'Submit Application' : 'Pay ₹50 & Continue'}
+                      {joinFeeSubmitted ? 'UTR Submitted — Verification Pending' : 'Pay ₹50 & Continue'}
                     </>
                   )}
                 </button>
