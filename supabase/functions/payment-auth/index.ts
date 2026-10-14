@@ -37,29 +37,69 @@ async function createPayment(body: Record<string, unknown>) {
   const payeeName = body.payee_name ? String(body.payee_name).trim().slice(0, 120) : null;
   const notes = body.notes ? String(body.notes).trim().slice(0, 300) : null;
 
-  // This endpoint is currently exposed only for the technician ₹50 joining flow.
-  // Do not allow the browser to mint arbitrary booking/wallet/commission payments.
-  if (payeeType !== "technician" || body.purpose !== "registration_fee" || Number(body.amount) !== 50) {
-    return json({ error: "Only the ₹50 technician registration payment is supported" }, 400);
+  const amount = Number(body.amount);
+  if (!Number.isFinite(amount) || amount <= 0 || amount > 100000) {
+    return json({ error: "A valid payment amount is required" }, 400);
   }
 
-  if (!/^\d{10}$/.test(payeeId) || referenceId !== payeeId) {
-    return json({ error: "A valid technician mobile number is required" }, 400);
+  let paymentRow: Record<string, unknown>;
+
+  if (payeeType === "technician" && body.purpose === "registration_fee") {
+    if (amount !== 50 || !/^\d{10}$/.test(payeeId) || referenceId !== payeeId) {
+      return json({ error: "Only the ₹50 technician registration payment is supported" }, 400);
+    }
+    paymentRow = {
+      payee_type: "technician",
+      payee_id: payeeId,
+      payee_name: payeeName || "VATTAMS Global Technologies Private Limited",
+      upi_id: "venkatesan04051985-5@oksbi",
+      amount: 50,
+      purpose: "registration_fee",
+      reference_id: payeeId,
+      status: "pending",
+      notes,
+    };
+  } else if (payeeType === "customer" && body.purpose === "booking") {
+    if (!/^\d{10}$/.test(payeeId) || !referenceId) {
+      return json({ error: "A valid customer mobile number and booking reference are required" }, 400);
+    }
+
+    // Customer payment records can only be created for a real booking belonging
+    // to that mobile number, and only for the exact amount stored on the booking.
+    const { data: booking, error: bookingError } = await supabase
+      .from("bookings")
+      .select("id,booking_number,mobile_number,total_amount,amount")
+      .or(`id.eq.${referenceId},booking_number.eq.${referenceId}`)
+      .maybeSingle();
+
+    const bookingAmount = Number(booking?.total_amount ?? booking?.amount);
+    if (
+      bookingError ||
+      !booking ||
+      String(booking.mobile_number).replace(/\D/g, "") !== payeeId ||
+      !Number.isFinite(bookingAmount) ||
+      bookingAmount !== amount
+    ) {
+      return json({ error: "Booking, customer mobile, or payable amount could not be verified" }, 403);
+    }
+
+    paymentRow = {
+      payee_type: "customer",
+      payee_id: payeeId,
+      payee_name: payeeName || null,
+      upi_id: "venkatesan04051985-5@oksbi",
+      amount,
+      purpose: "booking",
+      reference_id: String(booking.id),
+      status: "pending",
+      notes,
+    };
+  } else {
+    return json({ error: "Unsupported payment purpose" }, 400);
   }
 
-  const { data, error } = await supabase.from("payments").insert({
-    payee_type: "technician",
-    payee_id: payeeId,
-    payee_name: payeeName || 'VATTAMS Global Technologies Private Limited',
-    upi_id: "venkatesan04051985-5@oksbi",
-    amount: 50,
-    purpose: "registration_fee",
-    reference_id: payeeId,
-    status: "pending",
-    notes,
-  }).select("*").single();
-
-  if (error || !data) return json({ error: error?.message || "Unable to create payment record" }, 500);
+  const { data, error } = await supabase.from("payments").insert(paymentRow).select("*").single();
+  if (error || !data) return json({ error: "Unable to create payment record" }, 500);
   return json({ payment: data });
 }
 
