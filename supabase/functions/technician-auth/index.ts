@@ -90,7 +90,7 @@ Deno.serve(async (req: Request) => {
 async function handleRegister(supabase: ReturnType<typeof createClient>, body: RegisterBody) {
   const { full_name, mobile, email, city, service_categories, experience_years, id_proof_type, id_proof_number, password,
     whatsapp_number, area, pincode, available_days, working_time, has_vehicle, has_tools,
-    aadhaar_url, pan_url, dl_url, profile_photo_url, bank_name, bank_holder_name, bank_account_number, bank_ifsc, upi_id, registration_payment_id } = body;
+    aadhaar_url, pan_url, dl_url, profile_photo_url, bank_name, bank_holder_name, bank_account_number, bank_ifsc, upi_id } = body;
 
   const normalizedMobile = String(mobile || "").replace(/\D/g, "");
   if (!full_name?.trim() || !normalizedMobile || !city?.trim() || !password) {
@@ -107,37 +107,7 @@ async function handleRegister(supabase: ReturnType<typeof createClient>, body: R
     );
   }
 
-  // Technician applications require the one-time ₹49 joining fee.
-  // The payment must be linked to this mobile number and have a UTR
-  // confirmation before the application can be created.
-  if (!registration_payment_id) {
-    return new Response(
-      JSON.stringify({ error: "₹49 technician joining fee payment is required before submitting your application." }),
-      { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
-  }
-
-  const { data: registrationPayment, error: paymentError } = await supabase
-    .from("payments")
-    .select("payment_id, payee_type, payee_id, amount, purpose, utr, status")
-    .eq("payment_id", registration_payment_id)
-    .maybeSingle();
-
-  if (
-    paymentError ||
-    !registrationPayment ||
-    registrationPayment.payee_type !== "technician" ||
-    registrationPayment.payee_id !== normalizedMobile ||
-    Number(registrationPayment.amount) !== 49 ||
-    registrationPayment.purpose !== "registration_fee" ||
-    !registrationPayment.utr ||
-    !["pending", "success"].includes(String(registrationPayment.status))
-  ) {
-    return new Response(
-      JSON.stringify({ error: "Valid ₹49 technician joining fee payment confirmation is required." }),
-      { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
-  }
+  // Technician onboarding is free. No registration payment is required.
 
   const salt = await bcrypt.genSalt(10);
   const passwordHash = await bcrypt.hash(password, salt);
@@ -155,6 +125,7 @@ async function handleRegister(supabase: ReturnType<typeof createClient>, body: R
       id_proof_type: id_proof_type || null,
       id_proof_number: id_proof_number || null,
       status: "pending",
+      registration_payment_id: null,
       password_hash: passwordHash,
       whatsapp_number: whatsapp_number || null,
       area: area || null,
