@@ -80,17 +80,48 @@ export default function Booking() {
       } catch { /* ignore */ }
     }
 
+    let aiDraft: Record<string, unknown> | null = null;
+    try {
+      const draft = sessionStorage.getItem('vattams_ai_booking_draft');
+      if (draft) aiDraft = JSON.parse(draft) as Record<string, unknown>;
+    } catch {
+      sessionStorage.removeItem('vattams_ai_booking_draft');
+    }
+
     Promise.all([
       supabase.from('service_categories').select('*').order('created_at'),
       supabase.from('service_prices').select('*').eq('is_active', true),
       supabase.from('customer_service_prices').select('*').eq('is_active', true),
     ]).then(([catRes, priceRes, customerPriceRes]) => {
+      let featuredServices: ServiceCategory[] = [];
       if (catRes.data) {
-        const featuredServices = catRes.data
+        featuredServices = catRes.data
           .filter((service) => isCustomerBookingCategory(service.name))
           .sort((a, b) => customerCategoryOrder.indexOf(a.name) - customerCategoryOrder.indexOf(b.name));
         setServices(featuredServices);
         if (featuredServices[0]) setForm((f) => ({ ...f, service_category: featuredServices[0].name, service_type: getServiceTypes(featuredServices[0].name)[0] ?? '' }));
+      }
+
+      if (aiDraft) {
+        const requested = String(aiDraft.service_category ?? '').toLowerCase();
+        const mappedCategory = requested.includes('ac')
+          ? 'AC Service'
+          : requested.includes('washing machine')
+            ? 'Washing Machine'
+            : requested.includes('refrigerator') || requested.includes('fridge')
+              ? 'Refrigerator'
+              : '';
+        if (mappedCategory && featuredServices.some((service) => service.name === mappedCategory)) {
+          setForm((f) => ({
+            ...f,
+            service_category: mappedCategory,
+            service_type: getServiceTypes(mappedCategory)[0] ?? '',
+            problem_description: String(aiDraft?.problem_description ?? f.problem_description),
+            city: bookingCities.includes(String(aiDraft?.city ?? '')) ? String(aiDraft?.city) : f.city,
+            preferred_time: timeSlots.includes(String(aiDraft?.preferred_time ?? '')) ? String(aiDraft?.preferred_time) : f.preferred_time,
+          }));
+        }
+        sessionStorage.removeItem('vattams_ai_booking_draft');
       }
       if (priceRes.data) {
         const map: Record<string, ServicePrice> = {};
