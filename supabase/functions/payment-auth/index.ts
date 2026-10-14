@@ -66,11 +66,12 @@ async function createPayment(body: Record<string, unknown>) {
 
     // Customer payment records can only be created for a real booking belonging
     // to that mobile number, and only for the exact amount stored on the booking.
-    const { data: booking, error: bookingError } = await supabase
+    const bookingQuery = supabase
       .from("bookings")
-      .select("id,booking_number,mobile_number,total_amount,amount")
-      .or(`id.eq.${referenceId},booking_number.eq.${referenceId}`)
-      .maybeSingle();
+      .select("id,booking_number,mobile_number,total_amount,amount");
+    const { data: booking, error: bookingError } = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(referenceId)
+      ? await bookingQuery.eq("id", referenceId).maybeSingle()
+      : await bookingQuery.eq("booking_number", referenceId).maybeSingle();
 
     const bookingAmount = Number(booking?.total_amount ?? booking?.amount);
     if (
