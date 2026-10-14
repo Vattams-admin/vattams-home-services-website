@@ -70,6 +70,10 @@ export default function TechnicianRegister() {
   const [joinFeePaid, setJoinFeePaid] = useState(false);
   const [joinFeePaymentId, setJoinFeePaymentId] = useState<string | null>(null);
 
+  // Preserve the payment reference across refreshes so a completed payment
+  // does not become detached from the same-device registration draft.
+  const paymentDraftKey = 'vattams_technician_registration_payment_v1';
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const submittingRef = useRef(false);
@@ -87,6 +91,19 @@ export default function TechnicianRegister() {
   // device). Runs once on mount, before the default-first-question effect
   // below, so we don't flash the "Welcome" question if a draft exists.
   useEffect(() => {
+    try {
+      const rawPayment = window.localStorage.getItem(paymentDraftKey);
+      if (rawPayment) {
+        const savedPayment = JSON.parse(rawPayment);
+        if (savedPayment?.mobile && savedPayment.mobile === form.mobile && typeof savedPayment.paymentId === 'string') {
+          setJoinFeePaid(true);
+          setJoinFeePaymentId(savedPayment.paymentId);
+        }
+      }
+    } catch {
+      // Ignore unavailable or malformed payment-draft metadata.
+    }
+
     const draft = loadRegistrationDraft();
 
     if (draft && draft.stepIndex > 0 && draft.stepIndex < STEPS.length) {
@@ -473,6 +490,11 @@ export default function TechnicianRegister() {
       await submitTechnicianApplication(form, joinFeePaymentId || undefined);
 
       clearRegistrationDraft();
+      try {
+        window.localStorage.removeItem(paymentDraftKey);
+      } catch {
+        // Ignore unavailable local storage.
+      }
       setSuccess(true);
     } catch (err: any) {
       console.error('Registration Error:', err);
@@ -1138,6 +1160,15 @@ export default function TechnicianRegister() {
               onSuccess={(paymentId) => {
                 setJoinFeePaid(true);
                 setJoinFeePaymentId(paymentId);
+                try {
+                  window.localStorage.setItem(paymentDraftKey, JSON.stringify({
+                    mobile: form.mobile,
+                    paymentId,
+                    savedAt: Date.now(),
+                  }));
+                } catch {
+                  // Registration remains usable if local storage is unavailable.
+                }
                 setShowJoinFeePayment(false);
               }}
             />
