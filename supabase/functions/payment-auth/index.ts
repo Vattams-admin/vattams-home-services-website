@@ -118,12 +118,13 @@ async function submitUtr(body: Record<string, unknown>) {
     return json({ error: "Invalid UTR format" }, 400);
   }
 
-  const { data: duplicateUtr } = await supabase.from("payments")
+  const { data: duplicateUtr, error: duplicateUtrError } = await supabase.from("payments")
     .select("payment_id")
     .eq("utr", utr)
     .neq("payment_id", paymentId)
     .limit(1)
     .maybeSingle();
+  if (duplicateUtrError) return json({ error: "Unable to validate UTR uniqueness; please retry" }, 500);
   if (duplicateUtr) return json({ error: "This UTR is already linked to another payment" }, 409);
 
   const { data, error } = await supabase.from("payments")
