@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { X, Loader, Copy, CheckCircle, AlertCircle, Smartphone } from 'lucide-react';
 import {
   DEFAULT_UPI_ID, PAYEE_NAME,
@@ -35,8 +35,17 @@ export default function PaymentModal({
   const [copied, setCopied] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [loadingQr, setLoadingQr] = useState(false);
+  const paymentKeyRef = useRef('');
 
   const initPayment = useCallback(async () => {
+    const paymentKey = [payeeType, payeeId, amount, purpose, referenceId || ''].join(':');
+    // Reopening the same modal must not create another payment row for the same attempt.
+    if (paymentRecordId && paymentKeyRef.current === paymentKey) return;
+    paymentKeyRef.current = paymentKey;
+    setPaymentRecordId(null);
+    setPaymentActionToken(null);
+    setQrDataUrl('');
+    setUpiLink('');
     setLoadingQr(true);
     setErrorMsg('');
     setStep('qr');
@@ -71,7 +80,7 @@ export default function PaymentModal({
       setStep('error');
     }
     setLoadingQr(false);
-  }, [amount, note, payeeType, payeeId, payeeName, purpose, referenceId]);
+  }, [amount, note, payeeType, payeeId, payeeName, purpose, referenceId, paymentRecordId]);
 
   useEffect(() => {
     if (open) initPayment();
@@ -241,7 +250,7 @@ export default function PaymentModal({
                 <CheckCircle size={40} className="text-green-600" />
               </div>
               <div>
-                <h3 className="text-xl font-extrabold text-gray-900 mb-1">Payment Submitted!</h3>
+                <h3 className="text-xl font-extrabold text-amber-900 mb-1">UTR Submitted — Verification Pending</h3>
                 <p className="text-sm text-gray-500">
                   Your payment of {formatCurrency(amount)} has been recorded with UTR: <span className="font-mono font-semibold">{utr}</span>.
                   It will be verified by our team shortly.
