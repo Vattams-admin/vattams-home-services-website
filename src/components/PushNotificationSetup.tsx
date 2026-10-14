@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BellRing, CheckCircle2, Loader2, ShieldCheck } from 'lucide-react';
 import { initFCM } from '@/lib/fcm';
 
@@ -18,6 +18,37 @@ export default function PushNotificationSetup({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [connected, setConnected] = useState(false);
+
+  // Reconnect automatically when this account already granted browser
+  // permission. This restores the device token after a fresh login/session
+  // without prompting again or requiring the user to press the button twice.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('Notification' in window) || Notification.permission !== 'granted') {
+      return;
+    }
+    let cancelled = false;
+    setBusy(true);
+    void initFCM(userType, userId)
+      .then((token) => {
+        if (cancelled) return;
+        setConnected(Boolean(token));
+        setMessage(token
+          ? 'This device is registered for push notifications.'
+          : 'Browser permission is allowed, but device registration failed. Check Firebase/VAPID configuration and retry.');
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setConnected(false);
+          setMessage('Device registration failed. Check Firebase/VAPID configuration and retry.');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setBusy(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [userType, userId]);
 
   const connectThisDevice = async () => {
     setMessage('');
