@@ -175,13 +175,13 @@ async function verifyPayment(body: Record<string, unknown>) {
 async function reconcileLegacyPayment(body: Record<string, unknown>) {
   const paymentId = String(body.payment_id ?? "").trim();
   const expectedUtr = String(body.utr ?? "").trim();
-  const expectedPayeeId = String(body.expected_payee_id ?? "").replace(/\\D/g, "");
+  const expectedPayeeId = String(body.technician_mobile ?? "").replace(/\\D/g, "");
   const reason = String(body.reconciliation_reason ?? "").trim();
   const adminId = String(body.admin_id ?? "").trim();
   const adminSessionToken = String(body.admin_session_token ?? "").trim();
 
   if (!paymentId || !expectedUtr || !/^\\d{10}$/.test(expectedPayeeId) || reason.length < 20 || !adminId || !adminSessionToken) {
-    return json({ error: "Payment ID, matching UTR, expected 10-digit technician mobile, a reconciliation reason (at least 20 characters), and admin authorization are required" }, 400);
+    return json({ error: "Payment ID, matching UTR, matching 10-digit technician mobile, a reconciliation reason (at least 20 characters), and admin authorization are required" }, 400);
   }
 
   const { data: session, error: sessionError } = await supabase
