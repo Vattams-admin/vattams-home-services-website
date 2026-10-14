@@ -107,9 +107,9 @@ async function handleRegister(supabase: ReturnType<typeof createClient>, body: R
     );
   }
 
-  // Technician applications require the one-time ₹50 joining fee.
-  // The payment must be linked to this mobile number and have a UTR
-  // confirmation before the application can be created.
+  // New registrations require the verified one-time ₹50 joining fee.
+  // Legacy ₹49 payments are accepted only after admin verification metadata is recorded.
+  // A UTR alone is not settlement proof; pending payments cannot create accounts.
   if (!registration_payment_id) {
     return new Response(
       JSON.stringify({ error: "₹50 technician joining fee payment is required before submitting your application." }),
@@ -119,7 +119,7 @@ async function handleRegister(supabase: ReturnType<typeof createClient>, body: R
 
   const { data: registrationPayment, error: paymentError } = await supabase
     .from("payments")
-    .select("payment_id, payee_type, payee_id, amount, purpose, utr, status")
+    .select("payment_id, payee_type, payee_id, amount, purpose, utr, status, verified_by, verified_at")
     .eq("payment_id", registration_payment_id)
     .maybeSingle();
 
@@ -128,13 +128,15 @@ async function handleRegister(supabase: ReturnType<typeof createClient>, body: R
     !registrationPayment ||
     registrationPayment.payee_type !== "technician" ||
     registrationPayment.payee_id !== normalizedMobile ||
-    Number(registrationPayment.amount) !== 50 ||
+    ![49, 50].includes(Number(registrationPayment.amount)) ||
     registrationPayment.purpose !== "registration_fee" ||
     !registrationPayment.utr ||
-    !["pending", "success"].includes(String(registrationPayment.status))
+    registrationPayment.status !== "success" ||
+    !registrationPayment.verified_by ||
+    !registrationPayment.verified_at
   ) {
     return new Response(
-      JSON.stringify({ error: "Valid ₹50 technician joining fee payment confirmation is required." }),
+      JSON.stringify({ error: "A successfully verified technician joining fee payment is required. Legacy ₹49 payments must be reconciled by an admin before registration." }),
       { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
