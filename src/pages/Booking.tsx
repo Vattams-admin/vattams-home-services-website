@@ -205,8 +205,8 @@ export default function Booking() {
           <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
             <CheckCircle size={40} className="text-green-600" />
           </div>
-          <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Booking Confirmed!</h2>
-          <p className="text-gray-500 mb-4">Your service request has been received. Our team will contact you shortly.</p>
+          <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Booking Request Received!</h2>
+          <p className="text-gray-500 mb-4">Your request is recorded and awaiting technician assignment. Our team will contact you shortly to confirm the appointment.</p>
           <div className="bg-gold-50 rounded-xl p-4 mb-6">
             <div className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Your Booking Number</div>
             <div className="text-xl font-extrabold text-gold-700">{success.number}</div>
