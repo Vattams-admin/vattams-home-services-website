@@ -51,6 +51,7 @@ export default function Booking() {
   const [servicePrices, setServicePrices] = useState<Record<string, ServicePrice>>({});
   const [customerServicePrices, setCustomerServicePrices] = useState<Record<string, CustomerServicePrice>>({});
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [couponResult, setCouponResult] = useState<{ valid: boolean; error?: string; discountAmount: number; coupon?: Coupon } | null>(null);
@@ -80,17 +81,59 @@ export default function Booking() {
       } catch { /* ignore */ }
     }
 
+    let aiDraft: Record<string, unknown> | null = null;
+    try {
+      const draft = sessionStorage.getItem('vattams_ai_booking_draft');
+      if (draft) aiDraft = JSON.parse(draft) as Record<string, unknown>;
+    } catch {
+      sessionStorage.removeItem('vattams_ai_booking_draft');
+    }
+
     Promise.all([
       supabase.from('service_categories').select('*').order('created_at'),
       supabase.from('service_prices').select('*').eq('is_active', true),
       supabase.from('customer_service_prices').select('*').eq('is_active', true),
     ]).then(([catRes, priceRes, customerPriceRes]) => {
+      let featuredServices: ServiceCategory[] = [];
       if (catRes.data) {
-        const featuredServices = catRes.data
+        featuredServices = catRes.data
           .filter((service) => isCustomerBookingCategory(service.name))
           .sort((a, b) => customerCategoryOrder.indexOf(a.name) - customerCategoryOrder.indexOf(b.name));
         setServices(featuredServices);
         if (featuredServices[0]) setForm((f) => ({ ...f, service_category: featuredServices[0].name, service_type: getServiceTypes(featuredServices[0].name)[0] ?? '' }));
+      }
+
+      if (aiDraft) {
+        const requested = String(aiDraft.service_category ?? '').toLowerCase();
+        const mappedCategory = requested.includes('ac')
+          ? 'AC Service'
+          : requested.includes('washing machine')
+            ? 'Washing Machine'
+            : requested.includes('refrigerator') || requested.includes('fridge')
+              ? 'Refrigerator'
+              : '';
+        const draftLocation = String(aiDraft.city ?? '').trim();
+        const normalizedLocation = draftLocation.toLowerCase();
+        const matchedCity = bookingCities.find((city) =>
+          normalizedLocation === city.toLowerCase() || normalizedLocation.includes(city.toLowerCase())
+        );
+        const draftCity = matchedCity ?? (draftLocation && normalizedLocation !== 'other' ? 'Other' : undefined);
+        const draftAddress = draftLocation && (!matchedCity || normalizedLocation !== matchedCity.toLowerCase())
+          ? draftLocation
+          : '';
+
+        if (mappedCategory && featuredServices.some((service) => service.name === mappedCategory)) {
+          setForm((f) => ({
+            ...f,
+            service_category: mappedCategory,
+            service_type: getServiceTypes(mappedCategory)[0] ?? '',
+            problem_description: String(aiDraft.problem_description ?? f.problem_description),
+            city: draftCity ?? f.city,
+            address: draftAddress || f.address,
+            preferred_time: timeSlots.includes(String(aiDraft.preferred_time ?? '')) ? String(aiDraft.preferred_time) : f.preferred_time,
+          }));
+        }
+        sessionStorage.removeItem('vattams_ai_booking_draft');
       }
       if (priceRes.data) {
         const map: Record<string, ServicePrice> = {};
@@ -104,6 +147,17 @@ export default function Booking() {
           .forEach((price) => { map[getCustomerPriceKey(price.service_category, price.service_type)] = price; });
         setCustomerServicePrices(map);
       }
+      if (catRes.error) {
+        setLoadError('Unable to load service categories. Please refresh the page or contact support.');
+      } else if (priceRes.error || customerPriceRes.error) {
+        setLoadError('Unable to load current service prices. Please refresh the page before booking.');
+      } else if (!featuredServices.length) {
+        setLoadError('No appliance service categories are available right now.');
+      }
+      setLoading(false);
+    }).catch((error) => {
+      console.error('[Booking] service/pricing load failed:', error);
+      setLoadError('Service information could not be loaded. Check your connection and try again.');
       setLoading(false);
     });
   }, []);
@@ -186,9 +240,10 @@ export default function Booking() {
     trackMarketingEvent('generate_lead', { service_category: form.service_category, service_type: form.service_type });
     setSuccess({ number: data.booking_number, id: data.id });
 
-    await Promise.all([
-      notifyCustomer.bookingReceived(form.mobile_number, data.booking_number, data.id, data.booking_action_token),
-    ]);
+    // Notification delivery must not block technician assignment if the SMS/WhatsApp
+    // provider fails or is temporarily unavailable.
+    void notifyCustomer.bookingReceived(form.mobile_number, data.booking_number, data.id, data.booking_action_token)
+      .catch((notificationError) => console.error('[Booking] booking-received notification failed:', notificationError));
 
     // Automatically find and assign the best matching technician (no manual
     // accept needed). If none are eligible, the booking simply stays
@@ -205,8 +260,8 @@ export default function Booking() {
           <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
             <CheckCircle size={40} className="text-green-600" />
           </div>
-          <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Booking Confirmed!</h2>
-          <p className="text-gray-500 mb-4">Your service request has been received. Our team will contact you shortly.</p>
+          <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Booking Request Received!</h2>
+          <p className="text-gray-500 mb-4">Your request is recorded and awaiting technician assignment. Our team will contact you shortly to confirm the appointment.</p>
           <div className="bg-gold-50 rounded-xl p-4 mb-6">
             <div className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Your Booking Number</div>
             <div className="text-xl font-extrabold text-gold-700">{success.number}</div>
@@ -266,6 +321,11 @@ export default function Booking() {
           </button>
 
           <div className="bg-white rounded-2xl border border-[#e8e1d2] shadow-sm p-6 md:p-8">
+            {loadError && (
+              <div role="alert" className="mb-5 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+                {loadError}
+              </div>
+            )}
             {loading ? (
               <div className="flex justify-center py-16">
                 <Loader className="animate-spin text-navy-700" size={32} />

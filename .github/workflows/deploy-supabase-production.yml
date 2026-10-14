@@ -1,14 +1,12 @@
 name: Deploy Supabase Production
 
 on:
-  push:
-    branches: [main]
+  # Production backend changes require an explicit, deliberate dispatch.
+  # Do not deploy database migrations or Edge Functions automatically on merge.
   workflow_dispatch:
 
 permissions:
   contents: read
-
-# Production deployment is automatic for every main-branch change.
 
 jobs:
   deploy:

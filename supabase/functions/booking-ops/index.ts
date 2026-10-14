@@ -87,7 +87,7 @@ Deno.serve(async (req: Request) => {
       }
       const allowedStatuses = new Set(["pending"]);
       const b = booking || {};
-      if (!b.customer_name || !b.mobile_number || !b.city || !b.address || !b.service_category || !b.problem_description) {
+      if (!String(b.customer_name ?? "").trim() || !String(b.mobile_number ?? "").replace(/\D/g, "").match(/^\d{10}$/) || !String(b.city ?? "").trim() || !String(b.address ?? "").trim() || !String(b.service_category ?? "").trim()) {
         return new Response(JSON.stringify({ error: "Required booking fields are missing" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
       if (!isFeaturedApplianceService(b.service_category)) {
@@ -140,7 +140,7 @@ Deno.serve(async (req: Request) => {
         address: String(b.address).slice(0,500),
         service_category: String(b.service_category).slice(0,100),
         service_type: serviceType.slice(0,100),
-        problem_description: String(b.problem_description).slice(0,2000),
+        problem_description: String(b.problem_description ?? "").trim().slice(0,2000),
         preferred_date: b.preferred_date || null,
         preferred_time: b.preferred_time || null,
         amount: totalAmount,
@@ -254,20 +254,32 @@ Deno.serve(async (req: Request) => {
       // account not locked (dues cleared).
       const { data: candidates } = await supabase
         .from("technicians")
-        .select("id, full_name, rating, total_jobs, current_workload, is_online, last_active_at")
+        .select("id, full_name, rating, total_jobs, current_workload, is_online, last_active_at, service_categories")
         .eq("city", booking.city)
         .eq("status", "active")
         .eq("wallet_locked", false)
-        .contains("service_categories", [booking.service_category]) as { data: { id: string; full_name: string; rating: number; total_jobs: number; current_workload: number; is_online: boolean; last_active_at: string | null }[] | null; error: unknown };
+         as { data: { id: string; full_name: string; rating: number; total_jobs: number; current_workload: number; is_online: boolean; last_active_at: string | null; service_categories: string[] | null }[] | null; error: unknown };
 
-      if (!candidates || candidates.length === 0) {
+      const categoryAliases: Record<string, string[]> = {
+        "ac service": ["ac service", "ac technician", "ac repair", "air conditioner service"],
+        "washing machine": ["washing machine", "washing machine repair", "washing machine technician", "home appliance repair"],
+        "refrigerator": ["refrigerator", "refrigerator repair", "fridge", "home appliance repair"],
+      };
+      const requestedCategory = String(booking.service_category ?? "").trim().toLowerCase();
+      const acceptedCategories = categoryAliases[requestedCategory] ?? [requestedCategory];
+      const eligibleCandidates = (candidates ?? []).filter((candidate) =>
+        (candidate.service_categories ?? []).some((category) =>
+          acceptedCategories.includes(String(category).trim().toLowerCase())
+        )
+      );
+      if (eligibleCandidates.length === 0) {
         return new Response(JSON.stringify({ success: true, assigned: false, reason: "no_eligible_technician" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
       // Exclude technicians who already have an active job.
-      const candidateIds = candidates.map((c) => c.id);
+      const candidateIds = eligibleCandidates.map((c) => c.id);
       const { data: busy } = await supabase
         .from("technician_jobs")
         .select("technician_id")
@@ -275,7 +287,7 @@ Deno.serve(async (req: Request) => {
         .in("status", ["assigned", "accepted", "on_the_way", "in_progress", "job_started"]) as { data: { technician_id: string }[] | null; error: unknown };
 
       const busyIds = new Set((busy ?? []).map((b) => b.technician_id));
-      const free = candidates.filter((c) => !busyIds.has(c.id));
+      const free = eligibleCandidates.filter((c) => !busyIds.has(c.id));
 
       if (free.length === 0) {
         return new Response(JSON.stringify({ success: true, assigned: false, reason: "all_technicians_busy" }), {
@@ -304,11 +316,42 @@ Deno.serve(async (req: Request) => {
         });
       }
 
-      const { data: jobData } = await supabase
+      const { data: jobData, error: jobInsertError } = await supabase
         .from("technician_jobs")
         .insert({ booking_id, technician_id: chosen.id, status: "assigned", job_amount: Number(booking.base_price ?? 0), call_rate_fee: Number(booking.call_rate_fee) || 0, service_type: String(booking.service_type ?? "") || null })
         .select("*")
         .single() as { data: Record<string, unknown> | null; error: unknown };
+
+      // Do not leave a booking marked assigned when the corresponding job
+      // record failed to persist. Restore it to pending only if this request
+      // still owns the assignment, so we cannot undo a concurrent admin change.
+      if (jobInsertError || !jobData) {
+        const { data: rolledBackBooking, error: rollbackError } = await supabase
+          .from("bookings")
+          .update({
+            assigned_technician_id: null,
+            status: "pending",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", booking_id)
+          .eq("assigned_technician_id", chosen.id)
+          .eq("status", "assigned")
+          .select("id")
+          .maybeSingle();
+        if (rollbackError || !rolledBackBooking) {
+          console.error("[booking-ops auto_assign] job insert failed; rollback failed or assignment ownership changed");
+        } else {
+          console.error("[booking-ops auto_assign] job insert failed; booking returned to pending");
+        }
+        return new Response(JSON.stringify({
+          success: false,
+          assigned: false,
+          reason: "job_creation_failed",
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
       // Two notification writes here:
       //  1. `technician_notifications` — preserved as-is; TechnicianDashboard

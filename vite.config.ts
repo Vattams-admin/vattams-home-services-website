@@ -84,6 +84,12 @@ function prerenderSeoPages() {
       const baseUrl = 'https://vattams.net';
       const serviceLinks = '<nav aria-label="Primary"><a href="/">Home</a> · <a href="/services">Service prices</a> · <a href="/booking">Book a service</a> · <a href="/contact">Contact</a></nav>';
       for (const city of cities) {
+        // Keep prerendered HTML and FAQ structured data aligned with the
+        // appliance-only public catalog; the interactive city page applies
+        // the same exclusion rules.
+        const publicFAQs = city.faqs.filter((faq) =>
+          !/CCTV|electrical|plumbing|RO water|water purifier|microwave|electrician/i.test(`${faq.q} ${faq.a}`)
+        );
         const canonical = `${baseUrl}/areas/${city.slug}`;
         const providerId = `${baseUrl}/#organization`;
         const schema = {
@@ -111,7 +117,7 @@ function prerenderSeoPages() {
             })) : []),
             {
               '@type': 'FAQPage',
-              mainEntity: city.faqs.map((faq) => ({
+              mainEntity: publicFAQs.map((faq) => ({
                 '@type': 'Question',
                 name: faq.q,
                 acceptedAnswer: { '@type': 'Answer', text: faq.a },
@@ -125,7 +131,7 @@ function prerenderSeoPages() {
           <p>Appointment availability depends on your address, selected job type and technician schedule. Confirm availability in the booking flow.</p>
           <p><a href="/services">View service categories and prices</a> · <a href="/booking">Check appointment options</a></p>
           ${city.contentSections.map((section) => `<section><h2>${escapeHtml(section.heading)}</h2><p>${escapeHtml(section.body)}</p></section>`).join('')}
-          <section><h2>Frequently Asked Questions</h2>${city.faqs.map((faq) => `<details><summary>${escapeHtml(faq.q)}</summary><p>${escapeHtml(faq.a)}</p></details>`).join('')}</section>
+          <section><h2>Frequently Asked Questions</h2>${publicFAQs.map((faq) => `<details><summary>${escapeHtml(faq.q)}</summary><p>${escapeHtml(faq.a)}</p></details>`).join('')}</section>
           <section><h2>Neighbourhood references</h2><p>${escapeHtml(city.nearbyAreas.join(', '))}. Availability for any address is confirmed during booking.</p></section>
           <p><a href="/booking">Book appliance service</a></p></main><footer><a href="/contact">Contact VATTAMS</a></footer>`;
         let pageHtml = renderPage({ title: city.seoTitle, description: city.metaDescription, canonical, body, schema, schemaKey: 'city' });

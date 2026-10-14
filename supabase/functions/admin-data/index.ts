@@ -25,6 +25,74 @@ case "notifications":{const {data,error}=await db.from("notifications").select("
 case "notification_read":{const {data,error}=await db.from("notifications").update({is_read:true,read_at:new Date().toISOString(),status:"read"}).eq("id",b.notification_id).eq("recipient_type","admin").eq("recipient_id","admin").select("*").single();if(error)return out({error:"Unable to update notification"},400);return out({notification:data});}
 case "notifications_read_all":{const {error}=await db.from("notifications").update({is_read:true,read_at:new Date().toISOString(),status:"read"}).eq("recipient_type","admin").eq("recipient_id","admin").eq("is_read",false);if(error)return out({error:"Unable to update notifications"},400);return out({success:true});}
 case "notification_delete":{const {error}=await db.from("notifications").delete().eq("id",b.notification_id).eq("recipient_type","admin").eq("recipient_id","admin");if(error)return out({error:"Unable to delete notification"},400);return out({success:true});}
+case "technician_call_rates":{
+const {data,error}=await db.from("technician_call_rates").select("id,service_category,service_type,call_rate_fee,is_active,updated_at").order("service_category").order("service_type");
+if(error)return out({error:"Unable to load technician call-rate fees"},500);
+return out({rates:data||[]});
+}
+case "save_technician_call_rates":{
+const updates=Array.isArray(b.updates)?b.updates:[];
+if(updates.length>100)return out({error:"Too many technician fee updates"},400);
+const allowedTypes:Record<string,string[]>={
+"AC Service":["General Service","Installation","Gas Filling","Pump Water Service","Coil Service"],
+"AC Repair":["General Service","Installation","Gas Filling","Pump Water Service","Coil Service"],
+"Washing Machine":["Washing Machine Service"],
+"Washing Machine Repair":["Washing Machine Service"],
+"Refrigerator":["Refrigerator Service"],
+"Refrigerator Repair":["Refrigerator Service"]
+};
+for(const u of updates){
+const fee=Number(u?.call_rate_fee);
+if(!u?.id||!Number.isFinite(fee)||fee<0||typeof u.is_active!=="boolean")
+return out({error:"Invalid technician call-rate fee"},400);
+const {data:current,error:lookupError}=await db.from("technician_call_rates").select("id,service_category,service_type").eq("id",String(u.id)).maybeSingle();
+if(lookupError||!current)return out({error:"Technician call-rate row not found"},404);
+if(!allowedTypes[String(current.service_category)]?.includes(String(current.service_type)))
+return out({error:"This technician job type is not supported"},400);
+const {error}=await db.from("technician_call_rates").update({
+call_rate_fee:fee,
+is_active:u.is_active,
+updated_at:new Date().toISOString()
+}).eq("id",String(u.id));
+if(error)return out({error:"Unable to save technician call-rate fee"},400);
+}
+return out({success:true});
+}
+case "customer_service_prices":{
+const {data,error}=await db.from("customer_service_prices").select("id,service_category,service_type,base_price,price_label,is_active,updated_at").order("service_category").order("service_type");
+if(error)return out({error:"Unable to load customer job prices"},500);
+return out({prices:data||[]});
+}
+case "save_customer_service_prices":{
+const updates=Array.isArray(b.updates)?b.updates:[];
+if(updates.length>100)return out({error:"Too many customer price updates"},400);
+const allowedTypes:Record<string,string[]>={
+"AC Service":["General Service","Installation","Gas Filling","Pump Water Service","Coil Service"],
+"AC Repair":["General Service","Installation","Gas Filling","Pump Water Service","Coil Service"],
+"Washing Machine":["Washing Machine Service"],
+"Washing Machine Repair":["Washing Machine Service"],
+"Refrigerator":["Refrigerator Service"],
+"Refrigerator Repair":["Refrigerator Service"]
+};
+for(const u of updates){
+const basePrice=Number(u?.base_price);
+const priceLabel=String(u?.price_label??"").trim();
+if(!u?.id||!Number.isFinite(basePrice)||basePrice<0||typeof u.is_active!=="boolean"||!priceLabel||priceLabel.length>120)
+return out({error:"Invalid customer job price"},400);
+const {data:current,error:lookupError}=await db.from("customer_service_prices").select("id,service_category,service_type").eq("id",String(u.id)).maybeSingle();
+if(lookupError||!current)return out({error:"Customer job price not found"},404);
+if(!allowedTypes[String(current.service_category)]?.includes(String(current.service_type)))
+return out({error:"This customer job type is not supported"},400);
+const {error}=await db.from("customer_service_prices").update({
+base_price:basePrice,
+price_label:priceLabel,
+is_active:u.is_active,
+updated_at:new Date().toISOString()
+}).eq("id",String(u.id));
+if(error)return out({error:"Unable to save customer job price"},400);
+}
+return out({success:true});
+}
 case "service_prices":{const {data,error}=await db.from("service_prices").select("*").order("service_name");if(error)return out({error:"Unable to load service prices"},500);return out({prices:data||[]});}
 case "save_service_prices":{const updates=Array.isArray(b.updates)?b.updates:[];if(updates.length>200)return out({error:"Too many price updates"},400);for(const u of updates){if(!u?.id||Number(u.base_price)<0||Number(u.gst_rate)<0||Number(u.platform_fee)<0||!Number.isFinite(Number(u.call_rate_fee))||Number(u.call_rate_fee)<0)return out({error:"Invalid service price"},400);const {data:current,error:lookupError}=await db.from("service_prices").select("service_name").eq("id",String(u.id)).maybeSingle();if(lookupError||!current)return out({error:"Service price not found"},404);const appliance=["AC Repair","AC Service","Washing Machine","Washing Machine Repair","Refrigerator","Refrigerator Repair"].includes(String(current.service_name));if(Boolean(u.is_active)&&!appliance)return out({error:"Only AC, washing machine, and refrigerator services can be active"},400);const {error}=await db.from("service_prices").update({base_price:Number(u.base_price)||0,gst_rate:Number(u.gst_rate)||0,platform_fee:Number(u.platform_fee)||0,commission_rate:0,call_rate_fee:Number(u.call_rate_fee)||0,is_active:Boolean(u.is_active),updated_at:new Date().toISOString()}).eq("id",String(u.id));if(error)return out({error:"Unable to save service prices"},400);}return out({success:true});}
 case "site_settings":{const {data,error}=await db.from("site_settings").select("*").eq("id",1).maybeSingle();if(error)return out({error:"Unable to load site settings"},500);return out({settings:data||null});}
