@@ -576,7 +576,7 @@ export default function TechnicianRegister() {
           </h1>
 
           <p className="text-white/90 text-sm">
-            Register for AC, washing machine and refrigerator job opportunities. One-time joining fee: ₹49. Our AI guides you step by step
+            Register for AC, washing machine and refrigerator job opportunities. One-time joining fee: ₹50. Our AI guides you step by step
           </p>
 
         </div>
@@ -1100,7 +1100,7 @@ export default function TechnicianRegister() {
                 )}
 
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800">
-                  <div className="font-bold">Technician Joining Fee: ₹49</div>
+                  <div className="font-bold">Technician Joining Fee: ₹50</div>
                   <div className="mt-1">One-time joining fee. Pay by UPI QR and submit your UTR for verification.</div>
                 </div>
 
@@ -1117,7 +1117,7 @@ export default function TechnicianRegister() {
                   ) : (
                     <>
                       <CheckCircle size={18} />
-                      {joinFeePaid ? 'Submit Application' : 'Pay ₹49 & Continue'}
+                      {joinFeePaid ? 'Submit Application' : 'Pay ₹50 & Continue'}
                     </>
                   )}
                 </button>
@@ -1128,7 +1128,7 @@ export default function TechnicianRegister() {
             <PaymentModal
               open={showJoinFeePayment}
               onClose={() => setShowJoinFeePayment(false)}
-              amount={49}
+              amount={50}
               purpose="registration_fee"
               payeeType="technician"
               payeeId={form.mobile || 'technician-registration'}
