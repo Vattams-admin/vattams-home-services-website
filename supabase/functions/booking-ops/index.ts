@@ -87,7 +87,7 @@ Deno.serve(async (req: Request) => {
       }
       const allowedStatuses = new Set(["pending"]);
       const b = booking || {};
-      if (!b.customer_name || !b.mobile_number || !b.city || !b.address || !b.service_category || !b.problem_description) {
+      if (!String(b.customer_name ?? "").trim() || !String(b.mobile_number ?? "").replace(/\D/g, "").match(/^\d{10}$/) || !String(b.city ?? "").trim() || !String(b.address ?? "").trim() || !String(b.service_category ?? "").trim()) {
         return new Response(JSON.stringify({ error: "Required booking fields are missing" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
       if (!isFeaturedApplianceService(b.service_category)) {
@@ -140,7 +140,7 @@ Deno.serve(async (req: Request) => {
         address: String(b.address).slice(0,500),
         service_category: String(b.service_category).slice(0,100),
         service_type: serviceType.slice(0,100),
-        problem_description: String(b.problem_description).slice(0,2000),
+        problem_description: String(b.problem_description ?? "").trim().slice(0,2000),
         preferred_date: b.preferred_date || null,
         preferred_time: b.preferred_time || null,
         amount: totalAmount,
