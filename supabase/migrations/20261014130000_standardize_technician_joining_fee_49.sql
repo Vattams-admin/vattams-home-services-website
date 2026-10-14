@@ -1,10 +1,10 @@
--- Canonical technician onboarding policy: one verified ₹49 joining fee.
+-- Canonical technician onboarding policy: one verified ₹50 joining fee.
 -- There is no separate ₹50 security deposit under the current model.
 -- Preserve historical ledger rows; they require payment-proof reconciliation and
 -- must not be silently deleted or converted into real-payment evidence.
 
 UPDATE public.wallet_settings
-SET registration_fee = 49,
+SET registration_fee = 50,
     updated_at = now();
 
 -- Stop the completion trigger from releasing a legacy synthetic deposit.
@@ -87,3 +87,39 @@ BEGIN
   RETURN NEW;
 END;
 $function$;
+
+
+-- Keep activation verification consistent with the ₹50 joining payment.
+CREATE OR REPLACE FUNCTION public.enforce_technician_registration_fee()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  payment_status text;
+BEGIN
+  IF NEW.status = 'active'
+     AND (TG_OP = 'INSERT' OR OLD.status IS DISTINCT FROM NEW.status) THEN
+    IF NEW.registration_payment_id IS NULL OR NEW.registration_payment_id = '' THEN
+      RAISE EXCEPTION 'Technician cannot be activated without a verified ₹50 registration payment';
+    END IF;
+
+    SELECT status INTO payment_status
+    FROM public.payments
+    WHERE payment_id = NEW.registration_payment_id
+      AND payee_type = 'technician'
+      AND payee_id = NEW.mobile
+      AND amount = 50
+      AND purpose = 'registration_fee'
+      AND utr IS NOT NULL
+    LIMIT 1;
+
+    IF payment_status IS DISTINCT FROM 'success' THEN
+      RAISE EXCEPTION 'Technician cannot be activated until the ₹50 registration payment is verified';
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
