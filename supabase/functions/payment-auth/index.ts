@@ -118,6 +118,14 @@ async function submitUtr(body: Record<string, unknown>) {
     return json({ error: "Invalid UTR format" }, 400);
   }
 
+  const { data: duplicateUtr } = await supabase.from("payments")
+    .select("payment_id")
+    .eq("utr", utr)
+    .neq("payment_id", paymentId)
+    .limit(1)
+    .maybeSingle();
+  if (duplicateUtr) return json({ error: "This UTR is already linked to another payment" }, 409);
+
   const { data, error } = await supabase.from("payments")
     .update({ utr, status: "pending" })
     .eq("payment_id", paymentId)
@@ -156,17 +164,21 @@ async function verifyPayment(body: Record<string, unknown>) {
     return json({ error: "Not authorized" }, 401);
   }
 
-  const { data, error } = await supabase.from("payments")
+  let verificationQuery = supabase.from("payments")
     .update({
       status,
       verified_by: adminId,
       verified_at: status === "success" ? new Date().toISOString() : null,
     })
     .eq("payment_id", paymentId)
-    .eq("status", "pending")
-    .select("*").single();
+    .eq("status", "pending");
 
-  if (error || !data) return json({ error: error?.message || "Payment is no longer pending or could not be updated" }, 409);
+  // A payment cannot be marked successful until a UTR has been submitted.
+  if (status === "success") verificationQuery = verificationQuery.not("utr", "is", null);
+
+  const { data, error } = await verificationQuery.select("*").single();
+
+  if (error || !data) return json({ error: "Payment must still be pending and, for success, have a submitted UTR" }, 409);
   return json({ payment: data });
 }
 
