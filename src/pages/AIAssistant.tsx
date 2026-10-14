@@ -1,15 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Sparkles, CheckCircle, Loader } from 'lucide-react';
+import { ArrowRight, Send, Sparkles } from 'lucide-react';
 import { useRouter } from '@/lib/router';
-import { supabase } from '@/lib/supabase';
 import { getAssistantResponse, type AIAssistantState } from '@/lib/aiAssistant';
-import CommunicationCenter from '@/components/CommunicationCenter';
 
 const INITIAL_STATE: AIAssistantState = {
   step: 'initial',
   extracted: {},
   messages: [
-    { role: 'assistant', content: "Hi! I'm your VATTAMS AI Assistant. Tell me what issue you're facing and I'll help you book a service. For example: 'My AC is not cooling' or 'My kitchen tap is leaking'." },
+    { role: 'assistant', content: "Hi! I'm your VATTAMS AI Assistant. Tell me what appliance issue you're facing and I'll help you prepare a booking. For example: 'My AC is not cooling' or 'My washing machine won't spin'." },
   ],
 };
 
@@ -26,8 +24,6 @@ export default function AIAssistant() {
   const { navigate } = useRouter();
   const [state, setState] = useState<AIAssistantState>(INITIAL_STATE);
   const [input, setInput] = useState('');
-  const [creating, setCreating] = useState(false);
-  const [bookingNumber, setBookingNumber] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -43,49 +39,21 @@ export default function AIAssistant() {
     setInput('');
 
     if (newState.step === 'done') {
-      createBooking(newState.extracted as Record<string, unknown>);
+      // The assistant prepares a draft only. Customers review the exact job
+      // type, address, and current customer price on the booking form.
+      sessionStorage.setItem('vattams_ai_booking_draft', JSON.stringify({
+        service_category: newState.extracted.service,
+        problem_description: newState.extracted.problem,
+        city: newState.extracted.location,
+        preferred_time: newState.extracted.preferredTime,
+        urgency: newState.extracted.urgency,
+      }));
     }
-  };
-
-  const createBooking = async (data: Record<string, unknown>) => {
-    setCreating(true);
-    const sessionId = `ai-${Date.now()}`;
-    const customer = sessionStorage.getItem('vattams_customer');
-    const customerId = customer ? JSON.parse(customer).id : null;
-    const customerName = customer ? JSON.parse(customer).full_name : 'Guest User';
-    const customerMobile = customer ? JSON.parse(customer).mobile : '';
-
-    const bookingResponse = await supabase.functions.invoke('booking-ops', {
-      body: {
-        action: 'create_booking',
-        customer_session_token: sessionStorage.getItem('vattams_customer_session') || undefined,
-        booking: {
-      customer_name: customerName,
-      mobile_number: customerMobile,
-      customer_id: customerId,
-      city: (data.location as string) ?? '',
-      address: (data.location as string) ?? '',
-      service_category: (data.service as string) ?? 'General Service',
-      problem_description: (data.problem as string) ?? '',
-      preferred_date: new Date().toISOString().split('T')[0],
-      preferred_time: (data.preferredTime as string) ?? 'Flexible',
-      status: 'pending',
-      ai_booking: true,
-      urgency: (data.urgency as string) ?? 'normal',
-    }
-      },
-    });
-    const booking = bookingResponse.data?.data ?? null;
-
-    if (booking) {
-      setBookingNumber(booking.booking_number);
-    }
-    setCreating(false);
   };
 
   const reset = () => {
+    sessionStorage.removeItem('vattams_ai_booking_draft');
     setState(INITIAL_STATE);
-    setBookingNumber(null);
   };
 
   return (
@@ -115,28 +83,6 @@ export default function AIAssistant() {
             </div>
           ))}
 
-          {creating && (
-            <div className="flex justify-start">
-              <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-sm px-4 py-2.5 shadow-sm flex items-center gap-2">
-                <Loader size={14} className="animate-spin text-blue-600" />
-                <span className="text-sm text-gray-500">Creating your booking...</span>
-              </div>
-            </div>
-          )}
-
-          {bookingNumber && (
-            <div className="flex justify-center">
-              <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-center">
-                <CheckCircle className="text-green-600 mx-auto mb-1" size={20} />
-                <p className="text-sm font-semibold text-green-800">Booking Created!</p>
-                <p className="text-xs text-green-600">Booking Number: <span className="font-mono font-bold">{bookingNumber}</span></p>
-                <button onClick={() => navigate('customer-bookings')} className="mt-2 text-xs text-blue-600 font-semibold hover:underline">
-                  View My Bookings →
-                </button>
-              </div>
-            </div>
-          )}
-
           <div ref={messagesEndRef} />
         </div>
 
@@ -155,9 +101,15 @@ export default function AIAssistant() {
         )}
 
         {state.step === 'done' && (
-          <div className="px-4 py-3 border-t border-gray-100 text-center">
-            <button onClick={reset} className="text-sm text-blue-600 font-semibold hover:underline">
-              Book another service
+          <div className="px-4 py-3 border-t border-gray-100 flex flex-wrap justify-center gap-3">
+            <button
+              onClick={() => navigate('booking')}
+              className="inline-flex items-center gap-2 rounded-xl bg-[#0b1f3a] px-5 py-3 text-sm font-bold text-white hover:bg-[#17365b]"
+            >
+              Continue to booking <ArrowRight size={16} />
+            </button>
+            <button onClick={reset} className="rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-600 hover:bg-gray-50">
+              Start over
             </button>
           </div>
         )}
