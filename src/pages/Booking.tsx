@@ -51,6 +51,7 @@ export default function Booking() {
   const [servicePrices, setServicePrices] = useState<Record<string, ServicePrice>>({});
   const [customerServicePrices, setCustomerServicePrices] = useState<Record<string, CustomerServicePrice>>({});
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [couponResult, setCouponResult] = useState<{ valid: boolean; error?: string; discountAmount: number; coupon?: Coupon } | null>(null);
@@ -146,6 +147,17 @@ export default function Booking() {
           .forEach((price) => { map[getCustomerPriceKey(price.service_category, price.service_type)] = price; });
         setCustomerServicePrices(map);
       }
+      if (catRes.error) {
+        setLoadError('Unable to load service categories. Please refresh the page or contact support.');
+      } else if (priceRes.error || customerPriceRes.error) {
+        setLoadError('Unable to load current service prices. Please refresh the page before booking.');
+      } else if (!featuredServices.length) {
+        setLoadError('No appliance service categories are available right now.');
+      }
+      setLoading(false);
+    }).catch((error) => {
+      console.error('[Booking] service/pricing load failed:', error);
+      setLoadError('Service information could not be loaded. Check your connection and try again.');
       setLoading(false);
     });
   }, []);
@@ -308,6 +320,11 @@ export default function Booking() {
           </button>
 
           <div className="bg-white rounded-2xl border border-[#e8e1d2] shadow-sm p-6 md:p-8">
+            {loadError && (
+              <div role="alert" className="mb-5 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+                {loadError}
+              </div>
+            )}
             {loading ? (
               <div className="flex justify-center py-16">
                 <Loader className="animate-spin text-navy-700" size={32} />
