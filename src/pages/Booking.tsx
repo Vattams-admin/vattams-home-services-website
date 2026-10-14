@@ -240,9 +240,10 @@ export default function Booking() {
     trackMarketingEvent('generate_lead', { service_category: form.service_category, service_type: form.service_type });
     setSuccess({ number: data.booking_number, id: data.id });
 
-    await Promise.all([
-      notifyCustomer.bookingReceived(form.mobile_number, data.booking_number, data.id, data.booking_action_token),
-    ]);
+    // Notification delivery must not block technician assignment if the SMS/WhatsApp
+    // provider fails or is temporarily unavailable.
+    void notifyCustomer.bookingReceived(form.mobile_number, data.booking_number, data.id, data.booking_action_token)
+      .catch((notificationError) => console.error('[Booking] booking-received notification failed:', notificationError));
 
     // Automatically find and assign the best matching technician (no manual
     // accept needed). If none are eligible, the booking simply stays
