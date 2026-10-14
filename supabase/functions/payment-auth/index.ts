@@ -34,7 +34,7 @@ Deno.serve(async (req: Request) => {
 async function createPayment(body: Record<string, unknown>) {
   const payeeType = body.payee_type;
   const payeeId = String(body.payee_id ?? "").replace(/\D/g, "");
-  const referenceId = String(body.reference_id ?? "").replace(/\D/g, "");
+  const referenceId = String(body.reference_id ?? "").trim();
   const payeeName = body.payee_name ? String(body.payee_name).trim().slice(0, 120) : null;
   const notes = body.notes ? String(body.notes).trim().slice(0, 300) : null;
 
@@ -52,8 +52,8 @@ async function createPayment(body: Record<string, unknown>) {
     paymentRow = {
       payee_type: "technician",
       payee_id: payeeId,
-      payee_name: payeeName || "VATTAMS Global Technologies Private Limited",
-      upi_id: "venkatesan04051985-5@oksbi",
+      payee_name: payeeName || "VATTAMS HOME SERVICES",
+      upi_id: "venkatesan04051985-7@okhdfcbank",
       amount: 50,
       purpose: "registration_fee",
       reference_id: payeeId,
@@ -89,7 +89,7 @@ async function createPayment(body: Record<string, unknown>) {
       payee_type: "customer",
       payee_id: payeeId,
       payee_name: payeeName || null,
-      upi_id: "venkatesan04051985-5@oksbi",
+      upi_id: "venkatesan04051985-7@okhdfcbank",
       amount,
       purpose: "booking",
       reference_id: String(booking.id),
