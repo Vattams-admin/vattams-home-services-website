@@ -1,8 +1,8 @@
 import QRCode from 'qrcode';
 import { supabase } from './supabase';
 
-export const DEFAULT_UPI_ID = 'venkatesan04051985-7@okhdfcbank';
-export const PAYEE_NAME = 'VATTAMS HOME SERVICES';
+export const DEFAULT_UPI_ID = 'venkatesan04051985-5@oksbi';
+export const PAYEE_NAME = 'VATTAMS Global Technologies Private Limited';
 
 export type PaymentPurpose = 'booking' | 'registration_fee' | 'wallet_recharge' | 'commission';
 export type PaymentStatus = 'pending' | 'success' | 'failed';
