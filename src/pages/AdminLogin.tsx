@@ -85,7 +85,7 @@ export default function AdminLogin() {
           <div className="text-center mb-8">
             <img
               src="/logo.svg"
-              alt="VATTAMS HOME SERVICES"
+              alt="VATTAMS Hybrid Service Marketplace"
               className="h-20 w-auto mx-auto mb-4 rounded-xl"
             />
 
