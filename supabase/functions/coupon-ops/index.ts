@@ -50,9 +50,13 @@ Deno.serve(async req => {
       return new Response(JSON.stringify({ error: "Unsupported action" }), { status: 400, headers });
     }
 
+    const isUuid = (value: unknown): value is string =>
+      typeof value === "string"
+      && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value.trim());
+
     if (
-      typeof coupon_id !== "string" || !coupon_id.trim() ||
-      typeof booking_id !== "string" || !booking_id.trim() ||
+      !isUuid(coupon_id) ||
+      !isUuid(booking_id) ||
       typeof customer_session_token !== "string" ||
       !customer_session_token.trim() || customer_session_token.length > 512 ||
       typeof discount_amount !== "number" ||
