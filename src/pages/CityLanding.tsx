@@ -25,8 +25,8 @@ function buildSchema(city: CityData) {
     '@id': providerId,
     name: 'VATTAMS Hybrid Service Marketplace',
     url: baseUrl,
-    logo: `${baseUrl}/VATTAMS_HOME_SERVICES_logo.svg`,
-    image: `${baseUrl}/VATTAMS_HOME_SERVICES_logo.svg`,
+    logo: `${baseUrl}/logo.svg`,
+    image: `${baseUrl}/logo.svg`,
     telephone: '+91-63740-68296',
     email: 'admin@vattams.net',
     ...(city.isCurrentlyServed ? {
