@@ -145,7 +145,7 @@ export default function CustomerBookings() {
         <button
           type="button"
           onClick={() => navigate('customer-dashboard')}
-          className="mb-5 inline-flex items-center gap-2 text-sm font-semibold text-[#0b1f3a] hover:underline"
+          className="mb-5 inline-flex items-center gap-2 text-sm font-semibold text-[#0b1f3a] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a47c00] focus-visible:ring-offset-2 rounded"
         >
           <ArrowLeft size={16} /> Back to dashboard
         </button>
@@ -163,7 +163,7 @@ export default function CustomerBookings() {
               type="button"
               onClick={() => customer && void loadBookings(customer, true)}
               disabled={!customer || loading || refreshing}
-              className="inline-flex items-center gap-2 rounded-xl border border-white/25 bg-white/10 px-4 py-2.5 text-sm font-bold hover:bg-white/20 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/25 bg-white/10 px-4 py-2.5 text-sm font-bold hover:bg-white/20 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e8c75a] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1f3a]"
             >
               <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
               Refresh
@@ -189,7 +189,7 @@ export default function CustomerBookings() {
               type="button"
               onClick={() => customer && void loadBookings(customer, true)}
               disabled={!customer || refreshing}
-              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#0b1f3a] px-5 py-3 text-sm font-bold text-white disabled:opacity-50"
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#0b1f3a] px-5 py-3 text-sm font-bold text-white disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a47c00] focus-visible:ring-offset-2"
             >
               <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} /> Try again
             </button>
@@ -204,7 +204,7 @@ export default function CustomerBookings() {
             <button
               type="button"
               onClick={() => navigate('booking')}
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#0b1f3a] px-6 py-3 font-bold text-white hover:bg-[#17365b]"
+              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#0b1f3a] px-6 py-3 font-bold text-white hover:bg-[#17365b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a47c00] focus-visible:ring-offset-2"
             >
               Book a service <ArrowRight size={17} />
             </button>
