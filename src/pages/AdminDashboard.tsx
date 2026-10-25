@@ -889,7 +889,7 @@ export default function AdminDashboard() {
       const failedNotifications = notificationResults.filter((result) => result.status === 'rejected').length;
       if (failedNotifications > 0) {
         console.error('[AdminDashboard] assignment saved but notification delivery failed', { failedNotifications });
-        alert(`Technician assigned successfully, but ${failedNotifications} notification(s) failed. Please check notification delivery and retry those notifications separately.`);
+        alert(`Technician assigned successfully, but ${failedNotifications} notification(s) failed. Please review notification delivery; a retry action is not available here.`);
       }
     } catch (error) {
       console.error('[AdminDashboard] secure assignment failed:', error);
