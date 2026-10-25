@@ -49,6 +49,7 @@ export default function CustomerDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [notifications, setNotifications] = useState<{ id: string; title: string; message: string; created_at: string; is_read: boolean }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [selected, setSelected] = useState<Booking | null>(null);
 
   useEffect(() => {
@@ -57,18 +58,33 @@ export default function CustomerDashboard() {
     try {
       const c = JSON.parse(stored) as Customer;
       setCustomer(c);
-      Promise.all([loadBookings(c), loadNotifications(c)]).finally(() => setLoading(false));
+      Promise.all([
+        loadBookings(c).catch((error) => {
+          console.error('[CustomerDashboard] booking history load failed:', error);
+          setLoadError('Your booking history could not be verified. Please refresh the page to try again.');
+        }),
+        loadNotifications(c).catch((error) => {
+          console.error('[CustomerDashboard] notification load failed:', error);
+          setLoadError((current) => current || 'Some dashboard information could not be loaded. Please refresh the page.');
+        }),
+      ]).finally(() => setLoading(false));
     } catch { navigate('customer-login'); }
   }, []);
 
   const loadBookings = async (c: Customer) => {
     const data = await customerData<{ bookings: Booking[] }>('bookings', { mobile: c.mobile });
-    setBookings(data?.bookings ?? []);
+    if (!data || !Array.isArray(data.bookings)) {
+      throw new Error('Booking history response was unavailable or invalid.');
+    }
+    setBookings(data.bookings);
   };
 
   const loadNotifications = async (c: Customer) => {
     const data = await customerData<{ notifications: { id: string; title: string; message: string; created_at: string; is_read: boolean }[] }>('account', { mobile: c.mobile });
-    setNotifications(data?.notifications ?? []);
+    if (!data || !Array.isArray(data.notifications)) {
+      throw new Error('Notification response was unavailable or invalid.');
+    }
+    setNotifications(data.notifications);
   };
 
   if (loading || !customer) {
@@ -107,6 +123,33 @@ export default function CustomerDashboard() {
             </div>
           </div>
         </div>
+
+        {loadError && (
+          <div role="status" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            <span>{loadError}</span>
+            <button
+              type="button"
+              onClick={() => {
+                setLoadError('');
+                setLoading(true);
+                Promise.all([
+                  loadBookings(customer).catch((error) => {
+                    console.error('[CustomerDashboard] booking history retry failed:', error);
+                    setLoadError('Your booking history could not be verified. Please try again.');
+                  }),
+                  loadNotifications(customer).catch((error) => {
+                    console.error('[CustomerDashboard] notification retry failed:', error);
+                    setLoadError((current) => current || 'Notifications could not be loaded. Please try again.');
+                  }),
+                ]).finally(() => setLoading(false));
+              }}
+              disabled={loading}
+              className="rounded-lg border border-amber-300 px-3 py-2 font-bold disabled:opacity-50"
+            >
+              {loading ? 'Refreshing…' : 'Retry'}
+            </button>
+          </div>
+        )}
 
         <PushNotificationSetup userType="customer" userId={customer.mobile} />
 
