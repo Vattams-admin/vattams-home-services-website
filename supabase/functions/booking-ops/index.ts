@@ -478,13 +478,55 @@ Deno.serve(async (req: Request) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const { data: capabilityBooking } = await supabase.from("bookings").select("id, booking_action_token").eq("id", booking_id).maybeSingle();
-      const tokenMatches = Boolean(capabilityBooking && booking_action_token && capabilityBooking.booking_action_token === booking_action_token);
+      const { data: capabilityBooking, error: capabilityLookupError } = await supabase
+        .from("bookings")
+        .select("id, booking_action_token")
+        .eq("id", booking_id)
+        .maybeSingle();
+      if (capabilityLookupError) {
+        console.error("[booking-ops auto_assign] booking capability lookup failed");
+        return new Response(JSON.stringify({ error: "Unable to verify booking authorization. Please try again." }), {
+          status: 503,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const tokenMatches = Boolean(
+        capabilityBooking
+        && typeof booking_action_token === "string"
+        && booking_action_token.length > 0
+        && capabilityBooking.booking_action_token === booking_action_token
+      );
       let adminAuthorized = false;
       if (admin_id && admin_session_token) {
-        const { data: adminSession } = await supabase.from("admin_auth_sessions").select("admin_id, expires_at").eq("token", admin_session_token).maybeSingle();
-        if (adminSession && adminSession.admin_id === admin_id && new Date(adminSession.expires_at).getTime() > Date.now()) {
-          const { data: admin } = await supabase.from("admin_users").select("id, role, is_active").eq("id", admin_id).maybeSingle();
+        const { data: adminSession, error: adminSessionLookupError } = await supabase
+          .from("admin_auth_sessions")
+          .select("admin_id, expires_at")
+          .eq("token", admin_session_token)
+          .maybeSingle();
+        if (adminSessionLookupError) {
+          console.error("[booking-ops auto_assign] admin session lookup failed");
+          return new Response(JSON.stringify({ error: "Unable to verify administrator authorization. Please try again." }), {
+            status: 503,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        const adminSessionExpiry = adminSession?.expires_at == null
+          ? Number.NaN
+          : new Date(adminSession.expires_at).getTime();
+        if (adminSession && adminSession.admin_id === admin_id
+          && Number.isFinite(adminSessionExpiry) && adminSessionExpiry > Date.now()) {
+          const { data: admin, error: adminLookupError } = await supabase
+            .from("admin_users")
+            .select("id, role, is_active")
+            .eq("id", admin_id)
+            .maybeSingle();
+          if (adminLookupError) {
+            console.error("[booking-ops auto_assign] administrator account lookup failed");
+            return new Response(JSON.stringify({ error: "Unable to verify administrator authorization. Please try again." }), {
+              status: 503,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
           adminAuthorized = Boolean(admin && admin.id === admin_id && admin.role === "super_admin" && admin.is_active === true);
         }
       }
