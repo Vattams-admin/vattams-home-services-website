@@ -123,7 +123,7 @@ export default function CustomerRegister() {
             {step === 'success' && 'Welcome to VATTAMS!'}
           </h1>
           <p className="text-gray-500 text-sm mt-1">
-            {step === 'form' && 'Register to book and track home services'}
+            {step === 'form' && 'Register to book and track service requests'}
             {step === 'otp' && `Enter the 6-digit code sent to ${form.email.trim().toLowerCase()}`}
             {step === 'success' && 'Your account has been created successfully'}
           </p>
