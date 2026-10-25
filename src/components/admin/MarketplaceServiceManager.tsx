@@ -91,7 +91,7 @@ export default function MarketplaceServiceManager() {
         technician_payout_mode: form.technician_payout_mode, technician_payout: form.technician_payout === '' ? null : Number(form.technician_payout),
         requires_qualified_provider: Boolean(form.requires_qualified_provider), requires_admin_review: Boolean(form.requires_admin_review),
         is_active: Boolean(form.is_active), admin_review_confirmed: activating,
-      });
+      } });
       setMessage({ ok: true, text: 'Service settings saved.' });
       await load();
     } catch (error) {
