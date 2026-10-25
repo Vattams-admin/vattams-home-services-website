@@ -245,8 +245,8 @@ export default function Booking() {
       error: response.error || (!response.data?.data ? new Error('Booking failed') : null),
     }));
 
-    if (error) {
-      setSubmitError('We couldn’t submit your request. Your booking is not confirmed. Please try again or contact VATTAMS support.');
+    if (error || !data || !data.id || !data.booking_number) {
+      setSubmitError('We couldn’t confirm that your booking was created. Please check with VATTAMS support before submitting again.');
       return;
     }
     trackMarketingEvent('generate_lead', { service_category: form.service_category, service_type: form.service_type });
