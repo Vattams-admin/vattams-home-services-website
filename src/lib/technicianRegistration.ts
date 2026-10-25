@@ -515,3 +515,7 @@ export async function submitTechnicianApplication(form: TechnicianFormData, regi
 export async function verifyTechnicianRegistrationEmail(form: TechnicianFormData, code: string): Promise<any> {
   return postTechnicianAuth('verify-registration-otp', { mobile: form.mobile, code: code.trim() });
 }
+
+export async function resendTechnicianRegistrationEmailOtp(form: TechnicianFormData): Promise<any> {
+  return postTechnicianAuth('resend-registration-otp', { mobile: form.mobile });
+}
