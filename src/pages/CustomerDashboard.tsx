@@ -341,7 +341,14 @@ export default function CustomerDashboard() {
                         <div className="flex items-center gap-1.5"><MapPin size={14} className="text-gray-400" /> {b.city || "Location to be confirmed"}</div>
                         <div className="flex items-center gap-1.5"><Calendar size={14} className="text-gray-400" /> {b.preferred_date || "Date to be confirmed"}</div>
                         <div className="flex items-center gap-1.5"><Clock size={14} className="text-gray-400" /> {b.preferred_time || "Time to be confirmed"}</div>
-                        {b.amount != null && Number.isFinite(Number(b.amount)) ? <div className="font-bold text-gray-900">{formatCurrency(Number(b.amount))}</div> : <div className="text-xs text-gray-500">Price confirmation pending</div>}
+                        {(() => {
+                          const rawAmount = b.total_amount ?? b.amount;
+                          const parsedAmount = rawAmount == null || rawAmount === '' ? null : Number(rawAmount);
+                          const amount = parsedAmount !== null && Number.isFinite(parsedAmount) && parsedAmount >= 0 ? parsedAmount : null;
+                          return amount === null
+                            ? <div className="text-xs text-gray-500">Price confirmation pending</div>
+                            : <div className="font-bold text-gray-900">{formatCurrency(amount)}</div>;
+                        })()}
                       </div>
                       <div className="flex items-center gap-1">
                         {statusSteps.map((s, i) => (
