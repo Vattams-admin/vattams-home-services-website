@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import {
   Wind, BatteryCharging, Sun, Zap, ShieldCheck, Refrigerator, WashingMachine,
   Droplets, Hammer, Sparkles, Bug, Tv, Car, Laptop, Trees, HeartHandshake,
-  Camera, BriefcaseBusiness, Wifi, Package, Building2, Paintbrush, Utensils,
+  Camera, Briefcase, Wifi, Package, Building2, Paintbrush, Utensils,
   Scissors, FileCheck, ArrowRight, MapPin, Search, PlugZap, Wrench, Sofa,
   Shirt, Flower2, Monitor, CookingPot, Truck, Shield, Home, BadgeCheck,
   Thermometer, Router, Fan, ClipboardCheck, CircleHelp, Star, Sparkle,
@@ -62,7 +62,7 @@ const categories: ServiceCategory[] = [
   { name: 'Fire Safety Equipment', detail: 'Eligible inspection and servicing through authorised specialists', group: 'Business & professional', icon: Shield, partnerOnly: true },
   { name: 'Design, Translation & Content', detail: 'Creative, language, writing and digital-content services', group: 'Business & professional', icon: Sparkle },
   { name: 'Website & Virtual Assistance', detail: 'Website support, online admin and virtual assistance', group: 'Business & professional', icon: Monitor },
-  { name: 'Accounting & Tax Assistance', detail: 'Administrative help from appropriately qualified providers', group: 'Business & professional', icon: BriefcaseBusiness, partnerOnly: true },
+  { name: 'Accounting & Tax Assistance', detail: 'Administrative help from appropriately qualified providers', group: 'Business & professional', icon: Briefcase, partnerOnly: true },
   { name: 'Insurance Information & Referrals', detail: 'Permitted information and referrals to authorised partners only', group: 'Protection & assistance', icon: Shield, partnerOnly: true },
   { name: 'Warranty & Protection Plans', detail: 'Warranty information and eligible partner referrals', group: 'Protection & assistance', icon: BadgeCheck, partnerOnly: true },
   { name: 'Claim Document Assistance', detail: 'Help organising documents; insurer or issuer decides claims', group: 'Protection & assistance', icon: FileCheck, partnerOnly: true },
