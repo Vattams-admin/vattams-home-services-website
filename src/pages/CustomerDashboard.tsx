@@ -72,12 +72,16 @@ export default function CustomerDashboard() {
     setLoadError('');
     const results = await Promise.allSettled([loadBookings(c), loadNotifications(c)]);
     if (version !== requestVersion.current) return;
-    const bookingFailed = results[0].status === 'rejected';
-    const notificationsFailed = results[1].status === 'rejected';
-    if (bookingFailed) console.error('[CustomerDashboard] booking history load failed:', results[0].reason);
-    if (notificationsFailed) console.error('[CustomerDashboard] notification load failed:', results[1].reason);
-    if (bookingFailed) setLoadError('Your booking history could not be verified. Please retry.');
-    else if (notificationsFailed) setLoadError('Some dashboard information could not be loaded. Please retry.');
+
+    const bookingResult = results[0];
+    const notificationResult = results[1];
+    if (bookingResult.status === 'fulfilled') setBookings(bookingResult.value);
+    else console.error('[CustomerDashboard] booking history load failed:', bookingResult.reason);
+    if (notificationResult.status === 'fulfilled') setNotifications(notificationResult.value);
+    else console.error('[CustomerDashboard] notification load failed:', notificationResult.reason);
+
+    if (bookingResult.status === 'rejected') setLoadError('Your booking history could not be verified. Please retry.');
+    else if (notificationResult.status === 'rejected') setLoadError('Some dashboard information could not be loaded. Please retry.');
     setLoading(false);
   };
 
@@ -104,20 +108,20 @@ export default function CustomerDashboard() {
     }
   }, []);
 
-  const loadBookings = async (c: Customer) => {
+  const loadBookings = async (c: Customer): Promise<Booking[]> => {
     const data = await customerData<{ bookings: Booking[] }>('bookings', { mobile: c.mobile });
     if (!data || !Array.isArray(data.bookings)) {
       throw new Error('Booking history response was unavailable or invalid.');
     }
-    setBookings(data.bookings);
+    return data.bookings;
   };
 
-  const loadNotifications = async (c: Customer) => {
+  const loadNotifications = async (c: Customer): Promise<{ id: string; title: string; message: string; created_at: string; is_read: boolean }[]> => {
     const data = await customerData<{ notifications: { id: string; title: string; message: string; created_at: string; is_read: boolean }[] }>('account', { mobile: c.mobile });
     if (!data || !Array.isArray(data.notifications)) {
       throw new Error('Notification response was unavailable or invalid.');
     }
-    setNotifications(data.notifications);
+    return data.notifications;
   };
 
   if (loading || !customer) {
