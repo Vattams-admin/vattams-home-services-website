@@ -22,14 +22,44 @@ export default function CustomerProfile() {
 
   useEffect(() => {
     const stored = sessionStorage.getItem('vattams_customer');
-    if (!stored) { navigate('customer-login'); return; }
+    const sessionToken = sessionStorage.getItem('vattams_customer_session');
+    const expiresAt = sessionStorage.getItem('vattams_customer_expires');
+
+    if (!stored || !sessionToken) {
+      navigate('customer-login');
+      setLoading(false);
+      return;
+    }
+
+    if (expiresAt) {
+      const expiry = Number(expiresAt);
+      if (!Number.isFinite(expiry) || expiry <= Date.now()) {
+        sessionStorage.removeItem('vattams_customer');
+        sessionStorage.removeItem('vattams_customer_session');
+        sessionStorage.removeItem('vattams_customer_expires');
+        navigate('customer-login');
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
-      const c = JSON.parse(stored) as Customer;
+      const parsed = JSON.parse(stored) as Partial<Customer>;
+      if (typeof parsed.id !== 'string' || !parsed.id.trim() ||
+          typeof parsed.mobile !== 'string' || !parsed.mobile.trim() ||
+          typeof parsed.full_name !== 'string' || !parsed.full_name.trim()) {
+        throw new Error('Stored customer profile is incomplete.');
+      }
+      const c = parsed as Customer;
       setCustomer(c);
       setForm({ full_name: c.full_name, email: c.email ?? '', city: c.city ?? '', address: c.address ?? '' });
-      loadBookingCount(c.id);
-    } catch { navigate('customer-login'); }
-    setLoading(false);
+      void loadBookingCount(c.id);
+    } catch {
+      sessionStorage.removeItem('vattams_customer');
+      navigate('customer-login');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   const loadBookingCount = async (_customerId: string) => {
