@@ -60,11 +60,16 @@ Deno.serve(async req => {
       return new Response(JSON.stringify({ error: "Invalid redemption" }), { status: 400, headers });
     }
 
-    const { data: booking } = await db
+    const { data: booking, error: bookingLookupError } = await db
       .from("bookings")
       .select("id,total_amount,amount,coupon_code,discount_amount,customer_id")
       .eq("id", booking_id)
       .maybeSingle();
+
+    if (bookingLookupError) {
+      console.error("[coupon-ops] booking lookup failed");
+      return new Response(JSON.stringify({ error: "Unable to verify booking right now" }), { status: 503, headers });
+    }
 
     if (!booking) {
       return new Response(JSON.stringify({ error: "Booking not found" }), { status: 404, headers });
@@ -78,11 +83,16 @@ Deno.serve(async req => {
       return new Response(JSON.stringify({ error: "Customer authentication required" }), { status: 401, headers });
     }
 
-    const { data: session } = await db
+    const { data: session, error: sessionLookupError } = await db
       .from("customer_auth_sessions")
       .select("customer_id,expires_at")
       .eq("token", sessionToken)
       .maybeSingle();
+
+    if (sessionLookupError) {
+      console.error("[coupon-ops] customer session lookup failed");
+      return new Response(JSON.stringify({ error: "Unable to verify customer session right now" }), { status: 503, headers });
+    }
 
     if (
       !session ||
@@ -96,12 +106,17 @@ Deno.serve(async req => {
       return new Response(JSON.stringify({ error: "Booking has no coupon" }), { status: 400, headers });
     }
 
-    const { data: coupon } = await db
+    const { data: coupon, error: couponLookupError } = await db
       .from("coupons")
       .select("*")
       .eq("id", coupon_id)
       .eq("is_active", true)
       .maybeSingle();
+
+    if (couponLookupError) {
+      console.error("[coupon-ops] coupon lookup failed");
+      return new Response(JSON.stringify({ error: "Unable to verify coupon right now" }), { status: 503, headers });
+    }
 
     if (!coupon) {
       return new Response(JSON.stringify({ error: "Coupon unavailable" }), { status: 400, headers });
