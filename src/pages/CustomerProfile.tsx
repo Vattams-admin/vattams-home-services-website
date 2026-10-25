@@ -144,6 +144,12 @@ export default function CustomerProfile() {
           typeof updated.mobile !== 'string' || !updated.mobile.trim()) {
         throw new Error('Profile update could not be confirmed.');
       }
+      let profileCached = true;
+      try {
+        sessionStorage.setItem('vattams_customer', JSON.stringify(updated));
+      } catch {
+        profileCached = false;
+      }
       setCustomer(updated);
       setForm({
         full_name: updated.full_name,
@@ -151,8 +157,12 @@ export default function CustomerProfile() {
         city: updated.city ?? '',
         address: updated.address ?? '',
       });
-      sessionStorage.setItem('vattams_customer', JSON.stringify(updated));
-      setMsg({ type: 'success', text: 'Profile updated successfully!' });
+      setMsg({
+        type: profileCached ? 'success' : 'error',
+        text: profileCached
+          ? 'Profile updated successfully!'
+          : 'Your profile was updated, but this browser could not save the local copy. You may need to sign in again after refreshing.',
+      });
     } catch {
       setMsg({ type: 'error', text: 'Unable to confirm your profile update. Please try again.' });
     } finally {
