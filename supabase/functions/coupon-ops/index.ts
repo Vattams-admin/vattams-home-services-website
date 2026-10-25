@@ -136,7 +136,7 @@ Deno.serve(async req => {
       return new Response(JSON.stringify({ error: "Coupon unavailable" }), { status: 400, headers });
     }
 
-    if (String(coupon.code).toUpperCase() !== String(booking.coupon_code).toUpperCase()) {
+    if (String(coupon.code ?? "").trim().toUpperCase() !== String(booking.coupon_code ?? "").trim().toUpperCase()) {
       return new Response(JSON.stringify({ error: "Coupon does not match booking" }), { status: 400, headers });
     }
 
