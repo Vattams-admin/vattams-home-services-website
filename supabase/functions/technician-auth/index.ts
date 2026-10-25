@@ -175,6 +175,14 @@ async function verifyTechnicianRegistrationOtp(supabase: ReturnType<typeof creat
     if (restoreError) {
       console.error("Could not restore OTP after failed technician registration:", restoreError.message);
     }
+  } else {
+    // The account has been created; remove sensitive pending form data from the OTP record.
+    const { error: cleanupError } = await supabase.from("otp_codes")
+      .update({ registration_data: null })
+      .eq("id", row.id).eq("verified", true);
+    if (cleanupError) {
+      console.error("Could not clear sensitive registration data from consumed OTP:", cleanupError.message);
+    }
   }
   return registrationResponse;
 }
