@@ -179,30 +179,30 @@ export default function CustomerPayments() {
               const cfg = statusConfig[p.status] ?? statusConfig.pending;
               const booking = p.reference_id ? bookings[p.reference_id] : null;
               return (
-                <div key={p.id} className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <div className="font-bold text-blue-700 text-sm">{p.payment_id}</div>
-                      <div className="font-extrabold text-gray-900 mt-0.5">{purposeLabels[p.purpose] ?? p.purpose}</div>
-                      {booking && <div className="text-xs text-gray-400 mt-0.5">{booking.service_category} · {booking.booking_number}</div>}
+                <div key={p.id} className="min-w-0 rounded-2xl border border-gold-200/60 bg-white p-4 shadow-[0_12px_35px_rgba(5,10,23,0.06)] sm:p-5">
+                  <div className="mb-4 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0 flex-1">
+                      <div className="break-all text-sm font-bold text-blue-700">{p.payment_id}</div>
+                      <div className="mt-1 break-words font-extrabold text-gray-900">{purposeLabels[p.purpose] ?? p.purpose}</div>
+                      {booking && <div className="mt-1 break-words text-xs text-gray-500">{booking.service_category} · {booking.booking_number}</div>}
                     </div>
-                    <div className="text-right">
+                    <div className="flex shrink-0 flex-row items-center justify-between gap-3 sm:flex-col sm:items-end sm:gap-1">
                       <div className="text-lg font-extrabold text-gray-900">₹{p.amount.toLocaleString('en-IN')}</div>
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border ${cfg.color}`}>
+                      <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold ${cfg.color}`}>
                         <cfg.icon size={12} /> {cfg.label}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between text-sm text-gray-500">
-                    <div className="flex items-center gap-3">
-                      <span>{new Date(p.created_at).toLocaleDateString('en-IN')}</span>
-                      {p.utr && <span className="font-mono text-xs">UTR: {p.utr}</span>}
-                      <span className="text-xs">UPI: {p.upi_id}</span>
+                  <div className="flex min-w-0 flex-col gap-3 border-t border-gray-100 pt-3 text-sm text-gray-500 sm:flex-row sm:items-end sm:justify-between">
+                    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-2">
+                      <span className="shrink-0">{new Date(p.created_at).toLocaleDateString('en-IN')}</span>
+                      {p.utr && <span className="max-w-full break-all font-mono text-xs">UTR: {p.utr}</span>}
+                      <span className="max-w-full break-all text-xs">UPI: {p.upi_id}</span>
                     </div>
                     {p.status === 'success' && (
-                      <button onClick={() => downloadInvoice(p)} className="flex items-center gap-1 text-gold-700 font-semibold hover:underline">
-                        <Download size={14} /> Invoice
+                      <button type="button" onClick={() => downloadInvoice(p)} className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 self-start rounded-lg px-3 py-2 font-semibold text-gold-700 hover:bg-amber-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a47c00] focus-visible:ring-offset-2 sm:self-auto">
+                        <Download size={14} /> Download invoice
                       </button>
                     )}
                   </div>
