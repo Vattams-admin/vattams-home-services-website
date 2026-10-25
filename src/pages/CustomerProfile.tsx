@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Loader, User, Phone, Mail, MapPin, Home, Save, LogOut, Calendar, Briefcase, CheckCircle, Lock, Key } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import { Customer } from '@/lib/supabase';
@@ -20,6 +20,7 @@ export default function CustomerProfile() {
   const [pwdLoading, setPwdLoading] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [pwdMsg, setPwdMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const bookingCountRequestVersion = useRef(0);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('vattams_customer');
@@ -66,7 +67,12 @@ export default function CustomerProfile() {
     }
   }, []);
 
+  useEffect(() => () => {
+    bookingCountRequestVersion.current += 1;
+  }, []);
+
   const loadBookingCount = async (_customerId: string) => {
+    const requestVersion = ++bookingCountRequestVersion.current;
     setBookingCountError(false);
     try {
       const result = await customerData<{ bookings: { id: string }[] }>('bookings');
@@ -74,9 +80,11 @@ export default function CustomerProfile() {
           !result.bookings.every((booking) => booking && typeof booking.id === 'string')) {
         throw new Error('Booking count response is unavailable.');
       }
+      if (requestVersion !== bookingCountRequestVersion.current) return;
       setBookingCount(result.bookings.length);
       setBookingCountError(false);
     } catch {
+      if (requestVersion !== bookingCountRequestVersion.current) return;
       // Keep the count unknown: a failed request is not proof of zero bookings.
       setBookingCount(null);
       setBookingCountError(true);
