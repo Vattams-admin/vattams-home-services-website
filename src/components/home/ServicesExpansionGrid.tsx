@@ -92,7 +92,7 @@ export default function ServicesExpansionGrid() {
         <div className="mx-auto mb-9 max-w-3xl text-center">
           <p className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-white/90 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-amber-800 shadow-sm"><MapPin size={14} /> VATTAMS service marketplace</p>
           <h2 id="more-services-heading" className="mt-5 font-display text-3xl font-extrabold tracking-tight text-navy-950 md:text-5xl">One marketplace. <span className="text-amber-700">More ways to get help.</span></h2>
-          <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-gray-600 md:text-base">Explore 48 service categories across home care, repairs, technology, mobility and professional support. Availability depends on your city and participating independent providers.</p>
+          <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-gray-600 md:text-base">Explore {categories.length} service categories across home care, repairs, technology, mobility and professional support. Availability depends on your city and participating independent providers.</p>
           <div className="mx-auto mt-6 flex max-w-xl items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm transition focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-100">
             <Search size={19} className="shrink-0 text-gray-400" />
             <input value={query} onChange={(event) => setQuery(event.target.value)} aria-label="Search service categories" placeholder="Search AC, plumbing, solar, cleaning…" className="w-full bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-400" />
