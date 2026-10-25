@@ -660,12 +660,12 @@ export default function Booking() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <Field icon={Calendar} label="Preferred Date">
                     <input type="date" value={form.preferred_date} min={getIndiaBookingClock().date}
-                      onChange={(e) => setForm({ ...form, preferred_date: e.target.value })}
+                      onChange={(e) => { const preferred_date = e.target.value; setForm({ ...form, preferred_date, preferred_time: form.preferred_time && isTimeSlotInPastToday(form.preferred_time, preferred_date) ? '' : form.preferred_time }); }}
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all" />
                   </Field>
                   <Field icon={Clock} label="Preferred Time">
                     <select value={form.preferred_time}
-                      onChange={(e) => setForm({ ...form, preferred_time: e.target.value })}
+                      onChange={(e) => { const preferred_time = e.target.value; if (!preferred_time || !isTimeSlotInPastToday(preferred_time, form.preferred_date)) setForm({ ...form, preferred_time }); }}
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all bg-white">
                       <option value="">Any time</option>
                       {timeSlots.map((t) => <option key={t} value={t} disabled={isTimeSlotInPastToday(t, form.preferred_date)}>{t}</option>)}
