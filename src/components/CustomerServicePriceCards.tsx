@@ -110,15 +110,27 @@ export default function CustomerServicePriceCards({ variant = 'home' }: { varian
 
   const priceGroups = useMemo(() => groups.map((group) => {
     const rows = prices
-      .filter((price) => price.service_category === group.category && price.is_active)
+      .filter((price) => {
+        const basePrice = Number(price.base_price);
+        return price.service_category === group.category
+          && price.is_active
+          && Number.isFinite(basePrice)
+          && basePrice > 0
+          && Boolean(price.service_type);
+      })
       .sort((a, b) => group.order.indexOf(a.service_type) - group.order.indexOf(b.service_type))
       .map((row) => {
         const fee = checkoutFees[group.category];
         const basePrice = Number(row.base_price);
-        const breakdown = fee
-          ? moneyBreakdown(basePrice, Number(fee.gst_rate), Number(fee.platform_fee))
+        const gstRate = Number(fee?.gst_rate);
+        const platformFee = Number(fee?.platform_fee);
+        const feeConfigValid = Boolean(fee)
+          && Number.isFinite(gstRate) && gstRate >= 0 && gstRate <= 100
+          && Number.isFinite(platformFee) && platformFee >= 0;
+        const breakdown = feeConfigValid
+          ? moneyBreakdown(basePrice, gstRate, platformFee)
           : null;
-        return { ...row, breakdown };
+        return { ...row, base_price: basePrice, breakdown };
       });
     const startingRow = rows.length
       ? [...rows].sort((a, b) => Number(a.base_price) - Number(b.base_price))[0]
