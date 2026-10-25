@@ -123,7 +123,14 @@ export default function Booking() {
           .filter((service) => isCustomerBookingCategory(service.name))
           .sort((a, b) => customerCategoryOrder.indexOf(a.name) - customerCategoryOrder.indexOf(b.name));
         setServices(featuredServices);
-        if (featuredServices[0]) setForm((f) => ({ ...f, service_category: featuredServices[0].name, service_type: getServiceTypes(featuredServices[0].name)[0] ?? '' }));
+        if (featuredServices[0]) setForm((f) => {
+          const selectedCategoryExists = featuredServices.some((service) => service.name === f.service_category);
+          const serviceCategory = selectedCategoryExists ? f.service_category : featuredServices[0].name;
+          const allowedTypes = getServiceTypes(serviceCategory);
+          const serviceType = allowedTypes.includes(f.service_type) ? f.service_type : (allowedTypes[0] ?? '');
+          return { ...f, service_category: serviceCategory, service_type: serviceType };
+        });
+        else setForm((f) => ({ ...f, service_category: '', service_type: '' }));
       }
 
       if (aiDraft) {
