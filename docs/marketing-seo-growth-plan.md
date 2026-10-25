@@ -1,6 +1,6 @@
 # VATTAMS Home Services — Marketing, Promotion & SEO Growth Plan
 
-Last reviewed: 11 October 2026
+Last reviewed: 25 October 2026
 
 ## Goal
 
@@ -96,6 +96,44 @@ Use Tamil voiceover/subtitles plus concise English captions. End with one clear 
 **CTA:** “Review current terms and register at vattams.net/join-technician | +91 63740 68296”
 
 **Internal note:** Technician-paid platform fees are not customer service prices. Do not mix the two in ads.
+
+
+## Conversion and campaign improvements — 25 October 2026
+
+### Customer pricing presentation
+- Home and Services pages read job-specific base prices from the live `customer_service_prices` catalogue.
+- Price cards now show a transparent estimated checkout total using the matching active `service_prices` GST rate and customer platform fee.
+- Booking checkout remains the final source of truth for applicable charges and discounts.
+- Keep technician-paid call-rate fees out of customer ads, customer price labels and customer checkout totals.
+- Keep the distinction visible: base price, GST, customer platform fee, estimated total; parts or extra work require a separate quote and customer approval.
+
+### Updated campaign creative framework
+Use a repeatable 15–25 second vertical video structure for Instagram Reels, YouTube Shorts and Facebook Reels:
+1. **0–3 sec — relatable problem:** “AC cooling kammiya?”, “Washing machine drain aagala?”, or “Fridge cool aagala?”
+2. **3–8 sec — useful detail:** show one safe, practical observation or the information customers should share when booking. Do not instruct viewers to perform unsafe electrical or refrigerant work.
+3. **8–15 sec — product proof:** screen-record the real service selector and current price breakdown; blur all personal/customer information.
+4. **15–20 sec — transparent expectation:** explain that appointment options depend on address and technician schedule, and extra parts/work need approval.
+5. **Final CTA — one action:** “Check service options at vattams.net/services” or “Choose your appointment options at vattams.net/booking”.
+
+### Publishing cadence and channel roles
+- **3 short videos per week:** one AC topic, one washing-machine topic, one refrigerator topic.
+- **1 price-transparency post per week:** show the current catalogue and checkout breakdown; verify prices from production on publishing day.
+- **1 technician recruitment post per week:** focus on actual service categories, onboarding steps, service-area demand and the disclosed job-specific platform call-rate terms.
+- **WhatsApp:** use a short message with one tracked link; avoid unsolicited bulk messaging and provide an opt-out for promotional lists.
+- **Google Search:** separate customer booking campaigns from technician recruitment campaigns. Keep recruitment keywords negative in customer campaigns and customer-service keywords negative in recruitment campaigns.
+- **Local SEO:** focus customer-acquisition content on Chennai and Coimbatore until coverage and successful booking capacity are verified elsewhere. Other-city recruitment must not imply customer availability.
+
+### Measurement and iteration
+Use separate UTMs by channel and creative, for example `utm_source=instagram&utm_medium=organic_social&utm_campaign=appliance_service&utm_content=ac_general_service_01`. Never put a customer's name, phone number, address or booking identifier in a URL.
+
+Every two weeks, compare:
+- Service page visits → booking starts → successful booking requests.
+- Conversion rate by appliance, city and source.
+- Calls/WhatsApp clicks and how many lead to a serviceable booking.
+- Paid cost per qualified booking, cancellations and rejected assignments.
+- Technician applications, approvals, online coverage and completed jobs.
+
+Do not scale ad spend based on reach alone. Scale only when the booking flow, city coverage, technician capacity and cost per qualified booking are acceptable.
 
 ## Measurement
 
