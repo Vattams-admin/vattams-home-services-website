@@ -12,6 +12,18 @@ interface CustomerServicePrice {
   is_active: boolean;
 }
 
+interface CheckoutFee {
+  service_name: string;
+  gst_rate: number;
+  platform_fee: number;
+}
+
+const moneyBreakdown = (basePrice: number, gstRate: number, platformFee: number) => {
+  const gstAmount = Math.round((basePrice * gstRate / 100) * 100) / 100;
+  const total = Math.round((basePrice + gstAmount + platformFee) * 100) / 100;
+  return { gstAmount, platformFee, total };
+};
+
 const groups: Array<{
   category: string;
   title: string;
@@ -49,6 +61,7 @@ const groups: Array<{
 export default function CustomerServicePriceCards({ variant = 'home' }: { variant?: 'home' | 'page' }) {
   const { navigate } = useRouter();
   const [prices, setPrices] = useState<CustomerServicePrice[]>([]);
+  const [checkoutFees, setCheckoutFees] = useState<Record<string, CheckoutFee>>({});
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
 
@@ -57,17 +70,29 @@ export default function CustomerServicePriceCards({ variant = 'home' }: { varian
 
     const loadPrices = async () => {
       try {
-        const { data, error } = await supabase
-          .from('customer_service_prices')
-          .select('service_category,service_type,base_price,price_label,is_active')
-          .eq('is_active', true);
+        const [customerResult, feeResult] = await Promise.all([
+          supabase
+            .from('customer_service_prices')
+            .select('service_category,service_type,base_price,price_label,is_active')
+            .eq('is_active', true),
+          supabase
+            .from('service_prices')
+            .select('service_name,gst_rate,platform_fee')
+            .eq('is_active', true),
+        ]);
 
         if (!active) return;
-        if (error || !data) {
+        if (customerResult.error || !customerResult.data || feeResult.error || !feeResult.data) {
           setLoadFailed(true);
           setPrices([]);
+          setCheckoutFees({});
         } else {
-          setPrices(data as CustomerServicePrice[]);
+          setPrices(customerResult.data as CustomerServicePrice[]);
+          const feeMap: Record<string, CheckoutFee> = {};
+          (feeResult.data as CheckoutFee[]).forEach((fee) => {
+            feeMap[fee.service_name] = fee;
+          });
+          setCheckoutFees(feeMap);
         }
       } catch {
         if (!active) return;
@@ -85,9 +110,25 @@ export default function CustomerServicePriceCards({ variant = 'home' }: { varian
   const priceGroups = useMemo(() => groups.map((group) => {
     const rows = prices
       .filter((price) => price.service_category === group.category && price.is_active)
-      .sort((a, b) => group.order.indexOf(a.service_type) - group.order.indexOf(b.service_type));
-    return { ...group, rows, startingPrice: rows.length ? Math.min(...rows.map((row) => Number(row.base_price))) : null };
-  }), [prices]);
+      .sort((a, b) => group.order.indexOf(a.service_type) - group.order.indexOf(b.service_type))
+      .map((row) => {
+        const fee = checkoutFees[group.category];
+        const basePrice = Number(row.base_price);
+        const breakdown = fee
+          ? moneyBreakdown(basePrice, Number(fee.gst_rate), Number(fee.platform_fee))
+          : null;
+        return { ...row, breakdown };
+      });
+    const startingRow = rows.length
+      ? [...rows].sort((a, b) => Number(a.base_price) - Number(b.base_price))[0]
+      : null;
+    return {
+      ...group,
+      rows,
+      startingPrice: startingRow ? Number(startingRow.base_price) : null,
+      startingTotal: startingRow?.breakdown?.total ?? null,
+    };
+  }), [prices, checkoutFees]);
 
   const cardPadding = variant === 'page' ? 'p-7' : 'p-6';
 
@@ -115,8 +156,13 @@ export default function CustomerServicePriceCards({ variant = 'home' }: { varian
                 <p className="relative mt-2 min-h-[3rem] text-sm leading-6 text-gray-500">{group.description}</p>
                 {group.startingPrice !== null ? (
                   <div className="relative mt-4 rounded-xl border border-gold-100 bg-gold-50 px-4 py-3">
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Service price from</p>
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Starting base price</p>
                     <p className="mt-0.5 text-2xl font-extrabold text-gold-700">{formatINR(group.startingPrice)}</p>
+                    {group.startingTotal !== null && (
+                      <p className="mt-1 text-xs font-semibold text-navy-800">
+                        Estimated checkout from {formatINR(group.startingTotal)} including GST and platform fee
+                      </p>
+                    )}
                   </div>
                 ) : (
                   <div className="relative mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
@@ -125,17 +171,32 @@ export default function CustomerServicePriceCards({ variant = 'home' }: { varian
                 )}
                 <div className="relative mt-4 space-y-2">
                   {group.rows.map((row) => (
-                    <div key={row.service_type} className="flex items-start justify-between gap-3 border-b border-gray-100 pb-2 last:border-0 last:pb-0">
-                      <span className="flex items-start gap-2 text-sm text-gray-700">
-                        <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-gold-600" />
-                        {row.service_type}
-                      </span>
-                      <span className="shrink-0 text-sm font-bold text-navy-900">{formatINR(Number(row.base_price))}</span>
+                    <div key={row.service_type} className="border-b border-gray-100 pb-3 last:border-0 last:pb-0">
+                      <div className="flex items-start justify-between gap-3">
+                        <span className="flex items-start gap-2 text-sm font-semibold text-gray-800">
+                          <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-gold-600" />
+                          {row.service_type}
+                        </span>
+                        <span className="shrink-0 text-sm font-bold text-navy-900">{formatINR(Number(row.base_price))}</span>
+                      </div>
+                      {row.breakdown && (
+                        <div className="ml-6 mt-1.5 space-y-1 text-xs text-gray-500">
+                          <div className="flex justify-between gap-3">
+                            <span>GST</span><span>{formatINR(row.breakdown.gstAmount)}</span>
+                          </div>
+                          <div className="flex justify-between gap-3">
+                            <span>Platform fee</span><span>{formatINR(row.breakdown.platformFee)}</span>
+                          </div>
+                          <div className="flex justify-between gap-3 border-t border-gray-100 pt-1 font-extrabold text-navy-900">
+                            <span>Estimated checkout total</span><span>{formatINR(row.breakdown.total)}</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
                 <p className="relative mt-4 text-xs leading-5 text-gray-500">
-                  Listed service price before GST and platform fee. Any parts or additional work are quoted separately and require your approval.
+                  Estimates use the current listed base price, GST and platform fee. Final checkout shows the applicable charges and discounts. Parts or additional work are quoted separately and require your approval.
                 </p>
                 <button
                   type="button"
