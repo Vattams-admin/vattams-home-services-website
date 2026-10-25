@@ -520,10 +520,10 @@ export default function Booking() {
                       <span className="font-semibold text-gray-800 text-sm">Have a Coupon Code?</span>
                     </div>
                     <div className="flex gap-2">
-                      <input type="text" value={couponCode} disabled={validatingCoupon} onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponResult(null); }}
+                      <input type="text" value={couponCode} disabled={validatingCoupon || submitting} onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponResult(null); }}
                         placeholder="Enter coupon code"
                         className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-gold-500 uppercase" />
-                      <button type="button" onClick={handleValidateCoupon} disabled={validatingCoupon || !couponCode.trim()}
+                      <button type="button" onClick={handleValidateCoupon} disabled={validatingCoupon || submitting || !couponCode.trim()}
                         className="px-4 py-2 bg-navy-900 hover:bg-navy-800 disabled:bg-gray-300 text-white text-sm font-semibold rounded-lg transition-colors">
                         {validatingCoupon ? '...' : 'Apply'}
                       </button>
