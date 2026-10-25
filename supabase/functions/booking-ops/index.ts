@@ -685,15 +685,46 @@ Deno.serve(async (req: Request) => {
         });
       }
 
-      const { data: jobData, error: jobInsertError } = await supabase
+      let { data: jobData, error: jobInsertError } = await supabase
         .from("technician_jobs")
         .insert({ booking_id, technician_id: chosen.id, status: "assigned", job_amount: Number(booking.base_price ?? 0), call_rate_fee: Number(booking.call_rate_fee) || 0, service_type: String(booking.service_type ?? "") || null })
         .select("*")
         .single() as { data: Record<string, unknown> | null; error: unknown };
 
-      // Do not leave a booking marked assigned when the corresponding job
-      // record failed to persist. Restore the original booking status only if
-      // this request still owns the assignment, avoiding concurrent admin changes.
+      // A network/transport error can occur after the database committed the
+      // insert. Reconcile before rollback so we do not clear a booking while
+      // leaving a real technician job behind.
+      if (jobInsertError || !jobData) {
+        const { data: persistedJob, error: reconcileError } = await supabase
+          .from("technician_jobs")
+          .select("*")
+          .eq("booking_id", booking_id)
+          .eq("technician_id", chosen.id)
+          .eq("status", "assigned")
+          .maybeSingle() as { data: Record<string, unknown> | null; error: unknown };
+
+        if (reconcileError) {
+          console.error("[booking-ops auto_assign] job insert outcome uncertain; reconciliation lookup failed");
+          return new Response(JSON.stringify({
+            success: false,
+            assigned: false,
+            reason: "job_creation_state_uncertain",
+            review_required: true,
+          }), {
+            status: 503,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        if (persistedJob) {
+          jobData = persistedJob;
+          jobInsertError = null;
+        }
+      }
+
+      // Only roll back when reconciliation confirms no matching assigned job
+      // persisted. Restore the original booking status only if this request
+      // still owns the assignment, avoiding concurrent admin changes.
       if (jobInsertError || !jobData) {
         const { data: rolledBackBooking, error: rollbackError } = await supabase
           .from("bookings")
