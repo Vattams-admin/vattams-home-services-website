@@ -6,7 +6,7 @@ export async function customerData<T>(action:string, extra:Record<string,unknown
   const res=await fetch(`${SUPABASE_URL}/functions/v1/customer-data`,{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_ANON_KEY}`},
-    body:JSON.stringify({action,session_token:sessionToken,...extra})
+    body:JSON.stringify({...extra,action,session_token:sessionToken})
   });
   if(!res.ok) return null;
   return await res.json() as T;
