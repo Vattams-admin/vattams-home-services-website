@@ -165,7 +165,18 @@ async function verifyTechnicianRegistrationOtp(supabase: ReturnType<typeof creat
   if (!pending || String(pending.mobile || "").replace(/\D/g, "") !== mobile || !pending.email || !pending.password_hash) {
     return otpJson({ error: "Registration details expired. Please restart registration." }, 400);
   }
-  return await handleRegister(supabase, { ...pending, password: "", password_hash: pending.password_hash });
+  const registrationResponse = await handleRegister(supabase, { ...pending, password: "", password_hash: pending.password_hash });
+  // Keep the OTP available if registration fails (for example, if the joining-fee
+  // payment confirmation is not ready yet). Consume it permanently only on success.
+  if (!registrationResponse.ok) {
+    const { error: restoreError } = await supabase.from("otp_codes")
+      .update({ verified: false, verified_at: null })
+      .eq("id", row.id).eq("verified", true);
+    if (restoreError) {
+      console.error("Could not restore OTP after failed technician registration:", restoreError.message);
+    }
+  }
+  return registrationResponse;
 }
 
 Deno.serve(async (req: Request) => {
