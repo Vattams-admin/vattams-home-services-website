@@ -173,12 +173,21 @@ export default function CustomerProfile() {
   const handleLogout = async () => {
     if (loggingOut) return;
     setLoggingOut(true);
-    const sessionToken = sessionStorage.getItem('vattams_customer_session') || '';
+    let sessionToken = '';
+    try {
+      sessionToken = sessionStorage.getItem('vattams_customer_session') || '';
+    } catch {
+      // Browser storage may be unavailable; continue with local sign-out.
+    }
     // Clear the local session immediately so a network failure cannot leave
     // this browser appearing signed in. The server logout is best-effort.
-    sessionStorage.removeItem('vattams_customer');
-    sessionStorage.removeItem('vattams_customer_session');
-    sessionStorage.removeItem('vattams_customer_expires');
+    try {
+      sessionStorage.removeItem('vattams_customer');
+      sessionStorage.removeItem('vattams_customer_session');
+      sessionStorage.removeItem('vattams_customer_expires');
+    } catch {
+      // Navigation must still complete if storage cleanup is blocked.
+    }
     navigate('home');
     try {
       if (sessionToken) {
