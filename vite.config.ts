@@ -20,7 +20,7 @@ function configureFcmServiceWorker(env: Record<string, string>) {
   return {
     name: 'configure-fcm-service-worker',
     apply: 'build' as const,
-    closeBundle() {
+    writeBundle() {
       const workerPath = resolve(process.cwd(), 'dist/firebase-messaging-sw.js');
       const publicWorkerPath = resolve(process.cwd(), 'public/firebase-messaging-sw.js');
       let worker: string;
@@ -61,7 +61,7 @@ function prerenderSeoPages() {
   return {
     name: 'prerender-public-seo-pages',
     apply: 'build' as const,
-    closeBundle() {
+    writeBundle() {
       const outputDir = resolve(process.cwd(), 'dist');
       const template = readFileSync(resolve(outputDir, 'index.html'), 'utf8');
 
