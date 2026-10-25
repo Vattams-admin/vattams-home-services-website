@@ -244,7 +244,7 @@ export default function CustomerProfile() {
           </div>
         </div>
 
-        {msg && <div className={'rounded-xl p-3 text-sm mb-4 ' + (msg.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200')}>{msg.text}</div>}
+        {msg && <div role={msg.type === 'error' ? 'alert' : 'status'} aria-live={msg.type === 'error' ? 'assertive' : 'polite'} className={'rounded-xl p-3 text-sm mb-4 ' + (msg.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200')}>{msg.text}</div>}
 
         <form onSubmit={handleSave} className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-6 space-y-4">
           <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
@@ -256,45 +256,45 @@ export default function CustomerProfile() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Full Name</label>
+            <label htmlFor="profile-full-name" className="block text-sm font-semibold text-gray-700 mb-1.5">Full Name</label>
             <div className="relative">
               <User size={16} className="absolute left-3 top-3.5 text-gray-400" />
-              <input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+              <input id="profile-full-name" name="full_name" autoComplete="name" required minLength={2} maxLength={100} value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })}
                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Mobile Number (cannot change)</label>
+            <label htmlFor="profile-mobile" className="block text-sm font-semibold text-gray-700 mb-1.5">Mobile Number (cannot change)</label>
             <div className="relative">
               <Phone size={16} className="absolute left-3 top-3.5 text-gray-400" />
-              <input value={customer.mobile} disabled className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-ivory-50 text-gray-500 text-sm" />
+              <input id="profile-mobile" name="mobile" autoComplete="tel" value={customer.mobile} disabled className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-ivory-50 text-gray-500 text-sm" />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email</label>
+            <label htmlFor="profile-email" className="block text-sm font-semibold text-gray-700 mb-1.5">Email</label>
             <div className="relative">
               <Mail size={16} className="absolute left-3 top-3.5 text-gray-400" />
-              <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
+              <input id="profile-email" name="email" autoComplete="email" maxLength={254} type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">City</label>
+            <label htmlFor="profile-city" className="block text-sm font-semibold text-gray-700 mb-1.5">City</label>
             <div className="relative">
               <MapPin size={16} className="absolute left-3 top-3.5 text-gray-400" />
-              <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })}
+              <input id="profile-city" name="city" autoComplete="address-level2" maxLength={100} value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })}
                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Address</label>
+            <label htmlFor="profile-address" className="block text-sm font-semibold text-gray-700 mb-1.5">Address</label>
             <div className="relative">
               <Home size={16} className="absolute left-3 top-3.5 text-gray-400" />
-              <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })}
+              <input id="profile-address" name="address" autoComplete="street-address" maxLength={500} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })}
                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
             </div>
           </div>
