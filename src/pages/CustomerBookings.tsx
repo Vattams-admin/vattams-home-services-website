@@ -88,6 +88,9 @@ export default function CustomerBookings() {
     const sessionToken = sessionStorage.getItem('vattams_customer_session');
     const expiresAt = sessionStorage.getItem('vattams_customer_expires');
     if (!stored || !sessionToken || !expiresAt) {
+      sessionStorage.removeItem('vattams_customer');
+      sessionStorage.removeItem('vattams_customer_session');
+      sessionStorage.removeItem('vattams_customer_expires');
       navigate('customer-login');
       return;
     }
@@ -113,6 +116,8 @@ export default function CustomerBookings() {
       void loadBookings(record);
     } catch {
       sessionStorage.removeItem('vattams_customer');
+      sessionStorage.removeItem('vattams_customer_session');
+      sessionStorage.removeItem('vattams_customer_expires');
       navigate('customer-login');
     }
   }, [loadBookings, navigate]);
