@@ -4,7 +4,7 @@ import {
   Droplets, Hammer, Sparkles, Bug, Tv, Car, Laptop, Trees, HeartHandshake,
   Camera, BriefcaseBusiness, Wifi, Package, Building2, Paintbrush, Utensils,
   Scissors, FileCheck, ArrowRight, MapPin, Search, PlugZap, Wrench, Sofa,
-  Shirt, Flower2, Monitor, CookingPot, Truck, Shield, House, BadgeCheck,
+  Shirt, Flower2, Monitor, CookingPot, Truck, Shield, Home, BadgeCheck,
   Thermometer, Router, Fan, ClipboardCheck, CircleHelp, Star, Sparkle,
 } from 'lucide-react';
 import { useRouter } from '@/lib/router';
@@ -38,7 +38,7 @@ const categories: ServiceCategory[] = [
   { name: 'TV & Home Entertainment', detail: 'TV mounting, DTH, soundbars and home-theatre setup', group: 'Power & technology', icon: Tv },
   { name: 'Carpentry & Furniture', detail: 'Doors, cupboards, shelves, fittings and furniture assembly', group: 'Home improvement', icon: Hammer },
   { name: 'Painting & Wall Repairs', detail: 'Painting, touch-ups, drilling and minor wall repairs', group: 'Home improvement', icon: Paintbrush },
-  { name: 'Waterproofing & Damp Inspection', detail: 'Dampness checks and suitable specialist referrals', group: 'Home improvement', icon: House, partnerOnly: true },
+  { name: 'Waterproofing & Damp Inspection', detail: 'Dampness checks and suitable specialist referrals', group: 'Home improvement', icon: Home, partnerOnly: true },
   { name: 'Tile, Grout & Fixture Repair', detail: 'Minor tile, grout, drilling and fixture installation', group: 'Home improvement', icon: Wrench },
   { name: 'Locksmith & Door Repair', detail: 'Door locks, hinges and lockout assistance through verified providers', group: 'Home improvement', icon: ShieldCheck },
   { name: 'Home Deep Cleaning', detail: 'Full-home, kitchen, bathroom and move-in/move-out cleaning', group: 'Cleaning & outdoor', icon: Sparkles },
