@@ -40,6 +40,7 @@ const categories: ServiceCategory[] = [
   { name: 'Painting & Wall Repairs', detail: 'Painting, touch-ups, drilling and minor wall repairs', group: 'Home improvement', icon: Paintbrush },
   { name: 'Waterproofing & Damp Inspection', detail: 'Dampness checks and suitable specialist referrals', group: 'Home improvement', icon: House, partnerOnly: true },
   { name: 'Tile, Grout & Fixture Repair', detail: 'Minor tile, grout, drilling and fixture installation', group: 'Home improvement', icon: Wrench },
+  { name: 'Locksmith & Door Repair', detail: 'Door locks, hinges and lockout assistance through verified providers', group: 'Home improvement', icon: ShieldCheck },
   { name: 'Home Deep Cleaning', detail: 'Full-home, kitchen, bathroom and move-in/move-out cleaning', group: 'Cleaning & outdoor', icon: Sparkles },
   { name: 'Sofa & Mattress Cleaning', detail: 'Upholstery, mattress and fabric-care services', group: 'Cleaning & outdoor', icon: Sofa },
   { name: 'Pest Control', detail: 'Pest inspection and treatment through eligible providers', group: 'Cleaning & outdoor', icon: Bug, partnerOnly: true },
