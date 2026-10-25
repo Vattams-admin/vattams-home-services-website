@@ -101,7 +101,7 @@ const categories: ServiceCategory[] = [
   { name: 'Generator Maintenance', detail: 'Generator checks and service by qualified specialists', group: 'Business & professional', icon: Zap, partnerOnly: true },
   { name: 'Lift & Elevator Maintenance', detail: 'Specialist coordination for licensed lift maintenance', group: 'Business & professional', icon: Building2, partnerOnly: true },
   { name: 'Fire Safety Equipment', detail: 'Eligible inspection and servicing through authorised specialists', group: 'Business & professional', icon: Shield, partnerOnly: true },
-  { name: 'Design, Translation & Content', detail: 'Creative, language, writing and digital-content services', group: 'Business & professional', icon: Sparkle },
+  { name: 'Design, Translation & Content', detail: 'Creative, language, writing and digital-content services', group: 'Business & professional', icon: Sparkles },
   { name: 'Website & Virtual Assistance', detail: 'Website support, online admin and virtual assistance', group: 'Business & professional', icon: Monitor },
   { name: 'Accounting & Tax Assistance', detail: 'Administrative help from appropriately qualified providers', group: 'Business & professional', icon: Briefcase, partnerOnly: true },
   { name: 'Insurance Information & Referrals', detail: 'Permitted information and referrals to authorised partners only', group: 'Protection & assistance', icon: Shield, partnerOnly: true },
