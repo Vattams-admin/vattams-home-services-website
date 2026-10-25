@@ -144,12 +144,29 @@ export default function CustomerPayments() {
   );
 }
 
+function escapeInvoiceText(value: unknown): string {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
 function generateInvoiceHTML(payment: PaymentRecord, booking: BookingRef | null, customer: Customer | null): string {
+  const safePaymentId = escapeInvoiceText(payment.payment_id);
+  const safeCustomerName = escapeInvoiceText(customer?.full_name ?? payment.payee_name ?? 'N/A');
+  const safeMobile = escapeInvoiceText(payment.payee_id);
+  const safeServiceCategory = escapeInvoiceText(booking?.service_category);
+  const safeBookingNumber = escapeInvoiceText(booking?.booking_number);
+  const safePurpose = escapeInvoiceText(purposeLabels[payment.purpose] ?? payment.purpose);
+  const safeUpiId = escapeInvoiceText(payment.upi_id);
+  const safeUtr = escapeInvoiceText(payment.utr);
   return `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
-<title>Invoice ${payment.payment_id}</title>
+<title>Invoice ${safePaymentId}</title>
 <style>
   body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; color: #333; }
   .header { text-align: center; border-bottom: 3px solid #1e3a8a; padding-bottom: 20px; margin-bottom: 30px; }
@@ -172,17 +189,17 @@ function generateInvoiceHTML(payment: PaymentRecord, booking: BookingRef | null,
     <div class="subtitle">Hybrid Service Marketplace</div>
   </div>
   <div class="invoice-title">Payment Invoice</div>
-  <div class="row"><span class="label">Invoice Number</span><span class="value">${payment.payment_id}</span></div>
+  <div class="row"><span class="label">Invoice Number</span><span class="value">${safePaymentId}</span></div>
   <div class="row"><span class="label">Date</span><span class="value">${new Date(payment.created_at).toLocaleDateString('en-IN')}</span></div>
-  <div class="row"><span class="label">Customer Name</span><span class="value">${customer?.full_name ?? payment.payee_name ?? 'N/A'}</span></div>
-  <div class="row"><span class="label">Mobile Number</span><span class="value">${payment.payee_id}</span></div>
-  ${booking ? `<div class="row"><span class="label">Service</span><span class="value">${booking.service_category}</span></div><div class="row"><span class="label">Booking Number</span><span class="value">${booking.booking_number}</span></div>` : ''}
-  <div class="row"><span class="label">Payment Purpose</span><span class="value">${purposeLabels[payment.purpose] ?? payment.purpose}</span></div>
-  <div class="row"><span class="label">UPI ID</span><span class="value">${payment.upi_id}</span></div>
-  ${payment.utr ? `<div class="row"><span class="label">UTR Number</span><span class="value">${payment.utr}</span></div>` : ''}
+  <div class="row"><span class="label">Customer Name</span><span class="value">${safeCustomerName}</span></div>
+  <div class="row"><span class="label">Mobile Number</span><span class="value">${safeMobile}</span></div>
+  ${booking ? `<div class="row"><span class="label">Service</span><span class="value">${safeServiceCategory}</span></div><div class="row"><span class="label">Booking Number</span><span class="value">${safeBookingNumber}</span></div>` : ''}
+  <div class="row"><span class="label">Payment Purpose</span><span class="value">${safePurpose}</span></div>
+  <div class="row"><span class="label">UPI ID</span><span class="value">${safeUpiId}</span></div>
+  ${payment.utr ? `<div class="row"><span class="label">UTR Number</span><span class="value">${safeUtr}</span></div>` : ''}
   <div class="row"><span class="label">Status</span><span class="value"><span class="status-badge status-success">Paid</span></span></div>
   <div class="total"><div class="row" style="border:none"><span class="label" style="font-size:16px">Total Amount</span><span class="value">₹${payment.amount.toLocaleString('en-IN')}</span></div></div>
-  <div class="footer">This is a computer-generated invoice from VATTAMS Hybrid Service Marketplace.<br>For queries, call +91 81898 00757 or WhatsApp us.</div>
+  <div class="footer">This is a computer-generated invoice from VATTAMS Hybrid Service Marketplace.<br>For queries, call +91 63740 68296 or WhatsApp us.</div>
 </body>
 </html>`;
 }
