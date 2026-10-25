@@ -262,6 +262,12 @@ export default function Booking() {
     // pending and can still be picked up manually as a fallback.
     void supabase.functions.invoke('booking-ops', {
       body: { action: 'auto_assign', booking_id: data.id, booking_action_token: data.booking_action_token },
+    }).then(({ error: assignmentError }) => {
+      if (assignmentError) {
+        console.error('[Booking] automatic technician assignment failed:', assignmentError);
+      }
+    }).catch((assignmentError) => {
+      console.error('[Booking] automatic technician assignment failed:', assignmentError);
     });
     } catch (error) {
       console.error('[Booking] submission failed:', error);
