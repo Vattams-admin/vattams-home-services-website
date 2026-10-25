@@ -64,6 +64,7 @@ export default function CustomerServicePriceCards({ variant = 'home' }: { varian
   const [checkoutFees, setCheckoutFees] = useState<Record<string, CheckoutFee>>({});
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -105,7 +106,7 @@ export default function CustomerServicePriceCards({ variant = 'home' }: { varian
 
     void loadPrices();
     return () => { active = false; };
-  }, []);
+  }, [retryCount]);
 
   const priceGroups = useMemo(() => groups.map((group) => {
     const rows = prices
@@ -139,8 +140,17 @@ export default function CustomerServicePriceCards({ variant = 'home' }: { varian
           <Loader className="animate-spin text-navy-700" size={30} aria-label="Loading service prices" />
         </div>
       ) : loadFailed ? (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center text-sm text-amber-900">
-          Service prices are temporarily unavailable. Please try again shortly or contact our team.
+        <div role="alert" className="rounded-2xl border border-amber-200 bg-white p-6 text-center shadow-sm sm:p-8">
+          <p className="font-semibold text-[#101D3D]">We couldn’t load the live service catalogue.</p>
+          <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-600">We won’t guess prices or display an estimated total without the current catalogue. Please retry, or contact VATTAMS to ask about availability.</p>
+          <div className="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
+            <button type="button" onClick={() => { setLoading(true); setLoadFailed(false); setRetryCount((count) => count + 1); }} className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#0A132A] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#142342]">
+              Retry live prices
+            </button>
+            <a href="tel:+916374068296" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#D4AF37]/45 bg-[#F8F4E5] px-5 py-3 text-sm font-semibold text-[#101D3D] transition hover:bg-[#F1E8C9]">
+              Contact VATTAMS
+            </a>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
