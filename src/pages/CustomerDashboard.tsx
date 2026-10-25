@@ -263,10 +263,17 @@ export default function CustomerDashboard() {
               <h2 className="text-lg font-extrabold text-gray-900">Active Bookings</h2>
               <button onClick={() => navigate('customer-bookings')} className="text-sm text-gold-700 font-semibold hover:underline">View All</button>
             </div>
-            {activeBookings.length === 0 ? (
+            {!bookingsLoaded ? (
+              <div role="status" className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
+                <Loader className="animate-spin text-gold-700 mx-auto mb-2" size={24} />
+                <p className="text-gray-500 text-sm">Loading your active bookings…</p>
+              </div>
+            ) : activeBookings.length === 0 ? (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
                 <Briefcase size={32} className="text-gray-300 mx-auto mb-2" />
-                <p className="text-gray-500 text-sm">No active bookings right now.</p>
+                <p className="text-gray-700 text-sm font-semibold">No active bookings right now.</p>
+                <p className="text-gray-500 text-xs mt-1">Ready when you are—book a service to get started.</p>
+                <button type="button" onClick={() => navigate('booking')} className="mt-4 rounded-xl bg-navy-950 px-4 py-2 text-sm font-bold text-white hover:bg-navy-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500">Book a Service</button>
               </div>
             ) : (
               <div className="space-y-3">
@@ -321,9 +328,12 @@ export default function CustomerDashboard() {
             <div className="flex items-center justify-between mb-4 mt-6">
               <h2 className="text-lg font-extrabold text-gray-900">Recent History</h2>
             </div>
-            {completedBookings.length === 0 ? (
+            {!bookingsLoaded ? (
+              <div role="status" className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-center text-sm text-gray-500">Loading booking history…</div>
+            ) : completedBookings.length === 0 ? (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
-                <p className="text-gray-500 text-sm">No completed bookings yet.</p>
+                <p className="text-gray-700 text-sm font-semibold">No completed bookings yet.</p>
+                <p className="text-gray-500 text-xs mt-1">Completed services will appear here.</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -379,7 +389,9 @@ export default function CustomerDashboard() {
             {/* Notifications */}
             <div>
               <h2 className="text-lg font-extrabold text-gray-900 mb-4">Notifications</h2>
-              {notifications.length === 0 ? (
+              {!notificationsLoaded ? (
+                <div role="status" className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-center text-sm text-gray-500">Loading notifications…</div>
+              ) : notifications.length === 0 ? (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
                   <Bell size={32} className="text-gray-300 mx-auto mb-2" />
                   <p className="text-gray-500 text-sm">You’re all caught up.</p>
