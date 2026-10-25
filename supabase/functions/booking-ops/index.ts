@@ -662,6 +662,28 @@ Deno.serve(async (req: Request) => {
       free.sort((a, b) => Number(b.is_online === true) - Number(a.is_online === true) || (Number(a.current_workload || 0) - Number(b.current_workload || 0)) || (Number(b.rating || 0) - Number(a.rating || 0)) || (Number(a.total_jobs || 0) - Number(b.total_jobs || 0)));
       const chosen = free[0];
 
+      // Recheck the selected technician immediately before claiming the booking.
+      // This narrows the stale-workload window; a database-level constraint or
+      // transactional allocator is still needed for a fully atomic guarantee.
+      const { data: latestActiveJob, error: latestWorkloadError } = await supabase
+        .from("technician_jobs")
+        .select("id")
+        .eq("technician_id", chosen.id)
+        .in("status", ["assigned", "accepted", "on_the_way", "in_progress", "job_started"])
+        .limit(1)
+        .maybeSingle();
+      if (latestWorkloadError) {
+        console.error("[booking-ops auto_assign] selected technician workload recheck failed");
+        return new Response(JSON.stringify({ error: "Unable to recheck technician availability. Please try again." }), {
+          status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (latestActiveJob) {
+        return new Response(JSON.stringify({ success: true, assigned: false, reason: "technician_became_busy" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       const { data: claimedBooking, error: claimError } = await supabase.from("bookings")
         .update({
           assigned_technician_id: chosen.id,
