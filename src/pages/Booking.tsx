@@ -190,6 +190,7 @@ export default function Booking() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError('');
     if (!isFeaturedApplianceService(form.service_category)) {
       alert('Please select AC, washing machine, or refrigerator service.');
       return;
@@ -204,6 +205,7 @@ export default function Booking() {
     }
     trackMarketingEvent('booking_request_attempt', { service_category: form.service_category, service_type: form.service_type });
     setSubmitting(true);
+    try {
     const { data, error } = await supabase.functions.invoke('booking-ops', {
       body: {
         action: 'create_booking',
@@ -233,9 +235,8 @@ export default function Booking() {
       error: response.error || (!response.data?.data ? new Error('Booking failed') : null),
     }));
 
-    setSubmitting(false);
     if (error) {
-      alert('Booking failed. Please try again or call us.');
+      setSubmitError('We couldn’t submit your request. Your booking is not confirmed. Please try again or contact VATTAMS support.');
       return;
     }
     trackMarketingEvent('generate_lead', { service_category: form.service_category, service_type: form.service_type });
@@ -252,6 +253,12 @@ export default function Booking() {
     void supabase.functions.invoke('booking-ops', {
       body: { action: 'auto_assign', booking_id: data.id, booking_action_token: data.booking_action_token },
     });
+    } catch (error) {
+      console.error('[Booking] submission failed:', error);
+      setSubmitError('Something interrupted the booking request. Please try again or contact VATTAMS support.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (success) {
