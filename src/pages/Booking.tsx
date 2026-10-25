@@ -324,7 +324,7 @@ export default function Booking() {
           <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
             <CheckCircle size={40} className="text-green-600" />
           </div>
-          <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Booking Request Received!</h2>
+          <h2 aria-live="polite" className="text-2xl font-extrabold text-gray-900 mb-2">Booking Request Received!</h2>
           <p className="text-gray-500 mb-4">Your request is recorded and awaiting technician assignment. Our team will contact you shortly to confirm the appointment.</p>
           <div className="bg-gold-50 rounded-xl p-4 mb-6">
             <div className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Your Booking Number</div>
@@ -333,22 +333,22 @@ export default function Booking() {
           <div className="flex flex-col gap-3">
             {customer && (
               <button onClick={() => navigate('customer-bookings')}
-                className="flex items-center justify-center gap-2 py-3 bg-navy-900 hover:bg-navy-800 text-white font-semibold rounded-xl transition-colors">
+                className="flex items-center justify-center gap-2 py-3 bg-navy-900 hover:bg-navy-800 text-white font-semibold rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2">
                 View My Bookings
               </button>
             )}
             {!customer && (
               <button onClick={() => navigate('customer-register')}
-                className="flex items-center justify-center gap-2 py-3 bg-gold-50 hover:bg-gold-100 text-gold-700 font-semibold rounded-xl transition-colors border border-gold-200">
+                className="flex items-center justify-center gap-2 py-3 bg-gold-50 hover:bg-gold-100 text-gold-700 font-semibold rounded-xl transition-colors border border-gold-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2">
                 <LogIn size={18} /> Create Account to Track
               </button>
             )}
             <button onClick={() => navigate('home')}
-              className="py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors">
+              className="py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2">
               Back to Home
             </button>
             <button onClick={() => navigate('join-technician')}
-              className="flex items-center justify-center gap-2 py-3 bg-gold-400 hover:bg-gold-300 text-navy-950 text-white font-semibold rounded-xl transition-colors">
+              className="flex items-center justify-center gap-2 py-3 bg-gold-400 hover:bg-gold-300 text-navy-950 text-white font-semibold rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2">
               <Briefcase size={16} /> Join as a Technician
             </button>
           </div>
