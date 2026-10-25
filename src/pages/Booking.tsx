@@ -308,7 +308,7 @@ export default function Booking() {
         commission_amount: pricing?.commissionAmount ?? 0,
         total_amount: pricing?.finalAmount ?? pricing?.totalAmount ?? 0,
         coupon_code: couponResult?.valid ? couponResult.coupon?.code ?? null : null,
-        discount_amount: couponResult?.valid ? couponResult.discountAmount : 0,
+        discount_amount: couponResult?.valid ? pricing.discountAmount : 0,
         customer_id: customer?.id || null,
         status: 'pending',}
       }
