@@ -85,10 +85,18 @@ Deno.serve(async (req: Request) => {
         }
         authenticatedCustomerMobile = String(customer.mobile).replace(/\D/g, "");
       }
-      const allowedStatuses = new Set(["pending"]);
       const b = booking || {};
-      if (!String(b.customer_name ?? "").trim() || !String(b.mobile_number ?? "").replace(/\D/g, "").match(/^\d{10}$/) || !String(b.city ?? "").trim() || !String(b.address ?? "").trim() || !String(b.service_category ?? "").trim()) {
-        return new Response(JSON.stringify({ error: "Required booking fields are missing" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const customerName = String(b.customer_name ?? "").trim();
+      const mobileNumber = String(b.mobile_number ?? "").replace(/\D/g, "");
+      const city = String(b.city ?? "").trim();
+      const address = String(b.address ?? "").trim();
+      const problemDescription = String(b.problem_description ?? "").trim();
+
+      if (!customerName || !/^\d{10}$/.test(mobileNumber) || !city || !address || !String(b.service_category ?? "").trim()) {
+        return new Response(JSON.stringify({ error: "Enter your name, a valid 10-digit mobile number, city, address, and service." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      if (customerName.length > 120 || city.length > 100 || address.length > 1000 || problemDescription.length > 2000) {
+        return new Response(JSON.stringify({ error: "Some booking details are too long. Please shorten the name, city, address, or problem description and try again." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
       if (!isFeaturedApplianceService(b.service_category)) {
         return new Response(JSON.stringify({ error: "Only AC, washing machine, and refrigerator services are currently available" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
