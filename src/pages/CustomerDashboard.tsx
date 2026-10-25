@@ -60,7 +60,9 @@ export default function CustomerDashboard() {
   const { navigate } = useRouter();
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [bookingsLoaded, setBookingsLoaded] = useState(false);
   const [notifications, setNotifications] = useState<{ id: string; title: string; message: string; created_at: string; is_read: boolean }[]>([]);
+  const [notificationsLoaded, setNotificationsLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [selected, setSelected] = useState<Booking | null>(null);
@@ -75,9 +77,15 @@ export default function CustomerDashboard() {
 
     const bookingResult = results[0];
     const notificationResult = results[1];
-    if (bookingResult.status === 'fulfilled') setBookings(bookingResult.value);
+    if (bookingResult.status === 'fulfilled') {
+      setBookings(bookingResult.value);
+      setBookingsLoaded(true);
+    }
     else console.error('[CustomerDashboard] booking history load failed:', bookingResult.reason);
-    if (notificationResult.status === 'fulfilled') setNotifications(notificationResult.value);
+    if (notificationResult.status === 'fulfilled') {
+      setNotifications(notificationResult.value);
+      setNotificationsLoaded(true);
+    }
     else console.error('[CustomerDashboard] notification load failed:', notificationResult.reason);
 
     if (bookingResult.status === 'rejected') setLoadError('Your booking history could not be verified. Please retry.');
@@ -231,10 +239,10 @@ export default function CustomerDashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <StatCard icon={Briefcase} label="Active Bookings" value={String(activeBookings.length)} color="bg-blue-100 text-gold-700" />
-          <StatCard icon={CheckCircle} label="Completed" value={String(completedBookings.length)} color="bg-green-100 text-green-600" />
-          <StatCard icon={TrendingUp} label="Total Bookings" value={String(bookings.length)} color="bg-navy-100 text-navy-700" />
-          <StatCard icon={Bell} label="Notifications" value={String(unreadCount)} color="bg-amber-100 text-amber-600" />
+          <StatCard icon={Briefcase} label="Active Bookings" value={bookingsLoaded ? String(activeBookings.length) : '—'} color="bg-blue-100 text-gold-700" />
+          <StatCard icon={CheckCircle} label="Completed" value={bookingsLoaded ? String(completedBookings.length) : '—'} color="bg-green-100 text-green-600" />
+          <StatCard icon={TrendingUp} label="Total Bookings" value={bookingsLoaded ? String(bookings.length) : '—'} color="bg-navy-100 text-navy-700" />
+          <StatCard icon={Bell} label="Notifications" value={notificationsLoaded ? String(unreadCount) : '—'} color="bg-amber-100 text-amber-600" />
         </div>
 
         {/* Quick Links */}
