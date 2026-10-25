@@ -18,6 +18,7 @@ interface RegisterBody {
   id_proof_type?: string;
   id_proof_number?: string;
   password: string;
+  password_hash?: string;
   whatsapp_number?: string;
   area?: string;
   pincode?: string;
