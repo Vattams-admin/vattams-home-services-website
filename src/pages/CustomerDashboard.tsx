@@ -254,6 +254,10 @@ export default function CustomerDashboard() {
     if (validNotifications.length !== data.notifications.length) {
       throw new Error('Notifications contained incomplete records. Please retry.');
     }
+    const notificationIds = validNotifications.map((notification) => notification.id.trim());
+    if (new Set(notificationIds).size !== notificationIds.length) {
+      throw new Error('Notifications contained duplicate records. Please retry.');
+    }
     return validNotifications;
   };
 
