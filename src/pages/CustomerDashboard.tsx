@@ -192,6 +192,10 @@ export default function CustomerDashboard() {
     if (validBookings.length !== data.bookings.length) {
       throw new Error('Booking history contained incomplete records. Please retry.');
     }
+    const bookingIds = validBookings.map((booking) => booking.id.trim());
+    if (new Set(bookingIds).size !== bookingIds.length) {
+      throw new Error('Booking history contained duplicate records. Please retry.');
+    }
     return validBookings;
   };
 
