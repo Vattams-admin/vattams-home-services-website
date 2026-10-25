@@ -112,8 +112,14 @@ export default function CustomerProfile() {
       setMsg({ type: 'error', text: 'City must be at most 100 characters and address at most 500 characters.' });
       return;
     }
-    if (!sessionStorage.getItem('vattams_customer_session')) {
+    const sessionToken = sessionStorage.getItem('vattams_customer_session');
+    const expiresAt = Number(sessionStorage.getItem('vattams_customer_expires'));
+    if (!sessionToken || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+      sessionStorage.removeItem('vattams_customer');
+      sessionStorage.removeItem('vattams_customer_session');
+      sessionStorage.removeItem('vattams_customer_expires');
       setMsg({ type: 'error', text: 'Your session has expired. Please sign in again.' });
+      navigate('customer-login');
       return;
     }
 
@@ -197,8 +203,13 @@ export default function CustomerProfile() {
       return;
     }
     const sessionToken = sessionStorage.getItem('vattams_customer_session');
-    if (!sessionToken) {
+    const expiresAt = Number(sessionStorage.getItem('vattams_customer_expires'));
+    if (!sessionToken || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+      sessionStorage.removeItem('vattams_customer');
+      sessionStorage.removeItem('vattams_customer_session');
+      sessionStorage.removeItem('vattams_customer_expires');
       setPwdMsg({ type: 'error', text: 'Your session has expired. Please sign in again.' });
+      navigate('customer-login');
       return;
     }
 
