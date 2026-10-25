@@ -1,6 +1,7 @@
 import { ArrowRight } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import CustomerServicePriceCards from '@/components/CustomerServicePriceCards';
+import ServicesExpansionGrid from '@/components/home/ServicesExpansionGrid';
 
 export default function ServicesGrid() {
   const { navigate } = useRouter();
@@ -17,11 +18,12 @@ export default function ServicesGrid() {
             Our Expert Services
           </h2>
           <p className="text-gray-500 max-w-xl mx-auto text-base md:text-lg">
-            Focused expertise in the three appliances your home depends on most.
+            Discover our current appliance booking options and explore additional local service categories.
           </p>
         </div>
 
         <CustomerServicePriceCards variant="home" />
+        <div className="mt-12"><ServicesExpansionGrid /></div>
 
         <div className="text-center mt-12">
           <button
