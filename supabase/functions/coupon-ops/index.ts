@@ -117,15 +117,31 @@ Deno.serve(async req => {
       return new Response(JSON.stringify({ error: "Discount does not match booking" }), { status: 400, headers });
     }
 
-    if (coupon.valid_from && new Date(coupon.valid_from) > new Date()) {
+    const now = Date.now();
+    const validFrom = coupon.valid_from == null ? Number.NaN : new Date(coupon.valid_from).getTime();
+    const validUntil = coupon.valid_until == null ? null : new Date(coupon.valid_until).getTime();
+    const usedCount = Number(coupon.used_count);
+    const maxUses = coupon.max_uses == null ? null : Number(coupon.max_uses);
+
+    // Fail closed if coupon lifecycle/usage metadata is malformed.
+    if (!Number.isFinite(validFrom)
+      || (validUntil !== null && !Number.isFinite(validUntil))
+      || (validUntil !== null && validUntil < validFrom)
+      || !Number.isFinite(usedCount) || usedCount < 0
+      || (maxUses !== null && (!Number.isFinite(maxUses) || maxUses < 0))) {
+      console.error("[coupon-ops] invalid coupon lifecycle or usage configuration");
+      return new Response(JSON.stringify({ error: "Coupon configuration needs review" }), { status: 503, headers });
+    }
+
+    if (validFrom > now) {
       return new Response(JSON.stringify({ error: "Coupon not active" }), { status: 400, headers });
     }
 
-    if (coupon.valid_until && new Date(coupon.valid_until) < new Date()) {
+    if (validUntil !== null && validUntil < now) {
       return new Response(JSON.stringify({ error: "Coupon expired" }), { status: 400, headers });
     }
 
-    if (coupon.max_uses !== null && coupon.used_count >= coupon.max_uses) {
+    if (maxUses !== null && usedCount >= maxUses) {
       return new Response(JSON.stringify({ error: "Coupon usage limit reached" }), { status: 400, headers });
     }
 
