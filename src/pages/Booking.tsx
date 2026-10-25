@@ -53,6 +53,7 @@ export default function Booking() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [couponCode, setCouponCode] = useState('');
   const [couponResult, setCouponResult] = useState<{ valid: boolean; error?: string; discountAmount: number; coupon?: Coupon } | null>(null);
   const [validatingCoupon, setValidatingCoupon] = useState(false);
@@ -365,6 +366,13 @@ export default function Booking() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
+                {submitError && (
+                  <div role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 p-4 sm:p-5">
+                    <p className="font-semibold text-rose-950">Booking request not confirmed</p>
+                    <p className="mt-1 text-sm leading-6 text-rose-900">{submitError}</p>
+                    <a href="tel:+916374068296" className="mt-3 inline-flex min-h-10 items-center rounded-lg border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-950">Contact VATTAMS support</a>
+                  </div>
+                )}
                 {!customer && (
                   <div className="bg-gold-50 border border-gold-200 rounded-xl p-3 text-sm text-gold-700 flex items-center justify-between">
                     <span>Have an account? Login to pre-fill your details.</span>
