@@ -284,7 +284,7 @@ export default function CustomerDashboard() {
                       key={b.id}
                       role="button"
                       tabIndex={0}
-                      aria-label={`View booking ${b.booking_number}, ${statusLabels[b.status] ?? b.status.replace("_", " ")}`}
+                      aria-label={`View booking ${typeof b.booking_number === 'string' && b.booking_number.trim() ? b.booking_number : 'reference unavailable'}, ${statusLabels[b.status] ?? (typeof b.status === 'string' ? b.status.replace(/_/g, ' ') : 'status unavailable')}`}
                       onClick={() => setSelected(b)}
                       onKeyDown={(event) => {
                         if (event.key === "Enter" || event.key === " ") {
@@ -295,11 +295,11 @@ export default function CustomerDashboard() {
                       className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 transition-shadow cursor-pointer">
                       <div className="flex items-start justify-between mb-3">
                         <div>
-                          <div className="font-bold text-blue-700 text-xs">{b.booking_number || "Booking reference unavailable"}</div>
-                          <div className="font-extrabold text-gray-900 mt-0.5">{b.service_category || "Home service"}</div>
+                          <div className="font-bold text-blue-700 text-xs">{typeof b.booking_number === 'string' && b.booking_number.trim() ? b.booking_number : "Booking reference unavailable"}</div>
+                          <div className="font-extrabold text-gray-900 mt-0.5">{typeof b.service_category === 'string' && b.service_category.trim() ? b.service_category : "Home service"}</div>
                         </div>
                         <span className={`px-2.5 py-1 rounded-full text-xs font-semibold capitalize border ${statusColors[b.status] ?? "bg-gray-100 text-gray-700 border-gray-200"}`}>
-                          {statusLabels[b.status] ?? b.status.replace('_', ' ')}
+                          {statusLabels[b.status] ?? (typeof b.status === 'string' ? b.status.replace(/_/g, ' ') : 'Status unavailable')}
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-3">
@@ -338,8 +338,16 @@ export default function CustomerDashboard() {
             ) : (
               <div className="space-y-2">
                 {completedBookings.slice(0, 3).map((b) => (
-                  <div key={b.id} onClick={() => setSelected(b)}
-                    className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer">
+                  <div key={b.id} role="button" tabIndex={0}
+                    aria-label={`View completed booking ${typeof b.booking_number === 'string' && b.booking_number.trim() ? b.booking_number : 'reference unavailable'}`}
+                    onClick={() => setSelected(b)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        setSelected(b);
+                      }
+                    }}
+                    className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center justify-between hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 transition-shadow cursor-pointer">
                     <div>
                       <div className="font-bold text-gray-900 text-sm">{b.service_category || "Home service"}</div>
                       <div className="text-xs text-gray-400">{b.booking_number || "Booking reference unavailable"} · {formatNotificationDate(b.created_at)}</div>
