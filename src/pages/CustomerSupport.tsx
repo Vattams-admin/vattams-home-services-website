@@ -68,13 +68,24 @@ export default function CustomerSupport() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customer) return;
-    if (!subject.trim() || !message.trim()) { showToast('error', 'Please fill in all fields.'); return; }
+    if (!customer || sending) return;
+    const cleanSubject = subject.trim();
+    const cleanMessage = message.trim();
+    if (!cleanSubject || !cleanMessage) { showToast('error', 'Please fill in all fields.'); return; }
+    if (cleanSubject.length > 120 || cleanMessage.length > 2000) {
+      showToast('error', 'Please shorten your subject or message and try again.');
+      return;
+    }
 
     setSending(true);
     try {
-      const result = await customerData<{ success: boolean }>('support', { subject: subject.trim(), message: message.trim() });
-      if (!result?.success) throw new Error('Failed to send support message');
+      const result = await customerData<{ success?: unknown }>('support', {
+        subject: cleanSubject,
+        message: cleanMessage,
+      });
+      if (!result || typeof result !== 'object' || result.success !== true) {
+        throw new Error('Failed to send support message');
+      }
       showToast('success', 'Message sent! Our team will get back to you shortly.');
       setSubject('');
       setMessage('');
