@@ -83,6 +83,12 @@ Deno.serve(async (req: Request) => {
     const { action, booking_id, technician_id, otp, purpose, status, booking_action_token, admin_id, admin_session_token, customer_session_token, booking } = requestBody as Record<string, unknown>;
 
     if (action === "create_booking") {
+      if (!booking || typeof booking !== "object" || Array.isArray(booking)) {
+        return new Response(JSON.stringify({ error: "Booking details must be provided as a JSON object." }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       const customerSessionToken = String(customer_session_token || "");
       let customerId: string | null = null;
       let authenticatedCustomerMobile: string | null = null;
