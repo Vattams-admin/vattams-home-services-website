@@ -262,8 +262,7 @@ async function handleRegister(supabase: ReturnType<typeof createClient>, body: R
     );
   }
 
-  const salt = await bcrypt.genSalt(10);
-  const passwordHash = await bcrypt.hash(password, salt);
+  const passwordHash = body.password_hash || await bcrypt.hash(password, await bcrypt.genSalt(10));
 
   const { data, error } = await supabase
     .from("technicians")
