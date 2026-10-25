@@ -8,12 +8,12 @@ import { useRouter } from '@/lib/router';
 
 const categories = [
   { name: 'AC & Cooling', detail: 'AC service, installation, cleaning, gas and coil work', icon: Wind, available: true },
-  { name: 'UPS, Inverter & Battery', detail: 'Backup power, battery checks and inverter service', icon: BatteryCharging, available: true },
-  { name: 'Solar Energy', detail: 'Solar panel maintenance and qualified installation partners', icon: Sun, available: true },
-  { name: 'Electrical & EV Charging', detail: 'Electrical faults, wiring and EV charger installation', icon: Zap, available: true },
-  { name: 'CCTV & Smart Security', detail: 'Cameras, video doorphones and access systems', icon: ShieldCheck, available: true },
+  { name: 'UPS, Inverter & Battery', detail: 'Backup power, battery checks and inverter service', icon: BatteryCharging, available: false },
+  { name: 'Solar Energy', detail: 'Solar panel maintenance and qualified installation partners', icon: Sun, available: false },
+  { name: 'Electrical & EV Charging', detail: 'Electrical faults, wiring and EV charger installation', icon: Zap, available: false },
+  { name: 'CCTV & Smart Security', detail: 'Cameras, video doorphones and access systems', icon: ShieldCheck, available: false },
   { name: 'Home Appliances', detail: 'Refrigerator, washing machine, microwave and geyser', icon: Refrigerator, available: true },
-  { name: 'Plumbing & Water', detail: 'Pipes, leaks, pumps, RO and water tanks', icon: Droplets, available: true },
+  { name: 'Plumbing & Water', detail: 'Pipes, leaks, pumps, RO and water tanks', icon: Droplets, available: false },
   { name: 'Carpentry & Furniture', detail: 'Doors, cupboards, furniture assembly and fixtures', icon: Hammer, available: false },
   { name: 'Home & Deep Cleaning', detail: 'Kitchen, bathroom, sofa, mattress and move-out cleaning', icon: Sparkles, available: false },
   { name: 'Pest Control', detail: 'General pest treatment through eligible providers', icon: Bug, available: false },
