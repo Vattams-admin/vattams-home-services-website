@@ -93,20 +93,38 @@ export default function Booking() {
   });
 
   useEffect(() => {
-    // Pre-fill from customer session
+    // Pre-fill only from a complete, unexpired customer session.
+    // Invalid saved profile data must not be trusted for a new booking.
     const stored = sessionStorage.getItem('vattams_customer');
-    if (stored) {
+    const sessionToken = sessionStorage.getItem('vattams_customer_session');
+    const expiresAt = Number(sessionStorage.getItem('vattams_customer_expires'));
+    const clearCustomerSession = () => {
+      sessionStorage.removeItem('vattams_customer');
+      sessionStorage.removeItem('vattams_customer_session');
+      sessionStorage.removeItem('vattams_customer_expires');
+    };
+    if (!stored || !sessionToken || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+      clearCustomerSession();
+    } else {
       try {
-        const c = JSON.parse(stored) as Customer;
+        const parsed = JSON.parse(stored) as Partial<Customer>;
+        if (typeof parsed.id !== 'string' || !parsed.id.trim() ||
+            typeof parsed.full_name !== 'string' || !parsed.full_name.trim() ||
+            typeof parsed.mobile !== 'string' || !/^[6-9]\d{9}$/.test(parsed.mobile)) {
+          throw new Error('Saved customer profile is invalid.');
+        }
+        const c = parsed as Customer;
         setCustomer(c);
         setForm((f) => ({
           ...f,
           customer_name: c.full_name,
           mobile_number: c.mobile,
-          city: c.city || 'Chennai',
-          address: c.address || '',
+          city: typeof c.city === 'string' && c.city.trim() ? c.city : 'Chennai',
+          address: typeof c.address === 'string' ? c.address : '',
         }));
-      } catch { /* ignore */ }
+      } catch {
+        clearCustomerSession();
+      }
     }
 
     let aiDraft: Record<string, unknown> | null = null;
