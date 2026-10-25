@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Check, Briefcase, ChevronDown } from 'lucide-react';
 import CustomerServicePriceCards from '@/components/CustomerServicePriceCards';
+import ServicesExpansionGrid from '@/components/home/ServicesExpansionGrid';
 import { useRouter } from '@/lib/router';
 import { useSEO } from '@/lib/seo';
 
@@ -18,12 +19,12 @@ const SERVICE_FAQS = [
     answer: 'Choose your appliance and exact job type in the booking form. Review the base price, applicable GST, customer platform fee and any valid discount in the checkout breakdown before submitting the request.',
   },
   {
-    question: 'Which appliance services can I request?',
-    answer: 'You can request AC general service, installation, gas filling, pump water service or coil service, plus washing machine service and refrigerator service.',
+    question: 'Which services can I request?',
+    answer: 'Booking options currently depend on the service categories supported by the booking form. Other categories may be listed for enquiry or future expansion and are not necessarily bookable yet.',
   },
   {
-    question: 'Is an appointment guaranteed in every location?',
-    answer: 'No. Available appointment options depend on your address, the selected job type and technician schedules. Confirm the options displayed during booking.',
+    question: 'Is a response or appointment guaranteed?',
+    answer: 'No. VATTAMS is a service-personnel listing and connection platform. Independent providers may accept or decline enquiries; response, appointment, assignment and completion are not guaranteed.',
   },
   {
     question: 'Is the technician call-rate fee added to my checkout?',
@@ -35,9 +36,9 @@ export default function Services() {
   const { navigate } = useRouter();
 
   useSEO({
-    title: 'AC, Washing Machine & Refrigerator Service Prices | VATTAMS',
+    title: 'Home Services, UPS, Solar & Local Service Providers | VATTAMS',
     description:
-      'Compare current starting prices for AC general service, installation, gas filling, pump water service, coil service, washing machine service and refrigerator service. See GST and platform fees before confirming a booking.',
+      'Discover appliance services and an expanding catalogue of independent local service providers. Check supported booking options, city availability and prices before submitting a request.',
     keywords:
       'AC service price, AC installation price, AC gas filling price, AC coil service price, washing machine service price, refrigerator service price, VATTAMS Home Services',
     path: '/services',
@@ -69,10 +70,10 @@ export default function Services() {
             Our Services & Pricing
           </div>
           <h1 className="font-display text-3xl md:text-5xl font-bold text-white mb-4">
-            Appliance Service Prices, Clearly Explained
+            Discover Local Services, Clearly Explained
           </h1>
           <p className="text-navy-100 max-w-2xl mx-auto text-base md:text-lg">
-            Compare starting prices for AC, washing machine and refrigerator services. Review the estimated checkout total, then confirm the charges and appointment options for your address.
+            Explore participating service-personnel listings, check available booking options and review applicable charges before submitting a request. Service availability varies by city and provider.
           </p>
         </div>
       </section>
@@ -90,6 +91,8 @@ export default function Services() {
           <CustomerServicePriceCards variant="page" />
         </div>
       </section>
+
+      <ServicesExpansionGrid />
 
       <section className="py-14 md:py-18 bg-white" aria-labelledby="before-booking-heading">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -123,7 +126,7 @@ export default function Services() {
           <div className="text-center mb-8">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold-700">Helpful answers</p>
             <h2 id="service-faq-heading" className="mt-2 font-display text-2xl md:text-3xl font-bold text-navy-900">
-              Appliance Service & Pricing FAQs
+              Service Marketplace & Pricing FAQs
             </h2>
           </div>
           <div className="space-y-3">
