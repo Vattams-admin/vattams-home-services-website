@@ -1019,9 +1019,12 @@ export default function AdminDashboard() {
       setRecharges((prev) => prev.map((r) => r.id === rechargeId ? { ...r, ...recharge, status: 'approved' } : r));
       const r = recharges.find((x) => x.id === rechargeId);
       if (r) {
-        await notifyTechnician.walletRechargeApproved(r.technician_id, Number(r.amount));
-        const { technicians: latestTechs } = await adminData<{ technicians: Technician[] }>('technicians');
-        const { transactions } = await adminData<{ transactions: WalletTransaction[] }>('wallet_transactions');
+        // The database process_recharge_approval trigger already creates the
+        // technician recharge-approved notification. Avoid sending a duplicate.
+        const [{ technicians: latestTechs }, { transactions }] = await Promise.all([
+          adminData<{ technicians: Technician[] }>('technicians'),
+          adminData<{ transactions: WalletTransaction[] }>('wallet_transactions'),
+        ]);
         setTechnicians(latestTechs ?? []);
         setWalletTxns(transactions ?? []);
       }
