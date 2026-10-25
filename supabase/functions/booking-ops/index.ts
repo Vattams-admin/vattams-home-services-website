@@ -254,11 +254,24 @@ Deno.serve(async (req: Request) => {
           });
         }
 
+        const validFromTime = coupon?.valid_from ? new Date(coupon.valid_from).getTime() : null;
+        const validUntilTime = coupon?.valid_until ? new Date(coupon.valid_until).getTime() : null;
+        const usedCount = Number(coupon?.used_count);
+        const maxUses = coupon?.max_uses === null || coupon?.max_uses === undefined ? null : Number(coupon.max_uses);
+        const minimumOrderAmountForValidity = Number(coupon?.min_order_amount ?? 0);
+        const invalidValidityConfig = Boolean(coupon) && (
+          (validFromTime !== null && !Number.isFinite(validFromTime))
+          || (validUntilTime !== null && !Number.isFinite(validUntilTime))
+          || !Number.isFinite(usedCount) || usedCount < 0
+          || (maxUses !== null && (!Number.isFinite(maxUses) || maxUses < 0))
+          || !Number.isFinite(minimumOrderAmountForValidity) || minimumOrderAmountForValidity < 0
+        );
         if (!coupon
-          || (coupon.valid_from && new Date(coupon.valid_from) > new Date())
-          || (coupon.valid_until && new Date(coupon.valid_until) < new Date())
-          || (coupon.max_uses !== null && Number(coupon.used_count) >= Number(coupon.max_uses))
-          || totalAmount < Number(coupon.min_order_amount || 0)) {
+          || invalidValidityConfig
+          || (validFromTime !== null && validFromTime > Date.now())
+          || (validUntilTime !== null && validUntilTime < Date.now())
+          || (maxUses !== null && usedCount >= maxUses)
+          || totalAmount < minimumOrderAmountForValidity) {
           return new Response(JSON.stringify({ error: "This coupon is invalid, expired, or unavailable. Please re-validate it." }), {
             status: 400,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
