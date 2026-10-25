@@ -33,8 +33,8 @@ export default function CustomerRegister() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!form.full_name.trim() || !form.mobile.trim() || !form.password.trim()) {
-      setError('Please fill in all required fields.');
+    if (!form.full_name.trim() || !form.mobile.trim() || !form.password.trim() || !form.email.trim()) {
+      setError('Name, mobile, password, and email are required. Verify your email OTP to finish registration.');
       return;
     }
     if (!/^[6-9]\d{9}$/.test(form.mobile)) {
@@ -119,12 +119,12 @@ export default function CustomerRegister() {
           <img src="/logo.svg" alt="VATTAMS" className="h-16 w-auto mx-auto mb-3 rounded-xl" />
           <h1 className="text-2xl md:text-3xl font-extrabold text-navy-950">
             {step === 'form' && 'Create Your Account'}
-            {step === 'otp' && 'Verify Your Mobile'}
+            {step === 'otp' && 'Verify Your Email'}
             {step === 'success' && 'Welcome to VATTAMS!'}
           </h1>
           <p className="text-gray-500 text-sm mt-1">
             {step === 'form' && 'Register to book and track home services'}
-            {step === 'otp' && `Enter the 6-digit code sent to ${form.mobile}`}
+            {step === 'otp' && `Enter the 6-digit code sent to ${form.email.trim().toLowerCase()}`}
             {step === 'success' && 'Your account has been created successfully'}
           </p>
         </div>
@@ -138,12 +138,12 @@ export default function CustomerRegister() {
             <Input icon={User} name="full_name" placeholder="Full Name *" value={form.full_name} onChange={handleChange} />
             <Input icon={Phone} name="mobile" type="tel" placeholder="10-digit Mobile Number *" value={form.mobile} onChange={handleChange} maxLength={10} />
             <Input icon={Lock} name="password" type="password" placeholder="Password (min 6 chars) *" value={form.password} onChange={handleChange} />
-            <Input icon={Mail} name="email" type="email" placeholder="Email (optional)" value={form.email} onChange={handleChange} />
+            <Input icon={Mail} name="email" type="email" placeholder="Email address *" required value={form.email} onChange={handleChange} />
             <Input icon={MapPin} name="city" placeholder="City (optional)" value={form.city} onChange={handleChange} />
             <Input icon={Home} name="address" placeholder="Address (optional)" value={form.address} onChange={handleChange} />
             <button type="submit" disabled={loading}
               className="w-full flex items-center justify-center gap-2 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors">
-              {loading ? <Loader size={18} className="animate-spin" /> : <ShieldCheck size={18} />} Send OTP & Register
+              {loading ? <Loader size={18} className="animate-spin" /> : <ShieldCheck size={18} />} Send Email OTP
             </button>
             <p className="text-center text-sm text-gray-500">
               Already have an account?{' '}
@@ -154,10 +154,10 @@ export default function CustomerRegister() {
 
         {step === 'otp' && (
           <form onSubmit={handleVerifyOtp} className="bg-white rounded-3xl border border-gold-200/70 shadow-[0_18px_50px_rgba(5,10,23,0.08)] p-6 md:p-7 space-y-4">
-            <Input icon={KeyRound} name="otp" placeholder="6-digit OTP" value={otp} onChange={(e) => setOtp(e.target.value)} maxLength={6} />
+            <Input icon={KeyRound} name="otp" placeholder="6-digit email OTP" value={otp} onChange={(e) => setOtp(e.target.value)} maxLength={6} />
             <button type="submit" disabled={loading}
               className="w-full flex items-center justify-center gap-2 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors">
-              {loading ? <Loader size={18} className="animate-spin" /> : <ShieldCheck size={18} />} Verify & Create Account
+              {loading ? <Loader size={18} className="animate-spin" /> : <ShieldCheck size={18} />} Verify Email & Create Account
             </button>
             <div className="flex items-center justify-between text-sm">
               <button type="button" onClick={() => setStep('form')} className="text-gray-500 hover:underline">Back</button>
