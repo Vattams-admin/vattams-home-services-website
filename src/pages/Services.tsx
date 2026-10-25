@@ -36,11 +36,11 @@ export default function Services() {
   const { navigate } = useRouter();
 
   useSEO({
-    title: 'Home Services, UPS, Solar & Local Service Providers | VATTAMS',
+    title: 'VATTAMS Hybrid Service Marketplace | UPS, Solar & Local Service Providers',
     description:
       'Discover appliance services and an expanding catalogue of independent local service providers. Check supported booking options, city availability and prices before submitting a request.',
     keywords:
-      'AC service price, AC installation price, AC gas filling price, AC coil service price, washing machine service price, refrigerator service price, VATTAMS Home Services',
+      'AC service price, AC installation price, AC gas filling price, AC coil service price, washing machine service price, refrigerator service price, VATTAMS Hybrid Service Marketplace',
     path: '/services',
   });
 
