@@ -306,7 +306,7 @@ export default function Booking() {
     });
     } catch (error) {
       console.error('[Booking] submission failed:', error);
-      setSubmitError('Something interrupted the booking request. Please try again or contact VATTAMS support.');
+      setSubmitError('The booking status could not be confirmed. Please contact VATTAMS support before submitting again, so we can check whether your booking was created.');
     } finally {
       setSubmitting(false);
     }
