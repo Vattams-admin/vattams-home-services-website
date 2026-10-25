@@ -574,10 +574,10 @@ export default function Booking() {
                         <span className="text-gray-600">Platform Fee</span>
                         <span className="font-semibold text-gray-800">{formatINR(pricing.platformFee)}</span>
                       </div>
-                      {couponResult?.valid && couponResult.discountAmount > 0 && (
+                      {couponResult?.valid && pricing && pricing.discountAmount > 0 && (
                         <div className="flex justify-between text-green-600">
                           <span>Discount ({couponResult.coupon?.code})</span>
-                          <span className="font-semibold">-{formatINR(couponResult.discountAmount)}</span>
+                          <span className="font-semibold">-{formatINR(pricing.discountAmount)}</span>
                         </div>
                       )}
                       <div className="border-t border-gray-200 pt-1.5 flex justify-between">
@@ -608,7 +608,7 @@ export default function Booking() {
                     </div>
                     {couponResult?.valid && (
                       <p role="status" aria-live="polite" className="flex items-center gap-1.5 text-xs text-green-600 mt-2 font-semibold">
-                        <CheckCircle size={14} aria-hidden="true" /> Coupon applied! You save {formatINR(couponResult.discountAmount)}
+                        <CheckCircle size={14} aria-hidden="true" /> Coupon applied! You save {formatINR(pricing.discountAmount)}
                       </p>
                     )}
                     {couponResult && !couponResult.valid && (
