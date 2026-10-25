@@ -439,6 +439,12 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === "auto_assign") {
+      if (typeof booking_id !== "string" || !booking_id.trim()) {
+        return new Response(JSON.stringify({ error: "A valid booking ID is required for technician assignment." }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       const { data: capabilityBooking } = await supabase.from("bookings").select("id, booking_action_token").eq("id", booking_id).maybeSingle();
       const tokenMatches = Boolean(capabilityBooking && booking_action_token && capabilityBooking.booking_action_token === booking_action_token);
       let adminAuthorized = false;
