@@ -45,6 +45,30 @@ const isFeaturedApplianceService = (name: string) => {
 
 const timeSlots = ['07:00 - 09:00', '09:00 - 11:00', '11:00 - 13:00', '13:00 - 15:00', '15:00 - 17:00', '17:00 - 19:00', '19:00 - 21:00'];
 
+const getIndiaBookingClock = () => {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return {
+    date: `${values.year}-${values.month}-${values.day}`,
+    minutes: Number(values.hour) * 60 + Number(values.minute),
+  };
+};
+
+const isTimeSlotInPastToday = (slot: string, preferredDate: string) => {
+  const clock = getIndiaBookingClock();
+  if (preferredDate !== clock.date) return false;
+  const [hour, minute] = slot.split(' - ')[0].split(':').map(Number);
+  return hour * 60 + minute <= clock.minutes;
+};
+
 export default function Booking() {
   const { navigate } = useRouter();
   const [services, setServices] = useState<ServiceCategory[]>([]);
@@ -635,7 +659,7 @@ export default function Booking() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <Field icon={Calendar} label="Preferred Date">
-                    <input type="date" value={form.preferred_date} min={new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())}
+                    <input type="date" value={form.preferred_date} min={getIndiaBookingClock().date}
                       onChange={(e) => setForm({ ...form, preferred_date: e.target.value })}
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all" />
                   </Field>
@@ -644,7 +668,7 @@ export default function Booking() {
                       onChange={(e) => setForm({ ...form, preferred_time: e.target.value })}
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all bg-white">
                       <option value="">Any time</option>
-                      {timeSlots.map((t) => <option key={t} value={t}>{t}</option>)}
+                      {timeSlots.map((t) => <option key={t} value={t} disabled={isTimeSlotInPastToday(t, form.preferred_date)}>{t}</option>)}
                     </select>
                   </Field>
                 </div>
