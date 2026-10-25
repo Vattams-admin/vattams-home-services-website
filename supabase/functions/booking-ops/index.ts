@@ -89,7 +89,17 @@ Deno.serve(async (req: Request) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const customerSessionToken = String(customer_session_token || "");
+      if (customer_session_token != null
+        && (typeof customer_session_token !== "string"
+          || customer_session_token.length === 0
+          || customer_session_token.length > 512
+          || customer_session_token.trim() !== customer_session_token)) {
+        return new Response(JSON.stringify({ error: "Invalid customer session token format" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const customerSessionToken = typeof customer_session_token === "string" ? customer_session_token : "";
       let customerId: string | null = null;
       let authenticatedCustomerMobile: string | null = null;
       if (customerSessionToken) {
