@@ -541,7 +541,13 @@ Deno.serve(async (req: Request) => {
         .eq("id", booking_id)
         .maybeSingle() as { data: Record<string, unknown> | null; error: unknown };
 
-      if (bookingError || !booking) {
+      if (bookingError) {
+        console.error("[booking-ops auto_assign] booking lookup failed");
+        return new Response(JSON.stringify({ error: "Unable to load booking details. Please try again." }), {
+          status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (!booking) {
         return new Response(JSON.stringify({ error: "Booking not found" }), {
           status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -555,13 +561,19 @@ Deno.serve(async (req: Request) => {
 
       // Candidate technicians: same city, offers this service, active,
       // account not locked (dues cleared).
-      const { data: candidates } = await supabase
+      const { data: candidates, error: candidateLookupError } = await supabase
         .from("technicians")
         .select("id, full_name, rating, total_jobs, current_workload, is_online, last_active_at, service_categories")
         .eq("city", booking.city)
         .eq("status", "active")
         .eq("wallet_locked", false)
          as { data: { id: string; full_name: string; rating: number; total_jobs: number; current_workload: number; is_online: boolean; last_active_at: string | null; service_categories: string[] | null }[] | null; error: unknown };
+      if (candidateLookupError) {
+        console.error("[booking-ops auto_assign] technician candidate lookup failed");
+        return new Response(JSON.stringify({ error: "Unable to find eligible technicians right now. Please try again." }), {
+          status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
       const categoryAliases: Record<string, string[]> = {
         "ac service": ["ac service", "ac technician", "ac repair", "air conditioner service"],
@@ -583,11 +595,17 @@ Deno.serve(async (req: Request) => {
 
       // Exclude technicians who already have an active job.
       const candidateIds = eligibleCandidates.map((c) => c.id);
-      const { data: busy } = await supabase
+      const { data: busy, error: busyLookupError } = await supabase
         .from("technician_jobs")
         .select("technician_id")
         .in("technician_id", candidateIds)
         .in("status", ["assigned", "accepted", "on_the_way", "in_progress", "job_started"]) as { data: { technician_id: string }[] | null; error: unknown };
+      if (busyLookupError) {
+        console.error("[booking-ops auto_assign] technician workload lookup failed");
+        return new Response(JSON.stringify({ error: "Unable to verify technician availability. Please try again." }), {
+          status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
       const busyIds = new Set((busy ?? []).map((b) => b.technician_id));
       const free = eligibleCandidates.filter((c) => !busyIds.has(c.id));
@@ -613,7 +631,13 @@ Deno.serve(async (req: Request) => {
         .is("assigned_technician_id", null)
         .select("id,booking_number,booking_action_token")
         .maybeSingle();
-      if (claimError || !claimedBooking) {
+      if (claimError) {
+        console.error("[booking-ops auto_assign] conditional booking claim failed");
+        return new Response(JSON.stringify({ error: "Unable to reserve this booking for assignment. Please try again." }), {
+          status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (!claimedBooking) {
         return new Response(JSON.stringify({ success: true, assigned: false, reason: "booking_already_claimed" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
