@@ -280,23 +280,28 @@ export default function Booking() {
       error: response.error || (!response.data?.data ? new Error('Booking failed') : null),
     }));
 
-    if (error || !data || !data.id || !data.booking_number) {
+    // Only show the confirmation screen when the server returns usable booking
+    // identifiers. Normalize them once so notifications and assignment use the
+    // same values that the customer sees; never invent a booking number locally.
+    const bookingId = typeof data?.id === 'string' ? data.id.trim() : '';
+    const bookingNumber = typeof data?.booking_number === 'string' ? data.booking_number.trim() : '';
+    if (error || !bookingId || !bookingNumber) {
       setSubmitError('We couldn’t confirm that your booking was created. Please check with VATTAMS support before submitting again.');
       return;
     }
     trackMarketingEvent('generate_lead', { service_category: form.service_category, service_type: form.service_type });
-    setSuccess({ number: data.booking_number, id: data.id });
+    setSuccess({ number: bookingNumber, id: bookingId });
 
     // Notification delivery must not block technician assignment if the SMS/WhatsApp
     // provider fails or is temporarily unavailable.
-    void notifyCustomer.bookingReceived(form.mobile_number, data.booking_number, data.id, data.booking_action_token)
+    void notifyCustomer.bookingReceived(form.mobile_number, bookingNumber, bookingId, data.booking_action_token)
       .catch((notificationError) => console.error('[Booking] booking-received notification failed:', notificationError));
 
     // Automatically find and assign the best matching technician (no manual
     // accept needed). If none are eligible, the booking simply stays
     // pending and can still be picked up manually as a fallback.
     void supabase.functions.invoke('booking-ops', {
-      body: { action: 'auto_assign', booking_id: data.id, booking_action_token: data.booking_action_token },
+      body: { action: 'auto_assign', booking_id: bookingId, booking_action_token: data.booking_action_token },
     }).then(({ error: assignmentError }) => {
       if (assignmentError) {
         console.error('[Booking] automatic technician assignment failed:', assignmentError);
