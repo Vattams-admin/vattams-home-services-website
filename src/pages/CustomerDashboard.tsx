@@ -86,13 +86,17 @@ export default function CustomerDashboard() {
   };
 
   useEffect(() => {
+    let active = true;
     const stored = sessionStorage.getItem('vattams_customer');
     const sessionToken = sessionStorage.getItem('vattams_customer_session');
     const expiresAt = sessionStorage.getItem('vattams_customer_expires');
 
     if (!stored || !sessionToken) {
       navigate('customer-login');
-      return;
+      return () => {
+        active = false;
+        requestVersion.current += 1;
+      };
     }
 
     if (expiresAt) {
@@ -102,7 +106,10 @@ export default function CustomerDashboard() {
         sessionStorage.removeItem('vattams_customer_session');
         sessionStorage.removeItem('vattams_customer_expires');
         navigate('customer-login');
-        return;
+        return () => {
+          active = false;
+          requestVersion.current += 1;
+        };
       }
     }
 
@@ -114,14 +121,22 @@ export default function CustomerDashboard() {
         throw new Error('Stored customer profile is incomplete.');
       }
       const c = parsed as Customer;
-      setCustomer(c);
-      void refreshDashboard(c);
+      if (active) {
+        setCustomer(c);
+        void refreshDashboard(c);
+      }
     } catch {
       sessionStorage.removeItem('vattams_customer');
       sessionStorage.removeItem('vattams_customer_session');
       sessionStorage.removeItem('vattams_customer_expires');
       navigate('customer-login');
     }
+
+    return () => {
+      active = false;
+      // Invalidate in-flight refreshes on unmount so they cannot update stale state.
+      requestVersion.current += 1;
+    };
   }, []);
 
   const loadBookings = async (c: Customer): Promise<Booking[]> => {
