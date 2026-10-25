@@ -150,7 +150,7 @@ case "marketplace_city_availability_save": {
   if (serviceError || !service) return out({ error: "Service not found" }, 404);
   const requestedAvailable = Boolean(b.is_available);
   if (requestedAvailable && !service.is_active) return out({ error: "Activate and review the service before enabling a city" }, 400);
-  const { data, error } = await db.from("marketplace_service_city_availability").upsert({ service_id: serviceId, city, is_available: requestedAvailable, admin_note: typeof b.admin_note === "string" ? b.admin_note.slice(0, 500) : null, updated_at: new Date().toISOString() }, { onConflict: "service_id,lower(city)" }).select("*").single();
+  const { data, error } = await db.from("marketplace_service_city_availability").upsert({ service_id: serviceId, city, is_available: requestedAvailable, admin_note: typeof b.admin_note === "string" ? b.admin_note.slice(0, 500) : null, updated_at: new Date().toISOString() }, { onConflict: "service_id,city_normalized" }).select("*").single();
   if (error) return out({ error: "Unable to save city availability" }, 400);
   return out({ availability: data });
 }
