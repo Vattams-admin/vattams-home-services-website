@@ -262,7 +262,21 @@ Deno.serve(async (req: Request) => {
         urgency: ["normal","urgent","emergency"].includes(String(b.urgency)) ? String(b.urgency) : "normal",
       };
       const { data, error } = await supabase.from("bookings").insert(row).select("id,booking_number,booking_action_token").single();
-      if (error) return new Response(JSON.stringify({ error: "Unable to create booking" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (error || !data?.id || !data?.booking_number) {
+        // A database insert failure is a server-side failure, not invalid
+        // customer input. Keep database details in server logs only.
+        console.error("[booking-ops create_booking] booking insert failed", {
+          code: error?.code ?? null,
+          message: error?.message ?? "Booking insert returned no booking record",
+        });
+        return new Response(JSON.stringify({
+          error: "We could not confirm your booking. Please contact VATTAMS support before submitting again.",
+          code: "BOOKING_CREATE_UNCONFIRMED",
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
       // The coupon can become exhausted between the validation above and the
       // booking insert. Finalize the usage against the just-created booking
