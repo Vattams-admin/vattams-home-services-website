@@ -17,9 +17,34 @@ export default function CustomerSupport() {
 
   useEffect(() => {
     const stored = sessionStorage.getItem('vattams_customer');
-    if (!stored) { navigate('customer-login'); return; }
-    try { setCustomer(JSON.parse(stored) as Customer); } catch { navigate('customer-login'); }
-  }, []);
+    const sessionToken = sessionStorage.getItem('vattams_customer_session');
+    const expiresAt = Number(sessionStorage.getItem('vattams_customer_expires'));
+
+    const clearSession = () => {
+      sessionStorage.removeItem('vattams_customer');
+      sessionStorage.removeItem('vattams_customer_session');
+      sessionStorage.removeItem('vattams_customer_expires');
+    };
+
+    if (!stored || !sessionToken || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+      clearSession();
+      navigate('customer-login');
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(stored) as Partial<Customer>;
+      if (typeof parsed.id !== 'string' || !parsed.id.trim()
+        || typeof parsed.mobile !== 'string' || !parsed.mobile.trim()
+        || typeof parsed.full_name !== 'string' || !parsed.full_name.trim()) {
+        throw new Error('Incomplete customer profile');
+      }
+      setCustomer(parsed as Customer);
+    } catch {
+      clearSession();
+      navigate('customer-login');
+    }
+  }, [navigate]);
 
   const showToast = (type: 'success' | 'error', text: string) => {
     setToast({ type, text });
