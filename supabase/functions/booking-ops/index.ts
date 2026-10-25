@@ -260,7 +260,9 @@ Deno.serve(async (req: Request) => {
         const maxUses = coupon?.max_uses === null || coupon?.max_uses === undefined ? null : Number(coupon.max_uses);
         const minimumOrderAmountForValidity = Number(coupon?.min_order_amount ?? 0);
         const invalidValidityConfig = Boolean(coupon) && (
-          (validFromTime !== null && !Number.isFinite(validFromTime))
+          !coupon?.valid_from
+          || validFromTime === null
+          || (validFromTime !== null && !Number.isFinite(validFromTime))
           || (validUntilTime !== null && !Number.isFinite(validUntilTime))
           || !Number.isFinite(usedCount) || usedCount < 0
           || (maxUses !== null && (!Number.isFinite(maxUses) || maxUses < 0))
