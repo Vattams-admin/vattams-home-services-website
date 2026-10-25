@@ -587,7 +587,16 @@ Deno.serve(async (req: Request) => {
       }
 
       if (booking.status !== "pending" && booking.status !== "confirmed") {
-        return new Response(JSON.stringify({ success: true, assigned: false, reason: "already_assigned" }), {
+        const alreadyAssigned = booking.status === "assigned"
+          || booking.status === "accepted"
+          || booking.status === "on_the_way"
+          || booking.status === "in_progress"
+          || booking.status === "job_started";
+        return new Response(JSON.stringify({
+          success: true,
+          assigned: false,
+          reason: alreadyAssigned ? "already_assigned" : "booking_not_assignable",
+        }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
