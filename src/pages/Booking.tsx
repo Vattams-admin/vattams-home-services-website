@@ -208,6 +208,8 @@ export default function Booking() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Ignore rapid repeat submissions while a booking request is in flight.
+    if (submitting) return;
     setSubmitError('');
     if (!isFeaturedApplianceService(form.service_category)) {
       alert('Please select AC, washing machine, or refrigerator service.');
