@@ -705,15 +705,15 @@ export default function AdminDashboard() {
       completedBookings.reduce(
         (sum, b) =>
           sum +
-          (
-            (b.base_price ??
-              b.amount ??
-              0) -
+          Math.round(
             (
-              b.commission_amount ??
-              0
-            )
-          ),
+              (b.base_price ??
+                b.amount ??
+                0) -
+              (b.commission_amount ?? 0) -
+              (b.call_rate_fee ?? 0)
+            ) * 100
+          ) / 100,
         0
       );
 
