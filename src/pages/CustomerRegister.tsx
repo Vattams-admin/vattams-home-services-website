@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Loader, User, Phone, Lock, Mail, MapPin, Home, KeyRound, ShieldCheck } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase';
@@ -14,16 +14,30 @@ export default function CustomerRegister() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [resendTimer, setResendTimer] = useState(0);
+  const resendIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const clearResendTimer = () => {
+    if (resendIntervalRef.current !== null) {
+      clearInterval(resendIntervalRef.current);
+      resendIntervalRef.current = null;
+    }
+  };
+
+  useEffect(() => () => clearResendTimer(), []);
+
   const startResendTimer = () => {
+    clearResendTimer();
     setResendTimer(60);
-    const interval = setInterval(() => {
+    resendIntervalRef.current = setInterval(() => {
       setResendTimer((prev) => {
-        if (prev <= 1) { clearInterval(interval); return 0; }
+        if (prev <= 1) {
+          clearResendTimer();
+          return 0;
+        }
         return prev - 1;
       });
     }, 1000);
