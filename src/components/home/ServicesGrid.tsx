@@ -1,7 +1,6 @@
 import { ArrowRight } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import CustomerServicePriceCards from '@/components/CustomerServicePriceCards';
-import ServicesExpansionGrid from '@/components/home/ServicesExpansionGrid';
 
 export default function ServicesGrid() {
   const { navigate } = useRouter();
@@ -18,19 +17,18 @@ export default function ServicesGrid() {
             Our Expert Services
           </h2>
           <p className="text-gray-500 max-w-xl mx-auto text-base md:text-lg">
-            Discover our current appliance booking options and explore additional local service categories.
+            Explore supported appliance services with transparent starting prices and a clear path to booking.
           </p>
         </div>
 
         <CustomerServicePriceCards variant="home" />
-        <div className="mt-12"><ServicesExpansionGrid /></div>
 
         <div className="text-center mt-12">
           <button
             onClick={() => navigate('services')}
             className="inline-flex items-center gap-2 px-8 py-3.5 bg-navy-900 hover:bg-navy-950 text-white font-semibold rounded-lg transition-colors shadow-lg shadow-navy-900/20 border border-gold-500/20"
           >
-            Explore Our Services <ArrowRight size={16} />
+            Explore the Full Service Catalogue <ArrowRight size={16} />
           </button>
         </div>
       </div>
