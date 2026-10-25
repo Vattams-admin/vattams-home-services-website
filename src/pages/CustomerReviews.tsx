@@ -91,9 +91,12 @@ export default function CustomerReviews() {
   }, [load, navigate]);
 
   const submitReview = async (booking: Booking) => {
-    if (!customer) return;
+    if (!customer || submitting !== null) return;
     const selectedRating = rating[booking.id] ?? 0;
-    if (!selectedRating) { setMessage('Please select a rating before submitting.'); return; }
+    if (!Number.isInteger(selectedRating) || selectedRating < 1 || selectedRating > 5) {
+      setMessage('Please select a rating from 1 to 5 before submitting.');
+      return;
+    }
 
     setSubmitting(booking.id);
     setMessage('');
