@@ -149,7 +149,9 @@ Deno.serve(async req => {
     // client-supplied redemption amount; NaN comparisons otherwise fail open.
     if (booking.discount_amount == null
       || !Number.isFinite(storedDiscount) || storedDiscount <= 0
+      || Math.abs(storedDiscount * 100 - Math.round(storedDiscount * 100)) > 1e-7
       || bookingTotalValue == null || !Number.isFinite(bookingTotal) || bookingTotal <= 0
+      || Math.abs(bookingTotal * 100 - Math.round(bookingTotal * 100)) > 1e-7
       || storedDiscount > bookingTotal) {
       console.error("[coupon-ops] invalid persisted booking pricing");
       return new Response(JSON.stringify({ error: "Booking pricing needs review" }), { status: 503, headers });
