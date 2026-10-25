@@ -219,7 +219,13 @@ export default function Booking() {
   // Keep the preview aligned with booking-ops: invalid configuration should
   // appear unavailable, not silently turn malformed database values into zero.
   const pricing: PricingBreakdown | null = pricingConfigValid
-    ? calculatePricing(customerBasePrice, gstRate, platformFee, commissionRate, discount)
+    ? calculatePricing(
+      Math.round(customerBasePrice * 100) / 100,
+      gstRate,
+      Math.round(platformFee * 100) / 100,
+      commissionRate,
+      discount,
+    )
     : null;
 
   const handleValidateCoupon = async () => {
