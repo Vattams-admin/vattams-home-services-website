@@ -433,7 +433,7 @@ export default function Booking() {
                   <div role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 p-4 sm:p-5">
                     <p className="font-semibold text-rose-950">Booking request not confirmed</p>
                     <p className="mt-1 text-sm leading-6 text-rose-900">{submitError}</p>
-                    <a href="tel:+916374068296" className="mt-3 inline-flex min-h-10 items-center rounded-lg border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-950">Contact VATTAMS support</a>
+                    <a href="tel:+916374068296" className="mt-3 inline-flex min-h-10 items-center rounded-lg border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2">Contact VATTAMS support</a>
                   </div>
                 )}
                 {!customer && (
@@ -555,12 +555,12 @@ export default function Booking() {
                       </button>
                     </div>
                     {couponResult?.valid && (
-                      <p className="flex items-center gap-1.5 text-xs text-green-600 mt-2 font-semibold">
+                      <p role="status" aria-live="polite" className="flex items-center gap-1.5 text-xs text-green-600 mt-2 font-semibold">
                         <CheckCircle size={14} aria-hidden="true" /> Coupon applied! You save {formatINR(couponResult.discountAmount)}
                       </p>
                     )}
                     {couponResult && !couponResult.valid && (
-                      <p className="flex items-center gap-1.5 text-xs text-red-600 mt-2 font-semibold">
+                      <p role="status" aria-live="polite" className="flex items-center gap-1.5 text-xs text-red-600 mt-2 font-semibold">
                         <XCircle size={14} aria-hidden="true" /> {couponResult.error}
                       </p>
                     )}
