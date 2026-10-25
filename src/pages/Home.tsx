@@ -12,9 +12,10 @@ import { useSEO } from '@/lib/seo';
 
 export default function Home() {
   useSEO({
-    title: 'AC Service, Washing Machine Repair & Refrigerator Service | VATTAMS',
+    title: 'VATTAMS Hybrid Service Marketplace | Discover Services & Providers',
     description:
-      'Request AC service, washing machine service and refrigerator service with VATTAMS Home Services. Review listed base prices, see checkout charges and check appointment options for your address.',
+      'Discover VATTAMS Hybrid Service Marketplace — explore service categories, compare listed starting prices, and connect with independent service professionals.',
+    keywords: 'VATTAMS, Hybrid Service Marketplace, service marketplace, local services, service professionals',
     path: '/',
   });
 
