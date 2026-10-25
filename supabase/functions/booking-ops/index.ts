@@ -791,7 +791,7 @@ Deno.serve(async (req: Request) => {
         const publicAppUrl = getPublicAppUrl();
         await dispatchPush(
           "customer",
-          String(booking.mobile_number),
+          String(booking.mobile_number ?? ""),
           "Technician Assigned",
           `${chosen.full_name ?? "A technician"} has been assigned to your booking ${booking.booking_number}.`,
           {
