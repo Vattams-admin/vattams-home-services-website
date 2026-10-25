@@ -64,7 +64,7 @@ export default function Services() {
 
   return (
     <div className="pt-20 md:pt-24">
-      <section className="bg-gradient-to-br from-navy-950 via-navy-900 to-navy-800 py-16 md:py-20">
+      <section className="relative isolate overflow-hidden bg-[#070B15] py-14 text-white sm:py-20"><div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_0%,rgba(212,175,55,.17),transparent_40%)]" /><div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/65 to-transparent" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 bg-white/10 text-gold-300 rounded-full px-4 py-1.5 text-sm font-semibold mb-4">
             Our Services & Pricing
@@ -72,16 +72,16 @@ export default function Services() {
           <h1 className="font-display text-3xl md:text-5xl font-bold text-white mb-4">
             Discover Local Services, Clearly Explained
           </h1>
-          <p className="text-navy-100 max-w-2xl mx-auto text-base md:text-lg">
+          <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-300 sm:text-base sm:leading-8">
             Explore participating service-personnel listings, check available booking options and review applicable charges before submitting a request. Service availability varies by city and provider.
           </p>
         </div>
       </section>
 
-      <section className="py-12 md:py-16 bg-gray-50" aria-labelledby="service-prices-heading">
+      <section className="bg-gradient-to-b from-[#F1EEE5] to-[#F8F6F0] py-10 sm:py-16" aria-labelledby="service-prices-heading">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8 text-center">
-            <h2 id="service-prices-heading" className="font-display text-2xl md:text-3xl font-bold text-navy-900">
+            <h2 id="service-prices-heading" className="font-display text-2xl font-semibold tracking-tight text-[#091226] sm:text-4xl">
               Choose the Work You Need
             </h2>
             <p className="mt-2 text-sm md:text-base text-gray-600">
