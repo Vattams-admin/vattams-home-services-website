@@ -142,7 +142,9 @@ Deno.serve(async req => {
     }
 
     const storedDiscount = Number(booking.discount_amount);
-    const bookingTotalValue = booking.total_amount ?? booking.amount;
+    // `amount` stores the pre-discount subtotal; `total_amount` stores the final payable amount.
+    // Coupon terms must be recalculated against the original subtotal, not the discounted total.
+    const bookingTotalValue = booking.amount ?? booking.total_amount;
     const bookingTotal = Number(bookingTotalValue);
 
     // Persisted booking amounts must be trustworthy before comparing a
