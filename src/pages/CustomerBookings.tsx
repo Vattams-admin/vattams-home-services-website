@@ -79,7 +79,8 @@ export default function CustomerBookings() {
       // "No bookings yet" state.
       if (!result || !Array.isArray(result.bookings) ||
           !result.bookings.every((booking) => booking && typeof booking.id === 'string' && booking.id.trim() &&
-            typeof booking.status === 'string' && booking.status.trim())) {
+            typeof booking.status === 'string' && booking.status.trim()) ||
+          new Set(result.bookings.map((booking) => booking.id.trim())).size !== result.bookings.length) {
         throw new Error('We couldn’t verify your booking history. Please sign in again or retry shortly.');
       }
       if (requestVersion !== bookingRequestVersion.current) return;
