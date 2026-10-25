@@ -56,7 +56,13 @@ interface RouterContextValue extends RouteState {
 const RouterContext = createContext<RouterContextValue | undefined>(undefined);
 
 function hasSession(key: string): boolean {
-  return typeof window !== 'undefined' && Boolean(sessionStorage.getItem(key));
+  if (typeof window === 'undefined') return false;
+  try {
+    return Boolean(window.sessionStorage.getItem(key));
+  } catch {
+    // Fail closed: protected routes must not become public when storage is blocked.
+    return false;
+  }
 }
 function guardRoute(route: RouteState): RouteState {
   if (CUSTOMER_PROTECTED_PAGES.has(route.page) && !hasSession('vattams_customer_session')) return { page: 'customer-login' };
