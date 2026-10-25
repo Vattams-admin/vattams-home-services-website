@@ -71,10 +71,6 @@ export async function validateCoupon(code: string, orderAmount: number): Promise
     return { valid: false, error: 'Coupon usage limit reached', discountAmount: 0 };
   }
 
-  if (orderAmount < coupon.min_order_amount) {
-    return { valid: false, error: `Minimum order amount is ₹${coupon.min_order_amount}`, discountAmount: 0 };
-  }
-
   const discountValue = Number(coupon.discount_value);
   const minimumOrderAmount = Number(coupon.min_order_amount ?? 0);
   if (!Number.isFinite(discountValue) || discountValue <= 0
@@ -82,6 +78,10 @@ export async function validateCoupon(code: string, orderAmount: number): Promise
     || (coupon.discount_type === 'percentage' && discountValue > 100)
     || !Number.isFinite(minimumOrderAmount) || minimumOrderAmount < 0) {
     return { valid: false, error: 'This coupon has invalid discount settings', discountAmount: 0 };
+  }
+
+  if (orderAmount < minimumOrderAmount) {
+    return { valid: false, error: `Minimum order amount is ₹${minimumOrderAmount}`, discountAmount: 0 };
   }
 
   const calculatedDiscount =
