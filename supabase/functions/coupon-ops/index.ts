@@ -96,9 +96,12 @@ Deno.serve(async req => {
       return new Response(JSON.stringify({ error: "Unable to verify customer session right now" }), { status: 503, headers });
     }
 
+    const sessionExpiresAt = session ? new Date(session.expires_at).getTime() : Number.NaN;
     if (
       !session ||
-      new Date(session.expires_at).getTime() <= Date.now() ||
+      !Number.isFinite(sessionExpiresAt) ||
+      sessionExpiresAt <= Date.now() ||
+      session.customer_id == null ||
       String(session.customer_id) !== String(booking.customer_id)
     ) {
       return new Response(JSON.stringify({ error: "Not authorized for this booking" }), { status: 401, headers });
