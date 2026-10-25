@@ -217,18 +217,18 @@ export default function CustomerDashboard() {
                       className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 transition-shadow cursor-pointer">
                       <div className="flex items-start justify-between mb-3">
                         <div>
-                          <div className="font-bold text-blue-700 text-xs">{b.booking_number}</div>
-                          <div className="font-extrabold text-gray-900 mt-0.5">{b.service_category}</div>
+                          <div className="font-bold text-blue-700 text-xs">{b.booking_number || "Booking reference unavailable"}</div>
+                          <div className="font-extrabold text-gray-900 mt-0.5">{b.service_category || "Home service"}</div>
                         </div>
                         <span className={`px-2.5 py-1 rounded-full text-xs font-semibold capitalize border ${statusColors[b.status] ?? "bg-gray-100 text-gray-700 border-gray-200"}`}>
                           {statusLabels[b.status] ?? b.status.replace('_', ' ')}
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-3">
-                        <div className="flex items-center gap-1.5"><MapPin size={14} className="text-gray-400" /> {b.city}</div>
-                        {b.preferred_date && <div className="flex items-center gap-1.5"><Calendar size={14} className="text-gray-400" /> {b.preferred_date}</div>}
-                        {b.preferred_time && <div className="flex items-center gap-1.5"><Clock size={14} className="text-gray-400" /> {b.preferred_time}</div>}
-                        {b.amount && <div className="font-bold text-gray-900">{formatCurrency(b.amount)}</div>}
+                        <div className="flex items-center gap-1.5"><MapPin size={14} className="text-gray-400" /> {b.city || "Location to be confirmed"}</div>
+                        <div className="flex items-center gap-1.5"><Calendar size={14} className="text-gray-400" /> {b.preferred_date || "Date to be confirmed"}</div>
+                        <div className="flex items-center gap-1.5"><Clock size={14} className="text-gray-400" /> {b.preferred_time || "Time to be confirmed"}</div>
+                        {b.amount != null && Number.isFinite(Number(b.amount)) ? <div className="font-bold text-gray-900">{formatCurrency(Number(b.amount))}</div> : <div className="text-xs text-gray-500">Price confirmation pending</div>}
                       </div>
                       <div className="flex items-center gap-1">
                         {statusSteps.map((s, i) => (
@@ -260,11 +260,11 @@ export default function CustomerDashboard() {
                   <div key={b.id} onClick={() => setSelected(b)}
                     className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer">
                     <div>
-                      <div className="font-bold text-gray-900 text-sm">{b.service_category}</div>
-                      <div className="text-xs text-gray-400">{b.booking_number} · {new Date(b.created_at).toLocaleDateString('en-IN')}</div>
+                      <div className="font-bold text-gray-900 text-sm">{b.service_category || "Home service"}</div>
+                      <div className="text-xs text-gray-400">{b.booking_number || "Booking reference unavailable"} · {formatNotificationDate(b.created_at)}</div>
                     </div>
                     <div className="flex items-center gap-3">
-                      {b.amount && <span className="font-bold text-gray-900 text-sm">{formatCurrency(b.amount)}</span>}
+                      {b.amount != null && Number.isFinite(Number(b.amount)) && <span className="font-bold text-gray-900 text-sm">{formatCurrency(Number(b.amount))}</span>}
                       <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">Completed</span>
                       <ChevronRight size={16} className="text-gray-400" />
                     </div>
@@ -284,14 +284,14 @@ export default function CustomerDashboard() {
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center"><Wrench size={18} className="text-gold-700" /></div>
                     <div>
-                      <div className="font-bold text-gray-900 text-sm">{upcomingBooking.service_category}</div>
-                      <div className="text-xs text-gray-400">{upcomingBooking.booking_number}</div>
+                      <div className="font-bold text-gray-900 text-sm">{upcomingBooking.service_category || "Home service"}</div>
+                      <div className="text-xs text-gray-400">{upcomingBooking.booking_number || "Booking reference unavailable"}</div>
                     </div>
                   </div>
                   <div className="space-y-2 text-sm text-gray-600">
-                    {upcomingBooking.preferred_date && <div className="flex items-center gap-2"><Calendar size={14} className="text-gray-400" /> {upcomingBooking.preferred_date}</div>}
-                    {upcomingBooking.preferred_time && <div className="flex items-center gap-2"><Clock size={14} className="text-gray-400" /> {upcomingBooking.preferred_time}</div>}
-                    <div className="flex items-center gap-2"><MapPin size={14} className="text-gray-400" /> {upcomingBooking.city}</div>
+                    <div className="flex items-center gap-2"><Calendar size={14} className="text-gray-400" /> {upcomingBooking.preferred_date || "Date to be confirmed"}</div>
+                    <div className="flex items-center gap-2"><Clock size={14} className="text-gray-400" /> {upcomingBooking.preferred_time || "Time to be confirmed"}</div>
+                    <div className="flex items-center gap-2"><MapPin size={14} className="text-gray-400" /> {upcomingBooking.city || "Location to be confirmed"}</div>
                   </div>
                   <div className={`mt-3 px-3 py-1.5 rounded-full text-xs font-semibold capitalize border inline-block ${statusColors[upcomingBooking.status] ?? 'bg-gray-100 text-gray-700 border-gray-200'}`}>
                     {statusLabels[upcomingBooking.status] ?? upcomingBooking.status.replace('_', ' ')}
