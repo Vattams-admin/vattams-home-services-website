@@ -662,9 +662,9 @@ Deno.serve(async (req: Request) => {
       free.sort((a, b) => Number(b.is_online === true) - Number(a.is_online === true) || (Number(a.current_workload || 0) - Number(b.current_workload || 0)) || (Number(b.rating || 0) - Number(a.rating || 0)) || (Number(a.total_jobs || 0) - Number(b.total_jobs || 0)));
       const chosen = free[0];
 
-      // Recheck the selected technician immediately before claiming the booking.
-      // This narrows the stale-workload window; a database-level constraint or
-      // transactional allocator is still needed for a fully atomic guarantee.
+      // The atomic database RPC is the final authority for eligibility,
+      // workload, booking claim, and technician-job creation. It serializes
+      // concurrent assignments by locking the selected technician row.
       // The RPC locks the booking and technician rows, rechecks workload,
       // then writes the booking + technician job in one database transaction.
       const { data: assignmentResult, error: assignmentError } = await supabase.rpc(
@@ -683,6 +683,12 @@ Deno.serve(async (req: Request) => {
         if (assignmentErrorMessage.includes("BOOKING_NOT_ASSIGNABLE")) {
           return new Response(JSON.stringify({
             success: true, assigned: false, reason: "booking_already_claimed",
+          }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        if (assignmentErrorMessage.includes("TECHNICIAN_NOT_ELIGIBLE")
+          || assignmentErrorMessage.includes("TECHNICIAN_NOT_FOUND")) {
+          return new Response(JSON.stringify({
+            success: true, assigned: false, reason: "technician_no_longer_eligible",
           }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
         console.error("[booking-ops auto_assign] atomic assignment RPC failed", {
