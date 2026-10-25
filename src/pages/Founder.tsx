@@ -47,7 +47,7 @@ export default function Founder() {
   useSEO({
     title: 'Founder | VATTAMS — Venkatesan Ponniah',
     description:
-      'Meet Venkatesan Ponniah, Founder of VATTAMS, and discover the vision behind VATTAMS Home Services.',
+      'Meet Venkatesan Ponniah, Founder of VATTAMS, and discover the vision behind VATTAMS Hybrid Service Marketplace.',
     path: '/#founder',
   });
 
@@ -262,7 +262,7 @@ export default function Founder() {
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-navy-700 to-navy-900 border border-gold-400/20 flex items-center justify-center mb-5 shadow-lg group-hover:scale-110 transition-transform">
                 <Wrench size={26} className="text-gold-400" />
               </div>
-              <h3 className="text-white font-bold text-lg mb-2">VATTAMS HOME SERVICES</h3>
+              <h3 className="text-white font-bold text-lg mb-2">VATTAMS HYBRID SERVICE MARKETPLACE</h3>
               <p className="text-navy-100/70 text-sm leading-relaxed">
                 Connecting customers with professional home service networks.
               </p>
