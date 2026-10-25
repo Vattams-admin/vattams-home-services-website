@@ -48,7 +48,7 @@ BEGIN
     RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'TECHNICIAN_NOT_FOUND';
   END IF;
 
-  IF v_technician.status <> 'active'
+  IF v_technician.status IS DISTINCT FROM 'active'
      OR COALESCE(v_technician.wallet_locked, false) THEN
     RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'TECHNICIAN_NOT_ELIGIBLE';
   END IF;
