@@ -16,15 +16,28 @@ export default function CustomerSupport() {
   const [toast, setToast] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
-    const stored = sessionStorage.getItem('vattams_customer');
-    const sessionToken = sessionStorage.getItem('vattams_customer_session');
-    const expiresAt = Number(sessionStorage.getItem('vattams_customer_expires'));
-
     const clearSession = () => {
-      sessionStorage.removeItem('vattams_customer');
-      sessionStorage.removeItem('vattams_customer_session');
-      sessionStorage.removeItem('vattams_customer_expires');
+      try {
+        sessionStorage.removeItem('vattams_customer');
+        sessionStorage.removeItem('vattams_customer_session');
+        sessionStorage.removeItem('vattams_customer_expires');
+      } catch {
+        // Keep the redirect path available if storage cleanup is blocked.
+      }
     };
+
+    let stored: string | null;
+    let sessionToken: string | null;
+    let expiresAt: number;
+    try {
+      stored = sessionStorage.getItem('vattams_customer');
+      sessionToken = sessionStorage.getItem('vattams_customer_session');
+      expiresAt = Number(sessionStorage.getItem('vattams_customer_expires'));
+    } catch {
+      clearSession();
+      navigate('customer-login');
+      return;
+    }
 
     if (!stored || !sessionToken || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
       clearSession();
