@@ -774,7 +774,7 @@ Deno.serve(async (req: Request) => {
 
       const { error: customerNotifError } = await supabase.from("notifications").insert({
         recipient_type: "customer",
-        recipient_id: booking.mobile_number,
+        recipient_id: String(booking.mobile_number ?? ""),
         title: "Technician Assigned",
         message: `${chosen.full_name ?? "A technician"} has been assigned to your booking ${booking.booking_number}.`,
         type: "technician_assigned",
