@@ -504,7 +504,8 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === "auto_assign") {
-      if (typeof booking_id !== "string" || !booking_id.trim()) {
+      if (typeof booking_id !== "string"
+        || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(booking_id.trim())) {
         return new Response(JSON.stringify({ error: "A valid booking ID is required for technician assignment." }), {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
