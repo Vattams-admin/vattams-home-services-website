@@ -3,12 +3,24 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL } from './supabase';
 export async function customerData<T>(action:string, extra:Record<string,unknown>={}) : Promise<T|null> {
   if (typeof sessionStorage === 'undefined') return null;
 
-  const sessionToken = sessionStorage.getItem('vattams_customer_session');
-  const expiresAt = Number(sessionStorage.getItem('vattams_customer_expires'));
+  let sessionToken: string | null;
+  let expiresAt: number;
+  try {
+    sessionToken = sessionStorage.getItem('vattams_customer_session');
+    expiresAt = Number(sessionStorage.getItem('vattams_customer_expires'));
+  } catch {
+    // Storage can be blocked by browser privacy settings or quota/security policy.
+    return null;
+  }
+
   if (!sessionToken || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
-    sessionStorage.removeItem('vattams_customer');
-    sessionStorage.removeItem('vattams_customer_session');
-    sessionStorage.removeItem('vattams_customer_expires');
+    try {
+      sessionStorage.removeItem('vattams_customer');
+      sessionStorage.removeItem('vattams_customer_session');
+      sessionStorage.removeItem('vattams_customer_expires');
+    } catch {
+      // Invalid sessions are rejected even if the browser blocks cleanup.
+    }
     return null;
   }
 
