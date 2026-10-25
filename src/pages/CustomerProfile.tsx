@@ -260,8 +260,8 @@ export default function CustomerProfile() {
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-5">
             <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center mb-3"><Briefcase size={18} className="text-gold-700" /></div>
-            <div className="text-2xl font-extrabold text-gray-900">{bookingCount === null ? '—' : bookingCount}</div>
-            <div className="text-xs text-gray-400 font-medium">{bookingCountError ? 'Count unavailable' : 'Total Bookings'}</div>
+            <div aria-live="polite" aria-atomic="true" className="text-2xl font-extrabold text-gray-900">{bookingCountLoading && bookingCount === null ? '…' : bookingCount === null ? '—' : bookingCount}</div>
+            <div role={bookingCountError ? 'status' : undefined} aria-live={bookingCountError ? 'polite' : undefined} className="text-xs text-gray-400 font-medium">{bookingCountLoading && bookingCount === null ? 'Loading booking count…' : bookingCountError ? 'Count unavailable' : 'Total Bookings'}</div>
             {bookingCountError && <button type="button" disabled={bookingCountLoading} aria-busy={bookingCountLoading} onClick={() => customer && void loadBookingCount(customer.id)} className="mt-2 text-xs font-semibold text-gold-700 underline disabled:opacity-60 disabled:cursor-not-allowed">{bookingCountLoading ? 'Retrying…' : 'Retry count'}</button>}
           </div>
           <div className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-5">
