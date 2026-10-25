@@ -194,7 +194,9 @@ Deno.serve(async req => {
     if (!Number.isFinite(discountValue) || discountValue <= 0
       || !["percentage", "flat"].includes(String(coupon.discount_type))
       || (coupon.discount_type === "percentage" && discountValue > 100)
-      || !Number.isFinite(minimumOrderAmount) || minimumOrderAmount < 0) {
+      || (coupon.discount_type === "flat" && Math.abs(discountValue * 100 - Math.round(discountValue * 100)) > 1e-7)
+      || !Number.isFinite(minimumOrderAmount) || minimumOrderAmount < 0
+      || Math.abs(minimumOrderAmount * 100 - Math.round(minimumOrderAmount * 100)) > 1e-7) {
       console.error("[coupon-ops] invalid coupon discount configuration");
       return new Response(JSON.stringify({ error: "Coupon configuration needs review" }), { status: 503, headers });
     }
