@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">VATTAMS Hybrid Service Marketplace</title>
+  <rect width="512" height="512" rx="96" fill="#080F20"/>
+  <path d="M96 126h86l74 196 74-196h86L291 398h-70z" fill="#D4AF37"/>
+  <path d="M256 78l16 32 35 5-25 24 6 35-32-17-32 17 6-35-25-24 35-5z" fill="#F4E5A2"/>
+</svg>
