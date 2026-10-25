@@ -524,15 +524,20 @@ export default function CustomerDashboard() {
                   <div className="text-sm text-gray-700 bg-ivory-50 rounded-xl p-3">{selected.problem_description}</div>
                 </div>
               )}
-              {(selected.total_amount ?? selected.amount) != null && Number.isFinite(Number(selected.total_amount ?? selected.amount)) && (
-                <div className="flex items-center justify-between rounded-xl bg-ivory-50 p-3">
-                  <span className="text-sm font-medium text-gray-600">Customer total</span>
-                  <span className="text-base font-extrabold text-navy-900">{formatCurrency(Number(selected.total_amount ?? selected.amount))}</span>
-                </div>
-              )}
+              {(() => {
+                const rawAmount = selected.total_amount ?? selected.amount;
+                const parsedAmount = rawAmount == null || rawAmount === '' ? null : Number(rawAmount);
+                const amount = parsedAmount !== null && Number.isFinite(parsedAmount) && parsedAmount >= 0 ? parsedAmount : null;
+                return (
+                  <div className="flex items-center justify-between rounded-xl bg-ivory-50 p-3">
+                    <span className="text-sm font-medium text-gray-600">Customer total</span>
+                    <span className="text-base font-extrabold text-navy-900">{amount === null ? 'Amount unavailable' : formatCurrency(amount)}</span>
+                  </div>
+                );
+              })()}
               <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                 <span className="text-sm text-gray-500">Status:</span>
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize border ${statusColors[selected.status] ?? "bg-gray-100 text-gray-700 border-gray-200"}`}>{statusLabels[selected.status] ?? selected.status.replace("_", " ")}</span>
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize border ${statusColors[selected.status] ?? "bg-gray-100 text-gray-700 border-gray-200"}`}>{statusLabels[selected.status] ?? selected.status.replace(/_/g, ' ')}</span>
               </div>
 
               {/* VATTAMS Communication Center */}
