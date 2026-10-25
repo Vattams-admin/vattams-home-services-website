@@ -897,8 +897,9 @@ Deno.serve(async (req: Request) => {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
+    console.error("[booking-ops] unhandled request error:", err instanceof Error ? err.message : "unknown error");
     return new Response(
-      JSON.stringify({ error: err.message }),
+      JSON.stringify({ error: "The booking request could not be completed. Please try again or contact VATTAMS support." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
