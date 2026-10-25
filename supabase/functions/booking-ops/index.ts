@@ -447,8 +447,13 @@ Deno.serve(async (req: Request) => {
         // Resolve the coupon ID server-side because create_booking validated
         // by code. Keep the authoritative lookup immediately before the RPC.
         if (redeemError || redeemed !== true) {
-          const { error: cleanupError } = await supabase.from("bookings").delete().eq("id", data.id);
-          if (cleanupError) {
+          const { data: cleanedBooking, error: cleanupError } = await supabase
+            .from("bookings")
+            .delete()
+            .eq("id", data.id)
+            .select("id")
+            .maybeSingle();
+          if (cleanupError || !cleanedBooking?.id) {
             // Do not claim rollback succeeded. This needs support review and
             // the client must not blindly retry a potentially existing booking.
             console.error("[booking-ops create_booking] coupon redemption failed and booking cleanup also failed");
