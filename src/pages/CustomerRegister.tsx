@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { Loader, User, Phone, Lock, Mail, MapPin, Home, KeyRound, ShieldCheck } from 'lucide-react';
 import { useRouter } from '@/lib/router';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase';
 
-const SUPABASE_URL = 'https://nfcibyprftnowaiwlxxc.supabase.co';
-const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mY2lieXByZnRub3dhaXdseHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4ODMzOTgsImV4cCI6MjA5OTQ1OTM5OH0.5ZMjWYOuRBKNKG3ZonXXOBAfBapm54naphNXrHxq16k';
 type Step = 'form' | 'otp' | 'success';
 
 export default function CustomerRegister() {
@@ -54,7 +53,7 @@ export default function CustomerRegister() {
     try {
       const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-auth/register`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ANON_KEY}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
         body: JSON.stringify(form),
       });
       const data = await res.json();
@@ -63,8 +62,9 @@ export default function CustomerRegister() {
       startResendTimer();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Network error. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
@@ -76,7 +76,7 @@ export default function CustomerRegister() {
     try {
       const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-auth/verify-otp`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ANON_KEY}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
         body: JSON.stringify({
           mobile: form.mobile,
           code: otp,
@@ -89,8 +89,9 @@ export default function CustomerRegister() {
       setStep('success');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Network error. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleResendOtp = async () => {
@@ -99,7 +100,7 @@ export default function CustomerRegister() {
     try {
       const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-auth/resend-otp`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ANON_KEY}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
         body: JSON.stringify({ mobile: form.mobile, purpose: 'registration' }),
       });
       const data = await res.json();
@@ -108,8 +109,9 @@ export default function CustomerRegister() {
       startResendTimer();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Network error.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
