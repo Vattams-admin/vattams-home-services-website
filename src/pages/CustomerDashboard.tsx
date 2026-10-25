@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Loader, Briefcase, Calendar, Clock, MapPin, Wrench, CheckCircle, X, ChevronRight, Bell, TrendingUp, CreditCard, Star, Phone, User } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import { Booking, Customer } from '@/lib/supabase';
@@ -64,6 +64,22 @@ export default function CustomerDashboard() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [selected, setSelected] = useState<Booking | null>(null);
+  const requestVersion = useRef(0);
+
+  const refreshDashboard = async (c: Customer) => {
+    const version = ++requestVersion.current;
+    setLoading(true);
+    setLoadError('');
+    const results = await Promise.allSettled([loadBookings(c), loadNotifications(c)]);
+    if (version !== requestVersion.current) return;
+    const bookingFailed = results[0].status === 'rejected';
+    const notificationsFailed = results[1].status === 'rejected';
+    if (bookingFailed) console.error('[CustomerDashboard] booking history load failed:', results[0].reason);
+    if (notificationsFailed) console.error('[CustomerDashboard] notification load failed:', results[1].reason);
+    if (bookingFailed) setLoadError('Your booking history could not be verified. Please retry.');
+    else if (notificationsFailed) setLoadError('Some dashboard information could not be loaded. Please retry.');
+    setLoading(false);
+  };
 
   useEffect(() => {
     const stored = sessionStorage.getItem('vattams_customer');
@@ -71,16 +87,7 @@ export default function CustomerDashboard() {
     try {
       const c = JSON.parse(stored) as Customer;
       setCustomer(c);
-      Promise.all([
-        loadBookings(c).catch((error) => {
-          console.error('[CustomerDashboard] booking history load failed:', error);
-          setLoadError('Your booking history could not be verified. Please refresh the page to try again.');
-        }),
-        loadNotifications(c).catch((error) => {
-          console.error('[CustomerDashboard] notification load failed:', error);
-          setLoadError((current) => current || 'Some dashboard information could not be loaded. Please refresh the page.');
-        }),
-      ]).finally(() => setLoading(false));
+      void refreshDashboard(c);
     } catch { navigate('customer-login'); }
   }, []);
 
@@ -142,20 +149,7 @@ export default function CustomerDashboard() {
             <span>{loadError}</span>
             <button
               type="button"
-              onClick={() => {
-                setLoadError('');
-                setLoading(true);
-                Promise.all([
-                  loadBookings(customer).catch((error) => {
-                    console.error('[CustomerDashboard] booking history retry failed:', error);
-                    setLoadError('Your booking history could not be verified. Please try again.');
-                  }),
-                  loadNotifications(customer).catch((error) => {
-                    console.error('[CustomerDashboard] notification retry failed:', error);
-                    setLoadError((current) => current || 'Notifications could not be loaded. Please try again.');
-                  }),
-                ]).finally(() => setLoading(false));
-              }}
+              onClick={() => void refreshDashboard(customer)}
               disabled={loading}
               className="rounded-lg border border-amber-300 px-3 py-2 font-bold disabled:opacity-50"
             >
