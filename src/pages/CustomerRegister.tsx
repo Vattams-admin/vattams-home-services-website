@@ -56,8 +56,13 @@ export default function CustomerRegister() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
         body: JSON.stringify(form),
       });
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error || 'Registration failed');
+      const data: unknown = await res.json().catch(() => null);
+      const responseError = data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
+        ? data.error
+        : '';
+      if (!res.ok || !data || typeof data !== 'object' || responseError) {
+        throw new Error(responseError || 'Registration failed. Please try again.');
+      }
       setStep('otp');
       startResendTimer();
     } catch (err) {
@@ -84,8 +89,13 @@ export default function CustomerRegister() {
           registration_data: form,
         }),
       });
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error || 'Verification failed');
+      const data: unknown = await res.json().catch(() => null);
+      const responseError = data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
+        ? data.error
+        : '';
+      if (!res.ok || !data || typeof data !== 'object' || responseError) {
+        throw new Error(responseError || 'Verification failed. Please check the OTP and try again.');
+      }
       setStep('success');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Network error. Please try again.');
@@ -103,8 +113,13 @@ export default function CustomerRegister() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
         body: JSON.stringify({ mobile: form.mobile, purpose: 'registration' }),
       });
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error || 'Failed to resend OTP');
+      const data: unknown = await res.json().catch(() => null);
+      const responseError = data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
+        ? data.error
+        : '';
+      if (!res.ok || !data || typeof data !== 'object' || responseError) {
+        throw new Error(responseError || 'Failed to resend OTP. Please try again.');
+      }
       setOtp('');
       startResendTimer();
     } catch (err) {
