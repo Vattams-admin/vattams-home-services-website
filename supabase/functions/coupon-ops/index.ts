@@ -126,9 +126,21 @@ Deno.serve(async req => {
       return new Response(JSON.stringify({ error: "Coupon does not match booking" }), { status: 400, headers });
     }
 
-    if (
-      Math.abs(Number(booking.discount_amount || 0) - Number(discount_amount)) > 0.01
-    ) {
+    const storedDiscount = Number(booking.discount_amount);
+    const bookingTotalValue = booking.total_amount ?? booking.amount;
+    const bookingTotal = Number(bookingTotalValue);
+
+    // Persisted booking amounts must be trustworthy before comparing a
+    // client-supplied redemption amount; NaN comparisons otherwise fail open.
+    if (booking.discount_amount == null
+      || !Number.isFinite(storedDiscount) || storedDiscount <= 0
+      || bookingTotalValue == null || !Number.isFinite(bookingTotal) || bookingTotal <= 0
+      || storedDiscount > bookingTotal) {
+      console.error("[coupon-ops] invalid persisted booking pricing");
+      return new Response(JSON.stringify({ error: "Booking pricing needs review" }), { status: 503, headers });
+    }
+
+    if (Math.abs(storedDiscount - discount_amount) > 0.01) {
       return new Response(JSON.stringify({ error: "Discount does not match booking" }), { status: 400, headers });
     }
 
@@ -160,7 +172,7 @@ Deno.serve(async req => {
       return new Response(JSON.stringify({ error: "Coupon usage limit reached" }), { status: 400, headers });
     }
 
-    if (Number(discount_amount) > Number(booking.total_amount ?? booking.amount ?? 0)) {
+    if (discount_amount > bookingTotal) {
       return new Response(JSON.stringify({ error: "Invalid discount" }), { status: 400, headers });
     }
 
