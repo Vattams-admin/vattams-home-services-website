@@ -179,6 +179,11 @@ export default function CustomerServicePriceCards({ variant = 'home' }: { varian
                     Pricing temporarily unavailable
                   </div>
                 )}
+                {group.startingPrice !== null && group.startingTotal === null && (
+                  <div role="status" className="relative mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-5 text-amber-900">
+                    Checkout fee settings are unavailable, so we can’t show an estimated total yet. Please confirm the complete breakdown before booking.
+                  </div>
+                )}
                 <div className="relative mt-4 space-y-2">
                   {group.rows.map((row) => (
                     <div key={row.service_type} className="border-b border-gray-100 pb-3 last:border-0 last:pb-0">
