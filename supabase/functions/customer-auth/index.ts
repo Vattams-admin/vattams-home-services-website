@@ -160,7 +160,18 @@ Deno.serve(async (req: Request) => {
           const { data: customer, error: insertError } = await supabase.from("customers").insert({
             full_name, mobile: regMobile, email: String(email).trim().toLowerCase(), password_hash: String(password_hash), city: city || null, address: address || null,
           }).select("id, full_name, mobile, email, city, address, created_at").single();
-          if (insertError) return errorResponse("Failed to create account. Please try again.");
+          if (insertError) {
+            if (insertError.code === "23505") {
+              return errorResponse("An account already exists with this mobile number or email address.", 409);
+            }
+            // Preserve the pending registration after a transient database failure so
+            // the customer can retry with the same still-valid OTP.
+            const { error: restoreError } = await supabase.from("otp_codes")
+              .update({ verified: false, verified_at: null })
+              .eq("id", otpRecord.id).eq("verified", true);
+            if (restoreError) console.error("Could not restore OTP after failed customer registration:", restoreError.message);
+            return errorResponse("Failed to create account. Please try again.");
+          }
           return jsonResponse({ success: true, message: "Account created successfully", customer });
         }
 
