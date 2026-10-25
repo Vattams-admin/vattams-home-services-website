@@ -488,8 +488,12 @@ export default function Booking() {
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all bg-white">
                     {serviceTypes.map((type) => {
                       const listedPrice = customerServicePrices[getCustomerPriceKey(form.service_category, type)];
+                      const listedBasePrice = Number(listedPrice?.base_price);
+                      const hasListedPrice = Boolean(listedPrice)
+                        && Number.isFinite(listedBasePrice)
+                        && listedBasePrice > 0;
                       return <option key={type} value={type}>
-                        {type}{listedPrice ? ` — ${formatINR(Number(listedPrice.base_price))}` : ' — price unavailable'}
+                        {type}{hasListedPrice ? ` — ${formatINR(listedBasePrice)}` : ' — price unavailable'}
                       </option>;
                     })}
                   </select>
