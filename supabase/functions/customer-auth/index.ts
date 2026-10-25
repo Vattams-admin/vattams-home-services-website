@@ -83,7 +83,7 @@ Deno.serve(async (req: Request) => {
         if (!password?.trim()) return errorResponse("Password is required");
         if (!String(email || "").trim()) return errorResponse("Email address is required to register");
         const normalizedEmail = String(email).trim().toLowerCase();
-        if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(normalizedEmail)) return errorResponse("Enter a valid email address");
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) return errorResponse("Enter a valid email address");
         const mobileErr = validateMobile(mobile);
         if (mobileErr) return errorResponse(mobileErr);
         const passErr = validatePassword(password);
