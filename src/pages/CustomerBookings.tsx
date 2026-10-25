@@ -176,12 +176,13 @@ export default function CustomerBookings() {
         )}
 
         {loading ? (
-          <div className="flex min-h-64 items-center justify-center rounded-2xl bg-white">
-            <Loader2 size={30} className="animate-spin text-[#a47c00]" />
+          <div role="status" aria-live="polite" aria-label="Loading your bookings" className="flex min-h-64 items-center justify-center rounded-2xl bg-white">
+            <Loader2 size={30} aria-hidden="true" className="animate-spin text-[#a47c00]" />
+            <span className="sr-only">Loading your bookings…</span>
           </div>
         ) : error ? (
-          <div className="rounded-2xl border border-red-200 bg-white p-8 text-center">
-            <AlertCircle size={34} className="mx-auto mb-3 text-red-500" />
+          <div role="alert" aria-live="assertive" className="rounded-2xl border border-red-200 bg-white p-8 text-center">
+            <AlertCircle size={34} aria-hidden="true" className="mx-auto mb-3 text-red-500" />
             <h2 className="text-lg font-bold text-gray-900">Bookings could not be loaded</h2>
             <p className="mt-2 text-sm text-gray-600">{error}</p>
             <button
