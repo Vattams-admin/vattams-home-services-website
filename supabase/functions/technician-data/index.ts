@@ -18,10 +18,18 @@ case "job_status":{if(!body.job_id||!body.status)return out({error:"Job and stat
 assigned:["accepted","rejected"],accepted:["on_the_way","rejected"],on_the_way:["in_progress"],in_progress:["job_started","job_completed"],job_started:["job_completed"],job_completed:[],completed:[],rejected:[]
 };const requested=String(body.status);const {data:current,error:ce}=await supabase.from("technician_jobs").select("id,status,booking_id").eq("id",body.job_id).eq("technician_id",technicianId).maybeSingle();if(ce||!current)return out({error:"Job not found"},404);const allowed=transitions[String(current.status)]||[];if(!allowed.includes(requested))return out({error:"Invalid job status transition"},409);const update:any={status:requested};if(requested==="completed"||requested==="job_completed")update.completed_at=new Date().toISOString();const {data,error}=await supabase.from("technician_jobs").update(update).eq("id",body.job_id).eq("technician_id",technicianId).eq("status",current.status).select("id,booking_id,technician_id,status,assigned_at,completed_at").maybeSingle();if(error)return out({error:"Unable to update job status"},400);if(!data)return out({error:"Job status changed concurrently. Please retry."},409);
 const bookingStatus:Record<string,string>={accepted:"accepted",on_the_way:"on_the_way",in_progress:"in_progress",job_started:"job_started",job_completed:"job_completed",completed:"completed"};
+let bookingUpdateError:unknown=null;
 if(requested==="rejected"){
-  await supabase.from("bookings").update({assigned_technician_id:null,status:"pending",updated_at:new Date().toISOString()}).eq("id",current.booking_id).eq("assigned_technician_id",technicianId).in("status",["assigned","accepted"]);
+  const {data:booking,error:bookingError}=await supabase.from("bookings").update({assigned_technician_id:null,status:"pending",updated_at:new Date().toISOString()}).eq("id",current.booking_id).eq("assigned_technician_id",technicianId).in("status",["assigned","accepted"]).select("id").maybeSingle();
+  if(bookingError||!booking)bookingUpdateError=bookingError||new Error("Booking was not in a rejectable state");
 }else if(bookingStatus[requested]){
-  await supabase.from("bookings").update({status:bookingStatus[requested],updated_at:new Date().toISOString()}).eq("id",current.booking_id).eq("assigned_technician_id",technicianId);
+  const {data:booking,error:bookingError}=await supabase.from("bookings").update({status:bookingStatus[requested],updated_at:new Date().toISOString()}).eq("id",current.booking_id).eq("assigned_technician_id",technicianId).select("id").maybeSingle();
+  if(bookingError||!booking)bookingUpdateError=bookingError||new Error("Booking update did not match an assigned booking");
+}
+if(bookingUpdateError){
+  const {data:rolledBack,error:rollbackError}=await supabase.from("technician_jobs").update({status:current.status,completed_at:null}).eq("id",body.job_id).eq("technician_id",technicianId).eq("status",requested).select("id").maybeSingle();
+  if(rollbackError||!rolledBack)return out({error:"Booking/job status synchronization failed and automatic rollback also failed. Manual reconciliation is required."},500);
+  return out({error:"Booking status could not be updated; technician job change was rolled back. Please refresh and retry."},409);
 }
 return out({job:data});}
 case "notification_read":{if(!body.notification_id)return out({error:"Notification ID is required"},400);const source=String(body.source||"wallet");const table=source==="job"?"notifications":"technician_notifications";let q=supabase.from(table).update({is_read:true,read_at:new Date().toISOString(),status:"read"}).eq("id",body.notification_id);q=source==="job"?q.eq("recipient_type","technician").eq("recipient_id",technicianId):q.eq("technician_id",technicianId);const {error}=await q;if(error)return out({error:"Unable to update notification"},400);return out({success:true});}
