@@ -125,12 +125,55 @@ Deno.serve(async (req: Request) => {
       let couponCode: string | null = null;
       let couponId: string | null = null;
       if (b.coupon_code) {
-        const { data: coupon } = await supabase.from("coupons").select("id,code,discount_type,discount_value,max_uses,used_count,min_order_amount,valid_from,valid_until,is_active").eq("code",String(b.coupon_code).trim().toUpperCase()).eq("is_active",true).maybeSingle();
-        if (coupon && (!coupon.valid_from || new Date(coupon.valid_from) <= new Date()) && (!coupon.valid_until || new Date(coupon.valid_until) >= new Date()) && (coupon.max_uses === null || Number(coupon.used_count) < Number(coupon.max_uses)) && totalAmount >= Number(coupon.min_order_amount||0)) {
-          discountAmount = coupon.discount_type === "percentage" ? Math.round((totalAmount * Number(coupon.discount_value) / 100) * 100) / 100 : Math.min(totalAmount, Number(coupon.discount_value));
-          couponCode = coupon.code;
-          couponId = coupon.id;
+        const normalizedCouponCode = String(b.coupon_code).trim().toUpperCase();
+        const { data: coupon, error: couponLookupError } = await supabase
+          .from("coupons")
+          .select("id,code,discount_type,discount_value,max_uses,used_count,min_order_amount,valid_from,valid_until,is_active")
+          .eq("code", normalizedCouponCode)
+          .eq("is_active", true)
+          .maybeSingle();
+
+        if (couponLookupError) {
+          console.error("[booking-ops create_booking] coupon lookup failed");
+          return new Response(JSON.stringify({ error: "Unable to verify this coupon. Please try again." }), {
+            status: 503,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
         }
+
+        if (!coupon
+          || (coupon.valid_from && new Date(coupon.valid_from) > new Date())
+          || (coupon.valid_until && new Date(coupon.valid_until) < new Date())
+          || (coupon.max_uses !== null && Number(coupon.used_count) >= Number(coupon.max_uses))
+          || totalAmount < Number(coupon.min_order_amount || 0)) {
+          return new Response(JSON.stringify({ error: "This coupon is invalid, expired, or unavailable. Please re-validate it." }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const discountValue = Number(coupon.discount_value);
+        if (!Number.isFinite(discountValue) || discountValue <= 0
+          || !["percentage", "flat"].includes(String(coupon.discount_type))) {
+          return new Response(JSON.stringify({ error: "This coupon has invalid discount settings." }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        discountAmount = coupon.discount_type === "percentage"
+          ? Math.round((totalAmount * discountValue / 100) * 100) / 100
+          : discountValue;
+
+        if (!Number.isFinite(discountAmount) || discountAmount <= 0 || discountAmount > totalAmount) {
+          return new Response(JSON.stringify({ error: "This coupon discount is invalid for the current booking total." }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        couponCode = coupon.code;
+        couponId = coupon.id;
       }
       const finalAmount = Math.max(0, Math.round((totalAmount - discountAmount) * 100) / 100);
       const row: Record<string, unknown> = {
