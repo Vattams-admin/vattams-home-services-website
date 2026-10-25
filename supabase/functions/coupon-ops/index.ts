@@ -57,7 +57,8 @@ Deno.serve(async req => {
       !customer_session_token.trim() || customer_session_token.length > 512 ||
       typeof discount_amount !== "number" ||
       !Number.isFinite(discount_amount) ||
-      discount_amount <= 0
+      discount_amount <= 0 ||
+      Math.abs(discount_amount * 100 - Math.round(discount_amount * 100)) > 1e-7
     ) {
       return new Response(JSON.stringify({ error: "Invalid redemption" }), { status: 400, headers });
     }
