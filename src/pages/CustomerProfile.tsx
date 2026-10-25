@@ -223,7 +223,7 @@ export default function CustomerProfile() {
     try {
       const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-auth/change-password`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ANON_KEY}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
         body: JSON.stringify({ session_token: sessionToken, current_password: pwdForm.current, new_password: pwdForm.new }),
       });
       const data = await res.json().catch(() => null);
