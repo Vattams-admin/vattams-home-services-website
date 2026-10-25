@@ -13,16 +13,38 @@ const headers = {
 };
 
 Deno.serve(async req => {
-  if (req.method === "OPTIONS") return new Response(null, { headers });
+  if (req.method === "OPTIONS") {
+    return new Response(null, {
+      headers: { ...headers, "Access-Control-Allow-Methods": "POST, OPTIONS" },
+    });
+  }
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { ...headers, "Allow": "POST, OPTIONS" },
+    });
+  }
 
   try {
+    let payload: unknown;
+    try {
+      payload = await req.json();
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        return new Response(JSON.stringify({ error: "Invalid JSON request body" }), { status: 400, headers });
+      }
+      throw error;
+    }
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+      return new Response(JSON.stringify({ error: "Request body must be a JSON object" }), { status: 400, headers });
+    }
     const {
       action,
       coupon_id,
       booking_id,
       discount_amount,
       customer_session_token,
-    } = await req.json();
+    } = payload as Record<string, unknown>;
 
     if (action !== "redeem") {
       return new Response(JSON.stringify({ error: "Unsupported action" }), { status: 400, headers });
