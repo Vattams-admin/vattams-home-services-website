@@ -313,36 +313,36 @@ export default function CustomerProfile() {
               {showPwdForm ? 'Cancel' : 'Change'}
             </button>
           </div>
-          {pwdMsg && <div className={'rounded-xl p-3 text-sm mb-4 ' + (pwdMsg.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200')}>{pwdMsg.text}</div>}
+          {pwdMsg && <div role={pwdMsg.type === 'error' ? 'alert' : 'status'} aria-live={pwdMsg.type === 'error' ? 'assertive' : 'polite'} className={'rounded-xl p-3 text-sm mb-4 ' + (pwdMsg.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200')}>{pwdMsg.text}</div>}
           {showPwdForm && (
             <form onSubmit={handleChangePassword} className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Current Password</label>
+                <label htmlFor="profile-current-password" className="block text-sm font-semibold text-gray-700 mb-1.5">Current Password</label>
                 <div className="relative">
                   <Key size={16} className="absolute left-3 top-3.5 text-gray-400" />
-                  <input type="password" value={pwdForm.current} onChange={(e) => setPwdForm({ ...pwdForm, current: e.target.value })} required
+                  <input id="profile-current-password" name="current-password" autoComplete="current-password" type="password" value={pwdForm.current} onChange={(e) => setPwdForm({ ...pwdForm, current: e.target.value })} required
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">New Password</label>
+                <label htmlFor="profile-new-password" className="block text-sm font-semibold text-gray-700 mb-1.5">New Password</label>
                 <div className="relative">
                   <Lock size={16} className="absolute left-3 top-3.5 text-gray-400" />
-                  <input type="password" value={pwdForm.new} onChange={(e) => setPwdForm({ ...pwdForm, new: e.target.value })} required minLength={6}
+                  <input id="profile-new-password" name="new-password" autoComplete="new-password" type="password" value={pwdForm.new} onChange={(e) => setPwdForm({ ...pwdForm, new: e.target.value })} required minLength={6} maxLength={128}
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Confirm New Password</label>
+                <label htmlFor="profile-confirm-password" className="block text-sm font-semibold text-gray-700 mb-1.5">Confirm New Password</label>
                 <div className="relative">
                   <Lock size={16} className="absolute left-3 top-3.5 text-gray-400" />
-                  <input type="password" value={pwdForm.confirm} onChange={(e) => setPwdForm({ ...pwdForm, confirm: e.target.value })} required minLength={6}
+                  <input id="profile-confirm-password" name="confirm-password" autoComplete="new-password" type="password" value={pwdForm.confirm} onChange={(e) => setPwdForm({ ...pwdForm, confirm: e.target.value })} required minLength={6} maxLength={128}
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
                 </div>
               </div>
               <button type="submit" disabled={pwdLoading}
                 className="w-full flex items-center justify-center gap-2 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors">
-                {pwdLoading ? <Loader size={18} className="animate-spin" /> : <Key size={18} />} Update Password
+                {pwdLoading ? <Loader size={18} className="animate-spin" /> : <Key size={18} />} {pwdLoading ? 'Updating password…' : 'Update Password'}
               </button>
             </form>
           )}
