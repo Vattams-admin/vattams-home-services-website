@@ -923,14 +923,22 @@ export default function AdminDashboard() {
           prev ? { ...prev, assigned_technician_id: data.technician_id, status: 'assigned' } : prev
         );
         setAssignTechId(data.technician_id ?? '');
+      } else if (data?.reason === 'technician_became_busy') {
+        setAutoAssignResult('The selected technician just received another active job. Please retry automatic assignment.');
+      } else if (data?.reason === 'booking_not_assignable') {
+        setAutoAssignResult('This booking is no longer eligible for automatic assignment. Refresh the booking details.');
+      } else if (data?.reason === 'already_assigned') {
+        setAutoAssignResult('This booking is already assigned. Refresh the booking details.');
+      } else if (data?.reason === 'no_eligible_technician') {
+        setAutoAssignResult('No eligible technician is currently available. Please try again later.');
       } else {
-        setAutoAssignResult('No eligible technician available for automatic assignment.');
+        setAutoAssignResult('Automatic assignment did not complete. Refresh the booking details before retrying.');
       }
     } catch (err) {
       setAutoAssignResult(err instanceof Error ? err.message : 'Auto assignment failed.');
+    } finally {
+      setAutoAssigning(false);
     }
-
-    setAutoAssigning(false);
   };
 
   const updateTechStatus = async (
