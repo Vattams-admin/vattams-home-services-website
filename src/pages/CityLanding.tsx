@@ -23,7 +23,7 @@ function buildSchema(city: CityData) {
   const organizationSchema = {
     '@type': 'Organization',
     '@id': providerId,
-    name: 'VATTAMS Home Services',
+    name: 'VATTAMS Hybrid Service Marketplace',
     url: baseUrl,
     logo: `${baseUrl}/VATTAMS_HOME_SERVICES_logo.svg`,
     image: `${baseUrl}/VATTAMS_HOME_SERVICES_logo.svg`,
