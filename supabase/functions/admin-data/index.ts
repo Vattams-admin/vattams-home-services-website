@@ -24,10 +24,10 @@ if(readError||!current)return out({error:"Booking not found"},404);
 // Completion is deliberately gated: the technician workflow must first mark
 // the booking job_completed. This prevents admin status controls from directly
 // triggering the wallet completion trigger from an earlier booking state.
-if(requested==="completed"){
-if(current.status!=="job_completed")return out({error:"A booking can only be completed after the technician marks the job completed"},409);
+if(requested==="job_completed"||requested==="completed"){
+if(requested==="completed"&&current.status!=="job_completed")return out({error:"A booking can only be completed after the technician marks the job completed"},409);
 const {data:job,error:jobError}=await db.from("technician_jobs").select("id,status").eq("booking_id",bookingId).eq("status","job_completed").maybeSingle();
-if(jobError||!job)return out({error:"Completion must be recorded by the assigned technician before an admin can finalize this booking"},409);
+if(jobError||!job)return out({error:"The technician job must be marked job_completed before an admin can set this booking to job_completed or completed"},409);
 }
 if(current.status==="completed"||current.status==="cancelled")return out({error:"Completed or cancelled bookings cannot be transitioned again"},409);
 if(requested===current.status)return out({error:"Booking already has this status"},409);
