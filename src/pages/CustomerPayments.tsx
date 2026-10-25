@@ -26,29 +26,62 @@ export default function CustomerPayments() {
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [bookings, setBookings] = useState<Record<string, BookingRef>>({});
   const [loading, setLoading] = useState(true);
-  const [invoicePayment, setInvoicePayment] = useState<PaymentRecord | null>(null);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     const stored = sessionStorage.getItem('vattams_customer');
-    if (!stored) { navigate('customer-login'); return; }
-    try {
-      const c = JSON.parse(stored) as Customer;
-      setCustomer(c);
-      Promise.all([loadPayments(c), loadBookings(c)]).finally(() => setLoading(false));
-    } catch { navigate('customer-login'); }
-  }, []);
+    const sessionToken = sessionStorage.getItem('vattams_customer_session');
+    const expiresAt = Number(sessionStorage.getItem('vattams_customer_expires'));
 
-  const loadPayments = async (c: Customer) => {
-    const data = await customerData<{ payments: PaymentRecord[] }>('payments', { mobile: c.mobile });
-    setPayments(data?.payments ?? []);
-  };
+    if (!stored || !sessionToken || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+      sessionStorage.removeItem('vattams_customer');
+      sessionStorage.removeItem('vattams_customer_session');
+      sessionStorage.removeItem('vattams_customer_expires');
+      navigate('customer-login');
+      return;
+    }
 
-  const loadBookings = async (c: Customer) => {
-    const result = await customerData<{ bookings: { id: string; service_category: string; booking_number: string }[] }>('booking_refs', { mobile: c.mobile });
-    const map: Record<string, BookingRef> = {};
-    result?.bookings.forEach((b) => { map[b.id] = { service_category: b.service_category, booking_number: b.booking_number }; });
-    setBookings(map);
-  };
+    let active = true;
+    const load = async () => {
+      try {
+        const parsed = JSON.parse(stored) as Partial<Customer>;
+        if (typeof parsed.id !== 'string' || !parsed.id.trim()
+          || typeof parsed.mobile !== 'string' || !parsed.mobile.trim()
+          || typeof parsed.full_name !== 'string' || !parsed.full_name.trim()) {
+          throw new Error('Your saved customer profile is incomplete. Please sign in again.');
+        }
+        const c = parsed as Customer;
+        setCustomer(c);
+        const [paymentData, bookingData] = await Promise.all([
+          customerData<{ payments: PaymentRecord[] }>('payments', { mobile: c.mobile }),
+          customerData<{ bookings: { id: string; service_category: string; booking_number: string }[] }>('booking_refs', { mobile: c.mobile }),
+        ]);
+        if (!paymentData || !Array.isArray(paymentData.payments)
+          || !bookingData || !Array.isArray(bookingData.bookings)) {
+          throw new Error('We couldn’t verify your payment history. Please sign in again or retry shortly.');
+        }
+        if (!active) return;
+        setPayments(paymentData.payments);
+        const map: Record<string, BookingRef> = {};
+        for (const booking of bookingData.bookings) {
+          if (!booking || typeof booking.id !== 'string' || !booking.id.trim()
+            || typeof booking.service_category !== 'string'
+            || typeof booking.booking_number !== 'string') {
+            throw new Error('We received incomplete booking references. Please retry shortly.');
+          }
+          map[booking.id] = { service_category: booking.service_category, booking_number: booking.booking_number };
+        }
+        setBookings(map);
+      } catch (error) {
+        if (!active) return;
+        setLoadError(error instanceof Error ? error.message : 'Unable to load payment history. Please try again.');
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    void load();
+    return () => { active = false; };
+  }, [navigate]);
 
   const downloadInvoice = (payment: PaymentRecord) => {
     const booking = payment.reference_id ? bookings[payment.reference_id] : null;
@@ -66,6 +99,21 @@ export default function CustomerPayments() {
 
   if (loading || !customer) {
     return <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-ivory-50"><Loader className="animate-spin text-gold-700" size={32} /></div>;
+  }
+
+  if (loadError) {
+    return (
+      <div className="pt-20 md:pt-24 min-h-screen bg-ivory-50 px-4 py-12">
+        <div role="alert" className="mx-auto max-w-xl rounded-2xl border border-amber-200 bg-white p-8 text-center shadow-sm">
+          <FileText size={36} className="mx-auto mb-3 text-amber-600" />
+          <h1 className="text-xl font-bold text-gray-900">Payment history unavailable</h1>
+          <p className="mt-2 text-sm leading-6 text-gray-600">{loadError}</p>
+          <button type="button" onClick={() => navigate('customer-login')} className="mt-5 rounded-xl bg-[#0b1f3a] px-5 py-3 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a47c00] focus-visible:ring-offset-2">
+            Sign in again
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const totalPaid = payments.filter((p) => p.status === 'success').reduce((sum, p) => sum + p.amount, 0);
