@@ -176,6 +176,14 @@ export default function CustomerProfile() {
     e.preventDefault();
     if (pwdLoading || !customer) return;
     setPwdMsg(null);
+    if (pwdForm.new.length > 128 || pwdForm.confirm.length > 128) {
+      setPwdMsg({ type: 'error', text: 'New password must be 128 characters or fewer.' });
+      return;
+    }
+    if (pwdForm.current.length > 128) {
+      setPwdMsg({ type: 'error', text: 'Current password must be 128 characters or fewer.' });
+      return;
+    }
     if (!pwdForm.current) {
       setPwdMsg({ type: 'error', text: 'Enter your current password.' });
       return;
@@ -309,7 +317,11 @@ export default function CustomerProfile() {
         <div className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-6 mt-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2"><Lock size={16} className="text-gray-400" /> Change Password</h3>
-            <button type="button" disabled={pwdLoading} onClick={() => setShowPwdForm(!showPwdForm)} className="text-sm text-gold-700 font-semibold hover:underline disabled:opacity-60">
+            <button type="button" disabled={pwdLoading} onClick={() => {
+              setShowPwdForm((visible) => !visible);
+              setPwdMsg(null);
+              setPwdForm({ current: '', new: '', confirm: '' });
+            }} className="text-sm text-gold-700 font-semibold hover:underline disabled:opacity-60">
               {showPwdForm ? 'Cancel' : 'Change'}
             </button>
           </div>
