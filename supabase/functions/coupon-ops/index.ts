@@ -183,6 +183,30 @@ Deno.serve(async req => {
       return new Response(JSON.stringify({ error: "Coupon usage limit reached" }), { status: 400, headers });
     }
 
+    const discountValue = Number(coupon.discount_value);
+    const minimumOrderAmount = Number(coupon.min_order_amount ?? 0);
+    if (!Number.isFinite(discountValue) || discountValue <= 0
+      || !["percentage", "flat"].includes(String(coupon.discount_type))
+      || (coupon.discount_type === "percentage" && discountValue > 100)
+      || !Number.isFinite(minimumOrderAmount) || minimumOrderAmount < 0) {
+      console.error("[coupon-ops] invalid coupon discount configuration");
+      return new Response(JSON.stringify({ error: "Coupon configuration needs review" }), { status: 503, headers });
+    }
+
+    if (bookingTotal < minimumOrderAmount) {
+      return new Response(JSON.stringify({ error: "Booking does not meet the coupon minimum order amount" }), { status: 400, headers });
+    }
+
+    const expectedDiscount = Math.min(
+      coupon.discount_type === "percentage"
+        ? Math.round((bookingTotal * discountValue / 100) * 100) / 100
+        : Math.round(discountValue * 100) / 100,
+      bookingTotal,
+    );
+    if (Math.abs(expectedDiscount - storedDiscount) > 0.01) {
+      return new Response(JSON.stringify({ error: "Coupon terms no longer match this booking" }), { status: 409, headers });
+    }
+
     if (discount_amount > bookingTotal) {
       return new Response(JSON.stringify({ error: "Invalid discount" }), { status: 400, headers });
     }
