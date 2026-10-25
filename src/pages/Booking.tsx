@@ -450,7 +450,7 @@ export default function Booking() {
                   <div className="font-semibold text-[#10182B]">We can’t load the booking catalogue yet</div>
                   <p className="mt-1 text-sm leading-6 text-amber-900">{loadError}</p>
                   <p className="mt-2 text-xs leading-5 text-amber-900/80">Your request has not been submitted. Retry loading the live service catalogue before booking.</p>
-                  <button type="button" disabled={loading} onClick={() => { setLoading(true); setCatalogueRetryCount((count) => count + 1); }} className="mt-3 inline-flex min-h-10 items-center justify-center rounded-lg border border-amber-400 bg-white px-4 py-2 text-sm font-semibold text-amber-950 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-600 focus-visible:ring-offset-2">
+                  <button type="button" disabled={loading} onClick={() => { couponValidationRequest.current += 1; setValidatingCoupon(false); setCouponResult(null); setCouponCode(''); setLoading(true); setCatalogueRetryCount((count) => count + 1); }} className="mt-3 inline-flex min-h-10 items-center justify-center rounded-lg border border-amber-400 bg-white px-4 py-2 text-sm font-semibold text-amber-950 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-600 focus-visible:ring-offset-2">
                     {loading ? 'Retrying…' : 'Retry service catalogue'}
                   </button>
                   <div className="mt-4 flex flex-col gap-2 sm:flex-row">
