@@ -158,7 +158,7 @@ Deno.serve(async (req: Request) => {
       // Validate the category/type pairing independently of database rows so a
       // caller cannot combine one appliance category with another job type.
       const categoryValue = String(b.service_category ?? "").trim().toLowerCase();
-      const allowedServiceTypes = /(^|\\W)ac(\\W|$)|air\\s*condition/.test(categoryValue)
+      const allowedServiceTypes = /(^|\W)ac(\W|$)|air\s*condition/.test(categoryValue)
         ? ["General Service", "Installation", "Gas Filling", "Pump Water Service", "Coil Service"]
         : categoryValue.includes("washing machine")
           ? ["Washing Machine Service"]
