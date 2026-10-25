@@ -94,7 +94,7 @@ export default function CustomerDashboard() {
   const activeBookings = bookings.filter((b) => ['pending', 'confirmed', 'assigned', 'accepted', 'on_the_way', 'in_progress', 'job_started', 'job_completed'].includes(b.status));
   const completedBookings = bookings.filter((b) => b.status === 'completed');
   const upcomingBooking = activeBookings.find((b) => b.preferred_date) ?? activeBookings[0];
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
+  const unreadCount = notifications.filter((n) => n.is_read === false).length;
 
   const quickLinks = [
     { label: 'My Bookings', icon: Briefcase, page: 'customer-bookings' as const, color: 'bg-blue-100 text-gold-700' },
@@ -280,8 +280,8 @@ export default function CustomerDashboard() {
                     {upcomingBooking.preferred_time && <div className="flex items-center gap-2"><Clock size={14} className="text-gray-400" /> {upcomingBooking.preferred_time}</div>}
                     <div className="flex items-center gap-2"><MapPin size={14} className="text-gray-400" /> {upcomingBooking.city}</div>
                   </div>
-                  <div className={`mt-3 px-3 py-1.5 rounded-full text-xs font-semibold capitalize border inline-block ${statusColors[upcomingBooking.status]}`}>
-                    {upcomingBooking.status.replace('_', ' ')}
+                  <div className={`mt-3 px-3 py-1.5 rounded-full text-xs font-semibold capitalize border inline-block ${statusColors[upcomingBooking.status] ?? 'bg-gray-100 text-gray-700 border-gray-200'}`}>
+                    {statusLabels[upcomingBooking.status] ?? upcomingBooking.status.replace('_', ' ')}
                   </div>
                 </div>
               ) : (
@@ -298,21 +298,22 @@ export default function CustomerDashboard() {
               {notifications.length === 0 ? (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
                   <Bell size={32} className="text-gray-300 mx-auto mb-2" />
-                  <p className="text-gray-500 text-sm">No notifications.</p>
+                  <p className="text-gray-500 text-sm">You’re all caught up.</p>
+                  <p className="mt-1 text-xs text-gray-400">Updates about your bookings will appear here.</p>
                 </div>
               ) : (
                 <div className="space-y-2">
                   {notifications.map((n) => (
-                    <div key={n.id} className={`bg-white rounded-xl border shadow-sm p-3 ${n.is_read ? 'border-gray-100' : 'border-gold-200 bg-gold-50/30'}`}>
+                    <article key={n.id} aria-label={n.is_read === false ? `Unread notification: ${n.title}` : `Notification: ${n.title}`} className={`bg-white rounded-xl border shadow-sm p-3 ${n.is_read === false ? 'border-gold-200 bg-gold-50/30' : 'border-gray-100'}`}>
                       <div className="flex items-start gap-2">
-                        <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.is_read ? 'bg-gray-300' : 'bg-gold-500'}`} />
+                        <div aria-hidden="true" className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.is_read === false ? 'bg-gold-500' : 'bg-gray-300'}`} />
                         <div>
                           <div className="font-semibold text-gray-900 text-sm">{n.title}</div>
                           <div className="text-xs text-gray-500 mt-0.5">{n.message}</div>
                           <div className="text-xs text-gray-400 mt-1">{new Date(n.created_at).toLocaleString('en-IN')}</div>
                         </div>
                       </div>
-                    </div>
+                    </article>
                   ))}
                 </div>
               )}
