@@ -81,8 +81,9 @@ export default function CustomerProfile() {
     try {
       const result = await customerData<{ bookings: { id: string }[] }>('bookings');
       if (!result || !Array.isArray(result.bookings) ||
-          !result.bookings.every((booking) => booking && typeof booking.id === 'string')) {
-        throw new Error('Booking count response is unavailable.');
+          !result.bookings.every((booking) => booking && typeof booking.id === 'string' && booking.id.trim()) ||
+          new Set(result.bookings.map((booking) => booking.id.trim())).size !== result.bookings.length) {
+        throw new Error('Booking count response is unavailable or contains invalid records.');
       }
       if (requestVersion !== bookingCountRequestVersion.current) return;
       setBookingCount(result.bookings.length);
