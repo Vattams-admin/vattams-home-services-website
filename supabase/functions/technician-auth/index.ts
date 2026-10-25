@@ -90,12 +90,12 @@ function otpJson(data: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 }
 async function startTechnicianRegistrationOtp(supabase: ReturnType<typeof createClient>, body: RegisterBody) {
-  const mobile = String(body.mobile || "").replace(/\\D/g, "");
+  const mobile = String(body.mobile || "").replace(/\D/g, "");
   const email = String(body.email || "").trim().toLowerCase();
-  if (!body.full_name?.trim() || !/^[6-9]\\d{9}$/.test(mobile) || !body.password || body.password.length < 6 || !body.city?.trim()) {
+  if (!body.full_name?.trim() || !/^[6-9]\d{9}$/.test(mobile) || !body.password || body.password.length < 6 || !body.city?.trim()) {
     return otpJson({ error: "Valid name, mobile, city and password are required." }, 400);
   }
-  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) return otpJson({ error: "A valid email address is required for technician registration." }, 400);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return otpJson({ error: "A valid email address is required for technician registration." }, 400);
   const { data: existingMobile } = await supabase.from("technicians").select("id").eq("mobile", mobile).maybeSingle();
   if (existingMobile) return otpJson({ error: "This mobile number is already registered." }, 409);
   const { data: existingEmail } = await supabase.from("technicians").select("id").eq("email", email).maybeSingle();
@@ -119,9 +119,9 @@ async function startTechnicianRegistrationOtp(supabase: ReturnType<typeof create
   return otpJson({ success: true, message: "Email verification code sent." });
 }
 async function verifyTechnicianRegistrationOtp(supabase: ReturnType<typeof createClient>, body: Record<string, unknown>) {
-  const mobile = String(body.mobile || "").replace(/\\D/g, "");
+  const mobile = String(body.mobile || "").replace(/\D/g, "");
   const code = String(body.code || "").trim();
-  if (!mobile || !/^\\d{6}$/.test(code)) return otpJson({ error: "Mobile number and 6-digit email OTP are required." }, 400);
+  if (!mobile || !/^\d{6}$/.test(code)) return otpJson({ error: "Mobile number and 6-digit email OTP are required." }, 400);
   const { data: row } = await supabase.from("otp_codes").select("id,mobile,code,expires_at,attempt_count,registration_data,verified").eq("mobile", mobile).eq("purpose", "technician_registration").eq("verified", false).order("created_at", { ascending: false }).limit(1).maybeSingle();
   if (!row) return otpJson({ error: "No active email verification found. Please request a new code." }, 400);
   if (Number(row.attempt_count || 0) >= 5) return otpJson({ error: "Too many incorrect attempts. Request a new email OTP." }, 429);
@@ -134,7 +134,7 @@ async function verifyTechnicianRegistrationOtp(supabase: ReturnType<typeof creat
   const { data: consumed, error: consumeError } = await supabase.from("otp_codes").update({ verified: true, verified_at: new Date().toISOString() }).eq("id", row.id).eq("verified", false).select("id").maybeSingle();
   if (consumeError || !consumed) return otpJson({ error: "Email OTP has already been used. Request a new code." }, 409);
   const pending = row.registration_data as RegisterBody & { password_hash?: string } | null;
-  if (!pending || String(pending.mobile || "").replace(/\\D/g, "") !== mobile || !pending.email || !pending.password_hash) {
+  if (!pending || String(pending.mobile || "").replace(/\D/g, "") !== mobile || !pending.email || !pending.password_hash) {
     return otpJson({ error: "Registration details expired. Please restart registration." }, 400);
   }
   return await handleRegister(supabase, { ...pending, password: "", password_hash: pending.password_hash });
