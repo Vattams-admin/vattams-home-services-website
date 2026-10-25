@@ -82,7 +82,17 @@ const defaults=[
 ];
 const {error}=await db.from("customer_service_prices").upsert(defaults,{onConflict:"service_category,service_type",ignoreDuplicates:true});
 if(error)return out({error:"Unable to initialize customer price catalogue"},400);
-return out({success:true,inserted_if_missing:defaults.length});
+const feeDefaults=[
+{service_name:"AC Service",base_price:499,gst_rate:18,platform_fee:30,commission_rate:0,call_rate_fee:49,is_active:true},
+{service_name:"AC Repair",base_price:499,gst_rate:18,platform_fee:30,commission_rate:0,call_rate_fee:49,is_active:true},
+{service_name:"Washing Machine",base_price:399,gst_rate:18,platform_fee:30,commission_rate:0,call_rate_fee:39,is_active:true},
+{service_name:"Washing Machine Repair",base_price:399,gst_rate:18,platform_fee:30,commission_rate:0,call_rate_fee:39,is_active:true},
+{service_name:"Refrigerator",base_price:399,gst_rate:18,platform_fee:30,commission_rate:0,call_rate_fee:39,is_active:true},
+{service_name:"Refrigerator Repair",base_price:399,gst_rate:18,platform_fee:30,commission_rate:0,call_rate_fee:39,is_active:true}
+];
+const {error:feeError}=await db.from("service_prices").upsert(feeDefaults,{onConflict:"service_name",ignoreDuplicates:true});
+if(feeError)return out({error:"Customer prices were restored, but checkout fee settings could not be initialized. Contact support before publishing."},400);
+return out({success:true,customer_price_rows:defaults.length,checkout_fee_rows:feeDefaults.length,insert_missing_only:true});
 }
 case "save_customer_service_prices":{
 const updates=Array.isArray(b.updates)?b.updates:[];
