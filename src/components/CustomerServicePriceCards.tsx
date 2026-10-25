@@ -151,7 +151,7 @@ export default function CustomerServicePriceCards({ variant = 'home' }: { varian
   return (
     <>
       {loading ? (
-        <div className="flex justify-center py-14">
+        <div role="status" aria-live="polite" className="flex justify-center py-14">
           <Loader className="animate-spin text-navy-700" size={30} aria-label="Loading service prices" />
         </div>
       ) : loadFailed ? (
@@ -159,10 +159,10 @@ export default function CustomerServicePriceCards({ variant = 'home' }: { varian
           <p className="font-semibold text-[#101D3D]">We couldn’t load the live service catalogue.</p>
           <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-600">We won’t guess prices or display an estimated total without the current catalogue. Please retry, or contact VATTAMS to ask about availability.</p>
           <div className="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
-            <button type="button" onClick={() => { setLoading(true); setLoadFailed(false); setRetryCount((count) => count + 1); }} className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#0A132A] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#142342]">
+            <button type="button" onClick={() => { setLoading(true); setLoadFailed(false); setRetryCount((count) => count + 1); }} className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#0A132A] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#142342] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2">
               Retry live prices
             </button>
-            <a href="tel:+916374068296" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#D4AF37]/45 bg-[#F8F4E5] px-5 py-3 text-sm font-semibold text-[#101D3D] transition hover:bg-[#F1E8C9]">
+            <a href="tel:+916374068296" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#D4AF37]/45 bg-[#F8F4E5] px-5 py-3 text-sm font-semibold text-[#101D3D] transition hover:bg-[#F1E8C9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2">
               Contact VATTAMS
             </a>
           </div>
