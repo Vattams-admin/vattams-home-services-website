@@ -168,11 +168,16 @@ export async function markAllAsRead(recipientType: NotificationRecipientType, re
 }
 
 export async function deleteNotification(notificationId: string): Promise<boolean> {
-  if (sessionStorage.getItem('vattams_admin')) {
-    try { await adminData('notification_delete', { notification_id: notificationId }); return true; } catch { return false; }
+  try {
+    if (typeof sessionStorage === 'undefined' || !sessionStorage.getItem('vattams_admin')) {
+      return false;
+    }
+    await adminData('notification_delete', { notification_id: notificationId });
+    return true;
+  } catch {
+    return false;
   }
   // Notification deletion is intentionally not exposed to customer/technician clients.
-  return false;
 }
 
 export function subscribeToNotifications(
