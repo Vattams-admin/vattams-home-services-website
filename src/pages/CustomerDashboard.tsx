@@ -324,18 +324,25 @@ export default function CustomerDashboard() {
       {/* Booking Detail Modal */}
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setSelected(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="customer-booking-dialog-title"
+            className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
+
               <div>
-                <h3 className="font-extrabold text-gray-900 text-lg">Booking Details</h3>
+                <h3 id="customer-booking-dialog-title" className="font-extrabold text-gray-900 text-lg">Booking Details</h3>
                 <p className="text-gold-700 font-bold text-sm">{selected.booking_number}</p>
               </div>
-              <button onClick={() => setSelected(null)} className="p-2 rounded-lg hover:bg-gray-100"><X size={20} className="text-gray-500" /></button>
+              <button type="button" aria-label="Close booking details" onClick={() => setSelected(null)} className="p-2 rounded-lg hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500"><X size={20} className="text-gray-500" /></button>
             </div>
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <InfoRow icon={User} label="Customer" value={selected.customer_name} />
-                <InfoRow icon={Wrench} label="Service" value={selected.service_category} />
+                <InfoRow icon={Wrench} label="Service" value={[selected.service_category, selected.service_type].filter(Boolean).join(" · ")} />
                 <InfoRow icon={MapPin} label="City" value={selected.city} />
                 {selected.preferred_date && <InfoRow icon={Calendar} label="Date" value={selected.preferred_date} />}
                 {selected.preferred_time && <InfoRow icon={Clock} label="Time" value={selected.preferred_time} />}
@@ -350,9 +357,15 @@ export default function CustomerDashboard() {
                   <div className="text-sm text-gray-700 bg-ivory-50 rounded-xl p-3">{selected.problem_description}</div>
                 </div>
               )}
+              {(selected.total_amount ?? selected.amount) != null && Number.isFinite(Number(selected.total_amount ?? selected.amount)) && (
+                <div className="flex items-center justify-between rounded-xl bg-ivory-50 p-3">
+                  <span className="text-sm font-medium text-gray-600">Customer total</span>
+                  <span className="text-base font-extrabold text-navy-900">{formatCurrency(Number(selected.total_amount ?? selected.amount))}</span>
+                </div>
+              )}
               <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                 <span className="text-sm text-gray-500">Status:</span>
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize border ${statusColors[selected.status]}`}>{selected.status.replace('_', ' ')}</span>
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize border ${statusColors[selected.status] ?? "bg-gray-100 text-gray-700 border-gray-200"}`}>{statusLabels[selected.status] ?? selected.status.replace("_", " ")}</span>
               </div>
 
               {/* VATTAMS Communication Center */}
@@ -363,7 +376,7 @@ export default function CustomerDashboard() {
                 variant="full"
               />
             </div>
-          </div>
+          </section>
         </div>
       )}
     </div>
