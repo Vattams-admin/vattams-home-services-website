@@ -635,7 +635,7 @@ export default function Booking() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <Field icon={Calendar} label="Preferred Date">
-                    <input type="date" value={form.preferred_date} min={new Date().toISOString().split('T')[0]}
+                    <input type="date" value={form.preferred_date} min={new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())}
                       onChange={(e) => setForm({ ...form, preferred_date: e.target.value })}
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all" />
                   </Field>
