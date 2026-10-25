@@ -507,7 +507,7 @@ function technicianRegistrationPayload(form: TechnicianFormData, registrationPay
 }
 
 export async function submitTechnicianApplication(form: TechnicianFormData, registrationPaymentId?: string): Promise<any> {
-  if (!form.email.trim() || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(form.email.trim())) {
+  if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
     throw new Error('A valid email address is required to register as a technician.');
   }
   return postTechnicianAuth('send-registration-otp', technicianRegistrationPayload(form, registrationPaymentId));
