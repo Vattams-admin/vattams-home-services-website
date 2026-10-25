@@ -35,6 +35,32 @@ function validatePassword(password: string): string | null {
   return null;
 }
 
+async function sendEmailOtp(to: string, otp: string, purpose: string): Promise<boolean> {
+  const apiKey = Deno.env.get("RESEND_API_KEY");
+  const from = Deno.env.get("EMAIL_FROM");
+  if (!apiKey || !from) {
+    console.error("Email OTP is unavailable: RESEND_API_KEY and EMAIL_FROM must be configured.");
+    return false;
+  }
+  const subject = purpose === "registration" ? "Verify your VATTAMS account" : "Your VATTAMS verification code";
+  const html = `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:24px"><h2>VATTAMS Home Services</h2><p>Use this one-time code to verify your email address and continue registration.</p><div style="font-size:32px;font-weight:700;letter-spacing:8px;padding:18px 0">${otp}</div><p>This code expires in 10 minutes. Do not share it with anyone.</p></div>`;
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from, to: [to], subject, html }),
+    });
+    if (!response.ok) {
+      console.error("Email provider rejected OTP delivery", response.status, await response.text());
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error("Email OTP delivery failed", error);
+    return false;
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: corsHeaders });
   try {
@@ -55,6 +81,9 @@ Deno.serve(async (req: Request) => {
         if (!full_name?.trim()) return errorResponse("Full name is required");
         if (!mobile?.trim()) return errorResponse("Mobile number is required");
         if (!password?.trim()) return errorResponse("Password is required");
+        if (!String(email || "").trim()) return errorResponse("Email address is required to register");
+        const normalizedEmail = String(email).trim().toLowerCase();
+        if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(normalizedEmail)) return errorResponse("Enter a valid email address");
         const mobileErr = validateMobile(mobile);
         if (mobileErr) return errorResponse(mobileErr);
         const passErr = validatePassword(password);
@@ -63,7 +92,7 @@ Deno.serve(async (req: Request) => {
         const { data: existing } = await supabase.from("customers").select("id").eq("mobile", mobile).maybeSingle();
         if (existing) return errorResponse("An account with this mobile number already exists");
         if (email) {
-          const { data: existingEmail } = await supabase.from("customers").select("id").eq("email", email).maybeSingle();
+          const { data: existingEmail } = await supabase.from("customers").select("id").eq("email", normalizedEmail).maybeSingle();
           if (existingEmail) return errorResponse("An account with this email already exists");
         }
 
@@ -83,10 +112,15 @@ Deno.serve(async (req: Request) => {
 
         const passwordHash = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
         const { error: pendingError } = await supabase.from("otp_codes").update({
-          registration_data: { full_name: String(full_name).trim(), mobile, password_hash: passwordHash, email: email || null, city: city || null, address: address || null },
+          registration_data: { full_name: String(full_name).trim(), mobile, password_hash: passwordHash, email: normalizedEmail, city: city || null, address: address || null },
         }).eq("id", otpRow.id).eq("code", otpHash);
         if (pendingError) return errorResponse("Failed to prepare registration. Please try again.", 500);
-        return jsonResponse({ success: true, message: "OTP sent successfully" });
+        const delivered = await sendEmailOtp(normalizedEmail, otp, "registration");
+        if (!delivered) {
+          await supabase.from("otp_codes").delete().eq("id", otpRow.id);
+          return errorResponse("We could not send the verification email. Registration is paused until email delivery is available. Please try again later.", 503);
+        }
+        return jsonResponse({ success: true, message: "Verification code sent to your email address" });
       }
 
       case "verify-otp": {
@@ -118,13 +152,13 @@ Deno.serve(async (req: Request) => {
           if (!pending) return errorResponse("Registration session expired. Please register again.");
           const { full_name, mobile: regMobile, password_hash, email, city, address } = pending;
           if (String(regMobile).replace(/\D/g, "") !== String(mobile).replace(/\D/g, "")) return errorResponse("Registration mobile does not match the verified OTP");
-          if (!String(full_name || "").trim() || !String(password_hash || "").trim()) return errorResponse("Valid registration details are required");
+          if (!String(full_name || "").trim() || !String(password_hash || "").trim() || !String(email || "").trim()) return errorResponse("Valid registration details and verified email are required");
 
           const { data: existing } = await supabase.from("customers").select("id").eq("mobile", regMobile).maybeSingle();
           if (existing) return errorResponse("Account already exists with this mobile number");
 
           const { data: customer, error: insertError } = await supabase.from("customers").insert({
-            full_name, mobile: regMobile, email: email || null, password_hash: String(password_hash), city: city || null, address: address || null,
+            full_name, mobile: regMobile, email: String(email).trim().toLowerCase(), password_hash: String(password_hash), city: city || null, address: address || null,
           }).select("id, full_name, mobile, email, city, address, created_at").single();
           if (insertError) return errorResponse("Failed to create account. Please try again.");
           return jsonResponse({ success: true, message: "Account created successfully", customer });
@@ -273,14 +307,29 @@ Deno.serve(async (req: Request) => {
         const recentCutoff = new Date(Date.now() - 60 * 1000).toISOString();
         const { data: recentOtp } = await supabase.from("otp_codes").select("id").eq("mobile", mobile).eq("purpose", purpose).gte("created_at", recentCutoff).limit(1).maybeSingle();
         if (recentOtp) return errorResponse("Please wait 60 seconds before requesting another OTP.", 429);
+        let pendingRegistration: Record<string, unknown> | null = null;
+        let destinationEmail = "";
+        if (purpose === "registration") {
+          const { data: pendingRow } = await supabase.from("otp_codes").select("registration_data").eq("mobile", mobile).eq("purpose", "registration").order("created_at", { ascending: false }).limit(1).maybeSingle();
+          pendingRegistration = (pendingRow?.registration_data as Record<string, unknown> | null) || null;
+          destinationEmail = String(pendingRegistration?.email || "").trim().toLowerCase();
+          if (!pendingRegistration || !destinationEmail) return errorResponse("Please restart registration and provide a valid email address.");
+        } else {
+          const { data: account } = await supabase.from("customers").select("email").eq("mobile", mobile).maybeSingle();
+          destinationEmail = String(account?.email || "").trim().toLowerCase();
+          if (!destinationEmail) return errorResponse("This account does not have a verified email address.");
+        }
         await supabase.from("otp_codes").delete().eq("mobile", mobile).eq("purpose", purpose);
-
         const otp = generateOTP();
         const otpHash = await hashOTP(otp);
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-        const { error: otpError } = await supabase.from("otp_codes").insert({ mobile, code: otpHash, purpose, expires_at: expiresAt });
-        if (otpError) return errorResponse("Failed to generate OTP. Please try again.");
-        return jsonResponse({ success: true, message: "OTP resent successfully" });
+        const { data: newRow, error: otpError } = await supabase.from("otp_codes").insert({ mobile, code: otpHash, purpose, expires_at: expiresAt, ...(pendingRegistration ? { registration_data: pendingRegistration } : {}) }).select("id").single();
+        if (otpError || !newRow) return errorResponse("Failed to generate OTP. Please try again.");
+        if (!await sendEmailOtp(destinationEmail, otp, purpose)) {
+          await supabase.from("otp_codes").delete().eq("id", newRow.id);
+          return errorResponse("We could not send the verification email. Please try again later.", 503);
+        }
+        return jsonResponse({ success: true, message: "Verification code sent to your email address" });
       }
 
       default:
