@@ -172,20 +172,24 @@ export default function Booking() {
       .map((type) => customerServicePrices[getCustomerPriceKey(category, type)])
       .filter((price): price is CustomerServicePrice => Boolean(price))
       .map((price) => Number(price.base_price))
-      .filter((price) => Number.isFinite(price) && price >= 0);
+      .filter((price) => Number.isFinite(price) && price > 0);
     return prices.length ? Math.min(...prices) : null;
   };
   const discount = couponResult?.valid ? couponResult.discountAmount : 0;
-  // Keep the customer preview aligned with booking-ops, which recalculates
-  // all amounts from the authoritative database rows before creating a booking.
-  const pricing: PricingBreakdown | null = servicePrice && customerServicePrice
-    ? calculatePricing(
-        Number(customerServicePrice.base_price),
-        Number(servicePrice.gst_rate) || 0,
-        Number(servicePrice.platform_fee) || 0,
-        Number(servicePrice.commission_rate) || 0,
-        discount,
-      )
+  const customerBasePrice = Number(customerServicePrice?.base_price);
+  const gstRate = Number(servicePrice?.gst_rate);
+  const platformFee = Number(servicePrice?.platform_fee);
+  const commissionRate = Number(servicePrice?.commission_rate);
+  const pricingConfigValid = Boolean(servicePrice && customerServicePrice)
+    && Number.isFinite(customerBasePrice) && customerBasePrice > 0
+    && Number.isFinite(gstRate) && gstRate >= 0 && gstRate <= 100
+    && Number.isFinite(platformFee) && platformFee >= 0
+    && Number.isFinite(commissionRate) && commissionRate >= 0 && commissionRate <= 100;
+
+  // Keep the preview aligned with booking-ops: invalid configuration should
+  // appear unavailable, not silently turn malformed database values into zero.
+  const pricing: PricingBreakdown | null = pricingConfigValid
+    ? calculatePricing(customerBasePrice, gstRate, platformFee, commissionRate, discount)
     : null;
 
   const handleValidateCoupon = async () => {
