@@ -9,5 +9,11 @@ export async function customerData<T>(action:string, extra:Record<string,unknown
     body:JSON.stringify({...extra,action,session_token:sessionToken})
   });
   if(!res.ok) return null;
-  return await res.json() as T;
+  try {
+    return await res.json() as T;
+  } catch {
+    // Treat empty or malformed API responses as unavailable data so callers
+    // can show their existing retry/error state instead of crashing on JSON parsing.
+    return null;
+  }
 }
