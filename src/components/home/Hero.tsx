@@ -83,7 +83,7 @@ export default function Hero() {
                 { icon: ShieldCheck, label: 'OTP Job Checks' },
                 { icon: BadgeCheck, label: 'Clear Price Breakdown' },
                 { icon: Clock3, label: 'Convenient Booking' },
-                { icon: Sparkles, label: 'Quality Assured' },
+                { icon: Sparkles, label: 'Job Status Updates' },
               ].map((s, i) => (
                 <div key={s.label} className="flex items-center gap-x-10">
                   <div className="flex items-center gap-2.5">
