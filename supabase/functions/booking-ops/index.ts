@@ -700,7 +700,10 @@ Deno.serve(async (req: Request) => {
           .select("*")
           .eq("booking_id", booking_id)
           .eq("technician_id", chosen.id)
-          .eq("status", "assigned")
+          // The technician may already have accepted or started the job while
+          // the original insert response was lost; reconcile by ownership,
+          // not by the transient "assigned" status.
+          .limit(1)
           .maybeSingle() as { data: Record<string, unknown> | null; error: unknown };
 
         if (reconcileError) {
