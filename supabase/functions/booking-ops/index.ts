@@ -101,14 +101,21 @@ Deno.serve(async (req: Request) => {
 
       const preferredDate = b.preferred_date == null || b.preferred_date === "" ? null : String(b.preferred_date);
       const preferredTime = b.preferred_time == null || b.preferred_time === "" ? null : String(b.preferred_time);
+      const indiaNowParts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Kolkata",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23",
+      }).formatToParts(new Date());
+      const indiaNow = Object.fromEntries(indiaNowParts.map((part) => [part.type, part.value]));
+      const indiaToday = `${indiaNow.year}-${indiaNow.month}-${indiaNow.day}`;
+      const indiaCurrentMinutes = Number(indiaNow.hour) * 60 + Number(indiaNow.minute);
+
       if (preferredDate !== null) {
         const parsedDate = new Date(`${preferredDate}T00:00:00.000Z`);
-        const indiaToday = new Intl.DateTimeFormat("en-CA", {
-          timeZone: "Asia/Kolkata",
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-        }).format(new Date());
         if (!/^\d{4}-\d{2}-\d{2}$/.test(preferredDate)
           || Number.isNaN(parsedDate.getTime())
           || parsedDate.toISOString().slice(0, 10) !== preferredDate
@@ -127,6 +134,13 @@ Deno.serve(async (req: Request) => {
       ];
       if (preferredTime !== null && !allowedTimeSlots.includes(preferredTime)) {
         return new Response(JSON.stringify({ error: "Choose a valid preferred time slot." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      if (preferredDate === indiaToday && preferredTime !== null) {
+        const [startHour, startMinute] = preferredTime.split(" - ")[0].split(":").map(Number);
+        const slotStartMinutes = startHour * 60 + startMinute;
+        if (slotStartMinutes <= indiaCurrentMinutes) {
+          return new Response(JSON.stringify({ error: "That time slot has already started or passed. Please choose a later slot." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
       }
       if (!isFeaturedApplianceService(b.service_category)) {
         return new Response(JSON.stringify({ error: "Only AC, washing machine, and refrigerator services are currently available" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
