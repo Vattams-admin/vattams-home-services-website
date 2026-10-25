@@ -265,7 +265,7 @@ export default function CustomerProfile() {
 
         {msg && <div role={msg.type === 'error' ? 'alert' : 'status'} aria-live={msg.type === 'error' ? 'assertive' : 'polite'} className={'rounded-xl p-3 text-sm mb-4 ' + (msg.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200')}>{msg.text}</div>}
 
-        <form onSubmit={handleSave} className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-6 space-y-4">
+        <form onSubmit={handleSave} aria-busy={saving} className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-6 space-y-4">
           <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
             <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center"><User size={22} className="text-gold-700" /></div>
             <div>
@@ -319,8 +319,8 @@ export default function CustomerProfile() {
           </div>
 
           <button type="submit" disabled={saving}
-            className="w-full flex items-center justify-center gap-2 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors">
-            {saving ? <Loader size={18} className="animate-spin" /> : <Save size={18} />} Save Changes
+            className="w-full flex items-center justify-center gap-2 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors">
+            {saving ? <Loader size={18} className="animate-spin" /> : <Save size={18} />} {saving ? 'Saving changes…' : 'Save Changes'}
           </button>
         </form>
 
