@@ -213,6 +213,7 @@ Deno.serve(async (req: Request) => {
 
         const discountValue = Number(coupon.discount_value);
         if (!Number.isFinite(discountValue) || discountValue <= 0
+          || (coupon.discount_type === "percentage" && discountValue > 100)
           || !["percentage", "flat"].includes(String(coupon.discount_type))) {
           return new Response(JSON.stringify({ error: "This coupon has invalid discount settings." }), {
             status: 400,
