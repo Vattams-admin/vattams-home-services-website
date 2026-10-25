@@ -117,13 +117,23 @@ export default function CustomerReviews() {
     setSubmitting(booking.id);
     setMessage('');
     try {
+      let sessionToken: string | null;
+      try {
+        sessionToken = sessionStorage.getItem('vattams_customer_session');
+      } catch {
+        throw new Error('Browser storage is unavailable. Please sign in again before submitting a review.');
+      }
+      if (!sessionToken) {
+        throw new Error('Your session has expired. Please sign in again before submitting a review.');
+      }
+
       const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-auth/submit-review`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
         body: JSON.stringify({
           booking_id: booking.id,
           customer_id: customer.id,
-          session_token: sessionStorage.getItem('vattams_customer_session'),
+          session_token: sessionToken,
           customer_name: customer.full_name,
           technician_id: booking.assigned_technician_id,
           rating: selectedRating,
