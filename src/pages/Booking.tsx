@@ -238,6 +238,12 @@ export default function Booking() {
       alert('Pricing is not available for this service yet. Please choose another service or contact VATTAMS.');
       return;
     }
+    // Do not submit while coupon validation is unresolved: otherwise a fast
+    // submit could race the validation response and use a stale coupon state.
+    if (validatingCoupon) {
+      setSubmitError('Please wait for coupon verification to finish before submitting your booking.');
+      return;
+    }
     if (couponCode.trim() && !couponResult?.valid) {
       setSubmitError('You entered a coupon code that has not been successfully applied. Apply the coupon again or clear the coupon field before booking.');
       return;
