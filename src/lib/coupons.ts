@@ -52,6 +52,7 @@ export async function validateCoupon(code: string, orderAmount: number): Promise
   // than accidentally accepting a coupon because date comparisons return false.
   if (!Number.isFinite(validFromTime)
     || (validUntilTime !== null && !Number.isFinite(validUntilTime))
+    || (validUntilTime !== null && validUntilTime < validFromTime)
     || !Number.isFinite(usedCount) || usedCount < 0
     || (maxUses !== null && (!Number.isFinite(maxUses) || maxUses < 0))) {
     return { valid: false, error: 'This coupon has invalid validity or usage settings', discountAmount: 0 };
