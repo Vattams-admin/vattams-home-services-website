@@ -69,7 +69,7 @@ export default function TechnicianLogin() {
       <div className="max-w-md w-full">
         <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl p-8 shadow-2xl">
           <div className="text-center mb-8">
-            <img src="/logo.svg" alt="VATTAMS HOME SERVICES" className="h-20 w-auto mx-auto mb-4 rounded-xl" />
+            <img src="/logo.svg" alt="VATTAMS Hybrid Service Marketplace" className="h-20 w-auto mx-auto mb-4 rounded-xl" />
             <div className="inline-flex items-center gap-2 text-[#e8dcc0] text-sm font-semibold mb-2">
               <Wrench size={16} /> Technician Portal
             </div>
