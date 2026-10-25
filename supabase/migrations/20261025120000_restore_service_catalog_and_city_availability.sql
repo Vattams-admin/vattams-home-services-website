@@ -10,9 +10,11 @@ CREATE TABLE IF NOT EXISTS public.service_city_availability (
   city text NOT NULL,
   is_available boolean NOT NULL DEFAULT true,
   notes text,
-  updated_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE (service_category_id, lower(city))
+  updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS service_city_availability_category_city_key
+  ON public.service_city_availability (service_category_id, lower(city));
 
 ALTER TABLE public.service_city_availability ENABLE ROW LEVEL SECURITY;
 
