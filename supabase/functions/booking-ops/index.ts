@@ -122,7 +122,11 @@ Deno.serve(async (req: Request) => {
       if (!isFeaturedApplianceService(b.service_category)) {
         return new Response(JSON.stringify({ error: "Only AC, washing machine, and refrigerator services are currently available" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
-      const { data: servicePrice } = await supabase.from("service_prices").select("base_price,gst_rate,platform_fee,commission_rate,is_active").eq("service_name",String(b.service_category)).eq("is_active",true).maybeSingle();
+      const { data: servicePrice, error: servicePriceError } = await supabase.from("service_prices").select("base_price,gst_rate,platform_fee,commission_rate,is_active").eq("service_name",String(b.service_category)).eq("is_active",true).maybeSingle();
+      if (servicePriceError) {
+        console.error("[booking-ops create_booking] service pricing lookup failed");
+        return new Response(JSON.stringify({ error: "We could not load service pricing. Please try again shortly." }), { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
       if (!servicePrice) return new Response(JSON.stringify({ error: "Service is unavailable" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
       const serviceType = String(b.service_type ?? "").trim();
@@ -134,7 +138,11 @@ Deno.serve(async (req: Request) => {
         .eq("service_type", serviceType)
         .eq("is_active", true)
         .maybeSingle();
-      if (callRateError || !callRate) return new Response(JSON.stringify({ error: "The selected job type is unavailable. Please choose a valid service type." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (callRateError) {
+        console.error("[booking-ops create_booking] technician call-rate lookup failed");
+        return new Response(JSON.stringify({ error: "We could not verify this job type. Please try again shortly." }), { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      if (!callRate) return new Response(JSON.stringify({ error: "The selected job type is unavailable. Please choose a valid service type." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
       const { data: customerPrice, error: customerPriceError } = await supabase
         .from("customer_service_prices")
@@ -143,7 +151,11 @@ Deno.serve(async (req: Request) => {
         .eq("service_type", serviceType)
         .eq("is_active", true)
         .maybeSingle();
-      if (customerPriceError || !customerPrice) return new Response(JSON.stringify({ error: "Customer pricing is not configured for this job type yet. Please select another service or contact support." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (customerPriceError) {
+        console.error("[booking-ops create_booking] customer price lookup failed");
+        return new Response(JSON.stringify({ error: "We could not verify the customer price. Please try again shortly." }), { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      if (!customerPrice) return new Response(JSON.stringify({ error: "Customer pricing is not configured for this job type yet. Please select another service or contact support." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
       const basePrice = Number(customerPrice.base_price) || 0;
       const gstAmount = Math.round((basePrice * (Number(servicePrice.gst_rate)||0) / 100) * 100) / 100;
