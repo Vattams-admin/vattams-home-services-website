@@ -68,10 +68,25 @@ export async function createNotification(input: CreateNotificationInput): Promis
     });
     const data = await response.json();
     if (!response.ok || data.error) {
-      console.error('[notifications] gateway error:', data.error);
+      console.error('[notifications] gateway error:', data.error ?? `HTTP ${response.status}`);
       return null;
     }
-    return data.notification as NotificationRow;
+
+    // A 2xx response alone does not prove a notification was persisted.
+    // Require the gateway to return a minimally identifiable notification
+    // before callers treat this operation as successful.
+    const notification = data?.notification;
+    if (!notification
+      || typeof notification.id !== 'string'
+      || !notification.id.trim()
+      || typeof notification.recipient_type !== 'string'
+      || typeof notification.recipient_id !== 'string'
+      || typeof notification.title !== 'string'
+      || typeof notification.type !== 'string') {
+      console.error('[notifications] gateway returned an incomplete notification response');
+      return null;
+    }
+    return notification as NotificationRow;
   } catch (err) {
     console.error('[notifications] gateway error:', err);
     return null;
