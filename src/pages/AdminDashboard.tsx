@@ -1130,8 +1130,8 @@ export default function AdminDashboard() {
       {/* Sidebar */}
       <aside className="vattams-admin-sidebar lg:w-64 shrink-0 border-b lg:border-b-0 lg:border-r">
         <div className="vattams-admin-brand px-5 py-5 flex items-center gap-3">
-          <img src="/logo.svg" alt="VATTAMS HOME SERVICES" className="h-10 w-10 rounded-xl object-contain bg-white/95 p-1" />
-          <div className="min-w-0"><div className="font-extrabold tracking-wide text-white">VATTAMS</div><div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-200">Home Services</div></div>
+          <img src="/logo.svg" alt="VATTAMS Hybrid Service Marketplace" className="h-10 w-10 rounded-xl object-contain bg-white/95 p-1" />
+          <div className="min-w-0"><div className="font-extrabold tracking-wide text-white">VATTAMS</div><div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-200">Hybrid Service Marketplace</div></div>
         </div>
 
         <nav className="vattams-admin-nav flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible px-3 pb-4">
