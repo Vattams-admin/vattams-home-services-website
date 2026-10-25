@@ -116,8 +116,17 @@ Deno.serve(async (req: Request) => {
           return new Response(JSON.stringify({ error: "Choose a valid preferred date today or later." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
       }
-      if (preferredTime !== null && (preferredTime.length > 40 || /[<>\r\n]/.test(preferredTime))) {
-        return new Response(JSON.stringify({ error: "Choose a valid preferred time." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const allowedTimeSlots = [
+        "07:00 - 09:00",
+        "09:00 - 11:00",
+        "11:00 - 13:00",
+        "13:00 - 15:00",
+        "15:00 - 17:00",
+        "17:00 - 19:00",
+        "19:00 - 21:00",
+      ];
+      if (preferredTime !== null && !allowedTimeSlots.includes(preferredTime)) {
+        return new Response(JSON.stringify({ error: "Choose a valid preferred time slot." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
       if (!isFeaturedApplianceService(b.service_category)) {
         return new Response(JSON.stringify({ error: "Only AC, washing machine, and refrigerator services are currently available" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
