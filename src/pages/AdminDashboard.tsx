@@ -918,7 +918,18 @@ export default function AdminDashboard() {
       if (error) {
         setAutoAssignResult(error.message || 'Auto assignment failed.');
       } else if (data?.assigned) {
-        setAutoAssignResult('Technician auto-assigned.');
+        const notificationsCreated = data.notification_created === true && data.customer_notification_created === true;
+        setAutoAssignResult(
+          notificationsCreated
+            ? 'Technician auto-assigned and assignment notifications were created.'
+            : 'Technician auto-assigned, but one or more notifications were not confirmed as created. Check notification delivery before retrying.'
+        );
+        if (!notificationsCreated) {
+          console.warn('[AdminDashboard] auto-assignment succeeded with incomplete notification creation status', {
+            notification_created: data.notification_created,
+            customer_notification_created: data.customer_notification_created,
+          });
+        }
         setBookings((prev) =>
           prev.map((b) =>
             b.id === selectedBooking.id
