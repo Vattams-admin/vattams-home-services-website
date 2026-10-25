@@ -59,16 +59,29 @@ export default function NotificationCenter({ recipientType, recipientId }: Notif
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const loadInFlightRef = useRef(false);
 
   const load = useCallback(async (showLoading = true) => {
+    // Prevent the 30-second poll, subscription callback, and manual refresh
+    // from issuing overlapping requests and racing the notification badge.
+    if (loadInFlightRef.current) return;
+    loadInFlightRef.current = true;
     if (showLoading) setLoading(true);
-    const [notifs, count] = await Promise.all([
-      fetchNotifications(recipientType, recipientId, 50),
-      fetchUnreadCount(recipientType, recipientId),
-    ]);
-    setNotifications(notifs);
-    setUnreadCount(count);
-    if (showLoading) setLoading(false);
+
+    try {
+      const [notifs, count] = await Promise.all([
+        fetchNotifications(recipientType, recipientId, 50),
+        fetchUnreadCount(recipientType, recipientId),
+      ]);
+      setNotifications(notifs);
+      setUnreadCount(count);
+    } catch (error) {
+      // Keep the last successful state visible if a temporary request fails.
+      console.error('Unable to refresh notifications:', error);
+    } finally {
+      loadInFlightRef.current = false;
+      if (showLoading) setLoading(false);
+    }
   }, [recipientType, recipientId]);
 
   useEffect(() => {
