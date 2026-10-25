@@ -343,8 +343,20 @@ export default function Booking() {
 
           <div className="premium-surface rounded-2xl border bg-white p-5 shadow-xl shadow-slate-900/[0.04] sm:p-7 md:p-9">
             {loadError && (
-              <div role="alert" className="mb-5 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-                {loadError}
+              <div role="alert" className="mb-5 overflow-hidden rounded-2xl border border-amber-200 bg-white shadow-sm">
+                <div className="border-l-4 border-amber-400 bg-amber-50 p-4 sm:p-5">
+                  <div className="font-semibold text-[#10182B]">We can’t load the booking catalogue yet</div>
+                  <p className="mt-1 text-sm leading-6 text-amber-900">{loadError}</p>
+                  <p className="mt-2 text-xs leading-5 text-amber-900/80">Your request has not been submitted. Please retry, or contact the team if this continues.</p>
+                  <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                    <button type="button" onClick={() => window.location.reload()} className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#0A132A] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#142342]">
+                      Retry catalogue
+                    </button>
+                    <a href="tel:+916374068296" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#D4AF37]/45 bg-white px-5 py-3 text-sm font-semibold text-[#10182B] transition hover:bg-[#F8F4E5]">
+                      Contact VATTAMS support
+                    </a>
+                  </div>
+                </div>
               </div>
             )}
             {loading ? (
