@@ -52,6 +52,7 @@ export default function Booking() {
   const [customerServicePrices, setCustomerServicePrices] = useState<Record<string, CustomerServicePrice>>({});
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [catalogueRetryCount, setCatalogueRetryCount] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [couponCode, setCouponCode] = useState('');
@@ -91,11 +92,15 @@ export default function Booking() {
       sessionStorage.removeItem('vattams_ai_booking_draft');
     }
 
+    let active = true;
+    setLoading(true);
+    setLoadError('');
     Promise.all([
       supabase.from('service_categories').select('*').order('created_at'),
       supabase.from('service_prices').select('*').eq('is_active', true),
       supabase.from('customer_service_prices').select('*').eq('is_active', true),
     ]).then(([catRes, priceRes, customerPriceRes]) => {
+      if (!active) return;
       let featuredServices: ServiceCategory[] = [];
       if (catRes.data) {
         featuredServices = catRes.data
@@ -158,11 +163,13 @@ export default function Booking() {
       }
       setLoading(false);
     }).catch((error) => {
+      if (!active) return;
       console.error('[Booking] service/pricing load failed:', error);
       setLoadError('Service information could not be loaded. Check your connection and try again.');
       setLoading(false);
     });
-  }, []);
+    return () => { active = false; };
+  }, [catalogueRetryCount]);
 
   const selectedService = services.find((s) => s.name === form.service_category);
   const serviceTypes = getServiceTypes(form.service_category);
@@ -411,7 +418,10 @@ export default function Booking() {
                 <div className="border-l-4 border-amber-400 bg-amber-50 p-4 sm:p-5">
                   <div className="font-semibold text-[#10182B]">We can’t load the booking catalogue yet</div>
                   <p className="mt-1 text-sm leading-6 text-amber-900">{loadError}</p>
-                  <p className="mt-2 text-xs leading-5 text-amber-900/80">Your request has not been submitted. Please retry, or contact the team if this continues.</p>
+                  <p className="mt-2 text-xs leading-5 text-amber-900/80">Your request has not been submitted. Retry loading the live service catalogue before booking.</p>
+                  <button type="button" disabled={loading} onClick={() => { setLoading(true); setCatalogueRetryCount((count) => count + 1); }} className="mt-3 inline-flex min-h-10 items-center justify-center rounded-lg border border-amber-400 bg-white px-4 py-2 text-sm font-semibold text-amber-950 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-600 focus-visible:ring-offset-2">
+                    {loading ? 'Retrying…' : 'Retry service catalogue'}
+                  </button>
                   <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                     <button type="button" onClick={() => window.location.reload()} className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#0A132A] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#142342]">
                       Retry catalogue
