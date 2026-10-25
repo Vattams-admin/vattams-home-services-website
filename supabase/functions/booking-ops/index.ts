@@ -95,6 +95,14 @@ Deno.serve(async (req: Request) => {
       if (!customerName || !/^\d{10}$/.test(mobileNumber) || !city || !address || !String(b.service_category ?? "").trim()) {
         return new Response(JSON.stringify({ error: "Enter your name, a valid 10-digit mobile number, city, address, and service." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
+      // For signed-in customers, keep the booking contact number aligned with
+      // the verified account number used by customer notifications and tracking.
+      if (customerId && authenticatedCustomerMobile && mobileNumber !== authenticatedCustomerMobile) {
+        return new Response(JSON.stringify({ error: "Your booking mobile number must match your verified account number. Update your account details or sign in with the correct account before booking." }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       if (customerName.length > 120 || city.length > 100 || address.length > 1000 || problemDescription.length > 2000) {
         return new Response(JSON.stringify({ error: "Some booking details are too long. Please shorten the name, city, address, or problem description and try again." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
