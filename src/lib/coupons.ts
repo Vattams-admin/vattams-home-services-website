@@ -77,7 +77,9 @@ export async function validateCoupon(code: string, orderAmount: number): Promise
   if (!Number.isFinite(discountValue) || discountValue <= 0
     || !['percentage', 'flat'].includes(String(coupon.discount_type))
     || (coupon.discount_type === 'percentage' && discountValue > 100)
-    || !Number.isFinite(minimumOrderAmount) || minimumOrderAmount < 0) {
+    || (coupon.discount_type === 'flat' && Math.abs(discountValue * 100 - Math.round(discountValue * 100)) > 1e-7)
+    || !Number.isFinite(minimumOrderAmount) || minimumOrderAmount < 0
+    || Math.abs(minimumOrderAmount * 100 - Math.round(minimumOrderAmount * 100)) > 1e-7) {
     return { valid: false, error: 'This coupon has invalid discount settings', discountAmount: 0 };
   }
 
