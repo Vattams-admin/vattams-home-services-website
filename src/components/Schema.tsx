@@ -9,7 +9,7 @@ export default function Schema() {
         name: 'VATTAMS Hybrid Service Marketplace',
         url: baseUrl,
         logo: `${baseUrl}/logo.svg`,
-        image: `${baseUrl}/icons/icon-512.png`,
+        image: `${baseUrl}/pwa-icon-512.svg`,
         description: 'VATTAMS Hybrid Service Marketplace helps customers request AC, washing machine and refrigerator service, with listed base prices and appointment options confirmed during booking.',
         telephone: '+91-63740-68296',
         email: 'admin@vattams.net',
