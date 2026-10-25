@@ -98,6 +98,27 @@ Deno.serve(async (req: Request) => {
       if (customerName.length > 120 || city.length > 100 || address.length > 1000 || problemDescription.length > 2000) {
         return new Response(JSON.stringify({ error: "Some booking details are too long. Please shorten the name, city, address, or problem description and try again." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
+
+      const preferredDate = b.preferred_date == null || b.preferred_date === "" ? null : String(b.preferred_date);
+      const preferredTime = b.preferred_time == null || b.preferred_time === "" ? null : String(b.preferred_time);
+      if (preferredDate !== null) {
+        const parsedDate = new Date(`${preferredDate}T00:00:00.000Z`);
+        const indiaToday = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "Asia/Kolkata",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }).format(new Date());
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(preferredDate)
+          || Number.isNaN(parsedDate.getTime())
+          || parsedDate.toISOString().slice(0, 10) !== preferredDate
+          || preferredDate < indiaToday) {
+          return new Response(JSON.stringify({ error: "Choose a valid preferred date today or later." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+      }
+      if (preferredTime !== null && (preferredTime.length > 40 || /[<>\r\n]/.test(preferredTime))) {
+        return new Response(JSON.stringify({ error: "Choose a valid preferred time." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
       if (!isFeaturedApplianceService(b.service_category)) {
         return new Response(JSON.stringify({ error: "Only AC, washing machine, and refrigerator services are currently available" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
@@ -192,8 +213,8 @@ Deno.serve(async (req: Request) => {
         service_category: String(b.service_category).slice(0,100),
         service_type: serviceType.slice(0,100),
         problem_description: String(b.problem_description ?? "").trim().slice(0,2000),
-        preferred_date: b.preferred_date || null,
-        preferred_time: b.preferred_time || null,
+        preferred_date: preferredDate,
+        preferred_time: preferredTime,
         amount: totalAmount,
         base_price: basePrice,
         gst_amount: gstAmount,
