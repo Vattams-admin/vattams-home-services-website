@@ -66,7 +66,22 @@ export default function CustomerDashboard() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [selected, setSelected] = useState<Booking | null>(null);
+  const dialogCloseButtonRef = useRef<HTMLButtonElement | null>(null);
   const requestVersion = useRef(0);
+
+  useEffect(() => {
+    if (!selected) return;
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    dialogCloseButtonRef.current?.focus();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSelected(null);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      previousFocus?.focus();
+    };
+  }, [selected]);
 
   const refreshDashboard = async (c: Customer) => {
     const version = ++requestVersion.current;
@@ -440,21 +455,21 @@ export default function CustomerDashboard() {
 
               <div>
                 <h3 id="customer-booking-dialog-title" className="font-extrabold text-gray-900 text-lg">Booking Details</h3>
-                <p className="text-gold-700 font-bold text-sm">{selected.booking_number}</p>
+                <p className="text-gold-700 font-bold text-sm">{typeof selected.booking_number === 'string' && selected.booking_number.trim() ? selected.booking_number : 'Booking reference unavailable'}</p>
               </div>
-              <button type="button" aria-label="Close booking details" onClick={() => setSelected(null)} className="p-2 rounded-lg hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500"><X size={20} className="text-gray-500" /></button>
+              <button ref={dialogCloseButtonRef} type="button" aria-label="Close booking details" onClick={() => setSelected(null)} className="p-2 rounded-lg hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500"><X size={20} className="text-gray-500" /></button>
             </div>
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <InfoRow icon={User} label="Customer" value={selected.customer_name} />
+                <InfoRow icon={User} label="Customer" value={selected.customer_name || 'Not provided'} />
                 <InfoRow icon={Wrench} label="Service" value={[selected.service_category, selected.service_type].filter(Boolean).join(" · ")} />
-                <InfoRow icon={MapPin} label="City" value={selected.city} />
+                <InfoRow icon={MapPin} label="City" value={selected.city || 'Not provided'} />
                 {selected.preferred_date && <InfoRow icon={Calendar} label="Date" value={selected.preferred_date} />}
                 {selected.preferred_time && <InfoRow icon={Clock} label="Time" value={selected.preferred_time} />}
               </div>
               <div>
                 <div className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">Address</div>
-                <div className="text-sm text-gray-700 bg-ivory-50 rounded-xl p-3">{selected.address}</div>
+                <div className="text-sm text-gray-700 bg-ivory-50 rounded-xl p-3">{selected.address || 'Address not provided'}</div>
               </div>
               {selected.problem_description && (
                 <div>
