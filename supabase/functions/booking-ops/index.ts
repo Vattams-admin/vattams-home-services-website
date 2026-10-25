@@ -93,12 +93,35 @@ Deno.serve(async (req: Request) => {
       let customerId: string | null = null;
       let authenticatedCustomerMobile: string | null = null;
       if (customerSessionToken) {
-        const { data: cs } = await supabase.from("customer_auth_sessions").select("customer_id, expires_at").eq("token", customerSessionToken).maybeSingle();
-        if (!cs || new Date(cs.expires_at).getTime() <= Date.now()) {
+        const { data: cs, error: sessionLookupError } = await supabase
+          .from("customer_auth_sessions")
+          .select("customer_id, expires_at")
+          .eq("token", customerSessionToken)
+          .maybeSingle();
+        if (sessionLookupError) {
+          console.error("[booking-ops create_booking] customer session lookup failed");
+          return new Response(JSON.stringify({ error: "Unable to verify your customer session. Please try again." }), {
+            status: 503,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        const sessionExpiry = cs?.expires_at == null ? Number.NaN : new Date(cs.expires_at).getTime();
+        if (!cs || !Number.isFinite(sessionExpiry) || sessionExpiry <= Date.now() || !cs.customer_id) {
           return new Response(JSON.stringify({ error: "Invalid or expired customer session" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
         customerId = String(cs.customer_id);
-        const { data: customer } = await supabase.from("customers").select("id,mobile").eq("id", customerId).maybeSingle();
+        const { data: customer, error: customerLookupError } = await supabase
+          .from("customers")
+          .select("id,mobile")
+          .eq("id", customerId)
+          .maybeSingle();
+        if (customerLookupError) {
+          console.error("[booking-ops create_booking] customer account lookup failed");
+          return new Response(JSON.stringify({ error: "Unable to verify your customer account. Please try again." }), {
+            status: 503,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
         if (!customer?.mobile) {
           return new Response(JSON.stringify({ error: "Customer account is incomplete" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
