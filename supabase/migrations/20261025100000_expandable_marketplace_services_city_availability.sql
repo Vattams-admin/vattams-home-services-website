@@ -30,9 +30,11 @@ CREATE TABLE IF NOT EXISTS public.marketplace_service_city_availability (
   admin_note text,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT marketplace_service_city_availability_city_nonempty CHECK (length(trim(city)) > 0),
-  CONSTRAINT marketplace_service_city_availability_unique UNIQUE (service_id, lower(city))
+  CONSTRAINT marketplace_service_city_availability_city_nonempty CHECK (length(trim(city)) > 0)
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS marketplace_service_city_availability_unique
+  ON public.marketplace_service_city_availability (service_id, lower(city));
 
 CREATE INDEX IF NOT EXISTS marketplace_services_active_idx
   ON public.marketplace_services (is_active, category);
