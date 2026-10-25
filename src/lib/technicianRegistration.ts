@@ -119,7 +119,7 @@ export const STEPS: StepDef[] = [
   },
   {
     key: 'email',
-    question: 'What is your email address? (Optional — you can skip by typing "skip")',
+    question: 'What email address should receive your registration verification code? Email verification is required to finish registration.',
     field: 'email',
     type: 'email',
     placeholder: 'your@email.com',
