@@ -169,7 +169,7 @@ function generateInvoiceHTML(payment: PaymentRecord, booking: BookingRef | null,
 <body>
   <div class="header">
     <div class="logo">VATTAMS</div>
-    <div class="subtitle">Home Services</div>
+    <div class="subtitle">Hybrid Service Marketplace</div>
   </div>
   <div class="invoice-title">Payment Invoice</div>
   <div class="row"><span class="label">Invoice Number</span><span class="value">${payment.payment_id}</span></div>
@@ -182,7 +182,7 @@ function generateInvoiceHTML(payment: PaymentRecord, booking: BookingRef | null,
   ${payment.utr ? `<div class="row"><span class="label">UTR Number</span><span class="value">${payment.utr}</span></div>` : ''}
   <div class="row"><span class="label">Status</span><span class="value"><span class="status-badge status-success">Paid</span></span></div>
   <div class="total"><div class="row" style="border:none"><span class="label" style="font-size:16px">Total Amount</span><span class="value">₹${payment.amount.toLocaleString('en-IN')}</span></div></div>
-  <div class="footer">This is a computer-generated invoice from VATTAMS Home Services.<br>For queries, call +91 81898 00757 or WhatsApp us.</div>
+  <div class="footer">This is a computer-generated invoice from VATTAMS Hybrid Service Marketplace.<br>For queries, call +91 81898 00757 or WhatsApp us.</div>
 </body>
 </html>`;
 }
