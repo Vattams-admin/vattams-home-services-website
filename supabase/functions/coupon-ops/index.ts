@@ -53,6 +53,8 @@ Deno.serve(async req => {
     if (
       typeof coupon_id !== "string" || !coupon_id.trim() ||
       typeof booking_id !== "string" || !booking_id.trim() ||
+      typeof customer_session_token !== "string" ||
+      !customer_session_token.trim() || customer_session_token.length > 512 ||
       typeof discount_amount !== "number" ||
       !Number.isFinite(discount_amount) ||
       discount_amount <= 0
@@ -78,7 +80,7 @@ Deno.serve(async req => {
     // Coupon redemption is a customer-owned operation. Never trust a
     // client-supplied customer_id; derive the identity from the server-side
     // customer session and require it to match the booking owner.
-    const sessionToken = String(customer_session_token || "");
+    const sessionToken = customer_session_token.trim();
     if (!sessionToken || !booking.customer_id) {
       return new Response(JSON.stringify({ error: "Customer authentication required" }), { status: 401, headers });
     }
