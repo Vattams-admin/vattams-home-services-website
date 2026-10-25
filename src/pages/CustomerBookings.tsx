@@ -68,7 +68,13 @@ export default function CustomerBookings() {
       const result = await customerData<{ bookings: Booking[] }>('bookings', {
         mobile: customerRecord.mobile,
       });
-      setBookings(result?.bookings ?? []);
+      // customerData returns null when the session is missing or the endpoint
+      // rejects the request. Do not turn an unavailable response into a false
+      // "No bookings yet" state.
+      if (!result || !Array.isArray(result.bookings)) {
+        throw new Error('We couldn’t verify your booking history. Please sign in again or retry shortly.');
+      }
+      setBookings(result.bookings);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to load your bookings. Please try again.');
     } finally {
