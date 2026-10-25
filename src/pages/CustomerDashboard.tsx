@@ -104,13 +104,17 @@ export default function CustomerDashboard() {
     if (bookingResult.status === 'fulfilled') {
       setBookings(bookingResult.value);
       setBookingsLoaded(true);
+    } else {
+      setBookingsLoaded(false);
+      console.error('[CustomerDashboard] booking history load failed:', bookingResult.reason);
     }
-    else console.error('[CustomerDashboard] booking history load failed:', bookingResult.reason);
     if (notificationResult.status === 'fulfilled') {
       setNotifications(notificationResult.value);
       setNotificationsLoaded(true);
+    } else {
+      setNotificationsLoaded(false);
+      console.error('[CustomerDashboard] notification load failed:', notificationResult.reason);
     }
-    else console.error('[CustomerDashboard] notification load failed:', notificationResult.reason);
 
     if (bookingResult.status === 'rejected') setLoadError('Your booking history could not be verified. Please retry.');
     else if (notificationResult.status === 'rejected') setLoadError('Some dashboard information could not be loaded. Please retry.');
@@ -246,7 +250,7 @@ export default function CustomerDashboard() {
         </div>
 
         {loadError && (
-          <div role="status" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <div role="alert" aria-live="assertive" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
             <span>{loadError}</span>
             <button
               type="button"
