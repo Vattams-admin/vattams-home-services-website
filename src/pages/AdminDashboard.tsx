@@ -872,18 +872,25 @@ export default function AdminDashboard() {
         technician_id: assignTechId,
       });
       const assignedTech = technicians.find((t) => t.id === assignTechId);
-      await Promise.all([
+      // Assignment is already persisted by adminData. Notification failures must
+      // not make the UI imply that the assignment itself failed.
+      const notificationResults = await Promise.allSettled([
         notifyCustomer.technicianAssigned(
           selectedBooking.mobile_number,
           selectedBooking.booking_number,
           assignedTech?.full_name ?? 'A technician',
           selectedBooking.id
         ),
-        job ? notifyTechnician.jobAssigned(assignTechId, selectedBooking.booking_number, job.id) : null,
+        ...(job ? [notifyTechnician.jobAssigned(assignTechId, selectedBooking.booking_number, job.id)] : []),
       ]);
       setBookings((prev) => prev.map((b) => b.id === selectedBooking.id ? { ...b, ...booking } : b));
       setSelectedBooking(null);
       setAssignTechId('');
+      const failedNotifications = notificationResults.filter((result) => result.status === 'rejected').length;
+      if (failedNotifications > 0) {
+        console.error('[AdminDashboard] assignment saved but notification delivery failed', { failedNotifications });
+        alert(`Technician assigned successfully, but ${failedNotifications} notification(s) failed. Please check notification delivery and retry those notifications separately.`);
+      }
     } catch (error) {
       console.error('[AdminDashboard] secure assignment failed:', error);
       alert(error instanceof Error ? error.message : 'Failed to assign technician.');
