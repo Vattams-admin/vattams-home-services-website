@@ -95,14 +95,25 @@ export default function Booking() {
   useEffect(() => {
     // Pre-fill only from a complete, unexpired customer session.
     // Invalid saved profile data must not be trusted for a new booking.
-    const stored = sessionStorage.getItem('vattams_customer');
-    const sessionToken = sessionStorage.getItem('vattams_customer_session');
-    const expiresAt = Number(sessionStorage.getItem('vattams_customer_expires'));
+    let stored: string | null = null;
+    let sessionToken: string | null = null;
+    let expiresAt = Number.NaN;
     const clearCustomerSession = () => {
-      sessionStorage.removeItem('vattams_customer');
-      sessionStorage.removeItem('vattams_customer_session');
-      sessionStorage.removeItem('vattams_customer_expires');
+      try {
+        sessionStorage.removeItem('vattams_customer');
+        sessionStorage.removeItem('vattams_customer_session');
+        sessionStorage.removeItem('vattams_customer_expires');
+      } catch {
+        // Booking can continue as a guest if browser storage is blocked.
+      }
     };
+    try {
+      stored = sessionStorage.getItem('vattams_customer');
+      sessionToken = sessionStorage.getItem('vattams_customer_session');
+      expiresAt = Number(sessionStorage.getItem('vattams_customer_expires'));
+    } catch {
+      clearCustomerSession();
+    }
     if (!stored || !sessionToken || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
       clearCustomerSession();
     } else {
@@ -132,7 +143,11 @@ export default function Booking() {
       const draft = sessionStorage.getItem('vattams_ai_booking_draft');
       if (draft) aiDraft = JSON.parse(draft) as Record<string, unknown>;
     } catch {
-      sessionStorage.removeItem('vattams_ai_booking_draft');
+      try {
+        sessionStorage.removeItem('vattams_ai_booking_draft');
+      } catch {
+        // Ignore unavailable draft storage and keep the booking form usable.
+      }
     }
 
     let active = true;
@@ -340,7 +355,13 @@ export default function Booking() {
     const { data, error } = await supabase.functions.invoke('booking-ops', {
       body: {
         action: 'create_booking',
-        customer_session_token: sessionStorage.getItem('vattams_customer_session') || undefined,
+        customer_session_token: (() => {
+          try {
+            return sessionStorage.getItem('vattams_customer_session') || undefined;
+          } catch {
+            return undefined;
+          }
+        })(),
         booking: {customer_name: form.customer_name,
         mobile_number: form.mobile_number,
         city: form.city,
