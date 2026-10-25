@@ -109,7 +109,14 @@ export default function ServicesExpansionGrid() {
         {filtered.length ? <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((service) => {
             const Icon = service.icon;
-            return <button key={service.name} type="button" onClick={() => navigate(service.available ? 'booking' : 'contact')} className="group relative flex min-h-[172px] items-start gap-4 overflow-hidden rounded-2xl border border-gray-200/90 bg-white/95 p-5 text-left shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-amber-300 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2">
+            return <button key={service.name} type="button" onClick={() => {
+              if (service.available) {
+                navigate('booking');
+                return;
+              }
+              const message = `Hi VATTAMS, I would like to enquire about: ${service.name}. Please let me know whether this service is available in my city and how to proceed.`;
+              window.open(`https://wa.me/916374068296?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
+            }} className="group relative flex min-h-[172px] items-start gap-4 overflow-hidden rounded-2xl border border-gray-200/90 bg-white/95 p-5 text-left shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-amber-300 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2">
               <span className="absolute inset-x-0 top-0 h-1 origin-left scale-x-0 bg-gradient-to-r from-amber-400 to-yellow-600 transition-transform duration-300 group-hover:scale-x-100" />
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-navy-900 to-slate-700 text-amber-300 shadow-md transition duration-200 group-hover:scale-105 group-hover:from-amber-400 group-hover:to-yellow-500 group-hover:text-navy-950"><Icon size={22} strokeWidth={1.9} /></span>
               <span className="min-w-0 flex-1">
@@ -119,7 +126,7 @@ export default function ServicesExpansionGrid() {
                   {service.available ? <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">Booking flow available</span> : <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-800">Enquiry / availability check</span>}
                   {service.partnerOnly && <span className="rounded-full border border-slate-200 px-2 py-1 text-[10px] font-semibold text-slate-500">Qualified partner</span>}
                 </span>
-                <span className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-amber-800 group-hover:text-amber-950">{service.available ? 'Check booking options' : 'Ask about availability'} <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" /></span>
+                <span className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-amber-800 group-hover:text-amber-950">{service.available ? 'Check booking options' : 'Enquire on WhatsApp'} <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" /></span>
               </span>
             </button>;
           })}
