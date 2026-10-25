@@ -181,6 +181,12 @@ export default function Booking() {
     }).catch((error) => {
       if (!active) return;
       console.error('[Booking] service/pricing load failed:', error);
+      // Promise.all can reject before individual results are available. Clear
+      // previous catalogue state here too, so a network exception cannot leave
+      // old prices selectable after a failed retry.
+      setServices([]);
+      setServicePrices({});
+      setCustomerServicePrices({});
       setLoadError('Service information could not be loaded. Check your connection and try again.');
       setLoading(false);
     });
