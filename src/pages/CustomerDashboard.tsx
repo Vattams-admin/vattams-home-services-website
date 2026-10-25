@@ -63,6 +63,19 @@ function getBookingProgressIndex(status: string): number {
   return -1;
 }
 
+function getBookingProgressLabel(status: string): string {
+  if (status === 'cancelled') return 'This booking was cancelled.';
+  if (getBookingProgressIndex(status) < 0) return 'Progress unavailable for this booking status.';
+  if (status === 'completed') return 'Service completed.';
+  if (status === 'job_completed') return 'Work reported complete; awaiting confirmation.';
+  if (status === 'in_progress' || status === 'job_started') return 'Your service is in progress.';
+  if (status === 'on_the_way') return 'Your technician is on the way.';
+  if (status === 'accepted') return 'Your technician has accepted the booking.';
+  if (status === 'assigned') return 'A technician has been assigned.';
+  if (status === 'confirmed') return 'Your booking is confirmed.';
+  return 'Your booking is awaiting assignment.';
+}
+
 const statusSteps = ['pending', 'confirmed', 'in_progress', 'completed'];
 
 export default function CustomerDashboard() {
@@ -350,16 +363,23 @@ export default function CustomerDashboard() {
                             : <div className="font-bold text-gray-900">{formatCurrency(amount)}</div>;
                         })()}
                       </div>
-                      <div className="flex items-center gap-1">
-                        {statusSteps.map((s, i) => (
+                      {stepIndex < 0 ? (
+                        <p className="mt-2 text-xs text-gray-500" role="status">{getBookingProgressLabel(b.status)}</p>
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-1">
+                            {statusSteps.map((s, i) => (
                           <div key={s} className="flex items-center flex-1">
                             <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i <= stepIndex ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'}`}>
                               {i < stepIndex ? <CheckCircle size={14} /> : i + 1}
                             </div>
                             {i < statusSteps.length - 1 && <div className={`flex-1 h-1 mx-1 rounded ${i < stepIndex ? 'bg-blue-600' : 'bg-gray-200'}`} />}
                           </div>
-                        ))}
-                      </div>
+                            ))}
+                          </div>
+                          <p className="mt-2 text-xs text-gray-500" role="status">{getBookingProgressLabel(b.status)}</p>
+                        </>
+                      )}
                     </div>
                   );
                 })}
