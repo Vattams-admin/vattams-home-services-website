@@ -62,10 +62,13 @@ Deno.serve(async req => {
       return new Response(JSON.stringify({ error: "Invalid redemption" }), { status: 400, headers });
     }
 
+    const normalizedCouponId = coupon_id.trim();
+    const normalizedBookingId = booking_id.trim();
+
     const { data: booking, error: bookingLookupError } = await db
       .from("bookings")
       .select("id,status,total_amount,amount,coupon_code,discount_amount,customer_id")
-      .eq("id", booking_id)
+      .eq("id", normalizedBookingId)
       .maybeSingle();
 
     if (bookingLookupError) {
@@ -120,7 +123,7 @@ Deno.serve(async req => {
     const { data: coupon, error: couponLookupError } = await db
       .from("coupons")
       .select("*")
-      .eq("id", coupon_id)
+      .eq("id", normalizedCouponId)
       .eq("is_active", true)
       .maybeSingle();
 
@@ -215,8 +218,8 @@ Deno.serve(async req => {
     // This prevents concurrent requests from exceeding max_uses and prevents
     // a failed redemption insert from consuming a usage slot.
     const { data: redeemed, error: redeemError } = await db.rpc("redeem_coupon_atomic", {
-      p_coupon_id: coupon_id,
-      p_booking_id: booking_id,
+      p_coupon_id: normalizedCouponId,
+      p_booking_id: normalizedBookingId,
       p_customer_id: booking.customer_id,
       p_discount_amount: Number(discount_amount),
     });
