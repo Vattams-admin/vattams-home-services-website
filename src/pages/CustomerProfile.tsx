@@ -26,22 +26,25 @@ export default function CustomerProfile() {
     const sessionToken = sessionStorage.getItem('vattams_customer_session');
     const expiresAt = sessionStorage.getItem('vattams_customer_expires');
 
-    if (!stored || !sessionToken) {
+    const clearCustomerSession = () => {
+      sessionStorage.removeItem('vattams_customer');
+      sessionStorage.removeItem('vattams_customer_session');
+      sessionStorage.removeItem('vattams_customer_expires');
+    };
+
+    if (!stored || !sessionToken || !expiresAt) {
+      clearCustomerSession();
       navigate('customer-login');
       setLoading(false);
       return;
     }
 
-    if (expiresAt) {
-      const expiry = Number(expiresAt);
-      if (!Number.isFinite(expiry) || expiry <= Date.now()) {
-        sessionStorage.removeItem('vattams_customer');
-        sessionStorage.removeItem('vattams_customer_session');
-        sessionStorage.removeItem('vattams_customer_expires');
-        navigate('customer-login');
-        setLoading(false);
-        return;
-      }
+    const expiry = Number(expiresAt);
+    if (!Number.isFinite(expiry) || expiry <= Date.now()) {
+      clearCustomerSession();
+      navigate('customer-login');
+      setLoading(false);
+      return;
     }
 
     try {
@@ -56,7 +59,7 @@ export default function CustomerProfile() {
       setForm({ full_name: c.full_name, email: c.email ?? '', city: c.city ?? '', address: c.address ?? '' });
       void loadBookingCount(c.id);
     } catch {
-      sessionStorage.removeItem('vattams_customer');
+      clearCustomerSession();
       navigate('customer-login');
     } finally {
       setLoading(false);
