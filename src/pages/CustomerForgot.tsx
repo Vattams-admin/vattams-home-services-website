@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Loader, Phone, KeyRound, Lock, ShieldCheck } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase';
@@ -16,11 +16,28 @@ export default function CustomerForgot() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [resendTimer, setResendTimer] = useState(0);
+  const resendIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const clearResendTimer = () => {
+    if (resendIntervalRef.current !== null) {
+      clearInterval(resendIntervalRef.current);
+      resendIntervalRef.current = null;
+    }
+  };
+
+  useEffect(() => () => clearResendTimer(), []);
 
   const startResendTimer = () => {
+    clearResendTimer();
     setResendTimer(30);
-    const interval = setInterval(() => {
-      setResendTimer((prev) => { if (prev <= 1) { clearInterval(interval); return 0; } return prev - 1; });
+    resendIntervalRef.current = setInterval(() => {
+      setResendTimer((prev) => {
+        if (prev <= 1) {
+          clearResendTimer();
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
   };
 
