@@ -425,7 +425,7 @@ export default function CustomerDashboard() {
                     <div className="flex items-center gap-2"><MapPin size={14} className="text-gray-400" /> {upcomingBooking.city || "Location to be confirmed"}</div>
                   </div>
                   <div className={`mt-3 px-3 py-1.5 rounded-full text-xs font-semibold capitalize border inline-block ${statusColors[upcomingBooking.status] ?? 'bg-gray-100 text-gray-700 border-gray-200'}`}>
-                    {statusLabels[upcomingBooking.status] ?? upcomingBooking.status.replace('_', ' ')}
+                    {statusLabels[upcomingBooking.status] ?? upcomingBooking.status.replace(/_/g, ' ')}
                   </div>
                 </div>
               ) : (
