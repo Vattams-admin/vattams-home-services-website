@@ -439,7 +439,7 @@ export default function Booking() {
                 {!customer && (
                   <div className="bg-gold-50 border border-gold-200 rounded-xl p-3 text-sm text-gold-700 flex items-center justify-between">
                     <span>Have an account? Login to pre-fill your details.</span>
-                    <button type="button" onClick={() => navigate('customer-login')} className="font-bold hover:underline">Login</button>
+                    <button type="button" onClick={() => navigate('customer-login')} className="font-bold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2 rounded">Login</button>
                   </div>
                 )}
 
@@ -550,7 +550,7 @@ export default function Booking() {
                         placeholder="Enter coupon code"
                         className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-gold-500 uppercase" />
                       <button type="button" onClick={handleValidateCoupon} disabled={validatingCoupon || submitting || !couponCode.trim()}
-                        className="px-4 py-2 bg-navy-900 hover:bg-navy-800 disabled:bg-gray-300 text-white text-sm font-semibold rounded-lg transition-colors">
+                        className="px-4 py-2 bg-navy-900 hover:bg-navy-800 disabled:bg-gray-300 text-white text-sm font-semibold rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2">
                         {validatingCoupon ? '...' : 'Apply'}
                       </button>
                     </div>
@@ -598,7 +598,7 @@ export default function Booking() {
                 </div>
 
                 <button type="submit" disabled={submitting || !servicePrice || !customerServicePrice || !pricing}
-                  className="w-full flex items-center justify-center gap-2 py-4 bg-navy-900 hover:bg-navy-800 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors shadow-lg shadow-[#d8c58c]">
+                  className="w-full flex items-center justify-center gap-2 py-4 bg-navy-900 hover:bg-navy-800 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors shadow-lg shadow-[#d8c58c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2">
                   {submitting ? (
                     <><Loader size={18} className="animate-spin" /> Confirming...</>
                   ) : (
