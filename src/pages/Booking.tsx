@@ -176,8 +176,16 @@ export default function Booking() {
     return prices.length ? Math.min(...prices) : null;
   };
   const discount = couponResult?.valid ? couponResult.discountAmount : 0;
+  // Keep the customer preview aligned with booking-ops, which recalculates
+  // all amounts from the authoritative database rows before creating a booking.
   const pricing: PricingBreakdown | null = servicePrice && customerServicePrice
-    ? calculatePricing(Number(customerServicePrice.base_price), servicePrice.gst_rate ?? 18, servicePrice.platform_fee, servicePrice.commission_rate ?? 0, discount)
+    ? calculatePricing(
+        Number(customerServicePrice.base_price),
+        Number(servicePrice.gst_rate) || 0,
+        Number(servicePrice.platform_fee) || 0,
+        Number(servicePrice.commission_rate) || 0,
+        discount,
+      )
     : null;
 
   const handleValidateCoupon = async () => {
