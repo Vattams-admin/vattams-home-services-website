@@ -63,6 +63,9 @@ async function dispatchPush(
         "Content-Type": "application/json",
         "Authorization": `Bearer ${serviceRoleKey}`,
       },
+      // Push delivery is best-effort; never let a stalled downstream function
+      // hold the booking operation open indefinitely.
+      signal: AbortSignal.timeout(8000),
       body: JSON.stringify({ userType, userId, title, body, data }),
     });
     if (!response.ok) {
