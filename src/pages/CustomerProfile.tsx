@@ -251,7 +251,7 @@ export default function CustomerProfile() {
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-extrabold text-gray-900">My Profile</h1>
-          <button onClick={handleLogout} disabled={loggingOut} aria-busy={loggingOut} className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 disabled:opacity-60 disabled:cursor-not-allowed text-red-600 text-sm font-semibold rounded-xl transition-colors">
+          <button onClick={handleLogout} disabled={loggingOut} aria-busy={loggingOut} className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 disabled:opacity-60 disabled:cursor-not-allowed text-red-600 text-sm font-semibold rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2">
             <LogOut size={16} /> {loggingOut ? 'Logging out…' : 'Logout'}
           </button>
         </div>
@@ -262,7 +262,7 @@ export default function CustomerProfile() {
             <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center mb-3"><Briefcase size={18} className="text-gold-700" /></div>
             <div aria-live="polite" aria-atomic="true" className="text-2xl font-extrabold text-gray-900">{bookingCountLoading && bookingCount === null ? '…' : bookingCount === null ? '—' : bookingCount}</div>
             <div role={bookingCountError ? 'status' : undefined} aria-live={bookingCountError ? 'polite' : undefined} className="text-xs text-gray-400 font-medium">{bookingCountLoading && bookingCount === null ? 'Loading booking count…' : bookingCountError ? 'Count unavailable' : 'Total Bookings'}</div>
-            {bookingCountError && <button type="button" disabled={bookingCountLoading} aria-busy={bookingCountLoading} onClick={() => customer && void loadBookingCount(customer.id)} className="mt-2 text-xs font-semibold text-gold-700 underline disabled:opacity-60 disabled:cursor-not-allowed">{bookingCountLoading ? 'Retrying…' : 'Retry count'}</button>}
+            {bookingCountError && <button type="button" disabled={bookingCountLoading} aria-busy={bookingCountLoading} onClick={() => customer && void loadBookingCount(customer.id)} className="mt-2 text-xs font-semibold text-gold-700 underline disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-600 focus-visible:ring-offset-2 rounded">{bookingCountLoading ? 'Retrying…' : 'Retry count'}</button>}
           </div>
           <div className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-5">
             <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center mb-3"><CheckCircle size={18} className="text-green-600" /></div>
@@ -327,7 +327,7 @@ export default function CustomerProfile() {
           </div>
 
           <button type="submit" disabled={saving}
-            className="w-full flex items-center justify-center gap-2 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors">
+            className="w-full flex items-center justify-center gap-2 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-600 focus-visible:ring-offset-2">
             {saving ? <Loader size={18} className="animate-spin" /> : <Save size={18} />} {saving ? 'Saving changes…' : 'Save Changes'}
           </button>
         </form>
@@ -340,7 +340,7 @@ export default function CustomerProfile() {
               setShowPwdForm((visible) => !visible);
               setPwdMsg(null);
               setPwdForm({ current: '', new: '', confirm: '' });
-            }} className="text-sm text-gold-700 font-semibold hover:underline disabled:opacity-60">
+            }} className="text-sm text-gold-700 font-semibold hover:underline disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-600 focus-visible:ring-offset-2 rounded">
               {showPwdForm ? 'Cancel' : 'Change'}
             </button>
           </div>
@@ -379,7 +379,7 @@ export default function CustomerProfile() {
           )}
         </div>
 
-        <button onClick={() => navigate('customer-dashboard')} className="w-full mt-4 flex items-center justify-center gap-2 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors">
+        <button onClick={() => navigate('customer-dashboard')} className="w-full mt-4 flex items-center justify-center gap-2 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-600 focus-visible:ring-offset-2">
           <Briefcase size={18} /> Go to Dashboard
         </button>
       </div>
