@@ -157,7 +157,7 @@ Deno.serve(async req => {
       return new Response(JSON.stringify({ error: "Booking pricing needs review" }), { status: 503, headers });
     }
 
-    if (Math.abs(storedDiscount - discount_amount) > 0.01) {
+    if (Math.abs(storedDiscount - discount_amount) > 1e-7) {
       return new Response(JSON.stringify({ error: "Discount does not match booking" }), { status: 400, headers });
     }
 
@@ -211,7 +211,7 @@ Deno.serve(async req => {
         : Math.round(discountValue * 100) / 100,
       bookingTotal,
     );
-    if (Math.abs(expectedDiscount - storedDiscount) > 0.01) {
+    if (Math.abs(expectedDiscount - storedDiscount) > 1e-7) {
       return new Response(JSON.stringify({ error: "Coupon terms no longer match this booking" }), { status: 409, headers });
     }
 
