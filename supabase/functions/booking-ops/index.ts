@@ -362,7 +362,9 @@ Deno.serve(async (req: Request) => {
         if (!Number.isFinite(discountValue) || discountValue <= 0
           || (coupon.discount_type === "percentage" && discountValue > 100)
           || !["percentage", "flat"].includes(String(coupon.discount_type))
-          || !Number.isFinite(minimumOrderAmount) || minimumOrderAmount < 0) {
+          || (coupon.discount_type === "flat" && Math.abs(discountValue * 100 - Math.round(discountValue * 100)) > 1e-7)
+          || !Number.isFinite(minimumOrderAmount) || minimumOrderAmount < 0
+          || Math.abs(minimumOrderAmount * 100 - Math.round(minimumOrderAmount * 100)) > 1e-7) {
           console.error("[booking-ops create_booking] invalid coupon configuration");
           return new Response(JSON.stringify({ error: "This coupon has invalid discount settings. Please contact VATTAMS support." }), {
             status: 503,
