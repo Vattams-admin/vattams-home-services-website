@@ -3,7 +3,7 @@ import { Mail, MapPin, Send, Loader, Headphones, ChevronRight } from 'lucide-rea
 import { useRouter } from '@/lib/router';
 import { Customer } from '@/lib/supabase';
 import { customerData } from '@/lib/customerData';
-import CommunicationCenter, { SUPPORT_PHONE, SUPPORT_WHATSAPP } from '@/components/CommunicationCenter';
+import CommunicationCenter, { SUPPORT_PHONE } from '@/components/CommunicationCenter';
 
 const SUPPORT_EMAIL = 'support@vattams.net';
 
@@ -65,8 +65,9 @@ export default function CustomerSupport() {
       setMessage('');
     } catch {
       showToast('error', 'Failed to send message. Please try WhatsApp or call us directly.');
+    } finally {
+      setSending(false);
     }
-    setSending(false);
   };
 
   return (
@@ -75,7 +76,7 @@ export default function CustomerSupport() {
         <h1 className="text-2xl font-extrabold text-gray-900 mb-6 flex items-center gap-2"><Headphones size={24} className="text-gold-700" /> Customer Support</h1>
 
         {toast && (
-          <div className={`rounded-xl p-3 text-sm mb-4 ${toast.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>{toast.text}</div>
+          <div role={toast.type === 'error' ? 'alert' : 'status'} aria-live={toast.type === 'error' ? 'assertive' : 'polite'} className={`rounded-xl p-3 text-sm mb-4 ${toast.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>{toast.text}</div>
         )}
 
         {/* Quick Support Options */}
@@ -98,14 +99,14 @@ export default function CustomerSupport() {
           <h2 className="font-bold text-gray-900 text-sm mb-4">Send Us a Message</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Subject</label>
-              <input type="text" value={subject} onChange={(e) => setSubject(e.target.value)}
+              <label htmlFor="support-subject" className="block text-sm font-semibold text-gray-700 mb-1.5">Subject</label>
+              <input id="support-subject" name="subject" type="text" required maxLength={120} value={subject} onChange={(e) => setSubject(e.target.value)}
                 placeholder="What do you need help with?"
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Message</label>
-              <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={5}
+              <label htmlFor="support-message" className="block text-sm font-semibold text-gray-700 mb-1.5">Message</label>
+              <textarea id="support-message" name="message" required maxLength={2000} value={message} onChange={(e) => setMessage(e.target.value)} rows={5}
                 placeholder="Describe your issue in detail..."
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm resize-none" />
             </div>
