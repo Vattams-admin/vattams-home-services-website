@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AlertCircle,
   ArrowLeft,
@@ -59,8 +59,14 @@ export default function CustomerBookings() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  const bookingRequestVersion = useRef(0);
+
+  useEffect(() => () => {
+    bookingRequestVersion.current += 1;
+  }, []);
 
   const loadBookings = useCallback(async (customerRecord: Customer, refresh = false) => {
+    const requestVersion = ++bookingRequestVersion.current;
     if (refresh) setRefreshing(true);
     else setLoading(true);
     setError('');
@@ -74,12 +80,16 @@ export default function CustomerBookings() {
       if (!result || !Array.isArray(result.bookings)) {
         throw new Error('We couldn’t verify your booking history. Please sign in again or retry shortly.');
       }
+      if (requestVersion !== bookingRequestVersion.current) return;
       setBookings(result.bookings);
     } catch (err) {
+      if (requestVersion !== bookingRequestVersion.current) return;
       setError(err instanceof Error ? err.message : 'Unable to load your bookings. Please try again.');
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (requestVersion === bookingRequestVersion.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }, []);
 
