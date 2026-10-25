@@ -31,9 +31,17 @@ export default function CustomerProfile() {
     setLoading(false);
   }, []);
 
-  const loadBookingCount = async (customerId: string) => {
-    const result = await customerData<{ bookings: { id: string }[] }>('bookings');
-    setBookingCount(result?.bookings.length ?? 0);
+  const loadBookingCount = async (_customerId: string) => {
+    try {
+      const result = await customerData<{ bookings: { id: string }[] }>('bookings');
+      if (!result || !Array.isArray(result.bookings)) {
+        throw new Error('Booking count response is unavailable.');
+      }
+      setBookingCount(result.bookings.length);
+    } catch {
+      // A failed request is not proof that the customer has zero bookings.
+      setMsg({ type: 'error', text: 'Unable to load your booking count. Please refresh and try again.' });
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -43,7 +51,6 @@ export default function CustomerProfile() {
     setMsg(null);
     try {
       const result = await customerData<{ customer: Customer }>('profile', { full_name: form.full_name, email: form.email, city: form.city, address: form.address });
-      if (!result?.customer) throw new Error('Failed to update profile');
       if (!result?.customer) throw new Error('Failed to update profile');
       if (result.customer) {
         setCustomer(result.customer);
