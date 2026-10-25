@@ -253,20 +253,24 @@ Deno.serve(async (req: Request) => {
         }
 
         const discountValue = Number(coupon.discount_value);
+        const minimumOrderAmount = Number(coupon.min_order_amount ?? 0);
         if (!Number.isFinite(discountValue) || discountValue <= 0
           || (coupon.discount_type === "percentage" && discountValue > 100)
-          || !["percentage", "flat"].includes(String(coupon.discount_type))) {
-          return new Response(JSON.stringify({ error: "This coupon has invalid discount settings." }), {
-            status: 400,
+          || !["percentage", "flat"].includes(String(coupon.discount_type))
+          || !Number.isFinite(minimumOrderAmount) || minimumOrderAmount < 0) {
+          console.error("[booking-ops create_booking] invalid coupon configuration");
+          return new Response(JSON.stringify({ error: "This coupon has invalid discount settings. Please contact VATTAMS support." }), {
+            status: 503,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
 
-        discountAmount = coupon.discount_type === "percentage"
+        const calculatedDiscount = coupon.discount_type === "percentage"
           ? Math.round((totalAmount * discountValue / 100) * 100) / 100
-          : discountValue;
+          : Math.round(discountValue * 100) / 100;
+        discountAmount = Math.min(calculatedDiscount, totalAmount);
 
-        if (!Number.isFinite(discountAmount) || discountAmount <= 0 || discountAmount > totalAmount) {
+        if (!Number.isFinite(discountAmount) || discountAmount <= 0) {
           return new Response(JSON.stringify({ error: "This coupon discount is invalid for the current booking total." }), {
             status: 400,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
