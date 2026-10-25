@@ -33,6 +33,19 @@ const statusLabels: Record<string, string> = {
   cancelled: 'Cancelled',
 };
 
+function formatNotificationDate(value: string): string {
+  if (!value) return 'Date unavailable';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Date unavailable';
+  return date.toLocaleString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 function getBookingProgressIndex(status: string): number {
   if (status === 'pending') return 0;
   if (['confirmed', 'assigned', 'accepted', 'on_the_way'].includes(status)) return 1;
@@ -310,7 +323,7 @@ export default function CustomerDashboard() {
                         <div>
                           <div className="font-semibold text-gray-900 text-sm">{n.title}</div>
                           <div className="text-xs text-gray-500 mt-0.5">{n.message}</div>
-                          <div className="text-xs text-gray-400 mt-1">{new Date(n.created_at).toLocaleString('en-IN')}</div>
+                          <div className="text-xs text-gray-400 mt-1">{formatNotificationDate(n.created_at)}</div>
                         </div>
                       </div>
                     </article>
