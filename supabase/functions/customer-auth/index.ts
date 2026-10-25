@@ -103,8 +103,7 @@ Deno.serve(async (req: Request) => {
         const otp = generateOTP();
         const otpHash = await hashOTP(otp);
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-        await supabase.from("otp_codes").delete().eq("mobile", mobile).eq("purpose", "registration");
-
+        // Keep the previous pending OTP until the replacement email is accepted.
         const { data: otpRow, error: otpError } = await supabase.from("otp_codes").insert({
           mobile, code: otpHash, purpose: "registration", expires_at: expiresAt,
         }).select("id").single();
@@ -120,6 +119,14 @@ Deno.serve(async (req: Request) => {
           await supabase.from("otp_codes").delete().eq("id", otpRow.id);
           return errorResponse("We could not send the verification email. Registration is paused until email delivery is available. Please try again later.", 503);
         }
+        // Remove superseded pending OTPs only after the new code is successfully sent.
+        const { error: cleanupError } = await supabase.from("otp_codes")
+          .delete()
+          .eq("mobile", mobile)
+          .eq("purpose", "registration")
+          .eq("verified", false)
+          .neq("id", otpRow.id);
+        if (cleanupError) console.error("Could not remove superseded customer OTP rows:", cleanupError.message);
         return jsonResponse({ success: true, message: "Verification code sent to your email address" });
       }
 
