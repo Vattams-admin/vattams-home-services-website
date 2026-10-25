@@ -52,26 +52,41 @@ export default function CustomerPayments() {
         }
         const c = parsed as Customer;
         setCustomer(c);
-        const [paymentData, bookingData] = await Promise.all([
+        const [paymentResult, bookingResult] = await Promise.allSettled([
           customerData<{ payments: PaymentRecord[] }>('payments', { mobile: c.mobile }),
           customerData<{ bookings: { id: string; service_category: string; booking_number: string }[] }>('booking_refs', { mobile: c.mobile }),
         ]);
+        if (paymentResult.status === 'rejected') throw paymentResult.reason;
+        const paymentData = paymentResult.value;
         if (!paymentData || !Array.isArray(paymentData.payments)
-          || !bookingData || !Array.isArray(bookingData.bookings)) {
+          || !paymentData.payments.every((payment) => payment
+            && typeof payment.id === 'string' && payment.id.trim()
+            && typeof payment.payment_id === 'string' && payment.payment_id.trim()
+            && typeof payment.status === 'string' && payment.status.trim()
+            && typeof payment.created_at === 'string' && !Number.isNaN(Date.parse(payment.created_at))
+            && typeof payment.amount === 'number' && Number.isFinite(payment.amount) && payment.amount >= 0)
+          || new Set(paymentData.payments.map((payment) => payment.id)).size !== paymentData.payments.length) {
           throw new Error('We couldn’t verify your payment history. Please sign in again or retry shortly.');
         }
         if (!active) return;
         setPayments(paymentData.payments);
-        const map: Record<string, BookingRef> = {};
-        for (const booking of bookingData.bookings) {
-          if (!booking || typeof booking.id !== 'string' || !booking.id.trim()
-            || typeof booking.service_category !== 'string'
-            || typeof booking.booking_number !== 'string') {
-            throw new Error('We received incomplete booking references. Please retry shortly.');
+
+        // Booking references are supplementary: an unavailable booking lookup
+        // must not hide a valid payment history or misreport it as unavailable.
+        if (bookingResult.status === 'fulfilled' && bookingResult.value
+          && Array.isArray(bookingResult.value.bookings)) {
+          const map: Record<string, BookingRef> = {};
+          const validBookings = bookingResult.value.bookings.every((booking) =>
+            booking && typeof booking.id === 'string' && booking.id.trim()
+            && typeof booking.service_category === 'string'
+            && typeof booking.booking_number === 'string');
+          if (validBookings) {
+            for (const booking of bookingResult.value.bookings) {
+              map[booking.id] = { service_category: booking.service_category, booking_number: booking.booking_number };
+            }
+            setBookings(map);
           }
-          map[booking.id] = { service_category: booking.service_category, booking_number: booking.booking_number };
         }
-        setBookings(map);
       } catch (error) {
         if (!active) return;
         setLoadError(error instanceof Error ? error.message : 'Unable to load payment history. Please try again.');
