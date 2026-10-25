@@ -139,8 +139,12 @@ Deno.serve(async (req: Request) => {
 
         const submittedHash = await hashOTP(String(code));
         if (String(otpRecord.code) !== submittedHash) {
-          const nextAttempts = Number(otpRecord.attempt_count || 0) + 1;
-          await supabase.from("otp_codes").update({ attempt_count: nextAttempts }).eq("id", otpRecord.id).eq("verified", false);
+          const { data: attempts, error: attemptError } = await supabase.rpc("increment_otp_attempt_count", { p_otp_id: otpRecord.id });
+          if (attemptError || attempts == null) {
+            console.error("Could not atomically increment customer OTP attempts:", attemptError?.message);
+            return errorResponse("Could not verify OTP right now. Please try again.", 500);
+          }
+          const nextAttempts = Number(attempts);
           return errorResponse(nextAttempts >= 5 ? "Too many incorrect OTP attempts. Please request a new OTP." : "Invalid OTP code", nextAttempts >= 5 ? 429 : 400);
         }
 
