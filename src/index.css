@@ -26,7 +26,7 @@
   /* Executive corporate header language */
   header {
     background: rgba(5, 10, 23, 0.88) !important; backdrop-filter: blur(22px) saturate(140%); -webkit-backdrop-filter: blur(22px) saturate(140%);
-    border-bottom-color: rgba(249, 115, 22, 0.24) !important;
+    border-bottom-color: rgba(212, 175, 55, 0.28) !important;
     box-shadow: 0 14px 50px rgba(0,0,0,.22) !important;
   }
 
@@ -35,7 +35,7 @@
   }
 
   header .text-amber-600 {
-    color: #FB923C !important;
+    color: #D4AF37 !important;
   }
 
   header .text-gray-700 {
@@ -43,12 +43,12 @@
   }
 
   header .bg-blue-600 {
-    background: linear-gradient(135deg,#FB923C,#F97316) !important;
+    background: linear-gradient(135deg,#F1D979,#D4AF37,#B58A21) !important;
     color: #050A17 !important;
   }
 
   header .bg-blue-600:hover {
-    background: #FDBA74 !important;
+    background: #F4E6A4 !important;
   }
 
   header .hover\:bg-blue-50:hover {
@@ -109,4 +109,65 @@
 header .text-gray-700:hover { color: #fff !important; }
 header button { transition: transform .2s ease, box-shadow .2s ease, background .2s ease, color .2s ease; }
 header button:hover { transform: translateY(-1px); }
-footer { background: radial-gradient(circle at 15% 0%, rgba(249,115,22,.10), transparent 28rem), linear-gradient(180deg,#07101F 0%,#030914 100%) !important; }
+footer { background: radial-gradient(circle at 15% 0%, rgba(212,175,55,.12), transparent 28rem), linear-gradient(180deg,#07101F 0%,#030914 100%) !important; }
+
+
+/* VATTAMS premium experience system — consistent across discovery, booking and support */
+:root {
+  --vattams-midnight: #070B15;
+  --vattams-navy: #0A132A;
+  --vattams-gold: #D4AF37;
+  --vattams-gold-soft: #F3E6A8;
+  --vattams-ivory: #F7F5EF;
+}
+
+html { scroll-padding-top: 6rem; }
+body { background-color: var(--vattams-ivory); }
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+button, a { touch-action: manipulation; }
+
+@layer components {
+  /* Consistent elevated surfaces without changing page-specific functionality */
+  .premium-surface {
+    border-color: rgba(212,175,55,.20);
+    box-shadow: 0 18px 55px rgba(7,11,21,.08), 0 2px 8px rgba(7,11,21,.03);
+  }
+
+  main input:not([type="checkbox"]):not([type="radio"]),
+  main select,
+  main textarea {
+    border-radius: .85rem;
+    border-color: #D9DDE5;
+    background-color: #fff;
+    transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+  }
+
+  main input:not([type="checkbox"]):not([type="radio"]):focus,
+  main select:focus,
+  main textarea:focus {
+    border-color: #B9962B;
+    box-shadow: 0 0 0 4px rgba(212,175,55,.13);
+    outline: none;
+  }
+
+  main button:not(:disabled) { transition: transform .2s ease, box-shadow .2s ease, filter .2s ease; }
+  main button:not(:disabled):hover { filter: brightness(1.035); }
+  main button:disabled { cursor: not-allowed; }
+
+  main details {
+    transition: border-color .2s ease, box-shadow .2s ease;
+  }
+  main details[open] {
+    border-color: rgba(212,175,55,.35);
+    box-shadow: 0 12px 35px rgba(7,11,21,.05);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
