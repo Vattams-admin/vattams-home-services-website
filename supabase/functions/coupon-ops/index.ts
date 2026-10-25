@@ -51,10 +51,11 @@ Deno.serve(async req => {
     }
 
     if (
-      !coupon_id ||
-      !booking_id ||
-      !Number.isFinite(Number(discount_amount)) ||
-      Number(discount_amount) < 0
+      typeof coupon_id !== "string" || !coupon_id.trim() ||
+      typeof booking_id !== "string" || !booking_id.trim() ||
+      typeof discount_amount !== "number" ||
+      !Number.isFinite(discount_amount) ||
+      discount_amount <= 0
     ) {
       return new Response(JSON.stringify({ error: "Invalid redemption" }), { status: 400, headers });
     }
