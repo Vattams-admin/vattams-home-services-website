@@ -161,15 +161,31 @@ export default function CustomerDashboard() {
 
   useEffect(() => {
     let active = true;
-    const stored = sessionStorage.getItem('vattams_customer');
-    const sessionToken = sessionStorage.getItem('vattams_customer_session');
-    const expiresAt = sessionStorage.getItem('vattams_customer_expires');
-
     const clearCustomerSession = () => {
-      sessionStorage.removeItem('vattams_customer');
-      sessionStorage.removeItem('vattams_customer_session');
-      sessionStorage.removeItem('vattams_customer_expires');
+      try {
+        sessionStorage.removeItem('vattams_customer');
+        sessionStorage.removeItem('vattams_customer_session');
+        sessionStorage.removeItem('vattams_customer_expires');
+      } catch {
+        // Redirect even when browser storage cleanup is blocked.
+      }
     };
+
+    let stored: string | null;
+    let sessionToken: string | null;
+    let expiresAt: string | null;
+    try {
+      stored = sessionStorage.getItem('vattams_customer');
+      sessionToken = sessionStorage.getItem('vattams_customer_session');
+      expiresAt = sessionStorage.getItem('vattams_customer_expires');
+    } catch {
+      clearCustomerSession();
+      navigate('customer-login');
+      return () => {
+        active = false;
+        requestVersion.current += 1;
+      };
+    }
 
     if (!stored || !sessionToken || !expiresAt) {
       clearCustomerSession();
@@ -203,9 +219,7 @@ export default function CustomerDashboard() {
         void refreshDashboard(c);
       }
     } catch {
-      sessionStorage.removeItem('vattams_customer');
-      sessionStorage.removeItem('vattams_customer_session');
-      sessionStorage.removeItem('vattams_customer_expires');
+      clearCustomerSession();
       navigate('customer-login');
     }
 
