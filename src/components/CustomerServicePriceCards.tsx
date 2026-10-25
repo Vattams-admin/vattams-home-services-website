@@ -18,7 +18,10 @@ interface CheckoutFee {
   platform_fee: number;
 }
 
-const moneyBreakdown = (basePrice: number, gstRate: number, platformFee: number) => {
+const moneyBreakdown = (rawBasePrice: number, gstRate: number, rawPlatformFee: number) => {
+  // Match booking-ops currency normalization before calculating tax and totals.
+  const basePrice = Math.round(rawBasePrice * 100) / 100;
+  const platformFee = Math.round(rawPlatformFee * 100) / 100;
   const gstAmount = Math.round((basePrice * gstRate / 100) * 100) / 100;
   const total = Math.round((basePrice + gstAmount + platformFee) * 100) / 100;
   return { gstAmount, platformFee, total };
