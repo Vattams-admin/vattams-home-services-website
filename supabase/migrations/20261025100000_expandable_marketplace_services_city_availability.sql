@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS public.marketplace_service_city_availability (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   service_id uuid NOT NULL REFERENCES public.marketplace_services(id) ON DELETE CASCADE,
   city text NOT NULL,
+  city_normalized text GENERATED ALWAYS AS (lower(trim(city))) STORED,
   is_available boolean NOT NULL DEFAULT false,
   admin_note text,
   created_at timestamptz NOT NULL DEFAULT now(),
@@ -34,12 +35,12 @@ CREATE TABLE IF NOT EXISTS public.marketplace_service_city_availability (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS marketplace_service_city_availability_unique
-  ON public.marketplace_service_city_availability (service_id, lower(city));
+  ON public.marketplace_service_city_availability (service_id, city_normalized);
 
 CREATE INDEX IF NOT EXISTS marketplace_services_active_idx
   ON public.marketplace_services (is_active, category);
 CREATE INDEX IF NOT EXISTS marketplace_service_city_city_idx
-  ON public.marketplace_service_city_availability (lower(city), is_available);
+  ON public.marketplace_service_city_availability (city_normalized, is_available);
 
 ALTER TABLE public.marketplace_services ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.marketplace_service_city_availability ENABLE ROW LEVEL SECURITY;
