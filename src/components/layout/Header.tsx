@@ -126,7 +126,7 @@ export default function Header() {
             type="button"
             onClick={() => goTo('home')}
             className="flex items-center gap-2 shrink-0"
-            aria-label="VATTAMS Home"
+            aria-label="VATTAMS Hybrid Service Marketplace"
           >
             <img
               src="/logo.svg"
@@ -140,7 +140,7 @@ export default function Header() {
               </div>
 
               <div className="text-[10px] md:text-xs font-semibold text-[#a47c00] tracking-wider uppercase">
-                Home Services
+                Hybrid Service Marketplace
               </div>
             </div>
           </button>

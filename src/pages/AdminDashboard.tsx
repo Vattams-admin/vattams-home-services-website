@@ -32,6 +32,7 @@ import AdminAIDashboard from '@/components/admin/AdminAIDashboard';
 import AdminCRM from '@/components/admin/AdminCRM';
 import AdminContent from '@/components/admin/AdminContent';
 import AdminCoupons from '@/components/admin/AdminCoupons';
+import MarketplaceServiceManager from '@/components/admin/MarketplaceServiceManager';
 import './AdminDashboard.css';
 
 type TechnicianCallRateAdmin = {
@@ -106,6 +107,7 @@ type Tab =
   | 'crm'
   | 'content'
   | 'coupons'
+  | 'service-catalog'
 
 export default function AdminDashboard() {
   const { navigate } = useRouter();
@@ -1079,6 +1081,7 @@ export default function AdminDashboard() {
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'social', label: 'Social & Website', icon: Globe },
     { id: 'pricing', label: 'Pricing', icon: Tag },
+    { id: 'service-catalog', label: 'Service Catalogue', icon: Wrench },
     { id: 'coupons', label: 'Coupons', icon: Tag },
     { id: 'content', label: 'AI Content', icon: Sparkles },
     { id: 'crm', label: 'CRM', icon: FileText },
@@ -3293,6 +3296,11 @@ export default function AdminDashboard() {
       {/* ===================== COUPONS ===================== */}
       {tab === 'coupons' && (
         <AdminCoupons />
+      )}
+
+      {/* Marketplace service catalogue and city controls */}
+      {tab === 'service-catalog' && (
+        <MarketplaceServiceManager />
       )}
         </div>
       </div>

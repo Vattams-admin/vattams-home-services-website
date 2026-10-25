@@ -14,6 +14,7 @@ import {
   RefreshCw,
   FileText,
   RotateCcw,
+  ShieldCheck,
 } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import PaymentModal from '@/components/PaymentModal';
@@ -23,6 +24,8 @@ import {
   EMPTY_FORM,
   calculateProfileScore,
   submitTechnicianApplication,
+  verifyTechnicianRegistrationEmail,
+  resendTechnicianRegistrationEmailOtp,
   validateFile,
   uploadDocumentWithProgress,
   saveRegistrationDraft,
@@ -55,6 +58,9 @@ export default function TechnicianRegister() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [emailOtpPending, setEmailOtpPending] = useState(false);
+  const [emailOtp, setEmailOtp] = useState('');
+  const [emailOtpResendTimer, setEmailOtpResendTimer] = useState(0);
 
   const [chatHistory, setChatHistory] = useState<
     { role: 'ai' | 'user'; text: string }[]
@@ -73,6 +79,12 @@ export default function TechnicianRegister() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const submittingRef = useRef(false);
+
+  useEffect(() => {
+    if (!emailOtpPending || emailOtpResendTimer <= 0) return;
+    const timer = setTimeout(() => setEmailOtpResendTimer((remaining) => Math.max(0, remaining - 1)), 1000);
+    return () => clearTimeout(timer);
+  }, [emailOtpPending, emailOtpResendTimer]);
 
   const currentStep = STEPS[stepIndex];
 
@@ -463,6 +475,10 @@ export default function TechnicianRegister() {
       setShowJoinFeePayment(true);
       return;
     }
+    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      setError('A valid email address is required. Registration cannot finish without email verification.');
+      return;
+    }
     if (submittingRef.current) return;
 
     submittingRef.current = true;
@@ -471,9 +487,14 @@ export default function TechnicianRegister() {
 
     try {
       await submitTechnicianApplication(form, joinFeePaymentId || undefined);
-
-      clearRegistrationDraft();
-      setSuccess(true);
+      submittingRef.current = false;
+      setEmailOtpPending(true);
+      setEmailOtp('');
+      setEmailOtpResendTimer(60);
+      setChatHistory((history) => [...history, {
+        role: 'ai',
+        text: `A 6-digit verification code has been sent to ${form.email.trim().toLowerCase()}. Enter that code below to finish technician registration. Your application will not be submitted until the email OTP is verified.`,
+      }]);
     } catch (err: any) {
       console.error('Registration Error:', err);
 
@@ -484,6 +505,47 @@ export default function TechnicianRegister() {
       );
       submittingRef.current = false;
     } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleResendEmailOtp = async () => {
+    if (emailOtpResendTimer > 0 || submitting) return;
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setSubmitting(true);
+    setError('');
+    try {
+      await resendTechnicianRegistrationEmailOtp(form);
+      setEmailOtp('');
+      setEmailOtpResendTimer(60);
+    } catch (err: any) {
+      setError(err?.message || 'Could not resend the email verification code.');
+      if (err?.message?.includes('60 seconds')) setEmailOtpResendTimer(60);
+    } finally {
+      submittingRef.current = false;
+      setSubmitting(false);
+    }
+  };
+
+  const handleVerifyEmailOtp = async () => {
+    if (!/^\d{6}$/.test(emailOtp.trim())) {
+      setError('Enter the 6-digit code sent to your email.');
+      return;
+    }
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setSubmitting(true);
+    setError('');
+    try {
+      await verifyTechnicianRegistrationEmail(form, emailOtp);
+      clearRegistrationDraft();
+      setEmailOtpPending(false);
+      setSuccess(true);
+    } catch (err: any) {
+      setError(err?.message || 'Email verification failed. Please try again.');
+    } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   };
@@ -699,6 +761,42 @@ export default function TechnicianRegister() {
               </div>
             )}
 
+            {emailOtpPending && (
+              <div className="space-y-3">
+                <div className="rounded-xl bg-blue-50 border border-blue-100 p-3 text-sm text-blue-900">
+                  Verification email sent to <strong>{form.email.trim().toLowerCase()}</strong>. Enter the code to complete registration. If it does not arrive, check Spam/Junk.
+                </div>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  value={emailOtp}
+                  onChange={(event) => setEmailOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                  onKeyDown={(event) => { if (event.key === 'Enter') handleVerifyEmailOtp(); }}
+                  placeholder="6-digit email OTP"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-100 outline-none text-sm"
+                />
+                <button
+                  onClick={handleVerifyEmailOtp}
+                  disabled={submitting || emailOtp.length !== 6}
+                  className="w-full py-3 bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
+                  {submitting ? <Loader size={18} className="animate-spin" /> : <ShieldCheck size={18} />}
+                  Verify Email & Finish Registration
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResendEmailOtp}
+                  disabled={submitting || emailOtpResendTimer > 0}
+                  className="w-full py-2 text-sm font-semibold text-[#0b1f3a] disabled:text-gray-400 disabled:cursor-not-allowed"
+                >
+                  {emailOtpResendTimer > 0 ? `Resend code in ${emailOtpResendTimer}s` : 'Resend email OTP'}
+                </button>
+              </div>
+            )}
+
+            {!emailOtpPending && <>
             {/* Text / Number / Password */}
             {(
               currentStep.type === 'text' ||
@@ -1124,6 +1222,8 @@ export default function TechnicianRegister() {
 
               </div>
             )}
+
+            </>}
 
             <PaymentModal
               open={showJoinFeePayment}

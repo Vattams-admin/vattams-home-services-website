@@ -18,6 +18,7 @@ interface RegisterBody {
   id_proof_type?: string;
   id_proof_number?: string;
   password: string;
+  password_hash?: string;
   whatsapp_number?: string;
   area?: string;
   pincode?: string;
@@ -51,6 +52,167 @@ interface DocUrlBody {
   doc_type: "aadhaar" | "pan" | "dl";
 }
 
+function generateEmailOtp(): string {
+  const bytes = new Uint32Array(1);
+  crypto.getRandomValues(bytes);
+  return String(100000 + (bytes[0] % 900000));
+}
+async function hashEmailOtp(otp: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(otp));
+  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+async function sendEmailOtp(to: string, otp: string): Promise<boolean> {
+  const apiKey = Deno.env.get("RESEND_API_KEY");
+  const from = Deno.env.get("EMAIL_FROM");
+  if (!apiKey || !from) {
+    console.error("Email OTP unavailable: RESEND_API_KEY and EMAIL_FROM must be configured.");
+    return false;
+  }
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from, to: [to], subject: "Verify your VATTAMS technician registration email",
+        html: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:24px"><h2>VATTAMS Home Services</h2><p>Use this one-time code to verify the email address for your technician registration.</p><div style="font-size:32px;font-weight:700;letter-spacing:8px;padding:18px 0">${otp}</div><p>This code expires in 10 minutes. Do not share it with anyone.</p></div>`,
+      }),
+    });
+    if (!response.ok) {
+      console.error("Email provider rejected technician OTP", response.status, await response.text());
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error("Technician email OTP delivery failed", error);
+    return false;
+  }
+}
+function otpJson(data: Record<string, unknown>, status = 200) {
+  return new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+}
+async function startTechnicianRegistrationOtp(supabase: ReturnType<typeof createClient>, body: RegisterBody) {
+  const mobile = String(body.mobile || "").replace(/\D/g, "");
+  const email = String(body.email || "").trim().toLowerCase();
+  if (!body.full_name?.trim() || !/^[6-9]\d{9}$/.test(mobile) || !body.password || body.password.length < 6 || !body.city?.trim()) {
+    return otpJson({ error: "Valid name, mobile, city and password are required." }, 400);
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return otpJson({ error: "A valid email address is required for technician registration." }, 400);
+  const { data: existingMobile } = await supabase.from("technicians").select("id").eq("mobile", mobile).maybeSingle();
+  if (existingMobile) return otpJson({ error: "This mobile number is already registered." }, 409);
+  const { data: existingEmail } = await supabase.from("technicians").select("id").eq("email", email).maybeSingle();
+  if (existingEmail) return otpJson({ error: "This email address is already registered." }, 409);
+  const recentCutoff = new Date(Date.now() - 60 * 1000).toISOString();
+  const { data: recent } = await supabase.from("otp_codes").select("id").eq("mobile", mobile).eq("purpose", "technician_registration").gte("created_at", recentCutoff).limit(1).maybeSingle();
+  if (recent) return otpJson({ error: "Please wait 60 seconds before requesting another code." }, 429);
+  const otp = generateEmailOtp();
+  const otpHash = await hashEmailOtp(otp);
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+  const passwordHash = await bcrypt.hash(body.password, await bcrypt.genSalt(10));
+  const { data: row, error } = await supabase.from("otp_codes").insert({
+    mobile, code: otpHash, purpose: "technician_registration", expires_at: expiresAt,
+    registration_data: { ...body, mobile, email, password: undefined, password_hash: passwordHash },
+  }).select("id").single();
+  if (error || !row) return otpJson({ error: "Could not start registration. Please try again." }, 500);
+  if (!await sendEmailOtp(email, otp)) {
+    await supabase.from("otp_codes").delete().eq("id", row.id);
+    return otpJson({ error: "We could not send the verification email. Registration cannot continue until email delivery is available." }, 503);
+  }
+  // Remove superseded pending registration payloads only after the new email is accepted.
+  // If delivery fails, the applicant can still use the previous pending OTP.
+  const { error: cleanupError } = await supabase.from("otp_codes")
+    .delete()
+    .eq("mobile", mobile)
+    .eq("purpose", "technician_registration")
+    .eq("verified", false)
+    .neq("id", row.id);
+  if (cleanupError) {
+    console.error("Could not remove superseded technician OTP rows after initial send:", cleanupError.message);
+  }
+  return otpJson({ success: true, message: "Email verification code sent." });
+}
+async function resendTechnicianRegistrationOtp(supabase: ReturnType<typeof createClient>, body: Record<string, unknown>) {
+  const mobile = String(body.mobile || "").replace(/\D/g, "");
+  if (!/^[6-9]\d{9}$/.test(mobile)) return otpJson({ error: "A valid mobile number is required to resend the email OTP." }, 400);
+  const { data: pendingRow } = await supabase.from("otp_codes")
+    .select("mobile,registration_data,created_at,verified")
+    .eq("mobile", mobile).eq("purpose", "technician_registration")
+    .eq("verified", false).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  if (!pendingRow || !pendingRow.registration_data) return otpJson({ error: "No pending technician registration found. Please restart registration." }, 400);
+  const pending = pendingRow.registration_data as RegisterBody & { password_hash?: string };
+  const email = String(pending.email || "").trim().toLowerCase();
+  if (!email || !pending.password_hash) return otpJson({ error: "Registration details expired. Please restart registration." }, 400);
+  if (Date.now() - new Date(pendingRow.created_at).getTime() < 60 * 1000) {
+    return otpJson({ error: "Please wait 60 seconds before requesting another code." }, 429);
+  }
+  const otp = generateEmailOtp();
+  const { data: row, error } = await supabase.from("otp_codes").insert({
+    mobile, code: await hashEmailOtp(otp), purpose: "technician_registration",
+    expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+    registration_data: pending,
+  }).select("id").single();
+  if (error || !row) return otpJson({ error: "Could not resend the code. Please try again." }, 500);
+  if (!await sendEmailOtp(email, otp)) {
+    await supabase.from("otp_codes").delete().eq("id", row.id);
+    return otpJson({ error: "We could not send the verification email. Please try again later." }, 503);
+  }
+  // Only after delivery succeeds, remove older pending OTP rows so they do not
+  // retain duplicate copies of the applicant's sensitive registration payload.
+  const { error: cleanupError } = await supabase.from("otp_codes")
+    .delete()
+    .eq("mobile", mobile)
+    .eq("purpose", "technician_registration")
+    .eq("verified", false)
+    .neq("id", row.id);
+  if (cleanupError) {
+    console.error("Could not remove superseded technician OTP rows:", cleanupError.message);
+  }
+  return otpJson({ success: true, message: "A new email verification code was sent." });
+}
+async function verifyTechnicianRegistrationOtp(supabase: ReturnType<typeof createClient>, body: Record<string, unknown>) {
+  const mobile = String(body.mobile || "").replace(/\D/g, "");
+  const code = String(body.code || "").trim();
+  if (!mobile || !/^\d{6}$/.test(code)) return otpJson({ error: "Mobile number and 6-digit email OTP are required." }, 400);
+  const { data: row } = await supabase.from("otp_codes").select("id,mobile,code,expires_at,attempt_count,registration_data,verified").eq("mobile", mobile).eq("purpose", "technician_registration").eq("verified", false).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  if (!row) return otpJson({ error: "No active email verification found. Please request a new code." }, 400);
+  if (Number(row.attempt_count || 0) >= 5) return otpJson({ error: "Too many incorrect attempts. Request a new email OTP." }, 429);
+  if (new Date(row.expires_at) <= new Date()) return otpJson({ error: "Email OTP expired. Request a new code." }, 400);
+  if (await hashEmailOtp(code) !== String(row.code)) {
+    const { data: attempts, error: attemptError } = await supabase.rpc("increment_otp_attempt_count", { p_otp_id: row.id });
+    if (attemptError || attempts == null) {
+      console.error("Could not atomically increment technician OTP attempts:", attemptError?.message);
+      return otpJson({ error: "Could not verify OTP right now. Please try again." }, 500);
+    }
+    const nextAttempts = Number(attempts);
+    return otpJson({ error: nextAttempts >= 5 ? "Too many incorrect attempts. Request a new email OTP." : "Incorrect email OTP." }, nextAttempts >= 5 ? 429 : 400);
+  }
+  const { data: consumed, error: consumeError } = await supabase.from("otp_codes").update({ verified: true, verified_at: new Date().toISOString() }).eq("id", row.id).eq("verified", false).select("id").maybeSingle();
+  if (consumeError || !consumed) return otpJson({ error: "Email OTP has already been used. Request a new code." }, 409);
+  const pending = row.registration_data as RegisterBody & { password_hash?: string } | null;
+  if (!pending || String(pending.mobile || "").replace(/\D/g, "") !== mobile || !pending.email || !pending.password_hash) {
+    return otpJson({ error: "Registration details expired. Please restart registration." }, 400);
+  }
+  const registrationResponse = await handleRegister(supabase, { ...pending, password: "", password_hash: pending.password_hash });
+  // Keep the OTP available if registration fails (for example, if the joining-fee
+  // payment confirmation is not ready yet). Consume it permanently only on success.
+  if (!registrationResponse.ok) {
+    const { error: restoreError } = await supabase.from("otp_codes")
+      .update({ verified: false, verified_at: null })
+      .eq("id", row.id).eq("verified", true);
+    if (restoreError) {
+      console.error("Could not restore OTP after failed technician registration:", restoreError.message);
+    }
+  } else {
+    // The account has been created; remove sensitive pending form data from the OTP record.
+    const { error: cleanupError } = await supabase.from("otp_codes")
+      .update({ registration_data: null })
+      .eq("mobile", mobile).eq("purpose", "technician_registration");
+    if (cleanupError) {
+      console.error("Could not clear sensitive registration data from consumed OTP:", cleanupError.message);
+    }
+  }
+  return registrationResponse;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
@@ -68,7 +230,13 @@ Deno.serve(async (req: Request) => {
     const body = await req.json();
 
     if (action === "register") {
-      return await handleRegister(supabase, body as RegisterBody);
+      return otpJson({ error: "Email verification is required. Use send-registration-otp, then verify-registration-otp to finish registration." }, 403);
+    } else if (action === "send-registration-otp") {
+      return await startTechnicianRegistrationOtp(supabase, body as RegisterBody);
+    } else if (action === "verify-registration-otp") {
+      return await verifyTechnicianRegistrationOtp(supabase, body as Record<string, unknown>);
+    } else if (action === "resend-registration-otp") {
+      return await resendTechnicianRegistrationOtp(supabase, body as Record<string, unknown>);
     } else if (action === "login") {
       return await handleLogin(supabase, body as LoginBody);
     } else if (action === "doc-url") {
@@ -93,14 +261,14 @@ async function handleRegister(supabase: ReturnType<typeof createClient>, body: R
     aadhaar_url, pan_url, dl_url, profile_photo_url, bank_name, bank_holder_name, bank_account_number, bank_ifsc, upi_id, registration_payment_id } = body;
 
   const normalizedMobile = String(mobile || "").replace(/\D/g, "");
-  if (!full_name?.trim() || !normalizedMobile || !city?.trim() || !password) {
+  if (!full_name?.trim() || !normalizedMobile || !city?.trim() || (!password && !body.password_hash)) {
     return new Response(
       JSON.stringify({ error: "Missing required fields (full_name, mobile, city, password)" }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 
-  if (password.length < 6) {
+  if (password && password.length < 6) {
     return new Response(
       JSON.stringify({ error: "Password must be at least 6 characters" }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -139,8 +307,7 @@ async function handleRegister(supabase: ReturnType<typeof createClient>, body: R
     );
   }
 
-  const salt = await bcrypt.genSalt(10);
-  const passwordHash = await bcrypt.hash(password, salt);
+  const passwordHash = body.password_hash || await bcrypt.hash(password, await bcrypt.genSalt(10));
 
   const { data, error } = await supabase
     .from("technicians")

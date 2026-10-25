@@ -17,7 +17,7 @@ export default function ServicesGrid() {
             Our Expert Services
           </h2>
           <p className="text-gray-500 max-w-xl mx-auto text-base md:text-lg">
-            Focused expertise in the three appliances your home depends on most.
+            Explore supported appliance services with transparent starting prices and a clear path to booking.
           </p>
         </div>
 
@@ -28,7 +28,7 @@ export default function ServicesGrid() {
             onClick={() => navigate('services')}
             className="inline-flex items-center gap-2 px-8 py-3.5 bg-navy-900 hover:bg-navy-950 text-white font-semibold rounded-lg transition-colors shadow-lg shadow-navy-900/20 border border-gold-500/20"
           >
-            Explore Our Services <ArrowRight size={16} />
+            Explore the Full Service Catalogue <ArrowRight size={16} />
           </button>
         </div>
       </div>

@@ -12,7 +12,7 @@ export default function Hero() {
       <div className="absolute inset-0">
         <SafeImage
           src="https://images.pexels.com/photos/1669799/pexels-photo-1669799.jpeg?auto=compress&cs=tinysrgb&w=1920&q=80"
-          alt="Indian Home"
+          alt="Contemporary home interior"
           className="w-full h-full object-cover"
           fallbackIcon={Home}
           fallbackIconSize={72}
@@ -30,20 +30,20 @@ export default function Hero() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-gold-400/30 rounded-full px-4 py-2 mb-7">
             <Star size={14} className="text-gold-400 fill-gold-400" />
-            <span className="text-white/90 text-xs sm:text-sm font-medium tracking-wide">Premium Appliance Care</span>
+            <span className="text-white/90 text-xs sm:text-sm font-medium tracking-wide">VATTAMS HOME SERVICES · SERVICE NETWORK</span>
           </div>
 
           {/* Headline */}
           <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-bold text-white leading-[1.1] mb-6">
-            Expert Appliance Care{' '}
+            Essential Home Services{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold-300 via-gold-400 to-gold-300">
-              At Your Doorstep
+              Made Simpler
             </span>
           </h1>
 
           {/* Subtitle */}
           <p className="text-navy-100/90 text-base sm:text-lg md:text-xl leading-relaxed mb-10 max-w-2xl">
-            Specialist AC, washing machine and refrigerator service, delivered with clear communication, careful workmanship and convenient doorstep booking.
+            A more considered way to arrange AC, washing machine and refrigerator service — with clear pricing, structured booking and service updates in one place.
           </p>
 
           {/* CTA Buttons — one primary, one secondary */}
@@ -70,7 +70,7 @@ export default function Hero() {
             onClick={() => navigate('join-technician')}
             className="text-gold-300/90 hover:text-gold-200 text-sm font-medium underline underline-offset-4 decoration-gold-400/40 mb-10 transition-colors"
           >
-            Technicians: Get Call Rate Jobs • Join for ₹49 →
+            Service professionals: Explore network opportunities →
           </button>
 
           {/* Social Links */}

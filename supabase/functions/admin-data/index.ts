@@ -103,4 +103,56 @@ case "ai_content_draft_update":{const id=String(b.id||"");const status=String(b.
 case "crm_reminders_list":{const limit=Math.min(250,Math.max(1,Number(b.limit)||100));let query=db.from("crm_reminders").select("*").order(b.status==="pending"?"scheduled_for":"created_at",{ascending:b.status==="pending"}).limit(limit);if(["pending","sent","cancelled","failed"].includes(String(b.status)))query=query.eq("status",String(b.status));const {data,error}=await query;if(error)return out({error:"Unable to load CRM reminders"},500);return out({reminders:data||[]});}
 case "crm_reminder_create":{const input=b.input||{};const reminderType=String(input.reminder_type||"");const recipientType=String(input.recipient_type||"");const recipientId=String(input.recipient_id||"").trim();const title=String(input.title||"").trim();const message=String(input.message||"").trim();const scheduledFor=String(input.scheduled_for||"");const allowedTypes=["booking_reminder","review_request","amc_reminder","warranty_reminder","festival_offer","inactive_followup","birthday_greeting","technician_renewal"];if(!allowedTypes.includes(reminderType)||!["customer","technician"].includes(recipientType)||!recipientId||recipientId.length>120||!title||title.length>300||!message||message.length>5000||!Number.isFinite(Date.parse(scheduledFor)))return out({error:"Invalid CRM reminder"},400);const metadata=input.metadata&&typeof input.metadata==="object"&&!Array.isArray(input.metadata)?input.metadata:null;const {data,error}=await db.from("crm_reminders").insert({reminder_type:reminderType,recipient_type:recipientType,recipient_id:recipientId,recipient_name:typeof input.recipient_name==="string"?input.recipient_name.slice(0,200):null,title,message,scheduled_for:new Date(scheduledFor).toISOString(),status:"pending",metadata}).select("*").single();if(error)return out({error:"Unable to create CRM reminder"},400);return out({reminder:data});}
 case "crm_reminder_mark_sent":{const id=String(b.reminder_id||"");if(!id)return out({error:"Reminder ID is required"},400);const {data,error}=await db.from("crm_reminders").update({status:"sent",sent_at:new Date().toISOString()}).eq("id",id).select("*").single();if(error)return out({error:"Unable to mark reminder sent"},400);return out({reminder:data});}
+
+case "marketplace_services_list": {
+  const { data, error } = await db.from("marketplace_services").select("*").order("category").order("name");
+  if (error) return out({ error: "Unable to load marketplace services" }, 500);
+  return out({ services: data || [] });
+}
+case "marketplace_service_save": {
+  const input = b.input || {};
+  const id = String(input.id || "").trim();
+  const serviceKey = String(input.service_key || "").trim().toLowerCase();
+  const name = String(input.name || "").trim();
+  const category = String(input.category || "").trim();
+  const description = String(input.description || "").trim();
+  const pricingMode = String(input.customer_pricing_mode || "quote");
+  const payoutMode = String(input.technician_payout_mode || "per_job");
+  const price = input.customer_base_price === null || input.customer_base_price === "" ? null : Number(input.customer_base_price);
+  const payout = input.technician_payout === null || input.technician_payout === "" ? null : Number(input.technician_payout);
+  const gst = Number(input.gst_rate ?? 18);
+  const platformFee = Number(input.customer_platform_fee ?? 0);
+  if (!/^[a-z0-9][a-z0-9-]{1,79}$/.test(serviceKey) || !name || name.length > 120 || !category || category.length > 100 || description.length > 1000) return out({ error: "Invalid service details" }, 400);
+  if (!["fixed", "starting_at", "quote"].includes(pricingMode) || !["fixed", "per_job", "quote"].includes(payoutMode)) return out({ error: "Invalid pricing configuration" }, 400);
+  if (![gst, platformFee].every(Number.isFinite) || gst < 0 || gst > 100 || platformFee < 0 || (price !== null && (!Number.isFinite(price) || price < 0)) || (payout !== null && (!Number.isFinite(payout) || payout < 0))) return out({ error: "Invalid price or payout" }, 400);
+  const active = Boolean(input.is_active);
+  if (active && Boolean(input.requires_admin_review) && !Boolean(input.admin_review_confirmed)) return out({ error: "Confirm provider coverage and required review before activating this service" }, 400);
+  const payload = { service_key: serviceKey, name, category, description, customer_pricing_mode: pricingMode, customer_base_price: price, gst_rate: gst, customer_platform_fee: platformFee, technician_payout_mode: payoutMode, technician_payout: payout, requires_qualified_provider: Boolean(input.requires_qualified_provider), requires_admin_review: Boolean(input.requires_admin_review ?? true), is_active: active, updated_at: new Date().toISOString() };
+  let query = db.from("marketplace_services").upsert(payload, { onConflict: "service_key" });
+  if (id) query = db.from("marketplace_services").update(payload).eq("id", id);
+  const { data, error } = await query.select("*").single();
+  if (error) return out({ error: "Unable to save service configuration" }, 400);
+  return out({ service: data });
+}
+case "marketplace_city_availability_list": {
+  const serviceId = String(b.service_id || "").trim();
+  let query = db.from("marketplace_service_city_availability").select("*, marketplace_services(name, service_key)").order("city");
+  if (serviceId) query = query.eq("service_id", serviceId);
+  const { data, error } = await query;
+  if (error) return out({ error: "Unable to load city availability" }, 500);
+  return out({ availability: data || [] });
+}
+case "marketplace_city_availability_save": {
+  const serviceId = String(b.service_id || "").trim();
+  const city = String(b.city || "").trim().replace(/\\s+/g, " ");
+  if (!serviceId || city.length < 2 || city.length > 100) return out({ error: "Service and valid city are required" }, 400);
+  const { data: service, error: serviceError } = await db.from("marketplace_services").select("id,is_active,requires_admin_review").eq("id", serviceId).maybeSingle();
+  if (serviceError || !service) return out({ error: "Service not found" }, 404);
+  const requestedAvailable = Boolean(b.is_available);
+  if (requestedAvailable && !service.is_active) return out({ error: "Activate and review the service before enabling a city" }, 400);
+  const { data, error } = await db.from("marketplace_service_city_availability").upsert({ service_id: serviceId, city, is_available: requestedAvailable, admin_note: typeof b.admin_note === "string" ? b.admin_note.slice(0, 500) : null, updated_at: new Date().toISOString() }, { onConflict: "service_id,city_normalized" }).select("*").single();
+  if (error) return out({ error: "Unable to save city availability" }, 400);
+  return out({ availability: data });
+}
+
 default:return out({error:"Invalid action"},400)}}catch{return out({error:"Unexpected server error"},500)}});

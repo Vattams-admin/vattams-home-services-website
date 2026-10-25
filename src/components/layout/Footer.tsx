@@ -25,12 +25,12 @@ export default function Footer() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[.28em] text-orange-400">VATTAMS Ecosystem</p>
-              <h2 className="mt-2 text-2xl font-extrabold text-white sm:text-3xl">Premium care for the appliances your home relies on.</h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-400">Focused on three essential appliances: air conditioners, washing machines and refrigerators.</p>
+              <h2 className="mt-2 text-2xl font-extrabold text-white sm:text-3xl">Discover services. Connect with providers. Get it done.</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-400">A modern marketplace connecting customers with independent service providers across multiple categories.</p>
             </div>
             <div className="flex flex-wrap gap-3">
               <a href="https://academia.vattams.net" className="rounded-full border border-blue-400/40 bg-blue-400/10 px-4 py-2 text-sm font-semibold text-blue-200">Academia</a>
-              <a href="https://vattams.net" className="rounded-full border border-orange-400/50 bg-orange-400/10 px-4 py-2 text-sm font-semibold text-orange-200">Home Services</a>
+              <a href="https://vattams.net" className="rounded-full border border-orange-400/50 bg-orange-400/10 px-4 py-2 text-sm font-semibold text-orange-200">Marketplace</a>
               <a href="https://callpilot.vattams.net" className="rounded-full border border-green-400/40 bg-green-400/10 px-4 py-2 text-sm font-semibold text-green-200">CallPilot</a>
             </div>
           </div>
@@ -39,15 +39,15 @@ export default function Footer() {
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
           <div>
             <button type="button" onClick={() => navigate('home')} className="text-left">
-              <img src="/vattams-mark.png" alt="VATTAMS Home Services" className="h-16 w-auto object-contain rounded-xl" />
+              <img src="/logo.svg" alt="VATTAMS Hybrid Service Marketplace" className="h-16 w-auto object-contain" />
             </button>
-            <p className="mt-4 max-w-sm text-sm leading-6 text-gray-400">Dedicated AC, washing machine and refrigerator care — with convenient booking and a professional service network.</p>
-            <p className="mt-3 text-xs font-semibold uppercase tracking-[.2em] text-orange-400">Live Easier. Get It Done.</p>
+            <p className="mt-4 max-w-sm text-sm leading-6 text-gray-400">A service discovery and connection marketplace designed to help customers find relevant services and contact independent providers.</p>
+            <p className="mt-3 text-xs font-semibold uppercase tracking-[.2em] text-orange-400">DISCOVER · CONNECT · GET IT DONE</p>
             <SocialLinks variant="footer" />
           </div>
 
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-[.22em] text-orange-400 mb-4">Home Services</h4>
+            <h4 className="text-xs font-bold uppercase tracking-[.22em] text-orange-400 mb-4">Marketplace</h4>
             <ul className="space-y-2.5 text-sm text-gray-400">
               {serviceLinks.map((label) => (
                 <li key={label}><button onClick={() => navigate('services')} className="hover:text-white transition-colors">{label}</button></li>

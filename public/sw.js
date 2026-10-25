@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vattams-v4';
+const CACHE_NAME = 'vattams-v5';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -34,15 +34,21 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  if (request.headers.get('accept')?.includes('text/html')) {
+  // Always prefer the network for app scripts/styles. Cache-first JavaScript
+  // can keep an older Vite bundle after a deployment and leave the SPA blank
+  // when its HTML references newer hashed chunks.
+  const isAppCode = /\\.(?:js|mjs|css)(?:$|\\?)/i.test(url.pathname + url.search);
+  if (request.headers.get('accept')?.includes('text/html') || isAppCode) {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone)).catch(() => {});
+          if (response.ok && response.type === 'basic' && request.headers.get('accept')?.includes('text/html')) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone)).catch(() => {});
+          }
           return response;
         })
-        .catch(() => caches.match(request).then((cached) => cached || caches.match('/'))),
+        .catch(() => caches.match(request).then((cached) => cached || (request.headers.get('accept')?.includes('text/html') ? caches.match('/') : undefined))),
     );
     return;
   }

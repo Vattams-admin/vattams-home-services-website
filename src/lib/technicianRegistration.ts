@@ -119,12 +119,11 @@ export const STEPS: StepDef[] = [
   },
   {
     key: 'email',
-    question: 'What is your email address? (Optional — you can skip by typing "skip")',
+    question: 'What email address should receive your registration verification code? Email verification is required to finish registration.',
     field: 'email',
     type: 'email',
     placeholder: 'your@email.com',
-    optional: true,
-    validate: (v) => v.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) ? 'Enter a valid email or type "skip"' : null,
+    validate: (v) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) ? 'Enter a valid email address. Email verification is required.' : null,
   },
   {
     key: 'city',
@@ -479,55 +478,44 @@ export function clearRegistrationDraft(): void {
     // ignore
   }
 }
-export async function submitTechnicianApplication(
-  form: TechnicianFormData,
-  registrationPaymentId?: string
-): Promise<any> {
-  const { score } = calculateProfileScore(form);
+const TECHNICIAN_AUTH_URL = 'https://nfcibyprftnowaiwlxxc.supabase.co/functions/v1/technician-auth';
+const TECHNICIAN_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mY2lieXByZnRub3dhaXdseHhjIiwiaWF0IjoxNzgzODgzMzk4LCJleHAiOjIwOTk0NTkzOTh9.5ZMjWYOuRBKNKG3ZonXXOBAfBapm54naphNXrHxq16k';
 
-  const response = await fetch(
-    'https://nfcibyprftnowaiwlxxc.supabase.co/functions/v1/technician-auth/register',
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mY2lieXByZnRub3dhaXdseHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4ODMzOTgsImV4cCI6MjA5OTQ1OTM5OH0.5ZMjWYOuRBKNKG3ZonXXOBAfBapm54naphNXrHxq16k',
-      },
-      body: JSON.stringify({
-        full_name: form.full_name,
-        mobile: form.mobile,
-        email: form.email || undefined,
-        city: form.city,
-        service_categories: form.service_categories,
-        experience_years: Number(form.experience_years),
-        password: form.password,
-        whatsapp_number: form.whatsapp_number,
-        area: form.area,
-        pincode: form.pincode,
-        available_days: form.available_days,
-        working_time: form.working_time,
-        has_vehicle: form.has_vehicle,
-        has_tools: form.has_tools,
-        aadhaar_url: form.aadhaar_url,
-        pan_url: form.pan_url,
-        dl_url: form.dl_url || undefined,
-        profile_photo_url: form.profile_photo_url,
-        bank_name: form.bank_name,
-        bank_holder_name: form.bank_holder_name,
-        bank_account_number: form.bank_account_number,
-        bank_ifsc: form.bank_ifsc,
-        upi_id: form.upi_id || undefined,
-        profile_score: score,
-        registration_payment_id: registrationPaymentId,
-      }),
-    }
-  );
-
+async function postTechnicianAuth(action: string, payload: Record<string, unknown>): Promise<any> {
+  const response = await fetch(`${TECHNICIAN_AUTH_URL}/${action}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${TECHNICIAN_ANON_KEY}` },
+    body: JSON.stringify(payload),
+  });
   const result = await response.json();
+  if (!response.ok || result.error) throw new Error(result.error || 'Request failed.');
+  return result;
+}
 
-  if (!response.ok) {
-    throw new Error(result.error || 'Registration failed.');
+function technicianRegistrationPayload(form: TechnicianFormData, registrationPaymentId?: string) {
+  const { score } = calculateProfileScore(form);
+  return {
+    full_name: form.full_name, mobile: form.mobile, email: form.email.trim().toLowerCase(), city: form.city,
+    service_categories: form.service_categories, experience_years: Number(form.experience_years), password: form.password,
+    whatsapp_number: form.whatsapp_number, area: form.area, pincode: form.pincode, available_days: form.available_days,
+    working_time: form.working_time, has_vehicle: form.has_vehicle, has_tools: form.has_tools, aadhaar_url: form.aadhaar_url,
+    pan_url: form.pan_url, dl_url: form.dl_url || undefined, profile_photo_url: form.profile_photo_url, bank_name: form.bank_name,
+    bank_holder_name: form.bank_holder_name, bank_account_number: form.bank_account_number, bank_ifsc: form.bank_ifsc,
+    upi_id: form.upi_id || undefined, profile_score: score, registration_payment_id: registrationPaymentId,
+  };
+}
+
+export async function submitTechnicianApplication(form: TechnicianFormData, registrationPaymentId?: string): Promise<any> {
+  if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+    throw new Error('A valid email address is required to register as a technician.');
   }
+  return postTechnicianAuth('send-registration-otp', technicianRegistrationPayload(form, registrationPaymentId));
+}
 
-  return result.technician;
+export async function verifyTechnicianRegistrationEmail(form: TechnicianFormData, code: string): Promise<any> {
+  return postTechnicianAuth('verify-registration-otp', { mobile: form.mobile, code: code.trim() });
+}
+
+export async function resendTechnicianRegistrationEmailOtp(form: TechnicianFormData): Promise<any> {
+  return postTechnicianAuth('resend-registration-otp', { mobile: form.mobile });
 }

@@ -6,14 +6,16 @@ export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', message: '' });
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('sending');
-    // Simulate send
-    await new Promise((r) => setTimeout(r, 1200));
+    const subject = encodeURIComponent(`VATTAMS website enquiry from ${form.name.trim()}`);
+    const body = encodeURIComponent(
+      `Name: ${form.name.trim()}\nEmail: ${form.email.trim()}\nPhone: ${form.phone.trim()}\n\nMessage:\n${form.message.trim()}`
+    );
+    const mailtoUrl = `mailto:admin@vattams.net?subject=${subject}&body=${body}`;
+    window.location.href = mailtoUrl;
     setStatus('sent');
-    setForm({ name: '', email: '', phone: '', message: '' });
-    setTimeout(() => setStatus('idle'), 4000);
   };
 
   return (
@@ -149,7 +151,7 @@ export default function Contact() {
                 </button>
                 {status === 'sent' && (
                   <p className="text-green-600 text-sm text-center font-medium">
-                    Thank you! We'll get back to you within 24 hours.
+                    Your email app should open with this message ready to send. Please send it from your email app to complete delivery.
                   </p>
                 )}
               </form>
