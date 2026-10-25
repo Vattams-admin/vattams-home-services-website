@@ -78,15 +78,20 @@ export default function CustomerPayments() {
         if (bookingResult.status === 'fulfilled' && bookingResult.value
           && Array.isArray(bookingResult.value.bookings)) {
           const map: Record<string, BookingRef> = {};
-          const validBookings = bookingResult.value.bookings.every((booking) =>
+          const bookingRefs = bookingResult.value.bookings;
+          const validBookings = bookingRefs.every((booking) =>
             booking && typeof booking.id === 'string' && booking.id.trim()
-            && typeof booking.service_category === 'string'
-            && typeof booking.booking_number === 'string');
+            && typeof booking.service_category === 'string' && booking.service_category.trim()
+            && typeof booking.booking_number === 'string' && booking.booking_number.trim())
+            && new Set(bookingRefs.map((booking) => booking.id.trim())).size === bookingRefs.length;
           if (validBookings) {
-            for (const booking of bookingResult.value.bookings) {
-              map[booking.id] = { service_category: booking.service_category, booking_number: booking.booking_number };
+            for (const booking of bookingRefs) {
+              map[booking.id.trim()] = {
+                service_category: booking.service_category.trim(),
+                booking_number: booking.booking_number.trim(),
+              };
             }
-            setBookings(map);
+            if (active) setBookings(map);
           }
         }
       } catch (error) {
