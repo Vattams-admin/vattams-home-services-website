@@ -114,9 +114,11 @@ export default function CustomerReviews() {
           review_text: reviewText[booking.id]?.trim().slice(0, 2000) || null,
         }),
       });
-      const data: unknown = await res.json();
+      const data: unknown = await res.json().catch(() => null);
       const responseError = data && typeof data === 'object' && 'error' in data && typeof data.error === 'string' ? data.error : '';
-      if (!res.ok || responseError) throw new Error(responseError || 'Failed to submit review');
+      if (!res.ok || responseError) {
+        throw new Error(responseError || 'Unable to confirm review submission. Please try again.');
+      }
       setMessage('Thank you. Your review has been submitted.');
       await load(customer);
     } catch (err) {
