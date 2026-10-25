@@ -50,6 +50,10 @@ async function dispatchPush(
   body: string,
   data: Record<string, string>,
 ): Promise<void> {
+  if (!userId.trim()) {
+    console.error("[booking-ops] push dispatch skipped: recipient ID is empty", { userType });
+    return;
+  }
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!supabaseUrl || !serviceRoleKey) {
