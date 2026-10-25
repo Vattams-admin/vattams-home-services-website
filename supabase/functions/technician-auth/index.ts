@@ -119,6 +119,33 @@ async function startTechnicianRegistrationOtp(supabase: ReturnType<typeof create
   }
   return otpJson({ success: true, message: "Email verification code sent." });
 }
+async function resendTechnicianRegistrationOtp(supabase: ReturnType<typeof createClient>, body: Record<string, unknown>) {
+  const mobile = String(body.mobile || "").replace(/\\D/g, "");
+  if (!/^[6-9]\\d{9}$/.test(mobile)) return otpJson({ error: "A valid mobile number is required to resend the email OTP." }, 400);
+  const { data: pendingRow } = await supabase.from("otp_codes")
+    .select("mobile,registration_data,created_at,verified")
+    .eq("mobile", mobile).eq("purpose", "technician_registration")
+    .eq("verified", false).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  if (!pendingRow || !pendingRow.registration_data) return otpJson({ error: "No pending technician registration found. Please restart registration." }, 400);
+  const pending = pendingRow.registration_data as RegisterBody & { password_hash?: string };
+  const email = String(pending.email || "").trim().toLowerCase();
+  if (!email || !pending.password_hash) return otpJson({ error: "Registration details expired. Please restart registration." }, 400);
+  if (Date.now() - new Date(pendingRow.created_at).getTime() < 60 * 1000) {
+    return otpJson({ error: "Please wait 60 seconds before requesting another code." }, 429);
+  }
+  const otp = generateEmailOtp();
+  const { data: row, error } = await supabase.from("otp_codes").insert({
+    mobile, code: await hashEmailOtp(otp), purpose: "technician_registration",
+    expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+    registration_data: pending,
+  }).select("id").single();
+  if (error || !row) return otpJson({ error: "Could not resend the code. Please try again." }, 500);
+  if (!await sendEmailOtp(email, otp)) {
+    await supabase.from("otp_codes").delete().eq("id", row.id);
+    return otpJson({ error: "We could not send the verification email. Please try again later." }, 503);
+  }
+  return otpJson({ success: true, message: "A new email verification code was sent." });
+}
 async function verifyTechnicianRegistrationOtp(supabase: ReturnType<typeof createClient>, body: Record<string, unknown>) {
   const mobile = String(body.mobile || "").replace(/\D/g, "");
   const code = String(body.code || "").trim();
@@ -163,6 +190,8 @@ Deno.serve(async (req: Request) => {
       return await startTechnicianRegistrationOtp(supabase, body as RegisterBody);
     } else if (action === "verify-registration-otp") {
       return await verifyTechnicianRegistrationOtp(supabase, body as Record<string, unknown>);
+    } else if (action === "resend-registration-otp") {
+      return await resendTechnicianRegistrationOtp(supabase, body as Record<string, unknown>);
     } else if (action === "login") {
       return await handleLogin(supabase, body as LoginBody);
     } else if (action === "doc-url") {
