@@ -22,15 +22,29 @@ export default function CustomerProfile() {
   const bookingCountRequestVersion = useRef(0);
 
   useEffect(() => {
-    const stored = sessionStorage.getItem('vattams_customer');
-    const sessionToken = sessionStorage.getItem('vattams_customer_session');
-    const expiresAt = sessionStorage.getItem('vattams_customer_expires');
-
     const clearCustomerSession = () => {
-      sessionStorage.removeItem('vattams_customer');
-      sessionStorage.removeItem('vattams_customer_session');
-      sessionStorage.removeItem('vattams_customer_expires');
+      try {
+        sessionStorage.removeItem('vattams_customer');
+        sessionStorage.removeItem('vattams_customer_session');
+        sessionStorage.removeItem('vattams_customer_expires');
+      } catch {
+        // Continue to login when browser storage cleanup is blocked.
+      }
     };
+
+    let stored: string | null;
+    let sessionToken: string | null;
+    let expiresAt: string | null;
+    try {
+      stored = sessionStorage.getItem('vattams_customer');
+      sessionToken = sessionStorage.getItem('vattams_customer_session');
+      expiresAt = sessionStorage.getItem('vattams_customer_expires');
+    } catch {
+      clearCustomerSession();
+      navigate('customer-login');
+      setLoading(false);
+      return;
+    }
 
     if (!stored || !sessionToken || !expiresAt) {
       clearCustomerSession();
@@ -228,12 +242,24 @@ export default function CustomerProfile() {
       setPwdMsg({ type: 'error', text: 'Password must be at least 6 characters.' });
       return;
     }
-    const sessionToken = sessionStorage.getItem('vattams_customer_session');
-    const expiresAt = Number(sessionStorage.getItem('vattams_customer_expires'));
+    let sessionToken: string | null;
+    let expiresAt: number;
+    try {
+      sessionToken = sessionStorage.getItem('vattams_customer_session');
+      expiresAt = Number(sessionStorage.getItem('vattams_customer_expires'));
+    } catch {
+      setPwdMsg({ type: 'error', text: 'Browser storage is unavailable. Please enable site storage and sign in again.' });
+      navigate('customer-login');
+      return;
+    }
     if (!sessionToken || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
-      sessionStorage.removeItem('vattams_customer');
-      sessionStorage.removeItem('vattams_customer_session');
-      sessionStorage.removeItem('vattams_customer_expires');
+      try {
+        sessionStorage.removeItem('vattams_customer');
+        sessionStorage.removeItem('vattams_customer_session');
+        sessionStorage.removeItem('vattams_customer_expires');
+      } catch {
+        // Redirect even if expired-session cleanup is blocked.
+      }
       setPwdMsg({ type: 'error', text: 'Your session has expired. Please sign in again.' });
       navigate('customer-login');
       return;
