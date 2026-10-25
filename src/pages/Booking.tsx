@@ -101,6 +101,21 @@ export default function Booking() {
       supabase.from('customer_service_prices').select('*').eq('is_active', true),
     ]).then(([catRes, priceRes, customerPriceRes]) => {
       if (!active) return;
+
+      // A partial catalogue is unsafe: clear all prior values so a retry failure
+      // cannot leave stale prices or categories available for a new booking.
+      if (catRes.error || !catRes.data || priceRes.error || !priceRes.data
+        || customerPriceRes.error || !customerPriceRes.data) {
+        setServices([]);
+        setServicePrices({});
+        setCustomerServicePrices({});
+        setLoadError(catRes.error || !catRes.data
+          ? 'Unable to load service categories. Please retry before booking.'
+          : 'Unable to load current service prices. Please retry before booking.');
+        setLoading(false);
+        return;
+      }
+
       let featuredServices: ServiceCategory[] = [];
       if (catRes.data) {
         featuredServices = catRes.data
