@@ -9,7 +9,7 @@ import PushNotificationSetup from '@/components/PushNotificationSetup';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-700 border-amber-200',
-  confirmed: 'bg-blue-100 text-blue-700 border-gold-200',
+  confirmed: 'bg-blue-100 text-blue-700 border-blue-200',
   assigned: 'bg-cyan-100 text-cyan-700 border-cyan-200',
   accepted: 'bg-indigo-100 text-indigo-700 border-indigo-200',
   on_the_way: 'bg-sky-100 text-sky-700 border-sky-200',
@@ -189,14 +189,25 @@ export default function CustomerDashboard() {
                 {activeBookings.slice(0, 3).map((b) => {
                   const stepIndex = getBookingProgressIndex(b.status);
                   return (
-                    <div key={b.id} onClick={() => setSelected(b)}
-                      className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow cursor-pointer">
+                    <div
+                      key={b.id}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`View booking ${b.booking_number}, ${statusLabels[b.status] ?? b.status.replace("_", " ")}`}
+                      onClick={() => setSelected(b)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          setSelected(b);
+                        }
+                      }}
+                      className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 transition-shadow cursor-pointer">
                       <div className="flex items-start justify-between mb-3">
                         <div>
                           <div className="font-bold text-blue-700 text-xs">{b.booking_number}</div>
                           <div className="font-extrabold text-gray-900 mt-0.5">{b.service_category}</div>
                         </div>
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold capitalize border ${statusColors[b.status]}`}>
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold capitalize border ${statusColors[b.status] ?? "bg-gray-100 text-gray-700 border-gray-200"}`}>
                           {statusLabels[b.status] ?? b.status.replace('_', ' ')}
                         </span>
                       </div>
