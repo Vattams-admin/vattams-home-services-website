@@ -3246,6 +3246,20 @@ export default function AdminDashboard() {
               </table>
             </div>
 
+            {customerServicePrices.length === 0 && (
+              <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <p className="text-sm font-semibold text-amber-950">Customer price catalogue is empty</p>
+                <p className="mt-1 text-sm text-amber-900">Restore the repository initial customer price schedule. Existing rows and admin-edited prices are preserved.</p>
+                <button type="button" disabled={customerPriceSaving} onClick={async () => {
+                  setCustomerPriceSaving(true); setCustomerPriceMsg(null);
+                  try { await adminData("initialize_customer_service_prices"); await loadCustomerServicePrices(); setCustomerPriceMsg({ type: "success", text: "Initial customer price schedule restored for missing service types. Please review prices before publishing." }); }
+                  catch (error) { setCustomerPriceMsg({ type: "error", text: error instanceof Error ? error.message : "Unable to restore the customer price catalogue." }); }
+                  finally { setCustomerPriceSaving(false); }
+                }} className="mt-3 rounded-lg bg-amber-900 px-4 py-2 text-sm font-bold text-white disabled:opacity-50">
+                  {customerPriceSaving ? "Restoring…" : "Restore Missing Customer Prices"}
+                </button>
+              </div>
+            )}
             <button
               type="button"
               onClick={async () => {
