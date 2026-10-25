@@ -229,7 +229,7 @@ export default function CustomerProfile() {
         body: JSON.stringify({ session_token: sessionToken, current_password: pwdForm.current, new_password: pwdForm.new }),
       });
       const data = await res.json().catch(() => null);
-      if (!res.ok || !data || data.error || data.success === false) {
+      if (!res.ok || !data || typeof data !== 'object' || data.error || data.success !== true) {
         throw new Error(typeof data?.error === 'string' ? data.error : 'Unable to confirm password change. Please try again.');
       }
       setPwdMsg({ type: 'success', text: 'Password changed successfully!' });
