@@ -127,7 +127,14 @@ export default function CustomerDashboard() {
     const sessionToken = sessionStorage.getItem('vattams_customer_session');
     const expiresAt = sessionStorage.getItem('vattams_customer_expires');
 
-    if (!stored || !sessionToken) {
+    const clearCustomerSession = () => {
+      sessionStorage.removeItem('vattams_customer');
+      sessionStorage.removeItem('vattams_customer_session');
+      sessionStorage.removeItem('vattams_customer_expires');
+    };
+
+    if (!stored || !sessionToken || !expiresAt) {
+      clearCustomerSession();
       navigate('customer-login');
       return () => {
         active = false;
@@ -135,18 +142,14 @@ export default function CustomerDashboard() {
       };
     }
 
-    if (expiresAt) {
-      const expiry = Number(expiresAt);
-      if (!Number.isFinite(expiry) || expiry <= Date.now()) {
-        sessionStorage.removeItem('vattams_customer');
-        sessionStorage.removeItem('vattams_customer_session');
-        sessionStorage.removeItem('vattams_customer_expires');
-        navigate('customer-login');
-        return () => {
-          active = false;
-          requestVersion.current += 1;
-        };
-      }
+    const expiry = Number(expiresAt);
+    if (!Number.isFinite(expiry) || expiry <= Date.now()) {
+      clearCustomerSession();
+      navigate('customer-login');
+      return () => {
+        active = false;
+        requestVersion.current += 1;
+      };
     }
 
     try {
