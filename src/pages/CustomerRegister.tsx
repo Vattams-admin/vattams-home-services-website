@@ -130,11 +130,11 @@ export default function CustomerRegister() {
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3 mb-4">{error}</div>
+          <div role="alert" aria-live="assertive" className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3 mb-4">{error}</div>
         )}
 
         {step === 'form' && (
-          <form onSubmit={handleRegister} className="bg-white rounded-3xl border border-gold-200/70 shadow-[0_18px_50px_rgba(5,10,23,0.08)] p-6 md:p-7 space-y-4">
+          <form onSubmit={handleRegister} aria-busy={loading} className="bg-white rounded-3xl border border-gold-200/70 shadow-[0_18px_50px_rgba(5,10,23,0.08)] p-6 md:p-7 space-y-4">
             <Input icon={User} name="full_name" placeholder="Full Name *" value={form.full_name} onChange={handleChange} />
             <Input icon={Phone} name="mobile" type="tel" placeholder="10-digit Mobile Number *" value={form.mobile} onChange={handleChange} maxLength={10} />
             <Input icon={Lock} name="password" type="password" placeholder="Password (min 6 chars) *" value={form.password} onChange={handleChange} />
@@ -142,18 +142,18 @@ export default function CustomerRegister() {
             <Input icon={MapPin} name="city" placeholder="City (optional)" value={form.city} onChange={handleChange} />
             <Input icon={Home} name="address" placeholder="Address (optional)" value={form.address} onChange={handleChange} />
             <button type="submit" disabled={loading}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors">
+              className="w-full flex items-center justify-center gap-2 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2">
               {loading ? <Loader size={18} className="animate-spin" /> : <ShieldCheck size={18} />} Send Email OTP
             </button>
             <p className="text-center text-sm text-gray-500">
               Already have an account?{' '}
-              <button type="button" onClick={() => navigate('customer-login')} className="text-gold-700 font-semibold hover:text-gold-800 hover:underline">Login</button>
+              <button type="button" onClick={() => navigate('customer-login')} className="text-gold-700 font-semibold hover:text-gold-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2 rounded">Login</button>
             </p>
           </form>
         )}
 
         {step === 'otp' && (
-          <form onSubmit={handleVerifyOtp} className="bg-white rounded-3xl border border-gold-200/70 shadow-[0_18px_50px_rgba(5,10,23,0.08)] p-6 md:p-7 space-y-4">
+          <form onSubmit={handleVerifyOtp} aria-busy={loading} className="bg-white rounded-3xl border border-gold-200/70 shadow-[0_18px_50px_rgba(5,10,23,0.08)] p-6 md:p-7 space-y-4">
             <Input icon={KeyRound} name="otp" placeholder="6-digit email OTP" value={otp} onChange={(e) => setOtp(e.target.value)} maxLength={6} />
             <button type="submit" disabled={loading}
               className="w-full flex items-center justify-center gap-2 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors">
