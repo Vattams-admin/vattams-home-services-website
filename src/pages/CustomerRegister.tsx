@@ -21,7 +21,7 @@ export default function CustomerRegister() {
   };
 
   const startResendTimer = () => {
-    setResendTimer(30);
+    setResendTimer(60);
     const interval = setInterval(() => {
       setResendTimer((prev) => {
         if (prev <= 1) { clearInterval(interval); return 0; }
@@ -45,7 +45,7 @@ export default function CustomerRegister() {
       setError('Password must be at least 6 characters.');
       return;
     }
-    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
       setError('Please enter a valid email address.');
       return;
     }
