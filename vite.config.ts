@@ -22,11 +22,21 @@ function configureFcmServiceWorker(env: Record<string, string>) {
     apply: 'build' as const,
     closeBundle() {
       const workerPath = resolve(process.cwd(), 'dist/firebase-messaging-sw.js');
+      const publicWorkerPath = resolve(process.cwd(), 'public/firebase-messaging-sw.js');
       let worker: string;
       try {
         worker = readFileSync(workerPath, 'utf8');
       } catch {
-        throw new Error('FCM service worker was not emitted to dist/');
+        // Vite normally copies public/ assets to dist/, but do not depend on
+        // that copy having completed before this closeBundle hook runs.
+        try {
+          worker = readFileSync(publicWorkerPath, 'utf8');
+          mkdirSync(resolve(process.cwd(), 'dist'), { recursive: true });
+        } catch {
+          throw new Error(
+            'FCM service worker is missing from both dist/ and public/.',
+          );
+        }
       }
 
       for (const [workerKey, envKey] of Object.entries(keys)) {
