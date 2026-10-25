@@ -22,10 +22,15 @@ export interface CouponResult {
 }
 
 export async function validateCoupon(code: string, orderAmount: number): Promise<CouponResult> {
+  const normalizedCode = code.trim().toUpperCase();
+  if (!normalizedCode || !Number.isFinite(orderAmount) || orderAmount < 0) {
+    return { valid: false, error: 'Enter a valid coupon code and order amount', discountAmount: 0 };
+  }
+
   const { data, error } = await supabase
     .from('coupons')
     .select('*')
-    .eq('code', code)
+    .eq('code', normalizedCode)
     .eq('is_active', true)
     .maybeSingle();
 
@@ -51,13 +56,18 @@ export async function validateCoupon(code: string, orderAmount: number): Promise
     return { valid: false, error: `Minimum order amount is ₹${coupon.min_order_amount}`, discountAmount: 0 };
   }
 
+  const discountValue = Number(coupon.discount_value);
+  if (!Number.isFinite(discountValue) || discountValue <= 0) {
+    return { valid: false, error: 'This coupon has invalid discount settings', discountAmount: 0 };
+  }
+
   const discountAmount =
     coupon.discount_type === 'percentage'
-      ? Math.round((orderAmount * coupon.discount_value / 100) * 100) / 100
-      : coupon.discount_value;
+      ? Math.round((orderAmount * discountValue / 100) * 100) / 100
+      : discountValue;
 
-  if (discountAmount > orderAmount) {
-    return { valid: false, error: 'Discount exceeds order amount', discountAmount: 0 };
+  if (!Number.isFinite(discountAmount) || discountAmount <= 0 || discountAmount > orderAmount) {
+    return { valid: false, error: 'Discount exceeds order amount or is invalid', discountAmount: 0 };
   }
 
   return { valid: true, discountAmount, coupon };
