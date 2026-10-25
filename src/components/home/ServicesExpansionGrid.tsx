@@ -45,9 +45,8 @@ import {
   Router,
   Fan,
   ClipboardCheck,
-  CircleHelp,
+  HelpCircle,
   Star,
-  Sparkle,
 } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 
@@ -83,7 +82,7 @@ const categories: ServiceCategory[] = [
   { name: 'Waterproofing & Damp Inspection', detail: 'Dampness checks and suitable specialist referrals', group: 'Home improvement', icon: Home, partnerOnly: true },
   { name: 'Tile, Grout & Fixture Repair', detail: 'Minor tile, grout, drilling and fixture installation', group: 'Home improvement', icon: Wrench },
   { name: 'Locksmith & Door Repair', detail: 'Door locks, hinges and lockout assistance through verified providers', group: 'Home improvement', icon: ShieldCheck },
-  { name: 'Home Deep Cleaning', detail: 'Full-home, kitchen, bathroom and move-in/move-out cleaning', group: 'Cleaning & outdoor', icon: Sparkles },
+  { name: 'Home Deep Cleaning', detail: 'Full-home, kitchen, bathroom and move-in/move-out cleaning', group: 'Cleaning & outdoor', icon: Sparkless },
   { name: 'Sofa & Mattress Cleaning', detail: 'Upholstery, mattress and fabric-care services', group: 'Cleaning & outdoor', icon: Sofa },
   { name: 'Pest Control', detail: 'Pest inspection and treatment through eligible providers', group: 'Cleaning & outdoor', icon: Bug, partnerOnly: true },
   { name: 'Garden & Lawn Care', detail: 'Gardening, lawn care, irrigation and outdoor upkeep', group: 'Cleaning & outdoor', icon: Trees },
@@ -109,7 +108,7 @@ const categories: ServiceCategory[] = [
   { name: 'Warranty & Protection Plans', detail: 'Warranty information and eligible partner referrals', group: 'Protection & assistance', icon: BadgeCheck, partnerOnly: true },
   { name: 'Claim Document Assistance', detail: 'Help organising documents; insurer or issuer decides claims', group: 'Protection & assistance', icon: FileCheck, partnerOnly: true },
   { name: 'Accessible Home Support', detail: 'Non-clinical home assistance and accessibility setup', group: 'Protection & assistance', icon: HeartHandshake },
-  { name: 'Other Local Services', detail: 'Discover additional categories as vetted local partners join', group: 'More services', icon: CircleHelp },
+  { name: 'Other Local Services', detail: 'Discover additional categories as vetted local partners join', group: 'More services', icon: HelpCircle },
 ];
 
 const groups = ['All services', 'Home essentials', 'Power & technology', 'Home improvement', 'Cleaning & outdoor', 'Home & lifestyle', 'Vehicle services', 'Business & professional', 'Protection & assistance', 'More services'];
