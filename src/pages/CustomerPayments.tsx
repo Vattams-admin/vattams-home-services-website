@@ -103,15 +103,22 @@ export default function CustomerPayments() {
   const downloadInvoice = (payment: PaymentRecord) => {
     const booking = payment.reference_id ? bookings[payment.reference_id] : null;
     const invoiceContent = generateInvoiceHTML(payment, booking, customer);
-    const blob = new Blob([invoiceContent], { type: 'text/html' });
+    const blob = new Blob([invoiceContent], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
+    const safeFileId = payment.payment_id.replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 80) || 'payment';
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Invoice-${payment.payment_id}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    a.download = `VATTAMS-Invoice-${safeFileId}.html`;
+    a.hidden = true;
+
+    try {
+      document.body.appendChild(a);
+      a.click();
+    } finally {
+      a.remove();
+      // Give the browser time to start consuming the blob before revoking it.
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
   };
 
   if (loading || !customer) {
