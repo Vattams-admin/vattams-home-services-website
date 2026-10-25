@@ -64,34 +64,34 @@ export default function CustomerLogin() {
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3 mb-4">{error}</div>
+          <div role="alert" aria-live="assertive" className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3 mb-4">{error}</div>
         )}
 
-        <form onSubmit={handleLogin} className="bg-white rounded-3xl border border-gold-200/70 shadow-[0_18px_50px_rgba(5,10,23,0.08)] p-6 md:p-7 space-y-4">
+        <form onSubmit={handleLogin} aria-busy={loading} className="bg-white rounded-3xl border border-gold-200/70 shadow-[0_18px_50px_rgba(5,10,23,0.08)] p-6 md:p-7 space-y-4">
           <div className="relative">
             <Phone size={16} className="absolute left-3 top-3.5 text-gray-400" />
-            <input type="tel" value={mobile} onChange={(e) => setMobile(e.target.value)} maxLength={10}
+            <input type="tel" name="mobile" aria-label="10-digit mobile number" autoComplete="tel" inputMode="numeric" required value={mobile} onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))} maxLength={10}
               placeholder="10-digit Mobile Number"
               className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
           </div>
           <div className="relative">
             <Lock size={16} className="absolute left-3 top-3.5 text-gray-400" />
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+            <input type="password" name="password" aria-label="Password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
               className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
           </div>
           <button type="submit" disabled={loading}
-            className="w-full flex items-center justify-center gap-2 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors">
+            className="w-full flex items-center justify-center gap-2 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2">
             {loading ? <Loader size={18} className="animate-spin" /> : <LogIn size={18} />} Login
           </button>
           <div className="flex items-center justify-between text-sm">
-            <button type="button" onClick={() => navigate('customer-register')} className="text-gold-700 font-semibold hover:text-gold-800 hover:underline">Create Account</button>
-            <button type="button" onClick={() => navigate('customer-forgot')} className="text-gray-500 hover:underline">Forgot Password?</button>
+            <button type="button" onClick={() => navigate('customer-register')} className="text-gold-700 font-semibold hover:text-gold-800 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2 rounded">Create Account</button>
+            <button type="button" onClick={() => navigate('customer-forgot')} className="text-gray-500 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2 rounded">Forgot Password?</button>
           </div>
         </form>
 
         <div className="mt-5 text-center text-sm text-gray-500">
-          <button onClick={() => navigate('booking')} className="hover:underline">Book without an account</button>
+          <button onClick={() => navigate('booking')} className="hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2 rounded">Book without an account</button>
         </div>
       </div>
     </div>
