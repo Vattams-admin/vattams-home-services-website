@@ -58,14 +58,30 @@ export default function CustomerReviews() {
   }, []);
 
   useEffect(() => {
-    const stored = sessionStorage.getItem('vattams_customer');
-    const sessionToken = sessionStorage.getItem('vattams_customer_session');
-    const expiresAt = Number(sessionStorage.getItem('vattams_customer_expires'));
     const clearSession = () => {
-      sessionStorage.removeItem('vattams_customer');
-      sessionStorage.removeItem('vattams_customer_session');
-      sessionStorage.removeItem('vattams_customer_expires');
+      try {
+        sessionStorage.removeItem('vattams_customer');
+        sessionStorage.removeItem('vattams_customer_session');
+        sessionStorage.removeItem('vattams_customer_expires');
+      } catch {
+        // Keep authentication failure handling even if storage cleanup is blocked.
+      }
     };
+
+    let stored: string | null;
+    let sessionToken: string | null;
+    let expiresAt: number;
+    try {
+      stored = sessionStorage.getItem('vattams_customer');
+      sessionToken = sessionStorage.getItem('vattams_customer_session');
+      expiresAt = Number(sessionStorage.getItem('vattams_customer_expires'));
+    } catch {
+      clearSession();
+      navigate('customer-login');
+      setLoading(false);
+      return;
+    }
+
     if (!stored || !sessionToken || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
       clearSession();
       navigate('customer-login');
