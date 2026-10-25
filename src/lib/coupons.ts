@@ -69,15 +69,18 @@ export async function validateCoupon(code: string, orderAmount: number): Promise
     return { valid: false, error: 'This coupon has invalid discount settings', discountAmount: 0 };
   }
 
-  const discountAmount =
+  const calculatedDiscount =
     coupon.discount_type === 'percentage'
       ? Math.round((orderAmount * discountValue / 100) * 100) / 100
-      : discountValue;
+      : Math.round(discountValue * 100) / 100;
 
-  if (!Number.isFinite(discountAmount) || discountAmount <= 0 || discountAmount > orderAmount) {
-    return { valid: false, error: 'Discount exceeds order amount or is invalid', discountAmount: 0 };
+  if (!Number.isFinite(calculatedDiscount) || calculatedDiscount <= 0) {
+    return { valid: false, error: 'Discount is invalid for this order', discountAmount: 0 };
   }
 
+  // Match booking-ops: a flat discount is capped at the order total rather
+  // than rejected when it exceeds the payable amount.
+  const discountAmount = Math.min(calculatedDiscount, Math.round(orderAmount * 100) / 100);
   return { valid: true, discountAmount, coupon };
 }
 
