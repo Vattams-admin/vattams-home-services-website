@@ -62,7 +62,9 @@ export default function CustomerPayments() {
           || !paymentData.payments.every((payment) => payment
             && typeof payment.id === 'string' && payment.id.trim()
             && typeof payment.payment_id === 'string' && payment.payment_id.trim()
-            && typeof payment.status === 'string' && payment.status.trim()
+            && ['pending', 'success', 'failed'].includes(payment.status)
+            && typeof payment.purpose === 'string' && payment.purpose.trim()
+            && typeof payment.upi_id === 'string'
             && typeof payment.created_at === 'string' && !Number.isNaN(Date.parse(payment.created_at))
             && typeof payment.amount === 'number' && Number.isFinite(payment.amount) && payment.amount >= 0)
           || new Set(paymentData.payments.map((payment) => payment.id)).size !== paymentData.payments.length) {
