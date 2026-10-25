@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Loader, CheckCircle, XCircle, Calendar, User, Phone, MapPin, Wrench, FileText, Clock, ArrowRight, LogIn, Receipt, LucideIcon, Tag, Briefcase, Sparkles } from 'lucide-react';
 import { supabase, ServiceCategory, Customer, ServicePrice } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
@@ -56,6 +56,7 @@ export default function Booking() {
   const [submitError, setSubmitError] = useState('');
   const [couponCode, setCouponCode] = useState('');
   const [couponResult, setCouponResult] = useState<{ valid: boolean; error?: string; discountAmount: number; coupon?: Coupon } | null>(null);
+  const couponValidationRequest = useRef(0);
   const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [success, setSuccess] = useState<{ number: string; id: string } | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
@@ -194,19 +195,29 @@ export default function Booking() {
 
   const handleValidateCoupon = async () => {
     if (!couponCode.trim() || !pricing || validatingCoupon) return;
+    const requestId = ++couponValidationRequest.current;
+    const codeToValidate = couponCode.trim();
+    const amountToValidate = pricing.totalAmount;
     setValidatingCoupon(true);
     try {
-      const result = await validateCoupon(couponCode.trim(), pricing.totalAmount);
-      setCouponResult(result);
+      const result = await validateCoupon(codeToValidate, amountToValidate);
+      // Ignore stale responses if the selected service, price, or coupon changed.
+      if (requestId === couponValidationRequest.current
+        && codeToValidate === couponCode.trim()
+        && amountToValidate === pricing?.totalAmount) {
+        setCouponResult(result);
+      }
     } catch (error) {
       console.error('[Booking] coupon validation failed:', error);
-      setCouponResult({
-        valid: false,
-        error: 'We couldn’t verify this coupon right now. Please try again.',
-        discountAmount: 0,
-      });
+      if (requestId === couponValidationRequest.current) {
+        setCouponResult({
+          valid: false,
+          error: 'We couldn’t verify this coupon right now. Please try again.',
+          discountAmount: 0,
+        });
+      }
     } finally {
-      setValidatingCoupon(false);
+      if (requestId === couponValidationRequest.current) setValidatingCoupon(false);
     }
   };
 
@@ -446,7 +457,7 @@ export default function Booking() {
                   </Field>
                   <Field icon={Wrench} label="Service Category *">
                     <select required value={form.service_category}
-                      onChange={(e) => { setForm({ ...form, service_category: e.target.value, service_type: getServiceTypes(e.target.value)[0] ?? '' }); setCouponResult(null); setCouponCode(''); }}
+                      onChange={(e) => { couponValidationRequest.current += 1; setValidatingCoupon(false); setForm({ ...form, service_category: e.target.value, service_type: getServiceTypes(e.target.value)[0] ?? '' }); setCouponResult(null); setCouponCode(''); }}
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all bg-white">
                       {services.map((s) => {
                         const startingPrice = getCategoryStartingPrice(s.name);
@@ -462,7 +473,7 @@ export default function Booking() {
 
                 <Field icon={Wrench} label="Specific Job Type *">
                   <select required value={form.service_type}
-                    onChange={(e) => { setForm({ ...form, service_type: e.target.value }); setCouponResult(null); setCouponCode(''); }}
+                    onChange={(e) => { couponValidationRequest.current += 1; setValidatingCoupon(false); setForm({ ...form, service_type: e.target.value }); setCouponResult(null); setCouponCode(''); }}
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all bg-white">
                     {serviceTypes.map((type) => {
                       const listedPrice = customerServicePrices[getCustomerPriceKey(form.service_category, type)];
@@ -524,7 +535,7 @@ export default function Booking() {
                       <span className="font-semibold text-gray-800 text-sm">Have a Coupon Code?</span>
                     </div>
                     <div className="flex gap-2">
-                      <input type="text" value={couponCode} disabled={validatingCoupon || submitting} onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponResult(null); }}
+                      <input type="text" value={couponCode} disabled={validatingCoupon || submitting} onChange={(e) => { couponValidationRequest.current += 1; setValidatingCoupon(false); setCouponCode(e.target.value.toUpperCase()); setCouponResult(null); }}
                         placeholder="Enter coupon code"
                         className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-gold-500 uppercase" />
                       <button type="button" onClick={handleValidateCoupon} disabled={validatingCoupon || submitting || !couponCode.trim()}
