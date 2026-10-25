@@ -70,7 +70,7 @@ async function dispatchPush(
       // Push delivery is best-effort; never let a stalled downstream function
       // hold the booking operation open indefinitely.
       signal: AbortSignal.timeout(8000),
-      body: JSON.stringify({ userType, userId, title, body, data }),
+      body: JSON.stringify({ userType, userId: userId.trim(), title, body, data }),
     });
     if (!response.ok) {
       console.error("[booking-ops] push dispatch failed", { userType, status: response.status });
