@@ -897,6 +897,12 @@ Deno.serve(async (req: Request) => {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
+    if (err instanceof SyntaxError) {
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON request body. Please check the request and try again." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
     console.error("[booking-ops] unhandled request error:", err instanceof Error ? err.message : "unknown error");
     return new Response(
       JSON.stringify({ error: "The booking request could not be completed. Please try again or contact VATTAMS support." }),
