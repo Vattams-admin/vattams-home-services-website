@@ -344,6 +344,7 @@ Deno.serve(async (req: Request) => {
           || !Number.isSafeInteger(usedCount) || usedCount < 0
           || (maxUses !== null && (!Number.isSafeInteger(maxUses) || maxUses < 0))
           || !Number.isFinite(minimumOrderAmountForValidity) || minimumOrderAmountForValidity < 0
+          || Math.abs(minimumOrderAmountForValidity * 100 - Math.round(minimumOrderAmountForValidity * 100)) > 1e-7
         );
         if (!coupon
           || invalidValidityConfig
