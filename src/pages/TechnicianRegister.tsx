@@ -25,6 +25,7 @@ import {
   calculateProfileScore,
   submitTechnicianApplication,
   verifyTechnicianRegistrationEmail,
+  resendTechnicianRegistrationEmailOtp,
   validateFile,
   uploadDocumentWithProgress,
   saveRegistrationDraft,
@@ -59,6 +60,7 @@ export default function TechnicianRegister() {
   const [success, setSuccess] = useState(false);
   const [emailOtpPending, setEmailOtpPending] = useState(false);
   const [emailOtp, setEmailOtp] = useState('');
+  const [emailOtpResendTimer, setEmailOtpResendTimer] = useState(0);
 
   const [chatHistory, setChatHistory] = useState<
     { role: 'ai' | 'user'; text: string }[]
@@ -77,6 +79,12 @@ export default function TechnicianRegister() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const submittingRef = useRef(false);
+
+  useEffect(() => {
+    if (!emailOtpPending || emailOtpResendTimer <= 0) return;
+    const timer = setTimeout(() => setEmailOtpResendTimer((remaining) => Math.max(0, remaining - 1)), 1000);
+    return () => clearTimeout(timer);
+  }, [emailOtpPending, emailOtpResendTimer]);
 
   const currentStep = STEPS[stepIndex];
 
@@ -482,6 +490,7 @@ export default function TechnicianRegister() {
       submittingRef.current = false;
       setEmailOtpPending(true);
       setEmailOtp('');
+      setEmailOtpResendTimer(60);
       setChatHistory((history) => [...history, {
         role: 'ai',
         text: `A 6-digit verification code has been sent to ${form.email.trim().toLowerCase()}. Enter that code below to finish technician registration. Your application will not be submitted until the email OTP is verified.`,
@@ -496,6 +505,25 @@ export default function TechnicianRegister() {
       );
       submittingRef.current = false;
     } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleResendEmailOtp = async () => {
+    if (emailOtpResendTimer > 0 || submitting) return;
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setSubmitting(true);
+    setError('');
+    try {
+      await resendTechnicianRegistrationEmailOtp(form);
+      setEmailOtp('');
+      setEmailOtpResendTimer(60);
+    } catch (err: any) {
+      setError(err?.message || 'Could not resend the email verification code.');
+      if (err?.message?.includes('60 seconds')) setEmailOtpResendTimer(60);
+    } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   };
@@ -744,7 +772,7 @@ export default function TechnicianRegister() {
                   autoComplete="one-time-code"
                   maxLength={6}
                   value={emailOtp}
-                  onChange={(event) => setEmailOtp(event.target.value.replace(/\\D/g, '').slice(0, 6))}
+                  onChange={(event) => setEmailOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
                   onKeyDown={(event) => { if (event.key === 'Enter') handleVerifyEmailOtp(); }}
                   placeholder="6-digit email OTP"
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-100 outline-none text-sm"
@@ -756,6 +784,14 @@ export default function TechnicianRegister() {
                 >
                   {submitting ? <Loader size={18} className="animate-spin" /> : <ShieldCheck size={18} />}
                   Verify Email & Finish Registration
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResendEmailOtp}
+                  disabled={submitting || emailOtpResendTimer > 0}
+                  className="w-full py-2 text-sm font-semibold text-[#0b1f3a] disabled:text-gray-400 disabled:cursor-not-allowed"
+                >
+                  {emailOtpResendTimer > 0 ? `Resend code in ${emailOtpResendTimer}s` : 'Resend email OTP'}
                 </button>
               </div>
             )}
