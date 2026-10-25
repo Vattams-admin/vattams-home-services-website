@@ -249,7 +249,19 @@ Deno.serve(async (req: Request) => {
         // Resolve the coupon ID server-side because create_booking validated
         // by code. Keep the authoritative lookup immediately before the RPC.
         if (redeemError || redeemed !== true) {
-          await supabase.from("bookings").delete().eq("id", data.id);
+          const { error: cleanupError } = await supabase.from("bookings").delete().eq("id", data.id);
+          if (cleanupError) {
+            // Do not claim rollback succeeded. This needs support review and
+            // the client must not blindly retry a potentially existing booking.
+            console.error("[booking-ops create_booking] coupon redemption failed and booking cleanup also failed");
+            return new Response(JSON.stringify({
+              error: "We could not confirm the booking state after coupon redemption failed. Please contact VATTAMS support before trying again.",
+              code: "BOOKING_CLEANUP_REQUIRES_REVIEW",
+            }), {
+              status: 500,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
           return new Response(JSON.stringify({ error: "Coupon is no longer available. Please apply the coupon again." }), {
             status: 409,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
