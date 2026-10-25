@@ -117,6 +117,17 @@ async function startTechnicianRegistrationOtp(supabase: ReturnType<typeof create
     await supabase.from("otp_codes").delete().eq("id", row.id);
     return otpJson({ error: "We could not send the verification email. Registration cannot continue until email delivery is available." }, 503);
   }
+  // Remove superseded pending registration payloads only after the new email is accepted.
+  // If delivery fails, the applicant can still use the previous pending OTP.
+  const { error: cleanupError } = await supabase.from("otp_codes")
+    .delete()
+    .eq("mobile", mobile)
+    .eq("purpose", "technician_registration")
+    .eq("verified", false)
+    .neq("id", row.id);
+  if (cleanupError) {
+    console.error("Could not remove superseded technician OTP rows after initial send:", cleanupError.message);
+  }
   return otpJson({ success: true, message: "Email verification code sent." });
 }
 async function resendTechnicianRegistrationOtp(supabase: ReturnType<typeof createClient>, body: Record<string, unknown>) {
