@@ -74,7 +74,7 @@ export default function CustomerReviews() {
     try {
       const parsed = JSON.parse(stored) as Partial<Customer>;
       if (typeof parsed.id !== 'string' || !parsed.id.trim() ||
-          typeof parsed.mobile !== 'string' || !/^[6-9]\\d{9}$/.test(parsed.mobile) ||
+          typeof parsed.mobile !== 'string' || !/^[6-9]\d{9}$/.test(parsed.mobile) ||
           typeof parsed.full_name !== 'string' || !parsed.full_name.trim()) {
         throw new Error('Stored customer profile is incomplete.');
       }
