@@ -97,26 +97,36 @@ export default function CustomerBookings() {
   }, []);
 
   useEffect(() => {
-    const stored = sessionStorage.getItem('vattams_customer');
-    const sessionToken = sessionStorage.getItem('vattams_customer_session');
-    const expiresAt = sessionStorage.getItem('vattams_customer_expires');
-    if (!stored || !sessionToken || !expiresAt) {
-      sessionStorage.removeItem('vattams_customer');
-      sessionStorage.removeItem('vattams_customer_session');
-      sessionStorage.removeItem('vattams_customer_expires');
-      navigate('customer-login');
-      return;
-    }
-    {
-      const expiry = Number(expiresAt);
-      if (!Number.isFinite(expiry) || expiry <= Date.now()) {
+    const clearSession = () => {
+      try {
         sessionStorage.removeItem('vattams_customer');
         sessionStorage.removeItem('vattams_customer_session');
         sessionStorage.removeItem('vattams_customer_expires');
-        navigate('customer-login');
-        return;
+      } catch {
+        // The route still redirects if browser storage cleanup is blocked.
       }
+    };
+
+    let stored: string | null;
+    let sessionToken: string | null;
+    let expiresAt: string | null;
+    try {
+      stored = sessionStorage.getItem('vattams_customer');
+      sessionToken = sessionStorage.getItem('vattams_customer_session');
+      expiresAt = sessionStorage.getItem('vattams_customer_expires');
+    } catch {
+      clearSession();
+      navigate('customer-login');
+      return;
     }
+
+    const expiry = Number(expiresAt);
+    if (!stored || !sessionToken || !expiresAt || !Number.isFinite(expiry) || expiry <= Date.now()) {
+      clearSession();
+      navigate('customer-login');
+      return;
+    }
+
     try {
       const parsed = JSON.parse(stored) as Partial<Customer>;
       if (typeof parsed.id !== 'string' || !parsed.id.trim() ||
@@ -128,9 +138,7 @@ export default function CustomerBookings() {
       setCustomer(record);
       void loadBookings(record);
     } catch {
-      sessionStorage.removeItem('vattams_customer');
-      sessionStorage.removeItem('vattams_customer_session');
-      sessionStorage.removeItem('vattams_customer_expires');
+      clearSession();
       navigate('customer-login');
     }
   }, [loadBookings, navigate]);
