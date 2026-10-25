@@ -104,3 +104,54 @@ export async function updatePaymentStatus(
   }
   return (data?.payment ?? null) as PaymentRecord | null;
 }
+
+
+/**
+ * Record explicit super-admin reconciliation for a legacy ₹49 technician fee.
+ * Call only after independently checking the UTR against bank/UPI settlement evidence.
+ */
+export async function reconcileLegacyTechnicianPayment(
+  paymentId: string,
+  technicianMobile: string,
+  utr: string,
+  reconciliationReason: string,
+): Promise<PaymentRecord | null> {
+  const adminId = sessionStorage.getItem('vattams_admin_id') || '';
+  const adminSessionToken = sessionStorage.getItem('vattams_admin') || '';
+  const { data, error } = await supabase.functions.invoke('payment-auth', {
+    body: {
+      action: 'reconcile-legacy',
+      payment_id: paymentId,
+      technician_mobile: technicianMobile,
+      utr,
+      reconciliation_reason: reconciliationReason,
+      admin_id: adminId,
+      admin_session_token: adminSessionToken,
+    },
+  });
+  if (error) {
+    console.error('Legacy payment reconciliation failed:', error);
+    return null;
+  }
+  return (data?.payment ?? null) as PaymentRecord | null;
+}
+
+
+export async function checkPaymentStatus(
+  paymentId: string,
+  paymentActionToken: string
+): Promise<Pick<PaymentRecord, 'payment_id' | 'payee_type' | 'payee_id' | 'amount' | 'purpose' | 'utr' | 'status' | 'verified_by' | 'verified_at'> | null> {
+  const { data, error } = await supabase.functions.invoke('payment-auth', {
+    body: {
+      action: 'status',
+      payment_id: paymentId,
+      payment_action_token: paymentActionToken,
+    },
+  });
+
+  if (error) {
+    console.error('Failed to check payment verification:', error);
+    return null;
+  }
+  return (data?.payment ?? null) as Pick<PaymentRecord, 'payment_id' | 'payee_type' | 'payee_id' | 'amount' | 'purpose' | 'utr' | 'status' | 'verified_by' | 'verified_at'> | null;
+}

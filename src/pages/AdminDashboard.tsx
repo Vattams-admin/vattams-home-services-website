@@ -11,7 +11,7 @@ import {
 import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY, Booking, Technician, BookingStatus, WalletTransaction, WalletRecharge } from '@/lib/supabase';
 import { downloadOnboardingLetter } from '@/lib/onboardingLetter';
 import { useRouter } from '@/lib/router';
-import { updatePaymentStatus, PaymentRecord } from '@/lib/payments';
+import { updatePaymentStatus, reconcileLegacyTechnicianPayment, PaymentRecord } from '@/lib/payments';
 import { adminData } from '@/lib/adminData';
 import { getPricingFromServicePrice, formatINR, type PricingBreakdown } from '@/lib/pricing';
 import { ServicePrice } from '@/lib/supabase';
@@ -1654,7 +1654,37 @@ export default function AdminDashboard() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        {p.status === 'pending' ? (
+                        {p.status === 'success' &&
+                          p.payee_type === 'technician' &&
+                          p.purpose === 'registration_fee' &&
+                          Number(p.amount) === 49 &&
+                          !!p.utr &&
+                          !p.verified_by &&
+                          !p.verified_at ? (
+                          <button
+                            onClick={async () => {
+                              const confirmation = window.confirm(
+                                'Only continue after independently confirming this UTR in the bank/UPI settlement record. This records admin reconciliation; it does not verify the transaction automatically.'
+                              );
+                              if (!confirmation) return;
+                              const reason = window.prompt('Enter the bank/UPI reconciliation evidence and reference (minimum 20 characters):');
+                              if (!reason || reason.trim().length < 20) return;
+                              setPaymentUpdating(true);
+                              try {
+                                const reconciled = await reconcileLegacyTechnicianPayment(p.payment_id, p.payee_id, p.utr!, reason.trim());
+                                if (reconciled) {
+                                  setPayments((await adminData<{ payments: PaymentRecord[] }>('payments')).payments ?? []);
+                                }
+                              } finally {
+                                setPaymentUpdating(false);
+                              }
+                            }}
+                            disabled={paymentUpdating}
+                            className="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 disabled:opacity-50 text-amber-700 text-xs font-semibold transition-colors"
+                          >
+                            Reconcile legacy
+                          </button>
+                        ) : p.status === 'pending' ? (
                           <div className="flex justify-end gap-2">
                             <button
                               onClick={async () => {
