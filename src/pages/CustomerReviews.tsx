@@ -34,7 +34,8 @@ export default function CustomerReviews() {
             typeof (review as Review).id === 'string' && (review as Review).id.trim() &&
             typeof (review as Review).booking_id === 'string' && (review as Review).booking_id.trim() &&
             Number.isInteger((review as Review).rating) && (review as Review).rating >= 1 && (review as Review).rating <= 5 &&
-            typeof (review as Review).created_at === 'string')) {
+            typeof (review as Review).created_at === 'string' &&
+            ((review as Review).review_text === null || typeof (review as Review).review_text === 'string'))) {
         throw new Error('Review information could not be verified. Please retry.');
       }
       const validBookings = bookingResult.bookings as Booking[];
@@ -107,7 +108,7 @@ export default function CustomerReviews() {
           customer_name: customer.full_name,
           technician_id: booking.assigned_technician_id,
           rating: selectedRating,
-          review_text: reviewText[booking.id]?.trim() || null,
+          review_text: reviewText[booking.id]?.trim().slice(0, 2000) || null,
         }),
       });
       const data: unknown = await res.json();
@@ -173,7 +174,7 @@ export default function CustomerReviews() {
                         ))}
                       </div>
                     </div>
-                    <textarea value={reviewText[booking.id] ?? ''} onChange={(e) => setReviewText((current) => ({ ...current, [booking.id]: e.target.value }))} rows={3} placeholder="Tell us about your service experience (optional)" className="w-full mt-4 px-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm resize-none" />
+                    <textarea value={reviewText[booking.id] ?? ''} onChange={(e) => setReviewText((current) => ({ ...current, [booking.id]: e.target.value }))} rows={3} maxLength={2000} placeholder="Tell us about your service experience (optional)" className="w-full mt-4 px-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm resize-none" />
                     <button type="button" disabled={submitting === booking.id} onClick={() => void submitReview(booking)} className="mt-4 inline-flex items-center justify-center gap-2 px-5 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 text-white font-bold rounded-xl">
                       {submitting === booking.id ? <Loader size={16} className="animate-spin" /> : <MessageSquare size={16} />} Submit Review
                     </button>
