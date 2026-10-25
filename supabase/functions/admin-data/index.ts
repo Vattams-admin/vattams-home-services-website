@@ -63,6 +63,27 @@ const {data,error}=await db.from("customer_service_prices").select("id,service_c
 if(error)return out({error:"Unable to load customer job prices"},500);
 return out({prices:data||[]});
 }
+case "initialize_customer_service_prices":{
+const defaults=[
+{service_category:"AC Service",service_type:"General Service",base_price:499,price_label:"AC general service",is_active:true},
+{service_category:"AC Service",service_type:"Installation",base_price:1499,price_label:"AC installation",is_active:true},
+{service_category:"AC Service",service_type:"Gas Filling",base_price:1999,price_label:"AC gas filling",is_active:true},
+{service_category:"AC Service",service_type:"Pump Water Service",base_price:499,price_label:"AC pump water service",is_active:true},
+{service_category:"AC Service",service_type:"Coil Service",base_price:1499,price_label:"AC coil service",is_active:true},
+{service_category:"AC Repair",service_type:"General Service",base_price:499,price_label:"AC general service",is_active:true},
+{service_category:"AC Repair",service_type:"Installation",base_price:1499,price_label:"AC installation",is_active:true},
+{service_category:"AC Repair",service_type:"Gas Filling",base_price:1999,price_label:"AC gas filling",is_active:true},
+{service_category:"AC Repair",service_type:"Pump Water Service",base_price:499,price_label:"AC pump water service",is_active:true},
+{service_category:"AC Repair",service_type:"Coil Service",base_price:1499,price_label:"AC coil service",is_active:true},
+{service_category:"Washing Machine",service_type:"Washing Machine Service",base_price:399,price_label:"Washing machine service",is_active:true},
+{service_category:"Washing Machine Repair",service_type:"Washing Machine Service",base_price:399,price_label:"Washing machine service",is_active:true},
+{service_category:"Refrigerator",service_type:"Refrigerator Service",base_price:399,price_label:"Refrigerator service",is_active:true},
+{service_category:"Refrigerator Repair",service_type:"Refrigerator Service",base_price:399,price_label:"Refrigerator service",is_active:true}
+];
+const {error}=await db.from("customer_service_prices").upsert(defaults,{onConflict:"service_category,service_type",ignoreDuplicates:true});
+if(error)return out({error:"Unable to initialize customer price catalogue"},400);
+return out({success:true,inserted_if_missing:defaults.length});
+}
 case "save_customer_service_prices":{
 const updates=Array.isArray(b.updates)?b.updates:[];
 if(updates.length>100)return out({error:"Too many customer price updates"},400);
