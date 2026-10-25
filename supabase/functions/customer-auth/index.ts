@@ -172,6 +172,11 @@ Deno.serve(async (req: Request) => {
             if (restoreError) console.error("Could not restore OTP after failed customer registration:", restoreError.message);
             return errorResponse("Failed to create account. Please try again.");
           }
+          // Remove sensitive pending registration details from every OTP row for this mobile.
+          const { error: cleanupError } = await supabase.from("otp_codes")
+            .update({ registration_data: null })
+            .eq("mobile", regMobile).eq("purpose", "registration");
+          if (cleanupError) console.error("Could not clear customer registration data from OTP records:", cleanupError.message);
           return jsonResponse({ success: true, message: "Account created successfully", customer });
         }
 
