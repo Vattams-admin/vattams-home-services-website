@@ -1,11 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Loader, User, Phone, Mail, MapPin, Home, Save, LogOut, Calendar, Briefcase, CheckCircle, Lock, Key } from 'lucide-react';
 import { useRouter } from '@/lib/router';
-import { Customer } from '@/lib/supabase';
+import { Customer, SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase';
 import { customerData } from '@/lib/customerData';
 
-const SUPABASE_URL = 'https://nfcibyprftnowaiwlxxc.supabase.co';
-const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mY2lieXByZnRub3dhaXdseHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4ODMzOTgsImV4cCI6MjA5OTQ1OTM5OH0.5ZMjWYOuRBKNKG3ZonXXOBAfBapm54naphNXrHxq16k';
 export default function CustomerProfile() {
   const { navigate } = useRouter();
   const [customer, setCustomer] = useState<Customer | null>(null);
@@ -175,7 +173,7 @@ export default function CustomerProfile() {
       if (sessionToken) {
         await fetch(SUPABASE_URL + '/functions/v1/customer-auth/logout', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + ANON_KEY },
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + SUPABASE_ANON_KEY },
           body: JSON.stringify({ session_token: sessionToken }),
         });
       }
