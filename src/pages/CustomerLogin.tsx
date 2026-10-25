@@ -48,9 +48,17 @@ export default function CustomerLogin() {
       if (!Number.isFinite(expiry) || expiry <= Date.now()) {
         throw new Error('Your session could not be verified. Please sign in again.');
       }
-      sessionStorage.setItem('vattams_customer', JSON.stringify(payload.customer));
-      sessionStorage.setItem('vattams_customer_session', payload.sessionToken);
-      sessionStorage.setItem('vattams_customer_expires', String(expiry));
+      try {
+        sessionStorage.setItem('vattams_customer', JSON.stringify(customer));
+        sessionStorage.setItem('vattams_customer_session', payload.sessionToken);
+        sessionStorage.setItem('vattams_customer_expires', String(expiry));
+      } catch {
+        // Avoid leaving a partially authenticated client session if storage is unavailable.
+        for (const key of ['vattams_customer', 'vattams_customer_session', 'vattams_customer_expires']) {
+          try { sessionStorage.removeItem(key); } catch { /* Storage may be blocked. */ }
+        }
+        throw new Error('Unable to save your sign-in session in this browser. Please enable site storage and try again.');
+      }
       void registerServiceWorker();
       void initFCM('customer', customer.mobile);
       navigate('customer-dashboard');
