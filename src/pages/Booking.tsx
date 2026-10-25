@@ -295,16 +295,37 @@ export default function Booking() {
 
   return (
     <div className="pt-20 md:pt-24">
-      <section className="bg-navy-950 py-14">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-3">Book Appliance Service</h1>
-          <p className="text-navy-100 max-w-lg mx-auto">
-            Choose AC, washing machine or refrigerator service and tell us how we can help.
-          </p>
+      <section className="relative isolate overflow-hidden bg-[#070B15] py-12 text-white sm:py-16">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_0%,rgba(212,175,55,.18),transparent_38%)]" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/60 to-transparent" />
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/35 bg-white/[0.04] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-[#E7D17D] sm:text-xs">
+              <Sparkles size={13} /> Your service, thoughtfully arranged
+            </p>
+            <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight text-white sm:text-5xl">
+              Let’s find the right <span className="text-[#DCC15D]">service for your home.</span>
+            </h1>
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base sm:leading-8">
+              Share a few details, choose your appliance and review applicable charges before submitting your request.
+            </p>
+            <div className="mx-auto mt-7 grid max-w-2xl grid-cols-3 gap-2 sm:gap-3">
+              {[
+                { n: '01', label: 'Your details' },
+                { n: '02', label: 'Choose service' },
+                { n: '03', label: 'Review request' },
+              ].map((step) => (
+                <div key={step.n} className="rounded-xl border border-white/10 bg-white/[0.035] px-2 py-3 text-left sm:px-4">
+                  <span className="block text-[10px] font-bold tracking-[0.16em] text-[#D4AF37]">{step.n}</span>
+                  <span className="mt-1 block text-[11px] font-semibold text-white sm:text-sm">{step.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="py-12 bg-ivory">
+      <section className="bg-gradient-to-b from-[#F1EEE5] to-[#F8F6F0] py-8 sm:py-12">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <button
             type="button"
@@ -320,7 +341,7 @@ export default function Booking() {
             </div>
           </button>
 
-          <div className="bg-white rounded-2xl border border-[#e8e1d2] shadow-sm p-6 md:p-8">
+          <div className="premium-surface rounded-2xl border bg-white p-5 shadow-xl shadow-slate-900/[0.04] sm:p-7 md:p-9">
             {loadError && (
               <div role="alert" className="mb-5 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
                 {loadError}
