@@ -85,19 +85,34 @@ export default function CustomerBookings() {
 
   useEffect(() => {
     const stored = sessionStorage.getItem('vattams_customer');
-    if (!stored || !sessionStorage.getItem('vattams_customer_session')) {
+    const sessionToken = sessionStorage.getItem('vattams_customer_session');
+    const expiresAt = sessionStorage.getItem('vattams_customer_expires');
+    if (!stored || !sessionToken) {
       navigate('customer-login');
       return;
     }
-    try {
-      const record = JSON.parse(stored) as Customer;
-      if (!record?.mobile) {
+    if (expiresAt) {
+      const expiry = Number(expiresAt);
+      if (!Number.isFinite(expiry) || expiry <= Date.now()) {
+        sessionStorage.removeItem('vattams_customer');
+        sessionStorage.removeItem('vattams_customer_session');
+        sessionStorage.removeItem('vattams_customer_expires');
         navigate('customer-login');
         return;
       }
+    }
+    try {
+      const parsed = JSON.parse(stored) as Partial<Customer>;
+      if (typeof parsed.id !== 'string' || !parsed.id.trim() ||
+          typeof parsed.mobile !== 'string' || !parsed.mobile.trim() ||
+          typeof parsed.full_name !== 'string' || !parsed.full_name.trim()) {
+        throw new Error('Stored customer profile is incomplete.');
+      }
+      const record = parsed as Customer;
       setCustomer(record);
       void loadBookings(record);
     } catch {
+      sessionStorage.removeItem('vattams_customer');
       navigate('customer-login');
     }
   }, [loadBookings, navigate]);
