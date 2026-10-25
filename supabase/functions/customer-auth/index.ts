@@ -310,7 +310,7 @@ Deno.serve(async (req: Request) => {
         let pendingRegistration: Record<string, unknown> | null = null;
         let destinationEmail = "";
         if (purpose === "registration") {
-          const { data: pendingRow } = await supabase.from("otp_codes").select("registration_data").eq("mobile", mobile).eq("purpose", "registration").order("created_at", { ascending: false }).limit(1).maybeSingle();
+          const { data: pendingRow } = await supabase.from("otp_codes").select("registration_data").eq("mobile", mobile).eq("purpose", "registration").eq("verified", false).order("created_at", { ascending: false }).limit(1).maybeSingle();
           pendingRegistration = (pendingRow?.registration_data as Record<string, unknown> | null) || null;
           destinationEmail = String(pendingRegistration?.email || "").trim().toLowerCase();
           if (!pendingRegistration || !destinationEmail) return errorResponse("Please restart registration and provide a valid email address.");
