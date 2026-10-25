@@ -467,7 +467,7 @@ export default function TechnicianRegister() {
       setShowJoinFeePayment(true);
       return;
     }
-    if (!form.email.trim() || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(form.email.trim())) {
+    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
       setError('A valid email address is required. Registration cannot finish without email verification.');
       return;
     }
@@ -501,7 +501,7 @@ export default function TechnicianRegister() {
   };
 
   const handleVerifyEmailOtp = async () => {
-    if (!/^\\d{6}$/.test(emailOtp.trim())) {
+    if (!/^\d{6}$/.test(emailOtp.trim())) {
       setError('Enter the 6-digit code sent to your email.');
       return;
     }
