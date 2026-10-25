@@ -26,6 +26,21 @@ function generateOTP(): string {
   return String(Math.floor(1000 + Math.random() * 9000));
 }
 
+function getPublicAppUrl(): string {
+  const configuredUrl = Deno.env.get("PUBLIC_APP_URL");
+  if (configuredUrl) {
+    try {
+      const parsed = new URL(configuredUrl);
+      if (parsed.protocol === "https:" || parsed.protocol === "http:") {
+        return parsed.origin;
+      }
+    } catch {
+      console.error("[booking-ops] invalid PUBLIC_APP_URL; using safe fallback");
+    }
+  }
+  return "https://vattams.net";
+}
+
 async function dispatchPush(
   userType: "customer" | "technician" | "admin",
   userId: string,
@@ -459,7 +474,7 @@ Deno.serve(async (req: Request) => {
       if (adminNotificationError) {
         console.error("[booking-ops create_booking] admin notification insert failed");
       } else {
-        const publicAppUrl = Deno.env.get("PUBLIC_APP_URL") || "https://vattams.net";
+        const publicAppUrl = getPublicAppUrl();
         await dispatchPush("admin", "admin", adminNotificationTitle, adminNotificationMessage, {
           type: "new_booking",
           referenceType: "booking",
@@ -737,7 +752,7 @@ Deno.serve(async (req: Request) => {
         console.error("[booking-ops auto_assign] shared notifications (technician) insert error:", sharedTechNotifError);
       } else {
         notificationCreated = true;
-        const publicAppUrl = Deno.env.get("PUBLIC_APP_URL") || "https://vattams.net";
+        const publicAppUrl = getPublicAppUrl();
         await dispatchPush(
           "technician",
           chosen.id,
@@ -768,7 +783,7 @@ Deno.serve(async (req: Request) => {
         console.error("[booking-ops auto_assign] shared notifications (customer) insert error:", customerNotifError);
       } else {
         customerNotificationCreated = true;
-        const publicAppUrl = Deno.env.get("PUBLIC_APP_URL") || "https://vattams.net";
+        const publicAppUrl = getPublicAppUrl();
         await dispatchPush(
           "customer",
           String(booking.mobile_number),
