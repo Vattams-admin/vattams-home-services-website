@@ -155,9 +155,13 @@ async function verifyTechnicianRegistrationOtp(supabase: ReturnType<typeof creat
   if (Number(row.attempt_count || 0) >= 5) return otpJson({ error: "Too many incorrect attempts. Request a new email OTP." }, 429);
   if (new Date(row.expires_at) <= new Date()) return otpJson({ error: "Email OTP expired. Request a new code." }, 400);
   if (await hashEmailOtp(code) !== String(row.code)) {
-    const attempts = Number(row.attempt_count || 0) + 1;
-    await supabase.from("otp_codes").update({ attempt_count: attempts }).eq("id", row.id).eq("verified", false);
-    return otpJson({ error: attempts >= 5 ? "Too many incorrect attempts. Request a new email OTP." : "Incorrect email OTP." }, attempts >= 5 ? 429 : 400);
+    const { data: attempts, error: attemptError } = await supabase.rpc("increment_otp_attempt_count", { p_otp_id: row.id });
+    if (attemptError || attempts == null) {
+      console.error("Could not atomically increment technician OTP attempts:", attemptError?.message);
+      return otpJson({ error: "Could not verify OTP right now. Please try again." }, 500);
+    }
+    const nextAttempts = Number(attempts);
+    return otpJson({ error: nextAttempts >= 5 ? "Too many incorrect attempts. Request a new email OTP." : "Incorrect email OTP." }, nextAttempts >= 5 ? 429 : 400);
   }
   const { data: consumed, error: consumeError } = await supabase.from("otp_codes").update({ verified: true, verified_at: new Date().toISOString() }).eq("id", row.id).eq("verified", false).select("id").maybeSingle();
   if (consumeError || !consumed) return otpJson({ error: "Email OTP has already been used. Request a new code." }, 409);
