@@ -83,12 +83,25 @@ export default function CustomerDashboard() {
 
   useEffect(() => {
     const stored = sessionStorage.getItem('vattams_customer');
-    if (!stored) { navigate('customer-login'); return; }
+    const sessionToken = sessionStorage.getItem('vattams_customer_session');
+    if (!stored || !sessionToken) {
+      navigate('customer-login');
+      return;
+    }
     try {
-      const c = JSON.parse(stored) as Customer;
+      const parsed = JSON.parse(stored) as Partial<Customer>;
+      if (typeof parsed.id !== 'string' || !parsed.id.trim() ||
+          typeof parsed.mobile !== 'string' || !parsed.mobile.trim() ||
+          typeof parsed.full_name !== 'string' || !parsed.full_name.trim()) {
+        throw new Error('Stored customer profile is incomplete.');
+      }
+      const c = parsed as Customer;
       setCustomer(c);
       void refreshDashboard(c);
-    } catch { navigate('customer-login'); }
+    } catch {
+      sessionStorage.removeItem('vattams_customer');
+      navigate('customer-login');
+    }
   }, []);
 
   const loadBookings = async (c: Customer) => {
