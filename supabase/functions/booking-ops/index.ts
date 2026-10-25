@@ -650,8 +650,8 @@ Deno.serve(async (req: Request) => {
         .single() as { data: Record<string, unknown> | null; error: unknown };
 
       // Do not leave a booking marked assigned when the corresponding job
-      // record failed to persist. Restore it to pending only if this request
-      // still owns the assignment, so we cannot undo a concurrent admin change.
+      // record failed to persist. Restore the original booking status only if
+      // this request still owns the assignment, avoiding concurrent admin changes.
       if (jobInsertError || !jobData) {
         const { data: rolledBackBooking, error: rollbackError } = await supabase
           .from("bookings")
@@ -670,7 +670,7 @@ Deno.serve(async (req: Request) => {
         if (rollbackError || !rolledBackBooking) {
           console.error("[booking-ops auto_assign] job insert failed; rollback failed or assignment ownership changed");
         } else {
-          console.error("[booking-ops auto_assign] job insert failed; booking returned to pending");
+          console.error("[booking-ops auto_assign] job insert failed; original booking status restored");
         }
         return new Response(JSON.stringify({
           success: false,
