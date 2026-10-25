@@ -23,7 +23,7 @@ export interface CouponResult {
 
 export async function validateCoupon(code: string, orderAmount: number): Promise<CouponResult> {
   const normalizedCode = code.trim().toUpperCase();
-  if (!normalizedCode || !Number.isFinite(orderAmount) || orderAmount < 0) {
+  if (!normalizedCode || !Number.isFinite(orderAmount) || orderAmount <= 0) {
     return { valid: false, error: 'Enter a valid coupon code and order amount', discountAmount: 0 };
   }
 
