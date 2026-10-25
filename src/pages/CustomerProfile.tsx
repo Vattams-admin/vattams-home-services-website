@@ -77,21 +77,58 @@ export default function CustomerProfile() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customer) return;
-    setSaving(true);
+    if (saving || !customer) return;
     setMsg(null);
-    try {
-      const result = await customerData<{ customer: Customer }>('profile', { full_name: form.full_name, email: form.email, city: form.city, address: form.address });
-      if (!result?.customer) throw new Error('Failed to update profile');
-      if (result.customer) {
-        setCustomer(result.customer);
-        sessionStorage.setItem('vattams_customer', JSON.stringify(result.customer));
-        setMsg({ type: 'success', text: 'Profile updated successfully!' });
-      }
-    } catch {
-      setMsg({ type: 'error', text: 'Failed to update profile. Please try again.' });
+
+    const fullName = form.full_name.trim();
+    const email = form.email.trim();
+    const city = form.city.trim();
+    const address = form.address.trim();
+    if (fullName.length < 2 || fullName.length > 100) {
+      setMsg({ type: 'error', text: 'Full name must be between 2 and 100 characters.' });
+      return;
     }
-    setSaving(false);
+    if (email && (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
+      setMsg({ type: 'error', text: 'Please enter a valid email address.' });
+      return;
+    }
+    if (city.length > 100 || address.length > 500) {
+      setMsg({ type: 'error', text: 'City must be at most 100 characters and address at most 500 characters.' });
+      return;
+    }
+    if (!sessionStorage.getItem('vattams_customer_session')) {
+      setMsg({ type: 'error', text: 'Your session has expired. Please sign in again.' });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const result = await customerData<{ customer: Customer }>('profile', {
+        full_name: fullName,
+        email,
+        city,
+        address,
+      });
+      const updated = result?.customer;
+      if (!updated || typeof updated.id !== 'string' || updated.id !== customer.id ||
+          typeof updated.full_name !== 'string' || !updated.full_name.trim() ||
+          typeof updated.mobile !== 'string' || !updated.mobile.trim()) {
+        throw new Error('Profile update could not be confirmed.');
+      }
+      setCustomer(updated);
+      setForm({
+        full_name: updated.full_name,
+        email: updated.email ?? '',
+        city: updated.city ?? '',
+        address: updated.address ?? '',
+      });
+      sessionStorage.setItem('vattams_customer', JSON.stringify(updated));
+      setMsg({ type: 'success', text: 'Profile updated successfully!' });
+    } catch {
+      setMsg({ type: 'error', text: 'Unable to confirm your profile update. Please try again.' });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleLogout = async () => {
