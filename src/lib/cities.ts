@@ -72,7 +72,7 @@ function generateContentSections(cityName: string, _knownFor: string, _populatio
   return [
     {
       heading: `Appliance Service in ${cityName}`,
-      body: `VATTAMS Home Services lets residents in ${cityName} request doorstep service for air conditioners, washing machines and refrigerators. Select the appliance and describe the issue to check the appointment options currently available for your address.`,
+      body: `VATTAMS Hybrid Service Marketplace lets residents in ${cityName} request doorstep service for air conditioners, washing machines and refrigerators. Select the appliance and describe the issue to check the appointment options currently available for your address.`,
     },
     {
       heading: `AC Service and Repair in ${cityName}`,
