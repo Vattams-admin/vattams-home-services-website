@@ -14,6 +14,7 @@ import {
   RefreshCw,
   FileText,
   RotateCcw,
+  ShieldCheck,
 } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import PaymentModal from '@/components/PaymentModal';
@@ -478,6 +479,7 @@ export default function TechnicianRegister() {
 
     try {
       await submitTechnicianApplication(form, joinFeePaymentId || undefined);
+      submittingRef.current = false;
       setEmailOtpPending(true);
       setEmailOtp('');
       setChatHistory((history) => [...history, {
