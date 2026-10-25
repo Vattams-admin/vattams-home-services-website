@@ -52,7 +52,11 @@ export default function CustomerProfile() {
       const parsed = JSON.parse(stored) as Partial<Customer>;
       if (typeof parsed.id !== 'string' || !parsed.id.trim() ||
           typeof parsed.mobile !== 'string' || !parsed.mobile.trim() ||
-          typeof parsed.full_name !== 'string' || !parsed.full_name.trim()) {
+          typeof parsed.full_name !== 'string' || !parsed.full_name.trim() ||
+          (parsed.email != null && typeof parsed.email !== 'string') ||
+          (parsed.city != null && typeof parsed.city !== 'string') ||
+          (parsed.address != null && typeof parsed.address !== 'string') ||
+          (parsed.created_at != null && (typeof parsed.created_at !== 'string' || !Number.isFinite(Date.parse(parsed.created_at))))) {
         throw new Error('Stored customer profile is incomplete.');
       }
       const c = parsed as Customer;
@@ -270,7 +274,7 @@ export default function CustomerProfile() {
             <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center"><User size={22} className="text-gold-700" /></div>
             <div>
               <div className="font-bold text-gray-900">{customer.full_name}</div>
-              <div className="text-xs text-gray-400 flex items-center gap-1"><Calendar size={11} /> Joined {new Date(customer.created_at).toLocaleDateString('en-IN')}</div>
+              <div className="text-xs text-gray-400 flex items-center gap-1"><Calendar size={11} /> Joined {customer.created_at && Number.isFinite(Date.parse(customer.created_at)) ? new Date(customer.created_at).toLocaleDateString('en-IN') : 'Date unavailable'}</div>
             </div>
           </div>
 
