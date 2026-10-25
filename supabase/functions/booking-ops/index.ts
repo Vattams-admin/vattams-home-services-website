@@ -154,6 +154,24 @@ Deno.serve(async (req: Request) => {
 
       const serviceType = String(b.service_type ?? "").trim();
       if (!serviceType) return new Response(JSON.stringify({ error: "Please select a specific job type" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+      // Validate the category/type pairing independently of database rows so a
+      // caller cannot combine one appliance category with another job type.
+      const categoryValue = String(b.service_category ?? "").trim().toLowerCase();
+      const allowedServiceTypes = /(^|\\W)ac(\\W|$)|air\\s*condition/.test(categoryValue)
+        ? ["General Service", "Installation", "Gas Filling", "Pump Water Service", "Coil Service"]
+        : categoryValue.includes("washing machine")
+          ? ["Washing Machine Service"]
+          : categoryValue.includes("refrigerator") || categoryValue.includes("fridge")
+            ? ["Refrigerator Service"]
+            : [];
+      if (!allowedServiceTypes.includes(serviceType)) {
+        return new Response(JSON.stringify({ error: "The selected job type does not match this service category. Please choose a valid option." }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       const { data: callRate, error: callRateError } = await supabase
         .from("technician_call_rates")
         .select("call_rate_fee")
