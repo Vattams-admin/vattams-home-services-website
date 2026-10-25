@@ -88,10 +88,24 @@ export default function CustomerDashboard() {
   useEffect(() => {
     const stored = sessionStorage.getItem('vattams_customer');
     const sessionToken = sessionStorage.getItem('vattams_customer_session');
+    const expiresAt = sessionStorage.getItem('vattams_customer_expires');
+
     if (!stored || !sessionToken) {
       navigate('customer-login');
       return;
     }
+
+    if (expiresAt) {
+      const expiry = Number(expiresAt);
+      if (!Number.isFinite(expiry) || expiry <= Date.now()) {
+        sessionStorage.removeItem('vattams_customer');
+        sessionStorage.removeItem('vattams_customer_session');
+        sessionStorage.removeItem('vattams_customer_expires');
+        navigate('customer-login');
+        return;
+      }
+    }
+
     try {
       const parsed = JSON.parse(stored) as Partial<Customer>;
       if (typeof parsed.id !== 'string' || !parsed.id.trim() ||
@@ -104,6 +118,8 @@ export default function CustomerDashboard() {
       void refreshDashboard(c);
     } catch {
       sessionStorage.removeItem('vattams_customer');
+      sessionStorage.removeItem('vattams_customer_session');
+      sessionStorage.removeItem('vattams_customer_expires');
       navigate('customer-login');
     }
   }, []);
