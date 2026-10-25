@@ -168,8 +168,8 @@ Deno.serve(async req => {
     if (!Number.isFinite(validFrom)
       || (validUntil !== null && !Number.isFinite(validUntil))
       || (validUntil !== null && validUntil < validFrom)
-      || !Number.isFinite(usedCount) || usedCount < 0
-      || (maxUses !== null && (!Number.isFinite(maxUses) || maxUses < 0))) {
+      || !Number.isSafeInteger(usedCount) || usedCount < 0
+      || (maxUses !== null && (!Number.isSafeInteger(maxUses) || maxUses < 0))) {
       console.error("[coupon-ops] invalid coupon lifecycle or usage configuration");
       return new Response(JSON.stringify({ error: "Coupon configuration needs review" }), { status: 503, headers });
     }
