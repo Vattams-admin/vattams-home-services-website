@@ -181,11 +181,21 @@ export default function Booking() {
     : null;
 
   const handleValidateCoupon = async () => {
-    if (!couponCode.trim() || !pricing) return;
+    if (!couponCode.trim() || !pricing || validatingCoupon) return;
     setValidatingCoupon(true);
-    const result = await validateCoupon(couponCode.trim(), pricing.totalAmount);
-    setCouponResult(result);
-    setValidatingCoupon(false);
+    try {
+      const result = await validateCoupon(couponCode.trim(), pricing.totalAmount);
+      setCouponResult(result);
+    } catch (error) {
+      console.error('[Booking] coupon validation failed:', error);
+      setCouponResult({
+        valid: false,
+        error: 'We couldn’t verify this coupon right now. Please try again.',
+        discountAmount: 0,
+      });
+    } finally {
+      setValidatingCoupon(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
