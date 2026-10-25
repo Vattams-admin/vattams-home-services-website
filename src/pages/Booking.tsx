@@ -223,6 +223,10 @@ export default function Booking() {
       alert('Pricing is not available for this service yet. Please choose another service or contact VATTAMS.');
       return;
     }
+    if (couponCode.trim() && !couponResult?.valid) {
+      setSubmitError('You entered a coupon code that has not been successfully applied. Apply the coupon again or clear the coupon field before booking.');
+      return;
+    }
     trackMarketingEvent('booking_request_attempt', { service_category: form.service_category, service_type: form.service_type });
     setSubmitting(true);
     try {
