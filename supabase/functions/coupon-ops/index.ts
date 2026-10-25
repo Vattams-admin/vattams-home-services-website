@@ -64,7 +64,7 @@ Deno.serve(async req => {
 
     const { data: booking, error: bookingLookupError } = await db
       .from("bookings")
-      .select("id,total_amount,amount,coupon_code,discount_amount,customer_id")
+      .select("id,status,total_amount,amount,coupon_code,discount_amount,customer_id")
       .eq("id", booking_id)
       .maybeSingle();
 
@@ -75,6 +75,12 @@ Deno.serve(async req => {
 
     if (!booking) {
       return new Response(JSON.stringify({ error: "Booking not found" }), { status: 404, headers });
+    }
+
+    // Coupons should only be redeemed against an active booking. Cancelled or
+    // completed jobs must not consume a coupon usage slot.
+    if (!["pending", "confirmed"].includes(String(booking.status ?? "").toLowerCase())) {
+      return new Response(JSON.stringify({ error: "Coupon redemption is unavailable for this booking status" }), { status: 409, headers });
     }
 
     // Coupon redemption is a customer-owned operation. Never trust a
