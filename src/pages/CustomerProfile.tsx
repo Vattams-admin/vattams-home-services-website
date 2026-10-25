@@ -13,7 +13,8 @@ export default function CustomerProfile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [bookingCount, setBookingCount] = useState(0);
+  const [bookingCount, setBookingCount] = useState<number | null>(null);
+  const [bookingCountError, setBookingCountError] = useState(false);
   const [showPwdForm, setShowPwdForm] = useState(false);
   const [pwdForm, setPwdForm] = useState({ current: '', new: '', confirm: '' });
   const [pwdLoading, setPwdLoading] = useState(false);
@@ -63,15 +64,19 @@ export default function CustomerProfile() {
   }, []);
 
   const loadBookingCount = async (_customerId: string) => {
+    setBookingCountError(false);
     try {
       const result = await customerData<{ bookings: { id: string }[] }>('bookings');
-      if (!result || !Array.isArray(result.bookings)) {
+      if (!result || !Array.isArray(result.bookings) ||
+          !result.bookings.every((booking) => booking && typeof booking.id === 'string')) {
         throw new Error('Booking count response is unavailable.');
       }
       setBookingCount(result.bookings.length);
+      setBookingCountError(false);
     } catch {
-      // A failed request is not proof that the customer has zero bookings.
-      setMsg({ type: 'error', text: 'Unable to load your booking count. Please refresh and try again.' });
+      // Keep the count unknown: a failed request is not proof of zero bookings.
+      setBookingCount(null);
+      setBookingCountError(true);
     }
   };
 
@@ -217,8 +222,9 @@ export default function CustomerProfile() {
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-5">
             <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center mb-3"><Briefcase size={18} className="text-gold-700" /></div>
-            <div className="text-2xl font-extrabold text-gray-900">{bookingCount}</div>
-            <div className="text-xs text-gray-400 font-medium">Total Bookings</div>
+            <div className="text-2xl font-extrabold text-gray-900">{bookingCount === null ? '—' : bookingCount}</div>
+            <div className="text-xs text-gray-400 font-medium">{bookingCountError ? 'Count unavailable' : 'Total Bookings'}</div>
+            {bookingCountError && <button type="button" onClick={() => customer && void loadBookingCount(customer.id)} className="mt-2 text-xs font-semibold text-gold-700 underline">Retry count</button>}
           </div>
           <div className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-5">
             <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center mb-3"><CheckCircle size={18} className="text-green-600" /></div>
