@@ -29,14 +29,31 @@ export default function CustomerPayments() {
   const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
-    const stored = sessionStorage.getItem('vattams_customer');
-    const sessionToken = sessionStorage.getItem('vattams_customer_session');
-    const expiresAt = Number(sessionStorage.getItem('vattams_customer_expires'));
+    const clearSession = () => {
+      try {
+        sessionStorage.removeItem('vattams_customer');
+        sessionStorage.removeItem('vattams_customer_session');
+        sessionStorage.removeItem('vattams_customer_expires');
+      } catch {
+        // Continue redirecting even if browser storage cleanup is blocked.
+      }
+    };
+
+    let stored: string | null;
+    let sessionToken: string | null;
+    let expiresAt: number;
+    try {
+      stored = sessionStorage.getItem('vattams_customer');
+      sessionToken = sessionStorage.getItem('vattams_customer_session');
+      expiresAt = Number(sessionStorage.getItem('vattams_customer_expires'));
+    } catch {
+      clearSession();
+      navigate('customer-login');
+      return;
+    }
 
     if (!stored || !sessionToken || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
-      sessionStorage.removeItem('vattams_customer');
-      sessionStorage.removeItem('vattams_customer_session');
-      sessionStorage.removeItem('vattams_customer_expires');
+      clearSession();
       navigate('customer-login');
       return;
     }
