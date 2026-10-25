@@ -147,8 +147,8 @@ export default function CustomerServicePriceCards({ variant = 'home' }: { varian
           {priceGroups.map((group) => {
             const Icon = group.icon;
             return (
-              <article key={group.category} className={`relative overflow-hidden rounded-2xl border border-gold-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${cardPadding}`}>
-                <div className={`absolute -right-5 -top-5 h-24 w-24 rounded-full bg-gradient-to-br ${group.accent} opacity-[0.08]`} />
+              <article key={group.category} className={`group relative overflow-hidden rounded-[1.35rem] border border-[#E7E0CC] bg-white shadow-[0_14px_45px_rgba(7,11,21,.055)] transition-all duration-300 hover:-translate-y-1 hover:border-[#D4AF37]/55 hover:shadow-[0_24px_60px_rgba(7,11,21,.12)] ${cardPadding}`}>
+                <div className={`absolute -right-8 -top-8 h-32 w-32 rounded-full bg-gradient-to-br ${group.accent} opacity-[0.07] transition-transform duration-500 group-hover:scale-125`} /><div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-[#D4AF37]/70 to-transparent opacity-70" />
                 <div className={`relative mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${group.accent} shadow-md`}>
                   <Icon size={23} className="text-white" />
                 </div>
@@ -166,7 +166,7 @@ export default function CustomerServicePriceCards({ variant = 'home' }: { varian
                   </div>
                 ) : (
                   <div className="relative mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                    Price currently unavailable
+                    Pricing temporarily unavailable
                   </div>
                 )}
                 <div className="relative mt-4 space-y-2">
@@ -201,7 +201,7 @@ export default function CustomerServicePriceCards({ variant = 'home' }: { varian
                 <button
                   type="button"
                   onClick={() => navigate('booking')}
-                  className="relative mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-navy-900 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-navy-800"
+                  className="relative mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#D4AF37]/35 bg-gradient-to-r from-[#101D3D] to-[#070B15] px-4 py-3 text-sm font-bold text-white shadow-sm transition-all hover:border-[#D4AF37]/70 hover:shadow-lg"
                 >
                   Book {group.title} <ArrowRight size={15} />
                 </button>
