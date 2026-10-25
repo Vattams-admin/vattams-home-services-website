@@ -121,27 +121,45 @@ export default function CustomerProfile() {
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customer) return;
+    if (pwdLoading || !customer) return;
     setPwdMsg(null);
-    if (pwdForm.new !== pwdForm.confirm) { setPwdMsg({ type: 'error', text: 'New passwords do not match.' }); return; }
-    if (pwdForm.new.length < 6) { setPwdMsg({ type: 'error', text: 'Password must be at least 6 characters.' }); return; }
+    if (!pwdForm.current) {
+      setPwdMsg({ type: 'error', text: 'Enter your current password.' });
+      return;
+    }
+    if (pwdForm.new !== pwdForm.confirm) {
+      setPwdMsg({ type: 'error', text: 'New passwords do not match.' });
+      return;
+    }
+    if (pwdForm.new.length < 6) {
+      setPwdMsg({ type: 'error', text: 'Password must be at least 6 characters.' });
+      return;
+    }
+    const sessionToken = sessionStorage.getItem('vattams_customer_session');
+    if (!sessionToken) {
+      setPwdMsg({ type: 'error', text: 'Your session has expired. Please sign in again.' });
+      return;
+    }
 
     setPwdLoading(true);
     try {
       const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-auth/change-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ANON_KEY}` },
-        body: JSON.stringify({ session_token: sessionStorage.getItem('vattams_customer_session') || '', current_password: pwdForm.current, new_password: pwdForm.new }),
+        body: JSON.stringify({ session_token: sessionToken, current_password: pwdForm.current, new_password: pwdForm.new }),
       });
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error || 'Failed to change password');
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data || data.error || data.success === false) {
+        throw new Error(typeof data?.error === 'string' ? data.error : 'Unable to confirm password change. Please try again.');
+      }
       setPwdMsg({ type: 'success', text: 'Password changed successfully!' });
       setPwdForm({ current: '', new: '', confirm: '' });
       setShowPwdForm(false);
     } catch (err) {
       setPwdMsg({ type: 'error', text: err instanceof Error ? err.message : 'Failed to change password.' });
+    } finally {
+      setPwdLoading(false);
     }
-    setPwdLoading(false);
   };
 
   if (loading || !customer) {
@@ -237,7 +255,7 @@ export default function CustomerProfile() {
         <div className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-6 mt-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2"><Lock size={16} className="text-gray-400" /> Change Password</h3>
-            <button onClick={() => setShowPwdForm(!showPwdForm)} className="text-sm text-gold-700 font-semibold hover:underline">
+            <button type="button" disabled={pwdLoading} onClick={() => setShowPwdForm(!showPwdForm)} className="text-sm text-gold-700 font-semibold hover:underline disabled:opacity-60">
               {showPwdForm ? 'Cancel' : 'Change'}
             </button>
           </div>
