@@ -23,12 +23,28 @@ export default function CustomerLogin() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
         body: JSON.stringify({ mobile, password }),
       });
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error || 'Login failed');
-
-      sessionStorage.setItem('vattams_customer', JSON.stringify(data.customer));
-      sessionStorage.setItem('vattams_customer_session', data.sessionToken);
-      sessionStorage.setItem('vattams_customer_expires', data.expiresAt);
+      const data: unknown = await res.json();
+      if (!res.ok) {
+        const message = data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
+          ? data.error
+          : 'Login failed. Please try again.';
+        throw new Error(message);
+      }
+      if (!data || typeof data !== 'object') throw new Error('Login response was invalid. Please try again.');
+      const payload = data as { error?: unknown; customer?: unknown; sessionToken?: unknown; expiresAt?: unknown };
+      if (payload.error) throw new Error(typeof payload.error === 'string' ? payload.error : 'Login failed. Please try again.');
+      if (!payload.customer || typeof payload.customer !== 'object' ||
+          typeof payload.sessionToken !== 'string' || !payload.sessionToken.trim() ||
+          (typeof payload.expiresAt !== 'string' && typeof payload.expiresAt !== 'number')) {
+        throw new Error('Login response was incomplete. Please try again.');
+      }
+      const expiry = Number(payload.expiresAt);
+      if (!Number.isFinite(expiry) || expiry <= Date.now()) {
+        throw new Error('Your session could not be verified. Please sign in again.');
+      }
+      sessionStorage.setItem('vattams_customer', JSON.stringify(payload.customer));
+      sessionStorage.setItem('vattams_customer_session', payload.sessionToken);
+      sessionStorage.setItem('vattams_customer_expires', String(expiry));
       void registerServiceWorker();
       void initFCM('customer', data.customer.mobile);
       navigate('customer-dashboard');
