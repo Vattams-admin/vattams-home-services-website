@@ -46,7 +46,7 @@ export async function validateCoupon(code: string, orderAmount: number): Promise
   const validFromTime = coupon.valid_from ? new Date(coupon.valid_from).getTime() : Number.NaN;
   const validUntilTime = coupon.valid_until ? new Date(coupon.valid_until).getTime() : null;
   const usedCount = Number(coupon.used_count);
-  const maxUses = coupon.max_uses === null ? null : Number(coupon.max_uses);
+  const maxUses = coupon.max_uses === null || coupon.max_uses === undefined ? null : Number(coupon.max_uses);
 
   // Treat malformed dates or usage counters as invalid configuration rather
   // than accidentally accepting a coupon because date comparisons return false.
