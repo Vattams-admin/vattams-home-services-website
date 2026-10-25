@@ -73,7 +73,14 @@ Deno.serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const { action, booking_id, technician_id, otp, purpose, status, booking_action_token, admin_id, admin_session_token, customer_session_token, booking } = await req.json();
+    const requestBody: unknown = await req.json();
+    if (!requestBody || typeof requestBody !== "object" || Array.isArray(requestBody)) {
+      return new Response(JSON.stringify({ error: "Request body must be a JSON object." }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { action, booking_id, technician_id, otp, purpose, status, booking_action_token, admin_id, admin_session_token, customer_session_token, booking } = requestBody as Record<string, unknown>;
 
     if (action === "create_booking") {
       const customerSessionToken = String(customer_session_token || "");
