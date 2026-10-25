@@ -264,6 +264,7 @@ Deno.serve(async (req: Request) => {
           || validFromTime === null
           || (validFromTime !== null && !Number.isFinite(validFromTime))
           || (validUntilTime !== null && !Number.isFinite(validUntilTime))
+          || (validFromTime !== null && validUntilTime !== null && validUntilTime < validFromTime)
           || !Number.isFinite(usedCount) || usedCount < 0
           || (maxUses !== null && (!Number.isFinite(maxUses) || maxUses < 0))
           || !Number.isFinite(minimumOrderAmountForValidity) || minimumOrderAmountForValidity < 0
