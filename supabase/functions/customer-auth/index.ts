@@ -339,7 +339,6 @@ Deno.serve(async (req: Request) => {
           destinationEmail = String(account?.email || "").trim().toLowerCase();
           if (!destinationEmail) return errorResponse("This account does not have a verified email address.");
         }
-        await supabase.from("otp_codes").delete().eq("mobile", mobile).eq("purpose", purpose);
         const otp = generateOTP();
         const otpHash = await hashOTP(otp);
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
@@ -348,6 +347,16 @@ Deno.serve(async (req: Request) => {
         if (!await sendEmailOtp(destinationEmail, otp, purpose)) {
           await supabase.from("otp_codes").delete().eq("id", newRow.id);
           return errorResponse("We could not send the verification email. Please try again later.", 503);
+        }
+        // Preserve the previous OTP if delivery fails; replace older rows only
+        // after the provider accepts the new verification email.
+        const { error: cleanupError } = await supabase.from("otp_codes")
+          .delete()
+          .eq("mobile", mobile)
+          .eq("purpose", purpose)
+          .neq("id", newRow.id);
+        if (cleanupError) {
+          console.error("Could not remove superseded customer OTP rows:", cleanupError.message);
         }
         return jsonResponse({ success: true, message: "Verification code sent to your email address" });
       }
