@@ -17,6 +17,7 @@ export default function CustomerProfile() {
   const [showPwdForm, setShowPwdForm] = useState(false);
   const [pwdForm, setPwdForm] = useState({ current: '', new: '', confirm: '' });
   const [pwdLoading, setPwdLoading] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [pwdMsg, setPwdMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
@@ -64,7 +65,15 @@ export default function CustomerProfile() {
   };
 
   const handleLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
     const sessionToken = sessionStorage.getItem('vattams_customer_session') || '';
+    // Clear the local session immediately so a network failure cannot leave
+    // this browser appearing signed in. The server logout is best-effort.
+    sessionStorage.removeItem('vattams_customer');
+    sessionStorage.removeItem('vattams_customer_session');
+    sessionStorage.removeItem('vattams_customer_expires');
+    navigate('home');
     try {
       if (sessionToken) {
         await fetch(SUPABASE_URL + '/functions/v1/customer-auth/logout', {
@@ -73,11 +82,10 @@ export default function CustomerProfile() {
           body: JSON.stringify({ session_token: sessionToken }),
         });
       }
+    } catch {
+      // Local logout is complete; server-side revocation may need retry/login.
     } finally {
-      sessionStorage.removeItem('vattams_customer');
-      sessionStorage.removeItem('vattams_customer_session');
-      sessionStorage.removeItem('vattams_customer_expires');
-      navigate('home');
+      setLoggingOut(false);
     }
   };
 
@@ -115,8 +123,8 @@ export default function CustomerProfile() {
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-extrabold text-gray-900">My Profile</h1>
-          <button onClick={handleLogout} className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold rounded-xl transition-colors">
-            <LogOut size={16} /> Logout
+          <button onClick={handleLogout} disabled={loggingOut} aria-busy={loggingOut} className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 disabled:opacity-60 disabled:cursor-not-allowed text-red-600 text-sm font-semibold rounded-xl transition-colors">
+            <LogOut size={16} /> {loggingOut ? 'Logging out…' : 'Logout'}
           </button>
         </div>
 
