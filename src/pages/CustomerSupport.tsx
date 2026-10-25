@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Mail, MapPin, Send, Loader, Headphones, ChevronRight } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import { Customer } from '@/lib/supabase';
@@ -46,9 +46,24 @@ export default function CustomerSupport() {
     }
   }, [navigate]);
 
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearToastTimeout = () => {
+    if (toastTimeoutRef.current !== null) {
+      clearTimeout(toastTimeoutRef.current);
+      toastTimeoutRef.current = null;
+    }
+  };
+
+  useEffect(() => () => clearToastTimeout(), []);
+
   const showToast = (type: 'success' | 'error', text: string) => {
+    clearToastTimeout();
     setToast({ type, text });
-    setTimeout(() => setToast(null), 3000);
+    toastTimeoutRef.current = setTimeout(() => {
+      setToast(null);
+      toastTimeoutRef.current = null;
+    }, 3000);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
