@@ -575,7 +575,7 @@ export default function TechnicianRegister() {
 
           <p className="text-gray-500 mb-6 leading-7">
             Thank you for registering with{' '}
-            <strong>VATTAMS HOME SERVICES</strong>.
+            <strong>VATTAMS HYBRID SERVICE MARKETPLACE</strong>.
             <br />
             <br />
 
