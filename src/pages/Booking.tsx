@@ -54,6 +54,7 @@ export default function Booking() {
   const [loadError, setLoadError] = useState('');
   const [catalogueRetryCount, setCatalogueRetryCount] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const bookingSubmitInFlight = useRef(false);
   const [submitError, setSubmitError] = useState('');
   const [couponCode, setCouponCode] = useState('');
   const [couponResult, setCouponResult] = useState<{ valid: boolean; error?: string; discountAmount: number; coupon?: Coupon } | null>(null);
@@ -245,8 +246,9 @@ export default function Booking() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Ignore rapid repeat submissions while a booking request is in flight.
-    if (submitting) return;
+    // A ref lock closes the tiny gap before React commits the submitting state,
+    // preventing rapid double-clicks from issuing two create_booking requests.
+    if (bookingSubmitInFlight.current || submitting) return;
     setSubmitError('');
     if (!isFeaturedApplianceService(form.service_category)) {
       alert('Please select AC, washing machine, or refrigerator service.');
@@ -270,6 +272,7 @@ export default function Booking() {
       setSubmitError('You entered a coupon code that has not been successfully applied. Apply the coupon again or clear the coupon field before booking.');
       return;
     }
+    bookingSubmitInFlight.current = true;
     trackMarketingEvent('booking_request_attempt', { service_category: form.service_category, service_type: form.service_type });
     setSubmitting(true);
     try {
@@ -335,6 +338,7 @@ export default function Booking() {
       console.error('[Booking] submission failed:', error);
       setSubmitError('The booking status could not be confirmed. Please contact VATTAMS support before submitting again, so we can check whether your booking was created.');
     } finally {
+      bookingSubmitInFlight.current = false;
       setSubmitting(false);
     }
   };
