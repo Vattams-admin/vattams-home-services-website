@@ -34,7 +34,11 @@ export async function validateCoupon(code: string, orderAmount: number): Promise
     .eq('is_active', true)
     .maybeSingle();
 
-  if (error || !data) {
+  if (error) {
+    console.error('[coupons] coupon lookup failed');
+    return { valid: false, error: 'We couldn’t verify this coupon right now. Please try again shortly.', discountAmount: 0 };
+  }
+  if (!data) {
     return { valid: false, error: 'Invalid coupon code', discountAmount: 0 };
   }
 
