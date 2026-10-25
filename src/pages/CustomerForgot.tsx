@@ -123,29 +123,29 @@ export default function CustomerForgot() {
           </p>
         </div>
 
-        {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3 mb-4">{error}</div>}
+        {error && <div role="alert" aria-live="assertive" className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3 mb-4">{error}</div>}
 
         {step === 'request' && (
-          <form onSubmit={handleRequest} className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-6 space-y-4">
+          <form onSubmit={handleRequest} aria-busy={loading} className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-6 space-y-4">
             <div className="relative">
               <Phone size={16} className="absolute left-3 top-3.5 text-gray-400" />
-              <input type="tel" value={mobile} onChange={(e) => setMobile(e.target.value)} maxLength={10}
+              <input type="tel" name="mobile" aria-label="10-digit mobile number" autoComplete="tel" inputMode="numeric" required value={mobile} onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))} maxLength={10}
                 placeholder="10-digit Mobile Number"
                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
             </div>
             <button type="submit" disabled={loading}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors">
+              className="w-full flex items-center justify-center gap-2 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2">
               {loading ? <Loader size={18} className="animate-spin" /> : <KeyRound size={18} />} Send OTP
             </button>
-            <button type="button" onClick={() => navigate('customer-login')} className="w-full text-center text-sm text-gray-500 hover:underline">Back to Login</button>
+            <button type="button" onClick={() => navigate('customer-login')} className="w-full text-center text-sm text-gray-500 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2 rounded">Back to Login</button>
           </form>
         )}
 
         {step === 'otp' && (
-          <form onSubmit={handleVerifyOtp} className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-6 space-y-4">
+          <form onSubmit={handleVerifyOtp} aria-busy={loading} className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-6 space-y-4">
             <div className="relative">
               <KeyRound size={16} className="absolute left-3 top-3.5 text-gray-400" />
-              <input value={otp} onChange={(e) => setOtp(e.target.value)} maxLength={6}
+              <input name="otp" aria-label="6-digit OTP" inputMode="numeric" autoComplete="one-time-code" required value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} maxLength={6}
                 placeholder="6-digit OTP"
                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
             </div>
@@ -162,10 +162,10 @@ export default function CustomerForgot() {
         )}
 
         {step === 'reset' && (
-          <form onSubmit={handleResetPassword} className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-6 space-y-4">
+          <form onSubmit={handleResetPassword} aria-busy={loading} className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-6 space-y-4">
             <div className="relative">
               <Lock size={16} className="absolute left-3 top-3.5 text-gray-400" />
-              <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+              <input type="password" name="new-password" aria-label="New password" autoComplete="new-password" required minLength={6} maxLength={128} value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="New Password (min 6 chars)"
                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
             </div>
@@ -181,7 +181,7 @@ export default function CustomerForgot() {
             <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
               <ShieldCheck size={32} className="text-green-600" />
             </div>
-            <button onClick={() => navigate('customer-login')} className="w-full py-3 bg-navy-950 hover:bg-navy-900 text-white font-bold rounded-xl transition-colors">Login Now</button>
+            <button onClick={() => navigate('customer-login')} className="w-full py-3 bg-navy-950 hover:bg-navy-900 text-white font-bold rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2">Login Now</button>
           </div>
         )}
       </div>
