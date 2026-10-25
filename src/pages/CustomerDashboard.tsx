@@ -287,7 +287,7 @@ export default function CustomerDashboard() {
               <p className="text-navy-100 text-sm mt-1">Here's your service overview</p>
             </div>
             <div className="flex gap-3">
-              <button onClick={() => navigate('booking')} className="px-5 py-2.5 bg-gold-500 text-navy-950 font-bold text-sm rounded-xl hover:bg-gold-400 transition-colors">
+              <button onClick={() => navigate('booking')} className="px-5 py-2.5 bg-gold-500 text-navy-950 font-bold text-sm rounded-xl hover:bg-gold-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-navy-950">
                 Book a Service
               </button>
             </div>
@@ -301,7 +301,7 @@ export default function CustomerDashboard() {
               type="button"
               onClick={() => void refreshDashboard(customer)}
               disabled={loading}
-              className="rounded-lg border border-amber-300 px-3 py-2 font-bold disabled:opacity-50"
+              className="rounded-lg border border-amber-300 px-3 py-2 font-bold disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-700 focus-visible:ring-offset-2"
             >
               {loading ? 'Refreshing…' : 'Retry'}
             </button>
