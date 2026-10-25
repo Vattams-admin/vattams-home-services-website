@@ -43,16 +43,30 @@ export async function validateCoupon(code: string, orderAmount: number): Promise
   }
 
   const coupon = data as Coupon;
+  const validFromTime = coupon.valid_from ? new Date(coupon.valid_from).getTime() : Number.NaN;
+  const validUntilTime = coupon.valid_until ? new Date(coupon.valid_until).getTime() : null;
+  const usedCount = Number(coupon.used_count);
+  const maxUses = coupon.max_uses === null ? null : Number(coupon.max_uses);
 
-  if (coupon.valid_from && new Date(coupon.valid_from) > new Date()) {
+  // Treat malformed dates or usage counters as invalid configuration rather
+  // than accidentally accepting a coupon because date comparisons return false.
+  if (!Number.isFinite(validFromTime)
+    || (validUntilTime !== null && !Number.isFinite(validUntilTime))
+    || !Number.isFinite(usedCount) || usedCount < 0
+    || (maxUses !== null && (!Number.isFinite(maxUses) || maxUses < 0))) {
+    return { valid: false, error: 'This coupon has invalid validity or usage settings', discountAmount: 0 };
+  }
+
+  const now = Date.now();
+  if (validFromTime > now) {
     return { valid: false, error: 'Coupon is not yet active', discountAmount: 0 };
   }
 
-  if (coupon.valid_until && new Date(coupon.valid_until) < new Date()) {
+  if (validUntilTime !== null && validUntilTime < now) {
     return { valid: false, error: 'Coupon has expired', discountAmount: 0 };
   }
 
-  if (coupon.max_uses !== null && coupon.used_count >= coupon.max_uses) {
+  if (maxUses !== null && usedCount >= maxUses) {
     return { valid: false, error: 'Coupon usage limit reached', discountAmount: 0 };
   }
 
