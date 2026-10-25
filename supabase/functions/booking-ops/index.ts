@@ -657,7 +657,9 @@ Deno.serve(async (req: Request) => {
           .from("bookings")
           .update({
             assigned_technician_id: null,
-            status: "pending",
+            // Restore the exact pre-claim state; confirmed bookings must not
+            // be downgraded to pending when technician-job creation fails.
+            status: booking.status,
             updated_at: new Date().toISOString(),
           })
           .eq("id", booking_id)
