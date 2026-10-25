@@ -198,13 +198,22 @@ export default function CustomerServicePriceCards({ variant = 'home' }: { varian
                 <p className="relative mt-4 text-xs leading-5 text-gray-500">
                   Estimates use the current listed base price, GST and platform fee. Final checkout shows the applicable charges and discounts. Parts or additional work are quoted separately and require your approval.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => navigate('booking')}
-                  className="relative mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#D4AF37]/35 bg-gradient-to-r from-[#101D3D] to-[#070B15] px-4 py-3 text-sm font-bold text-white shadow-sm transition-all hover:border-[#D4AF37]/70 hover:shadow-lg"
-                >
-                  Book {group.title} <ArrowRight size={15} />
-                </button>
+                {group.rows.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => navigate('booking')}
+                    className="relative mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#D4AF37]/35 bg-gradient-to-r from-[#101D3D] to-[#070B15] px-4 py-3 text-sm font-bold text-white shadow-sm transition-all hover:border-[#D4AF37]/70 hover:shadow-lg"
+                  >
+                    Request {group.title} <ArrowRight size={15} />
+                  </button>
+                ) : (
+                  <a
+                    href="tel:+916374068296"
+                    className="relative mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#D4AF37]/45 bg-[#F8F4E5] px-4 py-3 text-sm font-bold text-[#101D3D] transition-all hover:bg-[#F1E8C9]"
+                  >
+                    Ask about availability <ArrowRight size={15} />
+                  </a>
+                )}
               </article>
             );
           })}
