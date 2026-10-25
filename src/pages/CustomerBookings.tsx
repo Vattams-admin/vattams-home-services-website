@@ -87,11 +87,11 @@ export default function CustomerBookings() {
     const stored = sessionStorage.getItem('vattams_customer');
     const sessionToken = sessionStorage.getItem('vattams_customer_session');
     const expiresAt = sessionStorage.getItem('vattams_customer_expires');
-    if (!stored || !sessionToken) {
+    if (!stored || !sessionToken || !expiresAt) {
       navigate('customer-login');
       return;
     }
-    if (expiresAt) {
+    {
       const expiry = Number(expiresAt);
       if (!Number.isFinite(expiry) || expiry <= Date.now()) {
         sessionStorage.removeItem('vattams_customer');
