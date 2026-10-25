@@ -140,19 +140,40 @@ export default function CustomerDashboard() {
   }, []);
 
   const loadBookings = async (c: Customer): Promise<Booking[]> => {
-    const data = await customerData<{ bookings: Booking[] }>('bookings', { mobile: c.mobile });
+    const data = await customerData<{ bookings: unknown }>('bookings', { mobile: c.mobile });
     if (!data || !Array.isArray(data.bookings)) {
       throw new Error('Booking history response was unavailable or invalid.');
     }
-    return data.bookings;
+    const validBookings = data.bookings.filter((item): item is Booking => {
+      if (!item || typeof item !== 'object') return false;
+      const booking = item as Partial<Booking>;
+      return typeof booking.id === 'string' && booking.id.trim().length > 0 &&
+        typeof booking.status === 'string' && booking.status.trim().length > 0;
+    });
+    if (validBookings.length !== data.bookings.length) {
+      throw new Error('Booking history contained incomplete records. Please retry.');
+    }
+    return validBookings;
   };
 
   const loadNotifications = async (c: Customer): Promise<{ id: string; title: string; message: string; created_at: string; is_read: boolean }[]> => {
-    const data = await customerData<{ notifications: { id: string; title: string; message: string; created_at: string; is_read: boolean }[] }>('account', { mobile: c.mobile });
+    const data = await customerData<{ notifications: unknown }>('account', { mobile: c.mobile });
     if (!data || !Array.isArray(data.notifications)) {
       throw new Error('Notification response was unavailable or invalid.');
     }
-    return data.notifications;
+    const validNotifications = data.notifications.filter((item): item is { id: string; title: string; message: string; created_at: string; is_read: boolean } => {
+      if (!item || typeof item !== 'object') return false;
+      const notification = item as Record<string, unknown>;
+      return typeof notification.id === 'string' && notification.id.trim().length > 0 &&
+        typeof notification.title === 'string' &&
+        typeof notification.message === 'string' &&
+        typeof notification.is_read === 'boolean' &&
+        typeof notification.created_at === 'string';
+    });
+    if (validNotifications.length !== data.notifications.length) {
+      throw new Error('Notifications contained incomplete records. Please retry.');
+    }
+    return validNotifications;
   };
 
   if (loading || !customer) {
