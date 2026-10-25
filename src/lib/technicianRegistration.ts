@@ -123,8 +123,7 @@ export const STEPS: StepDef[] = [
     field: 'email',
     type: 'email',
     placeholder: 'your@email.com',
-    optional: true,
-    validate: (v) => v.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) ? 'Enter a valid email or type "skip"' : null,
+    validate: (v) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) ? 'Enter a valid email address. Email verification is required.' : null,
   },
   {
     key: 'city',
