@@ -31,7 +31,9 @@ function getPublicAppUrl(): string {
   if (configuredUrl) {
     try {
       const parsed = new URL(configuredUrl);
-      if (parsed.protocol === "https:" || parsed.protocol === "http:") {
+      // Push links are delivered outside the app; require HTTPS to avoid
+      // sending customers or technicians to an insecure configured origin.
+      if (parsed.protocol === "https:") {
         return parsed.origin;
       }
     } catch {
