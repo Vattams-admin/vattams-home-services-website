@@ -157,10 +157,28 @@ Deno.serve(async (req: Request) => {
       }
       if (!customerPrice) return new Response(JSON.stringify({ error: "Customer pricing is not configured for this job type yet. Please select another service or contact support." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-      const basePrice = Number(customerPrice.base_price) || 0;
-      const gstAmount = Math.round((basePrice * (Number(servicePrice.gst_rate)||0) / 100) * 100) / 100;
-      const platformFee = Number(servicePrice.platform_fee) || 0;
-      const commissionAmount = Math.round((basePrice * (Number(servicePrice.commission_rate)||0) / 100) * 100) / 100;
+      const basePrice = Number(customerPrice.base_price);
+      const gstRate = Number(servicePrice.gst_rate);
+      const platformFee = Number(servicePrice.platform_fee);
+      const commissionRate = Number(servicePrice.commission_rate);
+      const callRateFee = Number(callRate.call_rate_fee);
+
+      // Fail closed on broken pricing configuration instead of silently
+      // converting null, NaN, or malformed database values into zero.
+      if (!Number.isFinite(basePrice) || basePrice <= 0
+        || !Number.isFinite(gstRate) || gstRate < 0 || gstRate > 100
+        || !Number.isFinite(platformFee) || platformFee < 0
+        || !Number.isFinite(commissionRate) || commissionRate < 0 || commissionRate > 100
+        || !Number.isFinite(callRateFee) || callRateFee < 0) {
+        console.error("[booking-ops create_booking] invalid numeric pricing configuration");
+        return new Response(JSON.stringify({ error: "Pricing for this service needs review. Please contact VATTAMS support before booking." }), {
+          status: 503,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const gstAmount = Math.round((basePrice * gstRate / 100) * 100) / 100;
+      const commissionAmount = Math.round((basePrice * commissionRate / 100) * 100) / 100;
       const totalAmount = Math.round((basePrice + gstAmount + platformFee) * 100) / 100;
       let discountAmount = 0;
       let couponCode: string | null = null;
@@ -232,7 +250,7 @@ Deno.serve(async (req: Request) => {
         gst_amount: gstAmount,
         platform_fee: platformFee,
         commission_amount: commissionAmount,
-        call_rate_fee: Number(callRate.call_rate_fee) || 0,
+        call_rate_fee: callRateFee,
         total_amount: finalAmount,
         coupon_code: couponCode,
         discount_amount: discountAmount,
