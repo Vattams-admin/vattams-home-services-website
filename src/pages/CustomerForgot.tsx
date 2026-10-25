@@ -35,8 +35,13 @@ export default function CustomerForgot() {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
         body: JSON.stringify({ mobile }),
       });
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error || 'Failed to send OTP');
+      const data: unknown = await res.json().catch(() => null);
+      const responseError = data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
+        ? data.error
+        : '';
+      if (!res.ok || !data || typeof data !== 'object' || responseError) {
+        throw new Error(responseError || 'Failed to send OTP. Please try again.');
+      }
       setStep('otp');
       startResendTimer();
     } catch (err) {
@@ -57,8 +62,13 @@ export default function CustomerForgot() {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
         body: JSON.stringify({ mobile, code: otp, purpose: 'forgot_password' }),
       });
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error || 'Verification failed');
+      const data: unknown = await res.json().catch(() => null);
+      const responseError = data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
+        ? data.error
+        : '';
+      if (!res.ok || !data || typeof data !== 'object' || responseError) {
+        throw new Error(responseError || 'OTP verification failed. Please try again.');
+      }
       setStep('reset');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Network error.');
@@ -78,8 +88,13 @@ export default function CustomerForgot() {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
         body: JSON.stringify({ mobile, new_password: newPassword }),
       });
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error || 'Failed to reset password');
+      const data: unknown = await res.json().catch(() => null);
+      const responseError = data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
+        ? data.error
+        : '';
+      if (!res.ok || !data || typeof data !== 'object' || responseError) {
+        throw new Error(responseError || 'Password reset failed. Please try again.');
+      }
       setStep('done');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Network error.');
@@ -96,8 +111,13 @@ export default function CustomerForgot() {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
         body: JSON.stringify({ mobile, purpose: 'forgot_password' }),
       });
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error || 'Failed to resend');
+      const data: unknown = await res.json().catch(() => null);
+      const responseError = data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
+        ? data.error
+        : '';
+      if (!res.ok || !data || typeof data !== 'object' || responseError) {
+        throw new Error(responseError || 'Failed to resend OTP. Please try again.');
+      }
       setOtp('');
       startResendTimer();
     } catch (err) {
