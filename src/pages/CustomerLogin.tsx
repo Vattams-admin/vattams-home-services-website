@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Loader, Phone, Lock, LogIn } from 'lucide-react';
 import { useRouter } from '@/lib/router';
-import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase';
 import { initFCM, registerServiceWorker } from '@/lib/fcm';
 export default function CustomerLogin() {
   const { navigate } = useRouter();
@@ -38,6 +38,12 @@ export default function CustomerLogin() {
           (typeof payload.expiresAt !== 'string' && typeof payload.expiresAt !== 'number')) {
         throw new Error('Login response was incomplete. Please try again.');
       }
+      const customer = payload.customer as { id?: unknown; mobile?: unknown; full_name?: unknown };
+      if (typeof customer.id !== 'string' || !customer.id.trim() ||
+          typeof customer.mobile !== 'string' || !/^[6-9]\\d{9}$/.test(customer.mobile) ||
+          typeof customer.full_name !== 'string' || !customer.full_name.trim()) {
+        throw new Error('Login response contained an invalid customer profile. Please try again.');
+      }
       const expiry = Number(payload.expiresAt);
       if (!Number.isFinite(expiry) || expiry <= Date.now()) {
         throw new Error('Your session could not be verified. Please sign in again.');
@@ -46,12 +52,13 @@ export default function CustomerLogin() {
       sessionStorage.setItem('vattams_customer_session', payload.sessionToken);
       sessionStorage.setItem('vattams_customer_expires', String(expiry));
       void registerServiceWorker();
-      void initFCM('customer', data.customer.mobile);
+      void initFCM('customer', customer.mobile);
       navigate('customer-dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Network error. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
