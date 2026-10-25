@@ -77,7 +77,9 @@ export default function CustomerBookings() {
       // customerData returns null when the session is missing or the endpoint
       // rejects the request. Do not turn an unavailable response into a false
       // "No bookings yet" state.
-      if (!result || !Array.isArray(result.bookings)) {
+      if (!result || !Array.isArray(result.bookings) ||
+          !result.bookings.every((booking) => booking && typeof booking.id === 'string' && booking.id.trim() &&
+            typeof booking.status === 'string' && booking.status.trim())) {
         throw new Error('We couldn’t verify your booking history. Please sign in again or retry shortly.');
       }
       if (requestVersion !== bookingRequestVersion.current) return;
@@ -223,19 +225,21 @@ export default function CustomerBookings() {
             </div>
 
             {bookings.map((booking) => {
-              const status = booking.status || 'pending';
-              const amount = Number(booking.total_amount ?? booking.amount ?? 0);
+              const status = booking.status || 'unknown';
+              const rawAmount = booking.total_amount ?? booking.amount;
+              const parsedAmount = rawAmount == null || rawAmount === '' ? null : Number(rawAmount);
+              const amount = parsedAmount !== null && Number.isFinite(parsedAmount) && parsedAmount >= 0 ? parsedAmount : null;
               return (
                 <article key={booking.id} className="rounded-2xl border border-[#e8e1d2] bg-white p-5 shadow-sm md:p-6">
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Booking {booking.booking_number}</p>
+                      <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Booking {typeof booking.booking_number === 'string' && booking.booking_number.trim() ? booking.booking_number : 'Reference unavailable'}</p>
                       <h2 className="mt-1 text-lg font-extrabold text-[#0b1f3a]">
-                        {booking.service_category}{booking.service_type ? ' · ' + booking.service_type : ''}
+                        {booking.service_category || 'Service details unavailable'}{booking.service_type ? ' · ' + booking.service_type : ''}
                       </h2>
                     </div>
                     <span className={'inline-flex rounded-full border px-3 py-1.5 text-xs font-bold ' + (statusClasses[status] ?? 'bg-gray-50 text-gray-700 border-gray-200')}>
-                      {statusLabels[status] ?? status.split('_').join(' ')}
+                      {statusLabels[status] ?? (status === 'unknown' ? 'Status unavailable' : status.split('_').join(' '))}
                     </span>
                   </div>
 
@@ -258,14 +262,14 @@ export default function CustomerBookings() {
                       <MapPin size={18} className="mt-0.5 shrink-0 text-[#a47c00]" />
                       <div>
                         <p className="text-xs font-semibold uppercase text-gray-500">Service address</p>
-                        <p className="mt-1 text-sm text-gray-700">{booking.address}, {booking.city}</p>
+                        <p className="mt-1 text-sm text-gray-700">{[booking.address, booking.city].filter((value) => typeof value === 'string' && value.trim()).join(', ') || 'Address unavailable'}</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
                       <Receipt size={18} className="mt-0.5 shrink-0 text-[#a47c00]" />
                       <div>
                         <p className="text-xs font-semibold uppercase text-gray-500">Customer total</p>
-                        <p className="mt-1 text-sm font-extrabold text-gray-900">{formatCurrency(amount)}</p>
+                        <p className="mt-1 text-sm font-extrabold text-gray-900">{amount === null ? 'Amount unavailable' : formatCurrency(amount)}</p>
                         <p className="mt-1 text-xs text-gray-500">Parts or additional work require your approval.</p>
                       </div>
                     </div>
