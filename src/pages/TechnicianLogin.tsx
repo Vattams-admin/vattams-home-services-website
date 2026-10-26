@@ -131,6 +131,9 @@ export default function TechnicianLogin() {
                   className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-blue-200/50 focus:border-[#c9a227] focus:ring-2 focus:ring-[#c9a227]/30 outline-none transition-all"
                   placeholder="e.g. 9876543210 or you@example.com"
                   autoComplete="username"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  maxLength={254}
                 />
               </div>
             </div>
