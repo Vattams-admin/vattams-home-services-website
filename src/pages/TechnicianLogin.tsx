@@ -149,7 +149,11 @@ export default function TechnicianLogin() {
                   autoComplete="current-password"
                   maxLength={128}
                 />
-                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                <button
+                  type="button"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-pressed={showPassword}
+                  onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-3.5 text-[#e8dcc0]/50 hover:text-[#e8dcc0]">
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
