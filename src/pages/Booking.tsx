@@ -591,7 +591,7 @@ export default function Booking() {
                       placeholder="Your full name" />
                   </Field>
                   <Field icon={Phone} label="Mobile Number *">
-                    <input type="tel" required inputMode="numeric" autoComplete="tel-national" maxLength={10} pattern="[0-9]{10}" value={form.mobile_number}
+                    <input type="tel" required aria-label="10-digit mobile number" inputMode="numeric" autoComplete="tel-national" maxLength={10} pattern="[0-9]{10}" value={form.mobile_number}
                       onChange={(e) => setForm({ ...form, mobile_number: e.target.value.replace(/\D/g, '').slice(0, 10) })}
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all"
                       placeholder="10-digit mobile number" />
