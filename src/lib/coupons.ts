@@ -176,6 +176,7 @@ export async function fetchActiveCoupons(): Promise<Coupon[]> {
       && ['percentage', 'flat'].includes(String(coupon.discount_type))
       && typeof coupon.discount_value === 'number' && Number.isFinite(coupon.discount_value) && coupon.discount_value > 0
       && (coupon.discount_type !== 'percentage' || coupon.discount_value <= 100)
+      && (coupon.discount_type !== 'flat' || Math.abs(coupon.discount_value * 100 - Math.round(coupon.discount_value * 100)) <= 1e-7)
       && typeof coupon.min_order_amount === 'number' && Number.isFinite(coupon.min_order_amount)
       && coupon.min_order_amount >= 0
       && typeof coupon.used_count === 'number' && Number.isSafeInteger(coupon.used_count) && coupon.used_count >= 0
