@@ -537,11 +537,15 @@ export async function submitTechnicianApplication(form: TechnicianFormData, regi
 }
 
 export async function verifyTechnicianRegistrationEmail(form: TechnicianFormData, code: string): Promise<any> {
+  const mobile = typeof form?.mobile === 'string' ? form.mobile.trim() : '';
+  if (!/^[6-9]\d{9}$/.test(mobile)) {
+    throw new Error('Enter a valid 10-digit Indian mobile number before verifying the code.');
+  }
   const normalizedCode = typeof code === 'string' ? code.trim() : '';
   if (!/^\d{6}$/.test(normalizedCode)) {
     throw new Error('Enter the 6-digit email verification code.');
   }
-  return postTechnicianAuth('verify-registration-otp', { mobile: form.mobile, code: normalizedCode });
+  return postTechnicianAuth('verify-registration-otp', { mobile, code: normalizedCode });
 }
 
 export async function resendTechnicianRegistrationEmailOtp(form: TechnicianFormData): Promise<any> {
