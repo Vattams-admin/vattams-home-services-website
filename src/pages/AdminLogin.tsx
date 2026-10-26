@@ -182,6 +182,7 @@ export default function AdminLogin() {
                   className="w-full pl-4 pr-10 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-blue-200/50 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all"
                   placeholder="Enter password"
                   autoComplete="current-password"
+                  maxLength={128}
                 />
 
                 <Lock
