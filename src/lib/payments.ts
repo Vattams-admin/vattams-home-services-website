@@ -123,7 +123,8 @@ export async function updatePaymentStatus(
     || (paymentActionToken !== undefined && (typeof paymentActionToken !== 'string' || !paymentActionToken.trim() || paymentActionToken.length > 1000))
     || (verifiedBy !== undefined && (typeof verifiedBy !== 'string' || verifiedBy.length > 200))
     || (status === 'pending' && (typeof utr !== 'string' || !utr.trim() || utr.trim().length > 100
-      || typeof paymentActionToken !== 'string' || !paymentActionToken.trim()))) {
+      || typeof paymentActionToken !== 'string' || !paymentActionToken.trim()))
+    || (status !== 'pending' && (typeof paymentActionToken !== 'string' || !paymentActionToken.trim()))) {
     console.error('Rejected invalid payment status update parameters.');
     return null;
   }
