@@ -755,7 +755,7 @@ export default function TechnicianRegister() {
           <div className="border-t border-[#e8e1d2] p-4">
 
             {error && (
-              <div className="mb-3 flex items-center gap-2 text-red-600 text-sm bg-red-50 rounded-lg px-3 py-2">
+              <div role="alert" aria-live="assertive" className="mb-3 flex items-center gap-2 text-red-600 text-sm bg-red-50 rounded-lg px-3 py-2">
                 <AlertCircle size={14} />
                 {error}
               </div>
