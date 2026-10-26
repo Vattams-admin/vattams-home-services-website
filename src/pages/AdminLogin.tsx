@@ -167,13 +167,14 @@ export default function AdminLogin() {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-blue-100 mb-1.5">
+              <label htmlFor="admin-password" className="block text-sm font-medium text-blue-100 mb-1.5">
                 Password
               </label>
 
               <div className="relative">
 
                 <input
+                  id="admin-password"
                   type="password"
                   required
                   value={password}
