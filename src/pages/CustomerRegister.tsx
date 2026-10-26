@@ -129,7 +129,7 @@ export default function CustomerRegister() {
       if (!res.ok || !data || typeof data !== 'object' || responseError) {
         throw new Error(responseError || 'Verification failed. Please check the OTP and try again.');
       }
-      setForm((current) => ({ ...current, password: '' }));
+      setForm({ full_name: '', mobile: '', password: '', email: '', city: '', address: '' });
       setOtp('');
       setStep('success');
     } catch (err) {
