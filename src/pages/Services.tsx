@@ -63,17 +63,17 @@ export default function Services() {
   }, []);
 
   return (
-    <div className="pt-20 md:pt-24">
-      <section className="bg-gradient-to-br from-navy-950 via-navy-900 to-navy-800 py-16 md:py-20">
+    <div className="pt-16 md:pt-20">
+      <section className="bg-gradient-to-br from-navy-950 via-navy-900 to-navy-800 py-10 md:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 bg-white/10 text-gold-300 rounded-full px-4 py-1.5 text-sm font-semibold mb-4">
             Our Services & Pricing
           </div>
           <h1 className="font-display text-3xl md:text-5xl font-bold text-white mb-4">
-            Discover Local Services, Clearly Explained
+            Discover Services. Connect with Local Providers.
           </h1>
           <p className="text-navy-100 max-w-2xl mx-auto text-base md:text-lg">
-            Explore participating service-personnel listings, check available booking options and review applicable charges before submitting a request. Service availability varies by city and provider.
+            Explore service categories, check which requests the website currently supports, and review prices before you submit. VATTAMS connects customers with independent service professionals; availability depends on your area and participating providers.
           </p>
         </div>
       </section>
@@ -85,7 +85,7 @@ export default function Services() {
               Choose the Work You Need
             </h2>
             <p className="mt-2 text-sm md:text-base text-gray-600">
-              Prices load from the current service catalogue. Checkout confirms applicable taxes, platform fees and discounts.
+              Only active catalogue prices are shown. If a price is unavailable, please confirm it with us before booking; we do not guess or invent prices. Checkout confirms applicable taxes, platform fees and discounts.
             </p>
           </div>
           <CustomerServicePriceCards variant="page" />
