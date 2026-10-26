@@ -98,7 +98,7 @@ export default function CustomerRegister() {
     e.preventDefault();
     if (loading) return;
     setError('');
-    if (!/^\d{6}$/.test(otp)) { setError('Please enter the 6-digit OTP using numbers only.'); return; }
+    if (!/^\d{6}$/.test(otp.trim())) { setError('Please enter the 6-digit OTP using numbers only.'); return; }
 
     setLoading(true);
     try {
