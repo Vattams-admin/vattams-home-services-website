@@ -48,6 +48,11 @@ export async function validateCoupon(code: string, orderAmount: number): Promise
   }
 
   const coupon = data as Coupon;
+  if (typeof coupon.id !== 'string' || !coupon.id.trim()
+    || typeof coupon.code !== 'string' || coupon.code.trim().toUpperCase() !== normalizedCode
+    || coupon.is_active !== true) {
+    return { valid: false, error: 'Coupon details could not be verified', discountAmount: 0 };
+  }
   const validFromTime = coupon.valid_from ? new Date(coupon.valid_from).getTime() : Number.NaN;
   const validUntilTime = coupon.valid_until ? new Date(coupon.valid_until).getTime() : null;
   const usedCount = Number(coupon.used_count);
