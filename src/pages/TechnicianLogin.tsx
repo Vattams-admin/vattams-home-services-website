@@ -157,7 +157,7 @@ export default function TechnicianLogin() {
             </div>
 
             {error && (
-              <div className="bg-red-500/20 border border-red-400/30 text-red-200 text-sm rounded-xl px-4 py-3 flex items-start gap-2">
+              <div role="alert" aria-live="assertive" className="bg-red-500/20 border border-red-400/30 text-red-200 text-sm rounded-xl px-4 py-3 flex items-start gap-2">
                 <AlertCircle size={16} className="shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
