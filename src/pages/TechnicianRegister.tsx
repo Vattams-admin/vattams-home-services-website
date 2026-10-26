@@ -771,7 +771,7 @@ export default function TechnicianRegister() {
 
             {emailOtpPending && (
               <div className="space-y-3">
-                <div className="rounded-xl bg-blue-50 border border-blue-100 p-3 text-sm text-blue-900">
+                <div role="status" aria-live="polite" className="rounded-xl bg-blue-50 border border-blue-100 p-3 text-sm text-blue-900">
                   Verification email sent to <strong>{form.email.trim().toLowerCase()}</strong>. Enter the code to complete registration. If it does not arrive, check Spam/Junk.
                 </div>
                 <input
