@@ -197,9 +197,9 @@ export default function CustomerForgot() {
           <form onSubmit={handleVerifyOtp} aria-busy={loading} className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-6 space-y-4">
             <div className="relative">
               <KeyRound size={16} className="absolute left-3 top-3.5 text-gray-400" />
-              <input name="otp" aria-label="6-digit OTP" inputMode="numeric" autoComplete="one-time-code" required value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} maxLength={6}
+              <input name="otp" aria-label="6-digit OTP" inputMode="numeric" autoComplete="one-time-code" required value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} maxLength={6} disabled={loading}
                 placeholder="6-digit OTP"
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm disabled:opacity-60 disabled:cursor-not-allowed" />
             </div>
             <button type="submit" disabled={loading}
               className="w-full flex items-center justify-center gap-2 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors">
