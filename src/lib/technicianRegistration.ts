@@ -487,8 +487,26 @@ async function postTechnicianAuth(action: string, payload: Record<string, unknow
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${TECHNICIAN_ANON_KEY}` },
     body: JSON.stringify(payload),
   });
-  const result = await response.json();
-  if (!response.ok || result.error) throw new Error(result.error || 'Request failed.');
+
+  let result: Record<string, unknown> = {};
+  try {
+    const parsed: unknown = await response.json();
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      result = parsed as Record<string, unknown>;
+    }
+  } catch {
+    // Empty, malformed, or non-JSON responses are handled as request failures below.
+  }
+
+  if (!response.ok || typeof result.error === 'string') {
+    const message = typeof result.error === 'string' && result.error.trim()
+      ? result.error
+      : `Technician request failed (HTTP ${response.status}).`;
+    throw new Error(message);
+  }
+  if (Object.keys(result).length === 0) {
+    throw new Error('Technician service returned an invalid response.');
+  }
   return result;
 }
 
