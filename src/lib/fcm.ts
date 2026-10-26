@@ -184,6 +184,10 @@ export async function initFCM(
   userType: UserType,
   userId: string,
 ): Promise<string | null> {
+  if (!['customer', 'technician', 'admin'].includes(userType)
+    || typeof userId !== 'string' || !userId.trim() || userId.length > 200) {
+    return null;
+  }
   try {
     // Request permission before the first asynchronous wait. This allows the
     // dashboard's explicit Enable Notifications click to satisfy browsers'
