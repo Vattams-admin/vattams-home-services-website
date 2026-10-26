@@ -29,24 +29,31 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
 }
 
 function sessionFor(userType: UserType): { token: string; id: string } | null {
-  if (typeof sessionStorage === 'undefined') return null;
-  if (userType === 'admin') return {
-    token: sessionStorage.getItem('vattams_admin') || '',
-    id: sessionStorage.getItem('vattams_admin_id') || '',
-  };
-  if (userType === 'technician') return {
-    token: sessionStorage.getItem('vattams_technician_session') || '',
-    id: sessionStorage.getItem('vattams_technician_id') || '',
-  };
-  let id = '';
+  if (typeof window === 'undefined') return null;
   try {
-    const customer = sessionStorage.getItem('vattams_customer');
-    id = customer ? String(JSON.parse(customer).id || '') : '';
-  } catch {}
-  return {
-    token: sessionStorage.getItem('vattams_customer_session') || '',
-    id,
-  };
+    if (userType === 'admin') return {
+      token: window.sessionStorage.getItem('vattams_admin') || '',
+      id: window.sessionStorage.getItem('vattams_admin_id') || '',
+    };
+    if (userType === 'technician') return {
+      token: window.sessionStorage.getItem('vattams_technician_session') || '',
+      id: window.sessionStorage.getItem('vattams_technician_id') || '',
+    };
+    let id = '';
+    try {
+      const customer = window.sessionStorage.getItem('vattams_customer');
+      id = customer ? String(JSON.parse(customer).id || '') : '';
+    } catch {
+      // The customer session token is still checked below; malformed profile cache is ignored.
+    }
+    return {
+      token: window.sessionStorage.getItem('vattams_customer_session') || '',
+      id,
+    };
+  } catch {
+    // Do not attempt push registration without readable session credentials.
+    return null;
+  }
 }
 
 async function fcmData(body: Record<string, unknown>): Promise<any> {
