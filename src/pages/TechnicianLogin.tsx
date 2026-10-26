@@ -27,15 +27,35 @@ export default function TechnicianLogin() {
         body: JSON.stringify({ identifier, password }),
       });
 
-      const data = await response.json();
+      const parsed: unknown = await response.json().catch(() => null);
+      const data = parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+        ? parsed as Record<string, unknown>
+        : {};
 
       if (!response.ok) {
-        setError(data.error || 'Login failed. Please try again.');
+        setError(typeof data.error === 'string' ? data.error : 'Login failed. Please try again.');
         setLoading(false);
         return;
       }
 
-      const technician = data.technician as Technician;
+      const candidate = data.technician;
+      if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)
+        || typeof (candidate as Record<string, unknown>).id !== 'string'
+        || !(candidate as Record<string, unknown>).id.trim()
+        || typeof data.sessionToken !== 'string' || !data.sessionToken.trim()
+        || typeof data.expiresAt !== 'string' && typeof data.expiresAt !== 'number') {
+        setError('The login service returned an invalid response. Please try again.');
+        setLoading(false);
+        return;
+      }
+
+      const technician = candidate as Technician;
+      const expiryTime = new Date(data.expiresAt).getTime();
+      if (!Number.isFinite(expiryTime) || expiryTime <= Date.now()) {
+        setError('The login session is invalid or expired. Please try again.');
+        setLoading(false);
+        return;
+      }
 
       // technician-auth/login now returns the technician record for every
       // application status (not just 'active') so that a pending/rejected/
@@ -43,7 +63,7 @@ export default function TechnicianLogin() {
       // login, instead of a dead-end error message on this form.
       sessionStorage.setItem('vattams_technician_id', technician.id);
       sessionStorage.setItem('vattams_technician_session', data.sessionToken);
-      sessionStorage.setItem('vattams_technician_expires', data.expiresAt);
+      sessionStorage.setItem('vattams_technician_expires', new Date(expiryTime).toISOString());
       if (technician.mobile) {
         sessionStorage.setItem('vattams_technician_mobile', technician.mobile);
       }
