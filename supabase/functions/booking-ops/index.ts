@@ -662,120 +662,56 @@ Deno.serve(async (req: Request) => {
       free.sort((a, b) => Number(b.is_online === true) - Number(a.is_online === true) || (Number(a.current_workload || 0) - Number(b.current_workload || 0)) || (Number(b.rating || 0) - Number(a.rating || 0)) || (Number(a.total_jobs || 0) - Number(b.total_jobs || 0)));
       const chosen = free[0];
 
-      // Recheck the selected technician immediately before claiming the booking.
-      // This narrows the stale-workload window; a database-level constraint or
-      // transactional allocator is still needed for a fully atomic guarantee.
-      const { data: latestActiveJob, error: latestWorkloadError } = await supabase
-        .from("technician_jobs")
-        .select("id")
-        .eq("technician_id", chosen.id)
-        .in("status", ["assigned", "accepted", "on_the_way", "in_progress", "job_started"])
-        .limit(1)
-        .maybeSingle();
-      if (latestWorkloadError) {
-        console.error("[booking-ops auto_assign] selected technician workload recheck failed");
-        return new Response(JSON.stringify({ error: "Unable to recheck technician availability. Please try again." }), {
-          status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (latestActiveJob) {
-        return new Response(JSON.stringify({ success: true, assigned: false, reason: "technician_became_busy" }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      const { data: claimedBooking, error: claimError } = await supabase.from("bookings")
-        .update({
-          assigned_technician_id: chosen.id,
-          status: "assigned",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", booking_id)
-        .eq("status", booking.status)
-        .is("assigned_technician_id", null)
-        .select("id,booking_number,booking_action_token")
-        .maybeSingle();
-      if (claimError) {
-        console.error("[booking-ops auto_assign] conditional booking claim failed");
-        return new Response(JSON.stringify({ error: "Unable to reserve this booking for assignment. Please try again." }), {
-          status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (!claimedBooking) {
-        return new Response(JSON.stringify({ success: true, assigned: false, reason: "booking_already_claimed" }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      let { data: jobData, error: jobInsertError } = await supabase
-        .from("technician_jobs")
-        .insert({ booking_id, technician_id: chosen.id, status: "assigned", job_amount: Number(booking.base_price ?? 0), call_rate_fee: Number(booking.call_rate_fee) || 0, service_type: String(booking.service_type ?? "") || null })
-        .select("*")
-        .single() as { data: Record<string, unknown> | null; error: unknown };
-
-      // A network/transport error can occur after the database committed the
-      // insert. Reconcile before rollback so we do not clear a booking while
-      // leaving a real technician job behind.
-      if (jobInsertError || !jobData) {
-        const { data: persistedJob, error: reconcileError } = await supabase
-          .from("technician_jobs")
-          .select("*")
-          .eq("booking_id", booking_id)
-          .eq("technician_id", chosen.id)
-          // The technician may already have accepted or started the job while
-          // the original insert response was lost; reconcile by ownership,
-          // not by the transient "assigned" status.
-          .limit(1)
-          .maybeSingle() as { data: Record<string, unknown> | null; error: unknown };
-
-        if (reconcileError) {
-          console.error("[booking-ops auto_assign] job insert outcome uncertain; reconciliation lookup failed");
+      // The atomic database RPC is the final authority for eligibility,
+      // workload, booking claim, and technician-job creation. It serializes
+      // concurrent assignments by locking the selected technician row.
+      // The RPC locks the booking and technician rows, rechecks workload,
+      // then writes the booking + technician job in one database transaction.
+      const { data: assignmentResult, error: assignmentError } = await supabase.rpc(
+        "assign_technician_job_atomic",
+        { p_booking_id: booking_id, p_technician_id: chosen.id },
+      );
+      const assignmentErrorMessage = String(
+        (assignmentError as { message?: unknown } | null)?.message ?? "",
+      );
+      if (assignmentError || !assignmentResult) {
+        if (assignmentErrorMessage.includes("TECHNICIAN_ALREADY_BUSY")) {
           return new Response(JSON.stringify({
-            success: false,
-            assigned: false,
-            reason: "job_creation_state_uncertain",
-            review_required: true,
-          }), {
-            status: 503,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
+            success: true, assigned: false, reason: "technician_became_busy",
+          }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
-
-        if (persistedJob) {
-          jobData = persistedJob;
-          jobInsertError = null;
+        if (assignmentErrorMessage.includes("BOOKING_NOT_ASSIGNABLE")) {
+          return new Response(JSON.stringify({
+            success: true, assigned: false, reason: "booking_already_claimed",
+          }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
-      }
-
-      // Only roll back when reconciliation confirms no matching assigned job
-      // persisted. Restore the original booking status only if this request
-      // still owns the assignment, avoiding concurrent admin changes.
-      if (jobInsertError || !jobData) {
-        const { data: rolledBackBooking, error: rollbackError } = await supabase
-          .from("bookings")
-          .update({
-            assigned_technician_id: null,
-            // Restore the exact pre-claim state; confirmed bookings must not
-            // be downgraded to pending when technician-job creation fails.
-            status: booking.status,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", booking_id)
-          .eq("assigned_technician_id", chosen.id)
-          .eq("status", "assigned")
-          .select("id")
-          .maybeSingle();
-        if (rollbackError || !rolledBackBooking) {
-          console.error("[booking-ops auto_assign] job insert failed; rollback failed or assignment ownership changed");
-        } else {
-          console.error("[booking-ops auto_assign] job insert failed; original booking status restored");
+        if (assignmentErrorMessage.includes("TECHNICIAN_NOT_ELIGIBLE")
+          || assignmentErrorMessage.includes("TECHNICIAN_NOT_FOUND")) {
+          return new Response(JSON.stringify({
+            success: true, assigned: false, reason: "technician_no_longer_eligible",
+          }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
+        console.error("[booking-ops auto_assign] atomic assignment RPC failed", {
+          code: (assignmentError as { code?: unknown } | null)?.code ?? null,
+        });
         return new Response(JSON.stringify({
-          success: false,
-          assigned: false,
-          reason: "job_creation_failed",
+          success: false, assigned: false, reason: "atomic_assignment_failed",
         }), {
-          status: 500,
+          status: 503,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const assignmentPayload = assignmentResult as {
+        booking?: Record<string, unknown>;
+        job?: Record<string, unknown>;
+      };
+      const jobData = assignmentPayload.job;
+      if (!jobData) {
+        console.error("[booking-ops auto_assign] atomic assignment returned no technician job");
+        return new Response(JSON.stringify({
+          success: false, assigned: false, reason: "atomic_assignment_result_invalid",
+        }), {
+          status: 503,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
