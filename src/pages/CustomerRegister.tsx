@@ -69,7 +69,14 @@ export default function CustomerRegister() {
       const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          full_name: form.full_name.trim(),
+          mobile: form.mobile.trim(),
+          email: form.email.trim().toLowerCase(),
+          city: form.city.trim(),
+          address: form.address.trim(),
+        }),
       });
       const data: unknown = await res.json().catch(() => null);
       const responseError = data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
@@ -99,10 +106,17 @@ export default function CustomerRegister() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
         body: JSON.stringify({
-          mobile: form.mobile,
-          code: otp,
+          mobile: form.mobile.trim(),
+          code: otp.trim(),
           purpose: 'registration',
-          registration_data: form,
+          registration_data: {
+            ...form,
+            full_name: form.full_name.trim(),
+            mobile: form.mobile.trim(),
+            email: form.email.trim().toLowerCase(),
+            city: form.city.trim(),
+            address: form.address.trim(),
+          },
         }),
       });
       const data: unknown = await res.json().catch(() => null);
