@@ -297,8 +297,17 @@ export default function TechnicianDashboard() {
     technician?.is_online === true;
 
   const setOnlineStatus = async (online: boolean) => {
-    const result = await technicianData<{ technician: Technician }>('online', { online });
-    if (result?.technician) setTechnician(result.technician);
+    if (!technician) return;
+    setError('');
+    try {
+      const result = await technicianData<{ technician?: Technician }>('online', { online });
+      if (!result?.technician || typeof result.technician.is_online !== 'boolean') {
+        throw new Error('The server did not confirm the technician availability change.');
+      }
+      setTechnician(result.technician);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to update technician availability.');
+    }
   };
 
   const updateJobStatus = async (job: TechnicianJob, status: 'accepted'|'rejected'|'on_the_way'|'in_progress'|'job_started'|'job_completed'|'completed') => {
