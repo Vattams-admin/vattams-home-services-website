@@ -27,7 +27,8 @@ export async function validateCoupon(code: string, orderAmount: number): Promise
   }
   const normalizedCode = code.trim().toUpperCase();
   if (!normalizedCode || !Number.isFinite(orderAmount) || orderAmount <= 0
-    || Math.abs(orderAmount * 100 - Math.round(orderAmount * 100)) > 1e-7) {
+    || Math.abs(orderAmount * 100 - Math.round(orderAmount * 100)) > 1e-7
+    || orderAmount > 1000000000) {
     return { valid: false, error: 'Enter a valid coupon code and order amount', discountAmount: 0 };
   }
 
