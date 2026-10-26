@@ -45,13 +45,14 @@ export default function CustomerForgot() {
     e.preventDefault();
     if (loading) return;
     setError('');
-    if (!/^[6-9]\d{9}$/.test(mobile)) { setError('Please enter a valid 10-digit mobile number.'); return; }
+    const normalizedMobile = mobile.trim();
+    if (!/^[6-9]\d{9}$/.test(normalizedMobile)) { setError('Please enter a valid 10-digit mobile number.'); return; }
 
     setLoading(true);
     try {
       const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-auth/forgot-password`, {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
-        body: JSON.stringify({ mobile }),
+        body: JSON.stringify({ mobile: normalizedMobile }),
       });
       const data: unknown = await res.json().catch(() => null);
       const responseError = data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
@@ -73,13 +74,14 @@ export default function CustomerForgot() {
     e.preventDefault();
     if (loading) return;
     setError('');
-    if (!/^\d{6}$/.test(otp)) { setError('Please enter the 6-digit OTP using numbers only.'); return; }
+    const normalizedOtp = otp.trim();
+    if (!/^\d{6}$/.test(normalizedOtp)) { setError('Please enter the 6-digit OTP using numbers only.'); return; }
 
     setLoading(true);
     try {
       const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-auth/verify-otp`, {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
-        body: JSON.stringify({ mobile, code: otp, purpose: 'forgot_password' }),
+        body: JSON.stringify({ mobile: mobile.trim(), code: normalizedOtp, purpose: 'forgot_password' }),
       });
       const data: unknown = await res.json().catch(() => null);
       const responseError = data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
@@ -106,7 +108,7 @@ export default function CustomerForgot() {
     try {
       const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-auth/reset-password`, {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
-        body: JSON.stringify({ mobile, new_password: newPassword }),
+        body: JSON.stringify({ mobile: mobile.trim(), new_password: newPassword }),
       });
       const data: unknown = await res.json().catch(() => null);
       const responseError = data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
@@ -130,7 +132,7 @@ export default function CustomerForgot() {
     try {
       const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-auth/resend-otp`, {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
-        body: JSON.stringify({ mobile, purpose: 'forgot_password' }),
+        body: JSON.stringify({ mobile: mobile.trim(), purpose: 'forgot_password' }),
       });
       const data: unknown = await res.json().catch(() => null);
       const responseError = data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
