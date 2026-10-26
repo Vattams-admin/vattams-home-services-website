@@ -48,8 +48,10 @@ export async function validateCoupon(code: string, orderAmount: number): Promise
   }
 
   const coupon = data as Coupon;
-  if (typeof coupon.id !== 'string' || !coupon.id.trim()
-    || typeof coupon.code !== 'string' || coupon.code.trim().toUpperCase() !== normalizedCode
+  if (typeof coupon.id !== 'string' || !coupon.id.trim() || coupon.id.length > 200
+    || typeof coupon.code !== 'string' || coupon.code.length > 100
+    || !/^[A-Za-z0-9_-]+$/.test(coupon.code.trim())
+    || coupon.code.trim().toUpperCase() !== normalizedCode
     || coupon.is_active !== true) {
     return { valid: false, error: 'Coupon details could not be verified', discountAmount: 0 };
   }
