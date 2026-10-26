@@ -66,8 +66,11 @@ export async function createNotification(input: CreateNotificationInput): Promis
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
       body: JSON.stringify(body),
     });
-    const data = await response.json();
-    if (!response.ok || data.error) {
+    const parsed: unknown = await response.json().catch(() => null);
+    const data = parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? parsed as Record<string, any>
+      : {};
+    if (!response.ok || typeof data.error === 'string') {
       console.error('[notifications] gateway error:', data.error ?? `HTTP ${response.status}`);
       return null;
     }
@@ -116,8 +119,17 @@ export async function fetchNotifications(recipientType: NotificationRecipientTyp
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
       body: JSON.stringify({ action: 'account', session_token: token }),
     });
-    const data = await response.json();
-    return recipientType === 'technician' ? (data.jobNotifications ?? []) : (data.notifications ?? []);
+    if (!response.ok) return [];
+    const parsed: unknown = await response.json().catch(() => null);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return [];
+    const data = parsed as Record<string, unknown>;
+    const rows = recipientType === 'technician' ? data.jobNotifications : data.notifications;
+    return Array.isArray(rows) ? rows.filter((row): row is NotificationRow =>
+      Boolean(row && typeof row === 'object'
+        && typeof (row as NotificationRow).id === 'string'
+        && typeof (row as NotificationRow).title === 'string'
+        && typeof (row as NotificationRow).is_read === 'boolean')
+    ) : [];
   } catch { return []; }
 }
 
