@@ -137,13 +137,15 @@ export default function AdminLogin() {
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-blue-100 mb-1.5">
+              <label htmlFor="admin-email" className="block text-sm font-medium text-blue-100 mb-1.5">
                 Admin Email
               </label>
 
               <div className="relative">
                 <input
+                  id="admin-email"
                   type="email"
+                  maxLength={254}
                   required
                   value={email}
                   onChange={(e) => {
