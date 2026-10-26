@@ -273,7 +273,13 @@ export const STEPS: StepDef[] = [
     type: 'text',
     placeholder: 'e.g. yourname@paytm',
     optional: true,
-    validate: (v) => v.trim() && !/^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z][a-zA-Z0-9]{1,64}$/.test(v.trim()) ? 'Enter a valid UPI ID (e.g. yourname@paytm) or type "skip"' : null,
+    validate: (v) => {
+      const value = v.trim();
+      return value && value.toLowerCase() !== 'skip'
+        && !/^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z][a-zA-Z0-9]{1,64}$/.test(value)
+        ? 'Enter a valid UPI ID (e.g. yourname@paytm) or type "skip"'
+        : null;
+    },
   },
   {
     key: 'password',
@@ -530,7 +536,8 @@ function technicianRegistrationPayload(form: TechnicianFormData, registrationPay
     working_time: form.working_time, has_vehicle: form.has_vehicle, has_tools: form.has_tools, aadhaar_url: form.aadhaar_url,
     pan_url: form.pan_url, dl_url: form.dl_url || undefined, profile_photo_url: form.profile_photo_url, bank_name: form.bank_name,
     bank_holder_name: form.bank_holder_name, bank_account_number: form.bank_account_number, bank_ifsc: form.bank_ifsc,
-    upi_id: form.upi_id || undefined, profile_score: score, registration_payment_id: registrationPaymentId,
+    upi_id: form.upi_id.trim() && form.upi_id.trim().toLowerCase() !== 'skip' ? form.upi_id.trim() : undefined,
+    profile_score: score, registration_payment_id: registrationPaymentId,
   };
 }
 
