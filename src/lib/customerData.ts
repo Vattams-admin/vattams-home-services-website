@@ -26,12 +26,21 @@ export async function customerData<T>(action:string, extra:Record<string,unknown
     return null;
   }
 
-  const res=await fetch(`${SUPABASE_URL}/functions/v1/customer-data`,{
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_ANON_KEY}`},
-    body:JSON.stringify({...extra,action,session_token:sessionToken})
-  });
-  if(!res.ok) return null;
+  let res: Response;
+  try {
+    res = await fetch(`${SUPABASE_URL}/functions/v1/customer-data`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({ ...extra, action, session_token: sessionToken }),
+    });
+  } catch {
+    // Network failures should follow the same unavailable-data path as HTTP errors.
+    return null;
+  }
+  if (!res.ok) return null;
   try {
     const parsed: unknown = await res.json();
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
