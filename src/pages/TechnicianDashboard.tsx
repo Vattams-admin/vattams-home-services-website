@@ -113,7 +113,8 @@ function formatDateTime(value?: string | null) {
 }
 
 function formatMoney(value?: number | null) {
-  return `₹${Number(value || 0).toLocaleString('en-IN')}`;
+  const amount = Number(value ?? 0);
+  return `₹${(Number.isFinite(amount) ? amount : 0).toLocaleString('en-IN')}`;
 }
 
 function getInitials(name?: string | null) {
