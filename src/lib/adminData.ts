@@ -27,15 +27,20 @@ export async function adminData<T = unknown>(action: string, payload: Record<str
   }
   const cleanAction = action.trim();
 
-  const response = await fetch(`${SUPABASE_URL}/functions/v1/admin-data`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-    },
-    // Keep trusted session fields and the requested action authoritative.
-    body: JSON.stringify({ ...payload, action: cleanAction, admin_id: adminId, admin_session_token: adminSessionToken }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${SUPABASE_URL}/functions/v1/admin-data`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      // Keep trusted session fields and the requested action authoritative.
+      body: JSON.stringify({ ...payload, action: cleanAction, admin_id: adminId, admin_session_token: adminSessionToken }),
+    });
+  } catch {
+    throw new Error('Unable to reach the admin service. Check your connection and try again.');
+  }
   const parsed: unknown = await response.json().catch(() => null);
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
     throw new Error(`Admin service returned an invalid response (HTTP ${response.status}).`);
