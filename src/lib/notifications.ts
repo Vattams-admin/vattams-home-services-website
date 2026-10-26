@@ -172,6 +172,10 @@ export async function markAsRead(notificationId: string): Promise<boolean> {
 }
 
 export async function markAllAsRead(recipientType: NotificationRecipientType, recipientId: string): Promise<boolean> {
+  if (!['customer', 'technician', 'admin'].includes(recipientType)
+    || typeof recipientId !== 'string' || !recipientId.trim() || recipientId.length > 200) {
+    return false;
+  }
   try {
     if (recipientType === 'admin') { await adminData('notifications_read_all'); return true; }
     const endpoint=recipientType==='technician'?'technician-data':'customer-data';
