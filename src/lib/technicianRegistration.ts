@@ -544,5 +544,9 @@ export async function verifyTechnicianRegistrationEmail(form: TechnicianFormData
 }
 
 export async function resendTechnicianRegistrationEmailOtp(form: TechnicianFormData): Promise<any> {
-  return postTechnicianAuth('resend-registration-otp', { mobile: form.mobile });
+  const mobile = typeof form?.mobile === 'string' ? form.mobile.trim() : '';
+  if (!/^[6-9]\d{9}$/.test(mobile)) {
+    throw new Error('Enter a valid 10-digit Indian mobile number before requesting a new code.');
+  }
+  return postTechnicianAuth('resend-registration-otp', { mobile });
 }
