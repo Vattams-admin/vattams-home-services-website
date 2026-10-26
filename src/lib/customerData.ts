@@ -31,7 +31,9 @@ export async function customerData<T>(action:string, extra:Record<string,unknown
   });
   if(!res.ok) return null;
   try {
-    return await res.json() as T;
+    const parsed: unknown = await res.json();
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
+    return parsed as T;
   } catch {
     // Treat empty or malformed API responses as unavailable data so callers
     // can show their existing retry/error state instead of crashing on JSON parsing.
