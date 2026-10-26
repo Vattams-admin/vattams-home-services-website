@@ -139,6 +139,9 @@ export async function fetchUnreadCount(recipientType: NotificationRecipientType,
 }
 
 export async function markAsRead(notificationId: string): Promise<boolean> {
+  if (typeof notificationId !== 'string' || !notificationId.trim() || notificationId.length > 200) {
+    return false;
+  }
   try {
     const adminToken = sessionStorage.getItem('vattams_admin');
     if (adminToken) { await adminData('notification_read', { notification_id: notificationId }); return true; }
