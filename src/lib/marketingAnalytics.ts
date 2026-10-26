@@ -11,8 +11,11 @@ declare global {
 export function trackMarketingEvent(name: string, params: AnalyticsParams = {}) {
   if (typeof window === 'undefined' || typeof window.gtag !== 'function') return;
   if (typeof name !== 'string' || !/^[a-zA-Z][a-zA-Z0-9_]{0,99}$/.test(name)) return;
+  const candidateParams = params && typeof params === 'object' && !Array.isArray(params)
+    ? params
+    : {};
   const safeParams = Object.fromEntries(
-    Object.entries(params).filter(([key, value]) =>
+    Object.entries(candidateParams).filter(([key, value]) =>
       /^[a-zA-Z][a-zA-Z0-9_]{0,99}$/.test(key)
       && (typeof value === 'string' ? value.length <= 500
         : typeof value === 'number' ? Number.isFinite(value)
