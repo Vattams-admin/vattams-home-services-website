@@ -260,6 +260,10 @@ export async function initFCM(
 export function onForegroundMessage(
   callback: (payload: { notification?: { title?: string; body?: string }; data?: Record<string, unknown> }) => void,
 ): void {
+  if (typeof callback !== 'function') {
+    foregroundCallback = null;
+    return;
+  }
   foregroundCallback = callback;
 }
 
