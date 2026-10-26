@@ -120,6 +120,7 @@ export default function CustomerForgot() {
       if (!res.ok || !data || typeof data !== 'object' || responseError) {
         throw new Error(responseError || 'Password reset failed. Please try again.');
       }
+      setNewPassword('');
       setStep('done');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Network error.');
