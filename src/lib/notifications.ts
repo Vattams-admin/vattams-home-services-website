@@ -45,7 +45,7 @@ export async function createNotification(input: CreateNotificationInput): Promis
     || (input.bookingActionToken !== undefined && (typeof input.bookingActionToken !== 'string' || !input.bookingActionToken.trim() || input.bookingActionToken.length > 2000))
     || (input.channels !== undefined && (!Array.isArray(input.channels) || input.channels.length > 4
       || new Set(input.channels).size !== input.channels.length
-      || input.channels.some((channel) => typeof channel !== 'string' || !['in_app', 'push', 'email', 'sms'].includes(channel)))) {
+      || input.channels.some((channel) => typeof channel !== 'string' || !['in_app', 'push', 'email', 'sms'].includes(channel))))) {
     return null;
   }
   try {
