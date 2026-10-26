@@ -28,13 +28,16 @@ export default function CustomerReviews() {
       if (!bookingResult || !Array.isArray(bookingResult.bookings) ||
           !bookingResult.bookings.every((booking) => booking && typeof booking === 'object' &&
             typeof (booking as Booking).id === 'string' && (booking as Booking).id.trim() &&
-            typeof (booking as Booking).status === 'string' && (booking as Booking).status.trim()) ||
+            typeof (booking as Booking).status === 'string' && (booking as Booking).status.trim() &&
+            typeof (booking as Booking).service_category === 'string' && (booking as Booking).service_category.trim() &&
+            typeof (booking as Booking).booking_number === 'string' && (booking as Booking).booking_number.trim() &&
+            typeof (booking as Booking).created_at === 'string' && Number.isFinite(Date.parse((booking as Booking).created_at))) ||
           !reviewResult || !Array.isArray(reviewResult.reviews) ||
           !reviewResult.reviews.every((review) => review && typeof review === 'object' &&
             typeof (review as Review).id === 'string' && (review as Review).id.trim() &&
             typeof (review as Review).booking_id === 'string' && (review as Review).booking_id.trim() &&
             Number.isInteger((review as Review).rating) && (review as Review).rating >= 1 && (review as Review).rating <= 5 &&
-            typeof (review as Review).created_at === 'string' &&
+            typeof (review as Review).created_at === 'string' && Number.isFinite(Date.parse((review as Review).created_at)) &&
             ((review as Review).review_text === null || typeof (review as Review).review_text === 'string'))) {
         throw new Error('Review information could not be verified. Please retry.');
       }
