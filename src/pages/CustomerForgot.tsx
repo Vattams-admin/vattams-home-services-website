@@ -102,7 +102,10 @@ export default function CustomerForgot() {
     e.preventDefault();
     if (loading) return;
     setError('');
-    if (newPassword.length < 6) { setError('Password must be at least 6 characters.'); return; }
+    if (!newPassword.trim() || newPassword.length < 6) {
+      setError('Password must be at least 6 characters and cannot contain only spaces.');
+      return;
+    }
 
     setLoading(true);
     try {
