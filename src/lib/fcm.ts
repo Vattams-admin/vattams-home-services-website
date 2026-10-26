@@ -125,6 +125,10 @@ export async function getTokensForUser(
   userType: UserType,
   userId: string,
 ): Promise<string[]> {
+  if (!['customer', 'technician', 'admin'].includes(userType)
+    || typeof userId !== 'string' || !userId.trim() || userId.length > 200) {
+    return [];
+  }
   try {
     const session = sessionFor(userType);
     if (!session?.token) return [];
