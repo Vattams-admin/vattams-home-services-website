@@ -244,8 +244,8 @@ function Input({ icon: Icon, ...props }: { icon: typeof User } & React.InputHTML
   return (
     <div className="relative">
       <Icon size={16} className="absolute left-3 top-3.5 text-gray-400" />
-      <input {...props} onChange={props.onChange}
-        className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
+      <input {...props} onChange={props.onChange} disabled={props.disabled}
+        className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm disabled:cursor-not-allowed disabled:opacity-60" />
     </div>
   );
 }
