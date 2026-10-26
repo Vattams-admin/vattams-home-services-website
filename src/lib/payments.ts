@@ -145,9 +145,9 @@ export async function updatePaymentStatus(
 ): Promise<PaymentRecord | null> {
   if (typeof paymentId !== 'string' || !paymentId.trim() || paymentId.length > 200
     || !['pending', 'success', 'failed'].includes(status)
-    || (utr !== undefined && (typeof utr !== 'string' || utr.trim().length > 100))
+    || (utr !== undefined && (typeof utr !== 'string' || utr.trim().length > 100 || /[\\u0000-\\u001f\\u007f]/.test(utr)))
     || (paymentActionToken !== undefined && (typeof paymentActionToken !== 'string' || !paymentActionToken.trim() || paymentActionToken.length > 1000))
-    || (verifiedBy !== undefined && (typeof verifiedBy !== 'string' || verifiedBy.length > 200))
+    || (verifiedBy !== undefined && (typeof verifiedBy !== 'string' || verifiedBy.length > 200 || /[\\u0000-\\u001f\\u007f]/.test(verifiedBy)))
     || (status === 'pending' && (typeof utr !== 'string' || !utr.trim() || utr.trim().length > 100
       || typeof paymentActionToken !== 'string' || !paymentActionToken.trim()))
     || (status !== 'pending' && (typeof paymentActionToken !== 'string' || !paymentActionToken.trim()))) {
