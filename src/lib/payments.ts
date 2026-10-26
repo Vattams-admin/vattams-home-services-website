@@ -35,6 +35,11 @@ function parsePaymentRecord(value: unknown): PaymentRecord | null {
     || typeof payment.payment_action_token !== 'string' || !payment.payment_action_token.trim() || payment.payment_action_token.length > 1000
     || typeof payment.payee_id !== 'string' || !payment.payee_id.trim() || payment.payee_id.length > 200
     || typeof payment.upi_id !== 'string' || !payment.upi_id.trim() || payment.upi_id.length > 255
+    || (payment.payee_name !== null && payment.payee_name !== undefined && (typeof payment.payee_name !== 'string' || payment.payee_name.length > 200))
+    || (payment.reference_id !== null && payment.reference_id !== undefined && (typeof payment.reference_id !== 'string' || payment.reference_id.length > 200))
+    || (payment.utr !== null && payment.utr !== undefined && (typeof payment.utr !== 'string' || payment.utr.length > 100))
+    || (payment.notes !== null && payment.notes !== undefined && (typeof payment.notes !== 'string' || payment.notes.length > 500))
+    || (payment.verified_by !== null && payment.verified_by !== undefined && (typeof payment.verified_by !== 'string' || payment.verified_by.length > 200))
     || !['customer', 'technician'].includes(String(payment.payee_type))
     || !['booking', 'registration_fee', 'wallet_recharge', 'commission'].includes(String(payment.purpose))
     || !['pending', 'success', 'failed'].includes(String(payment.status))
