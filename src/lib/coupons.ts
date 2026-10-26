@@ -101,7 +101,8 @@ export async function validateCoupon(code: string, orderAmount: number): Promise
       ? Math.round((orderAmount * discountValue / 100) * 100) / 100
       : Math.round(discountValue * 100) / 100;
 
-  if (!Number.isFinite(calculatedDiscount) || calculatedDiscount <= 0) {
+  if (!Number.isFinite(calculatedDiscount) || calculatedDiscount <= 0
+    || !Number.isFinite(Math.round(orderAmount * 100) / 100)) {
     return { valid: false, error: 'Discount is invalid for this order', discountAmount: 0 };
   }
 
