@@ -43,6 +43,7 @@ export default function CustomerForgot() {
 
   const handleRequest = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setError('');
     if (!/^[6-9]\d{9}$/.test(mobile)) { setError('Please enter a valid 10-digit mobile number.'); return; }
 
