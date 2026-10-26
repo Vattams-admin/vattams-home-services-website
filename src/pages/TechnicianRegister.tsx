@@ -827,6 +827,12 @@ export default function TechnicianRegister() {
                     }
                   }}
                   placeholder={currentStep.placeholder}
+                  maxLength={
+                    currentStep.type === 'password' ? 128
+                    : currentStep.type === 'email' ? 254
+                    : currentStep.type === 'tel' ? 10
+                    : undefined
+                  }
                   className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-100 outline-none text-sm"
                   autoFocus
                 />
