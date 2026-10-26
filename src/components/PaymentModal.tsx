@@ -111,7 +111,13 @@ export default function PaymentModal({
     setStep('submitting');
     setErrorMsg('');
 
-    const updated = await updatePaymentStatus(paymentRecordId, 'pending', utr.trim(), paymentActionToken || undefined);
+    let updated = null;
+    try {
+      updated = await updatePaymentStatus(paymentRecordId, 'pending', utr.trim(), paymentActionToken || undefined);
+    } catch {
+      updated = null;
+    }
+
     if (!updated) {
       setErrorMsg('Could not submit UTR. Please try again.');
       setStep('utr');
