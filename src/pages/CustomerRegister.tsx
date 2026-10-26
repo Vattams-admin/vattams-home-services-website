@@ -207,7 +207,7 @@ export default function CustomerRegister() {
 
         {step === 'otp' && (
           <form onSubmit={handleVerifyOtp} aria-busy={loading} className="bg-white rounded-3xl border border-gold-200/70 shadow-[0_18px_50px_rgba(5,10,23,0.08)] p-6 md:p-7 space-y-4">
-            <Input icon={KeyRound} name="otp" aria-label="6-digit email verification code" placeholder="6-digit email OTP" value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} maxLength={6} inputMode="numeric" disabled={loading} />
+            <Input icon={KeyRound} name="otp" aria-label="6-digit email verification code" autoComplete="one-time-code" placeholder="6-digit email OTP" value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} maxLength={6} inputMode="numeric" disabled={loading} />
             <button type="submit" disabled={loading}
               className="w-full flex items-center justify-center gap-2 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors">
               {loading ? <Loader size={18} className="animate-spin" /> : <ShieldCheck size={18} />} Verify Email & Create Account
