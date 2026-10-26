@@ -185,6 +185,9 @@ export async function fetchActiveCoupons(): Promise<Coupon[]> {
       && (coupon.valid_until === null || coupon.valid_until === undefined
         || (typeof coupon.valid_until === 'string' && Number.isFinite(new Date(coupon.valid_until).getTime())
           && new Date(coupon.valid_until).getTime() >= new Date(coupon.valid_from).getTime()))
+      && (coupon.max_uses === null || coupon.max_uses === undefined || coupon.used_count < coupon.max_uses)
+      && new Date(coupon.valid_from).getTime() <= Date.now()
+      && (coupon.valid_until === null || coupon.valid_until === undefined || new Date(coupon.valid_until).getTime() >= Date.now())
       && typeof coupon.is_active === 'boolean' && coupon.is_active === true;
   }) as Coupon[];
 }
