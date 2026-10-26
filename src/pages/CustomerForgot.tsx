@@ -181,7 +181,7 @@ export default function CustomerForgot() {
           <form onSubmit={handleRequest} aria-busy={loading} className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-6 space-y-4">
             <div className="relative">
               <Phone size={16} className="absolute left-3 top-3.5 text-gray-400" />
-              <input type="tel" name="mobile" aria-label="10-digit mobile number" autoComplete="tel" inputMode="numeric" required value={mobile} onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))} maxLength={10}
+              <input type="tel" name="mobile" aria-label="10-digit mobile number" autoComplete="tel" inputMode="numeric" required disabled={loading} value={mobile} onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))} maxLength={10}
                 placeholder="10-digit Mobile Number"
                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
             </div>
