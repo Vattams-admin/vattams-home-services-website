@@ -34,6 +34,18 @@ export interface CreateNotificationInput {
 }
 
 export async function createNotification(input: CreateNotificationInput): Promise<NotificationRow | null> {
+  if (!input || typeof input !== 'object'
+    || !['customer', 'technician', 'admin'].includes(input.recipientType)
+    || typeof input.recipientId !== 'string' || !input.recipientId.trim() || input.recipientId.length > 200
+    || typeof input.title !== 'string' || !input.title.trim() || input.title.length > 200
+    || typeof input.message !== 'string' || !input.message.trim() || input.message.length > 5000
+    || typeof input.type !== 'string' || !input.type.trim() || input.type.length > 100
+    || (input.referenceType !== undefined && (typeof input.referenceType !== 'string' || input.referenceType.length > 100))
+    || (input.referenceId !== undefined && (typeof input.referenceId !== 'string' || input.referenceId.length > 200))
+    || (input.bookingActionToken !== undefined && (typeof input.bookingActionToken !== 'string' || !input.bookingActionToken.trim() || input.bookingActionToken.length > 2000))
+    || (input.channels !== undefined && (!Array.isArray(input.channels) || input.channels.some((channel) => !['in_app', 'push', 'email', 'sms'].includes(channel)))) {
+    return null;
+  }
   try {
     const sessionKey =
       input.recipientType === 'admin' ? 'vattams_admin' :
