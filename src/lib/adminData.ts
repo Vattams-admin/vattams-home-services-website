@@ -1,6 +1,13 @@
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase';
 
 export async function adminData<T = unknown>(action: string, payload: Record<string, unknown> = {}): Promise<T> {
+  if (typeof action !== 'string' || !action.trim() || action.length > 100) {
+    throw new Error('Invalid admin request. Please try again.');
+  }
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw new Error('Invalid admin request data. Please try again.');
+  }
+
   let adminId = '';
   let adminSessionToken = '';
   try {
