@@ -84,6 +84,12 @@ export async function registerFCMToken(
   token: string,
   deviceInfo?: string,
 ): Promise<boolean> {
+  if (!['customer', 'technician', 'admin'].includes(userType)
+    || typeof userId !== 'string' || !userId.trim() || userId.length > 200
+    || typeof token !== 'string' || !token.trim() || token.length > 4096
+    || (deviceInfo !== undefined && (typeof deviceInfo !== 'string' || deviceInfo.length > 200))) {
+    return false;
+  }
   try {
     const session = sessionFor(userType);
     if (!session?.token) return false;
