@@ -770,6 +770,7 @@ export default function TechnicianRegister() {
                   type="text"
                   inputMode="numeric"
                   autoComplete="one-time-code"
+                  aria-label="6-digit email verification code"
                   maxLength={6}
                   value={emailOtp}
                   onChange={(event) => setEmailOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
