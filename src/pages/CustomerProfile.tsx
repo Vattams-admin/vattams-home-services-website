@@ -133,12 +133,24 @@ export default function CustomerProfile() {
       setMsg({ type: 'error', text: 'City must be at most 100 characters and address at most 500 characters.' });
       return;
     }
-    const sessionToken = sessionStorage.getItem('vattams_customer_session');
-    const expiresAt = Number(sessionStorage.getItem('vattams_customer_expires'));
+    let sessionToken: string | null = null;
+    let expiresAt = 0;
+    try {
+      sessionToken = sessionStorage.getItem('vattams_customer_session');
+      expiresAt = Number(sessionStorage.getItem('vattams_customer_expires'));
+    } catch {
+      setMsg({ type: 'error', text: 'Browser storage is unavailable. Please enable storage and sign in again.' });
+      navigate('customer-login');
+      return;
+    }
     if (!sessionToken || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
-      sessionStorage.removeItem('vattams_customer');
-      sessionStorage.removeItem('vattams_customer_session');
-      sessionStorage.removeItem('vattams_customer_expires');
+      try {
+        sessionStorage.removeItem('vattams_customer');
+        sessionStorage.removeItem('vattams_customer_session');
+        sessionStorage.removeItem('vattams_customer_expires');
+      } catch {
+        // Continue to login even when browser storage cleanup is blocked.
+      }
       setMsg({ type: 'error', text: 'Your session has expired. Please sign in again.' });
       navigate('customer-login');
       return;
