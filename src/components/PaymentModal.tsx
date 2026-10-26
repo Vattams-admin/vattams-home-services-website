@@ -36,12 +36,14 @@ export default function PaymentModal({
   const [errorMsg, setErrorMsg] = useState('');
   const [loadingQr, setLoadingQr] = useState(false);
   const paymentKeyRef = useRef('');
+  const inFlightPaymentKeyRef = useRef('');
 
   const initPayment = useCallback(async () => {
     const paymentKey = [payeeType, payeeId, amount, purpose, referenceId || ''].join(':');
-    // Reuse the existing payment attempt when this modal is reopened with the same inputs.
-    if (paymentRecordId && paymentKeyRef.current === paymentKey) return;
+    // Avoid duplicate requests from rapid reopen or React StrictMode while creation is pending.
+    if (paymentKeyRef.current === paymentKey && (paymentRecordId || inFlightPaymentKeyRef.current === paymentKey)) return;
     paymentKeyRef.current = paymentKey;
+    inFlightPaymentKeyRef.current = paymentKey;
     setPaymentRecordId(null);
     setPaymentActionToken(null);
     setQrDataUrl('');
@@ -51,15 +53,22 @@ export default function PaymentModal({
     setStep('qr');
     setUtr('');
 
-    const record = await createPaymentRecord({
-      payee_type: payeeType,
-      payee_id: payeeId,
-      payee_name: payeeName,
-      amount,
-      purpose,
-      reference_id: referenceId,
-      notes: note,
-    });
+    let record;
+    try {
+      record = await createPaymentRecord({
+        payee_type: payeeType,
+        payee_id: payeeId,
+        payee_name: payeeName,
+        amount,
+        purpose,
+        reference_id: referenceId,
+        notes: note,
+      });
+    } catch {
+      record = null;
+    } finally {
+      if (inFlightPaymentKeyRef.current === paymentKey) inFlightPaymentKeyRef.current = '';
+    }
 
     if (!record) {
       setErrorMsg('Could not create payment record. Please try again.');
