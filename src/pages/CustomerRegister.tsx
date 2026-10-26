@@ -17,7 +17,10 @@ export default function CustomerRegister() {
   const resendIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const value = e.target.name === 'mobile'
+      ? e.target.value.replace(/\D/g, '').slice(0, 10)
+      : e.target.value;
+    setForm({ ...form, [e.target.name]: value });
   };
 
   const clearResendTimer = () => {
