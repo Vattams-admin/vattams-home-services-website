@@ -167,7 +167,7 @@ export async function fetchActiveCoupons(): Promise<Coupon[]> {
     return [];
   }
 
-  if (!Array.isArray(data)) return [];
+  if (!Array.isArray(data) || data.length === 0) return [];
   return data.filter((row): row is Coupon => {
     if (!row || typeof row !== 'object' || Array.isArray(row)) return false;
     const coupon = row as Partial<Coupon>;
