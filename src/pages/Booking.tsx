@@ -144,14 +144,10 @@ export default function Booking() {
       if (draft) aiDraft = JSON.parse(draft) as Record<string, unknown>;
     } catch {
       try {
-        try {
-          sessionStorage.removeItem('vattams_ai_booking_draft');
-        } catch {
-          // The draft was already read defensively; blocked cleanup must not
-          // invalidate a successfully loaded service catalogue.
-        }
+        sessionStorage.removeItem('vattams_ai_booking_draft');
       } catch {
-        // Ignore unavailable draft storage and keep the booking form usable.
+        // The draft was already read defensively; blocked cleanup must not
+        // invalidate a successfully loaded service catalogue.
       }
     }
 
