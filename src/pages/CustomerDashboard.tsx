@@ -260,10 +260,11 @@ export default function CustomerDashboard() {
       if (!item || typeof item !== 'object') return false;
       const notification = item as Record<string, unknown>;
       return typeof notification.id === 'string' && notification.id.trim().length > 0 &&
-        typeof notification.title === 'string' &&
+        typeof notification.title === 'string' && notification.title.trim().length > 0 &&
         typeof notification.message === 'string' &&
         typeof notification.is_read === 'boolean' &&
-        typeof notification.created_at === 'string';
+        typeof notification.created_at === 'string' &&
+        Number.isFinite(Date.parse(notification.created_at));
     });
     if (validNotifications.length !== data.notifications.length) {
       throw new Error('Notifications contained incomplete records. Please retry.');
