@@ -12,6 +12,7 @@ export default function CustomerLogin() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setError('');
     if (!mobile.trim() || !password.trim()) { setError('Please enter your mobile number and password.'); return; }
     if (!/^[6-9]\d{9}$/.test(mobile)) { setError('Please enter a valid 10-digit mobile number.'); return; }
