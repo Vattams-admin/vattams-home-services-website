@@ -28,12 +28,23 @@ export interface PaymentRecord {
 }
 
 export function buildUpiLink(amount: number, note: string, upiId: string = DEFAULT_UPI_ID): string {
+  if (!Number.isFinite(amount) || amount <= 0
+    || Math.abs(amount * 100 - Math.round(amount * 100)) > 1e-7) {
+    throw new Error('Enter a valid payment amount in rupees and paise.');
+  }
+  if (typeof upiId !== 'string' || !upiId.trim() || upiId.length > 255) {
+    throw new Error('A valid UPI ID is required.');
+  }
+  if (typeof note !== 'string' || note.length > 200) {
+    throw new Error('Payment note must be 200 characters or fewer.');
+  }
+
   const params = new URLSearchParams({
-    pa: upiId,
+    pa: upiId.trim(),
     pn: PAYEE_NAME,
     am: amount.toFixed(2),
     cu: 'INR',
-    tn: note,
+    tn: note.trim(),
   });
   return `upi://pay?${params.toString()}`;
 }
