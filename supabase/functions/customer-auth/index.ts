@@ -42,8 +42,12 @@ async function sendEmailOtp(to: string, otp: string, purpose: string): Promise<b
     console.error("Email OTP is unavailable: RESEND_API_KEY and EMAIL_FROM must be configured.");
     return false;
   }
-  const subject = purpose === "registration" ? "Verify your VATTAMS account" : "Your VATTAMS verification code";
-  const html = `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:24px"><h2>VATTAMS Home Services</h2><p>Use this one-time code to verify your email address and continue registration.</p><div style="font-size:32px;font-weight:700;letter-spacing:8px;padding:18px 0">${otp}</div><p>This code expires in 10 minutes. Do not share it with anyone.</p></div>`;
+  const isRegistration = purpose === "registration";
+  const subject = isRegistration ? "Verify your VATTAMS account" : "Reset your VATTAMS account password";
+  const message = isRegistration
+    ? "Use this one-time code to verify your email address and continue registration."
+    : "Use this one-time code to verify your password-reset request. If you did not request a password reset, you can ignore this email.";
+  const html = `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:24px"><h2>VATTAMS Home Services</h2><p>${message}</p><div style="font-size:32px;font-weight:700;letter-spacing:8px;padding:18px 0">${otp}</div><p>This code expires in 10 minutes. Do not share it with anyone.</p></div>`;
   try {
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
