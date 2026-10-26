@@ -11,6 +11,9 @@ export async function technicianData<T = any>(action: string, extra: Record<stri
     throw new Error('Technician session unavailable. Please sign in again.');
   }
   if (!sessionToken) throw new Error('Technician session expired. Please sign in again.');
+  if (typeof action !== 'string' || !action.trim() || action.length > 100) {
+    throw new Error('Invalid technician request. Please try again.');
+  }
 
   const response = await fetch(`${SUPABASE_URL}/functions/v1/technician-data`, {
     method: 'POST',
