@@ -27,6 +27,22 @@ export interface PaymentRecord {
   verified_at: string | null;
 }
 
+function parsePaymentRecord(value: unknown): PaymentRecord | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const payment = value as Partial<PaymentRecord>;
+  if (typeof payment.id !== 'string' || !payment.id.trim()
+    || typeof payment.payment_id !== 'string' || !payment.payment_id.trim()
+    || typeof payment.payment_action_token !== 'string' || !payment.payment_action_token.trim()
+    || typeof payment.payee_id !== 'string'
+    || !['customer', 'technician'].includes(String(payment.payee_type))
+    || !['booking', 'registration_fee', 'wallet_recharge', 'commission'].includes(String(payment.purpose))
+    || !['pending', 'success', 'failed'].includes(String(payment.status))
+    || typeof payment.amount !== 'number' || !Number.isFinite(payment.amount) || payment.amount <= 0) {
+    return null;
+  }
+  return payment as PaymentRecord;
+}
+
 export function buildUpiLink(amount: number, note: string, upiId: string = DEFAULT_UPI_ID): string {
   if (!Number.isFinite(amount) || amount <= 0
     || Math.abs(amount * 100 - Math.round(amount * 100)) > 1e-7) {
@@ -84,7 +100,9 @@ export async function createPaymentRecord(params: {
     console.error('Failed to create payment record:', error);
     return null;
   }
-  return (data?.payment ?? null) as PaymentRecord | null;
+  const payment = parsePaymentRecord(data?.payment);
+  if (!payment) console.error('Payment service returned an invalid payment record.');
+  return payment;
 }
 
 export async function updatePaymentStatus(
