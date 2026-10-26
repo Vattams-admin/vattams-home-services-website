@@ -276,6 +276,8 @@ function generateInvoiceHTML(payment: PaymentRecord, booking: BookingRef | null,
   .footer { text-align: center; margin-top: 40px; font-size: 12px; color: #999; }
   .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
   .status-success { background: #dcfce7; color: #166534; }
+  .status-pending { background: #fef3c7; color: #92400e; }
+  .status-failed { background: #fee2e2; color: #991b1b; }
 </style>
 </head>
 <body>
@@ -292,7 +294,7 @@ function generateInvoiceHTML(payment: PaymentRecord, booking: BookingRef | null,
   <div class="row"><span class="label">Payment Purpose</span><span class="value">${safePurpose}</span></div>
   <div class="row"><span class="label">UPI ID</span><span class="value">${safeUpiId}</span></div>
   ${payment.utr ? `<div class="row"><span class="label">UTR Number</span><span class="value">${safeUtr}</span></div>` : ''}
-  <div class="row"><span class="label">Status</span><span class="value"><span class="status-badge status-success">Paid</span></span></div>
+  <div class="row"><span class="label">Status</span><span class="value"><span class="status-badge status-${payment.status}">${payment.status === 'success' ? 'Paid' : payment.status === 'pending' ? 'Pending' : 'Failed'}</span></span></div>
   <div class="total"><div class="row" style="border:none"><span class="label" style="font-size:16px">Total Amount</span><span class="value">₹${payment.amount.toLocaleString('en-IN')}</span></div></div>
   <div class="footer">This is a computer-generated invoice from VATTAMS Hybrid Service Marketplace.<br>For queries, call +91 63740 68296 or WhatsApp us.</div>
 </body>
