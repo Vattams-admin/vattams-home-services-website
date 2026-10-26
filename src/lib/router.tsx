@@ -56,7 +56,13 @@ interface RouterContextValue extends RouteState {
 const RouterContext = createContext<RouterContextValue | undefined>(undefined);
 
 function hasSession(key: string): boolean {
-  return typeof window !== 'undefined' && Boolean(sessionStorage.getItem(key));
+  if (typeof window === 'undefined') return false;
+  try {
+    return Boolean(window.sessionStorage.getItem(key));
+  } catch {
+    // Fail closed: protected routes must not become public when storage is blocked.
+    return false;
+  }
 }
 function guardRoute(route: RouteState): RouteState {
   if (CUSTOMER_PROTECTED_PAGES.has(route.page) && !hasSession('vattams_customer_session')) return { page: 'customer-login' };
@@ -70,9 +76,11 @@ function parseHash(rawHash: string): RouteState {
   if (!hash) return { page: 'home' };
   try { hash = decodeURIComponent(hash); } catch { /* keep malformed fragment as-is */ }
   if ((KNOWN_PAGES as string[]).includes(hash)) return guardRoute({ page: hash as Page });
-  if (hash.startsWith('city-')) {
-    const citySlug = hash.slice('city-'.length);
-    return citySlug ? { page: 'city-landing', citySlug } : { page: 'not-found' };
+  if (hash.toLowerCase().startsWith('city-')) {
+    const citySlug = hash.slice('city-'.length).trim().toLowerCase();
+    return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(citySlug)
+      ? { page: 'city-landing', citySlug }
+      : { page: 'not-found' };
   }
   return { page: 'not-found' };
 }
@@ -93,7 +101,12 @@ function parseCurrentRoute(): RouteState {
   if (pathname === '/' && window.location.hash) return parseHash(window.location.hash);
   if (PUBLIC_PATHS[pathname]) return { page: PUBLIC_PATHS[pathname] };
   const cityMatch = pathname.match(/^\/areas\/([a-z0-9-]+)$/i);
-  if (cityMatch) return { page: 'city-landing', citySlug: cityMatch[1] };
+  if (cityMatch) {
+    const citySlug = cityMatch[1].toLowerCase();
+    if (/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(citySlug)) {
+      return { page: 'city-landing', citySlug };
+    }
+  }
   if (window.location.hash) return parseHash(window.location.hash);
   return { page: 'not-found' };
 }
@@ -124,7 +137,13 @@ export function RouterProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const navigate = (page: Page, slug?: string) => {
-    const guarded = guardRoute({ page, ...(slug ? { citySlug: slug } : {}) });
+    const normalizedSlug = typeof slug === 'string' ? slug.trim().toLowerCase() : '';
+    const route: RouteState = page === 'city-landing'
+      ? (/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(normalizedSlug)
+        ? { page, citySlug: normalizedSlug }
+        : { page: 'not-found' })
+      : { page, ...(slug ? { citySlug: slug } : {}) };
+    const guarded = guardRoute(route);
     const publicPath = publicPathFor(guarded);
     if (publicPath !== null) {
       if (window.location.pathname !== publicPath || window.location.hash) {

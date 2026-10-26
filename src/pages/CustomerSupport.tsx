@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Mail, MapPin, Send, Loader, Headphones, ChevronRight } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import { Customer } from '@/lib/supabase';
 import { customerData } from '@/lib/customerData';
-import CommunicationCenter, { SUPPORT_PHONE, SUPPORT_WHATSAPP } from '@/components/CommunicationCenter';
+import CommunicationCenter, { SUPPORT_PHONE } from '@/components/CommunicationCenter';
 
 const SUPPORT_EMAIL = 'support@vattams.net';
 
@@ -16,32 +16,104 @@ export default function CustomerSupport() {
   const [toast, setToast] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
-    const stored = sessionStorage.getItem('vattams_customer');
-    if (!stored) { navigate('customer-login'); return; }
-    try { setCustomer(JSON.parse(stored) as Customer); } catch { navigate('customer-login'); }
-  }, []);
+    const clearSession = () => {
+      try {
+        sessionStorage.removeItem('vattams_customer');
+        sessionStorage.removeItem('vattams_customer_session');
+        sessionStorage.removeItem('vattams_customer_expires');
+      } catch {
+        // Keep the redirect path available if storage cleanup is blocked.
+      }
+    };
+
+    let stored: string | null;
+    let sessionToken: string | null;
+    let expiresAt: number;
+    try {
+      stored = sessionStorage.getItem('vattams_customer');
+      sessionToken = sessionStorage.getItem('vattams_customer_session');
+      expiresAt = Number(sessionStorage.getItem('vattams_customer_expires'));
+    } catch {
+      clearSession();
+      navigate('customer-login');
+      return;
+    }
+
+    if (!stored || !sessionToken || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+      clearSession();
+      navigate('customer-login');
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(stored) as Partial<Customer>;
+      if (typeof parsed.id !== 'string' || !parsed.id.trim()
+        || typeof parsed.mobile !== 'string' || !parsed.mobile.trim()
+        || typeof parsed.full_name !== 'string' || !parsed.full_name.trim()) {
+        throw new Error('Incomplete customer profile');
+      }
+      setCustomer(parsed as Customer);
+    } catch {
+      clearSession();
+      navigate('customer-login');
+    }
+  }, [navigate]);
+
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearToastTimeout = () => {
+    if (toastTimeoutRef.current !== null) {
+      clearTimeout(toastTimeoutRef.current);
+      toastTimeoutRef.current = null;
+    }
+  };
+
+  useEffect(() => () => clearToastTimeout(), []);
 
   const showToast = (type: 'success' | 'error', text: string) => {
+    clearToastTimeout();
     setToast({ type, text });
-    setTimeout(() => setToast(null), 3000);
+    toastTimeoutRef.current = setTimeout(() => {
+      setToast(null);
+      toastTimeoutRef.current = null;
+    }, 3000);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customer) return;
-    if (!subject.trim() || !message.trim()) { showToast('error', 'Please fill in all fields.'); return; }
+    if (!customer || sending) return;
+    const cleanSubject = subject.trim();
+    const cleanMessage = message.trim();
+    if (!cleanSubject || !cleanMessage) { showToast('error', 'Please fill in all fields.'); return; }
+    if (cleanSubject.length > 120 || cleanMessage.length > 2000) {
+      showToast('error', 'Please shorten your subject or message and try again.');
+      return;
+    }
+    // Reject invisible control characters that can corrupt support records,
+    // while preserving normal line breaks and tabs in the message body.
+    if (/[\u0000-\u001f\u007f]/.test(cleanSubject)
+      || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(cleanMessage)) {
+      showToast('error', 'Please remove unsupported control characters and try again.');
+      return;
+    }
 
     setSending(true);
     try {
-      const result = await customerData<{ success: boolean }>('support', { subject: subject.trim(), message: message.trim() });
-      if (!result?.success) throw new Error('Failed to send support message');
+      const result = await customerData<{ success?: unknown }>('support', {
+        subject: cleanSubject,
+        message: cleanMessage,
+      });
+      if (!result || typeof result !== 'object' || result.success !== true) {
+        throw new Error('Failed to send support message');
+      }
       showToast('success', 'Message sent! Our team will get back to you shortly.');
       setSubject('');
       setMessage('');
     } catch {
       showToast('error', 'Failed to send message. Please try WhatsApp or call us directly.');
+    } finally {
+      setSending(false);
     }
-    setSending(false);
   };
 
   return (
@@ -50,7 +122,7 @@ export default function CustomerSupport() {
         <h1 className="text-2xl font-extrabold text-gray-900 mb-6 flex items-center gap-2"><Headphones size={24} className="text-gold-700" /> Customer Support</h1>
 
         {toast && (
-          <div className={`rounded-xl p-3 text-sm mb-4 ${toast.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>{toast.text}</div>
+          <div role={toast.type === 'error' ? 'alert' : 'status'} aria-live={toast.type === 'error' ? 'assertive' : 'polite'} className={`rounded-xl p-3 text-sm mb-4 ${toast.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>{toast.text}</div>
         )}
 
         {/* Quick Support Options */}
@@ -73,14 +145,14 @@ export default function CustomerSupport() {
           <h2 className="font-bold text-gray-900 text-sm mb-4">Send Us a Message</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Subject</label>
-              <input type="text" value={subject} onChange={(e) => setSubject(e.target.value)}
+              <label htmlFor="support-subject" className="block text-sm font-semibold text-gray-700 mb-1.5">Subject</label>
+              <input id="support-subject" name="subject" type="text" required maxLength={120} value={subject} onChange={(e) => setSubject(e.target.value)}
                 placeholder="What do you need help with?"
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Message</label>
-              <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={5}
+              <label htmlFor="support-message" className="block text-sm font-semibold text-gray-700 mb-1.5">Message</label>
+              <textarea id="support-message" name="message" required maxLength={2000} value={message} onChange={(e) => setMessage(e.target.value)} rows={5}
                 placeholder="Describe your issue in detail..."
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm resize-none" />
             </div>

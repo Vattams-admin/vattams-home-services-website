@@ -15,6 +15,8 @@ import {
   FileText,
   RotateCcw,
   ShieldCheck,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import PaymentModal from '@/components/PaymentModal';
@@ -55,6 +57,7 @@ export default function TechnicianRegister() {
   const [stepIndex, setStepIndex] = useState(0);
   const [form, setForm] = useState<TechnicianFormData>(EMPTY_FORM);
   const [inputValue, setInputValue] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -540,6 +543,7 @@ export default function TechnicianRegister() {
     try {
       await verifyTechnicianRegistrationEmail(form, emailOtp);
       clearRegistrationDraft();
+      setEmailOtp('');
       setEmailOtpPending(false);
       setSuccess(true);
     } catch (err: any) {
@@ -575,7 +579,7 @@ export default function TechnicianRegister() {
 
           <p className="text-gray-500 mb-6 leading-7">
             Thank you for registering with{' '}
-            <strong>VATTAMS HOME SERVICES</strong>.
+            <strong>VATTAMS HYBRID SERVICE MARKETPLACE</strong>.
             <br />
             <br />
 
@@ -650,11 +654,15 @@ export default function TechnicianRegister() {
           <div className="mb-4 flex items-center justify-between gap-3 bg-[#f8f4e8] border border-blue-100 text-[#0b1f3a] text-xs font-semibold rounded-xl px-4 py-2.5">
             <span>
               Welcome back — we picked up where you left off.
+              {emailOtpPending && <span id="registration-otp-pending-note" className="block mt-1 font-normal">Finish email verification before starting over.</span>}
             </span>
 
             <button
+              type="button"
               onClick={handleStartOver}
-              className="flex items-center gap-1 text-[#0b1f3a] hover:text-blue-900 underline shrink-0"
+              disabled={submitting || emailOtpPending}
+              aria-describedby={emailOtpPending ? 'registration-otp-pending-note' : undefined}
+              className="flex items-center gap-1 text-[#0b1f3a] hover:text-blue-900 underline shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <RotateCcw size={12} />
               Start Over
@@ -755,7 +763,7 @@ export default function TechnicianRegister() {
           <div className="border-t border-[#e8e1d2] p-4">
 
             {error && (
-              <div className="mb-3 flex items-center gap-2 text-red-600 text-sm bg-red-50 rounded-lg px-3 py-2">
+              <div role="alert" aria-live="assertive" className="mb-3 flex items-center gap-2 text-red-600 text-sm bg-red-50 rounded-lg px-3 py-2">
                 <AlertCircle size={14} />
                 {error}
               </div>
@@ -763,19 +771,21 @@ export default function TechnicianRegister() {
 
             {emailOtpPending && (
               <div className="space-y-3">
-                <div className="rounded-xl bg-blue-50 border border-blue-100 p-3 text-sm text-blue-900">
+                <div role="status" aria-live="polite" className="rounded-xl bg-blue-50 border border-blue-100 p-3 text-sm text-blue-900">
                   Verification email sent to <strong>{form.email.trim().toLowerCase()}</strong>. Enter the code to complete registration. If it does not arrive, check Spam/Junk.
                 </div>
                 <input
                   type="text"
                   inputMode="numeric"
                   autoComplete="one-time-code"
+                  aria-label="6-digit email verification code"
                   maxLength={6}
                   value={emailOtp}
+                  disabled={submitting}
                   onChange={(event) => setEmailOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
                   onKeyDown={(event) => { if (event.key === 'Enter') handleVerifyEmailOtp(); }}
                   placeholder="6-digit email OTP"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-100 outline-none text-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-100 outline-none text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                 />
                 <button
                   onClick={handleVerifyEmailOtp}
@@ -812,7 +822,7 @@ export default function TechnicianRegister() {
                     currentStep.type === 'number'
                       ? 'number'
                       : currentStep.type === 'password'
-                      ? 'password'
+                      ? (showPassword ? 'text' : 'password')
                       : currentStep.type === 'tel'
                       ? 'tel'
                       : 'text'
@@ -827,12 +837,31 @@ export default function TechnicianRegister() {
                     }
                   }}
                   placeholder={currentStep.placeholder}
+                  maxLength={
+                    currentStep.type === 'password' ? 128
+                    : currentStep.type === 'email' ? 254
+                    : currentStep.type === 'tel' ? 10
+                    : undefined
+                  }
                   className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-100 outline-none text-sm"
                   autoFocus
                 />
 
+                {currentStep.type === 'password' && (
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((visible) => !visible)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    aria-pressed={showPassword}
+                    className="px-3 py-2.5 text-gray-600 hover:text-gray-900 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+                  >
+                    {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+                  </button>
+                )}
                 <button
-                  onClick={handleNext}
+                  type="button"
+                  onClick={() => { setShowPassword(false); handleNext(); }}
+                  aria-label="Continue to next registration step"
                   className="px-4 py-2.5 bg-[#c9a227] hover:bg-[#b08b18] text-white rounded-xl transition-colors"
                 >
                   <Send size={18} />

@@ -26,46 +26,141 @@ export default function CustomerPayments() {
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [bookings, setBookings] = useState<Record<string, BookingRef>>({});
   const [loading, setLoading] = useState(true);
-  const [invoicePayment, setInvoicePayment] = useState<PaymentRecord | null>(null);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
-    const stored = sessionStorage.getItem('vattams_customer');
-    if (!stored) { navigate('customer-login'); return; }
+    const clearSession = () => {
+      try {
+        sessionStorage.removeItem('vattams_customer');
+        sessionStorage.removeItem('vattams_customer_session');
+        sessionStorage.removeItem('vattams_customer_expires');
+      } catch {
+        // Continue redirecting even if browser storage cleanup is blocked.
+      }
+    };
+
+    let stored: string | null;
+    let sessionToken: string | null;
+    let expiresAt: number;
     try {
-      const c = JSON.parse(stored) as Customer;
-      setCustomer(c);
-      Promise.all([loadPayments(c), loadBookings(c)]).finally(() => setLoading(false));
-    } catch { navigate('customer-login'); }
-  }, []);
+      stored = sessionStorage.getItem('vattams_customer');
+      sessionToken = sessionStorage.getItem('vattams_customer_session');
+      expiresAt = Number(sessionStorage.getItem('vattams_customer_expires'));
+    } catch {
+      clearSession();
+      navigate('customer-login');
+      return;
+    }
 
-  const loadPayments = async (c: Customer) => {
-    const data = await customerData<{ payments: PaymentRecord[] }>('payments', { mobile: c.mobile });
-    setPayments(data?.payments ?? []);
-  };
+    if (!stored || !sessionToken || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+      clearSession();
+      navigate('customer-login');
+      return;
+    }
 
-  const loadBookings = async (c: Customer) => {
-    const result = await customerData<{ bookings: { id: string; service_category: string; booking_number: string }[] }>('booking_refs', { mobile: c.mobile });
-    const map: Record<string, BookingRef> = {};
-    result?.bookings.forEach((b) => { map[b.id] = { service_category: b.service_category, booking_number: b.booking_number }; });
-    setBookings(map);
-  };
+    let active = true;
+    const load = async () => {
+      try {
+        const parsed = JSON.parse(stored) as Partial<Customer>;
+        if (typeof parsed.id !== 'string' || !parsed.id.trim()
+          || typeof parsed.mobile !== 'string' || !parsed.mobile.trim()
+          || typeof parsed.full_name !== 'string' || !parsed.full_name.trim()) {
+          throw new Error('Your saved customer profile is incomplete. Please sign in again.');
+        }
+        const c = parsed as Customer;
+        setCustomer(c);
+        const [paymentResult, bookingResult] = await Promise.allSettled([
+          customerData<{ payments: PaymentRecord[] }>('payments', { mobile: c.mobile }),
+          customerData<{ bookings: { id: string; service_category: string; booking_number: string }[] }>('booking_refs', { mobile: c.mobile }),
+        ]);
+        if (paymentResult.status === 'rejected') throw paymentResult.reason;
+        const paymentData = paymentResult.value;
+        if (!paymentData || !Array.isArray(paymentData.payments)
+          || !paymentData.payments.every((payment) => payment
+            && typeof payment.id === 'string' && payment.id.trim()
+            && typeof payment.payment_id === 'string' && payment.payment_id.trim()
+            && ['pending', 'success', 'failed'].includes(payment.status)
+            && typeof payment.purpose === 'string' && payment.purpose.trim()
+            && typeof payment.upi_id === 'string'
+            && typeof payment.created_at === 'string' && !Number.isNaN(Date.parse(payment.created_at))
+            && typeof payment.amount === 'number' && Number.isFinite(payment.amount) && payment.amount >= 0)
+          || new Set(paymentData.payments.map((payment) => payment.id.trim())).size !== paymentData.payments.length
+          || new Set(paymentData.payments.map((payment) => payment.payment_id.trim())).size !== paymentData.payments.length) {
+          throw new Error('We couldn’t verify your payment history. Please sign in again or retry shortly.');
+        }
+        if (!active) return;
+        setPayments(paymentData.payments);
+
+        // Booking references are supplementary: an unavailable booking lookup
+        // must not hide a valid payment history or misreport it as unavailable.
+        if (bookingResult.status === 'fulfilled' && bookingResult.value
+          && Array.isArray(bookingResult.value.bookings)) {
+          const map: Record<string, BookingRef> = {};
+          const bookingRefs = bookingResult.value.bookings;
+          const validBookings = bookingRefs.every((booking) =>
+            booking && typeof booking.id === 'string' && booking.id.trim()
+            && typeof booking.service_category === 'string' && booking.service_category.trim()
+            && typeof booking.booking_number === 'string' && booking.booking_number.trim())
+            && new Set(bookingRefs.map((booking) => booking.id.trim())).size === bookingRefs.length;
+          if (validBookings) {
+            for (const booking of bookingRefs) {
+              map[booking.id.trim()] = {
+                service_category: booking.service_category.trim(),
+                booking_number: booking.booking_number.trim(),
+              };
+            }
+            if (active) setBookings(map);
+          }
+        }
+      } catch (error) {
+        if (!active) return;
+        setLoadError(error instanceof Error ? error.message : 'Unable to load payment history. Please try again.');
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    void load();
+    return () => { active = false; };
+  }, [navigate]);
 
   const downloadInvoice = (payment: PaymentRecord) => {
     const booking = payment.reference_id ? bookings[payment.reference_id] : null;
     const invoiceContent = generateInvoiceHTML(payment, booking, customer);
-    const blob = new Blob([invoiceContent], { type: 'text/html' });
+    const blob = new Blob([invoiceContent], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
+    const safeFileId = payment.payment_id.replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 80) || 'payment';
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Invoice-${payment.payment_id}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    a.download = `VATTAMS-Invoice-${safeFileId}.html`;
+    a.hidden = true;
+
+    try {
+      document.body.appendChild(a);
+      a.click();
+    } finally {
+      a.remove();
+      // Give the browser time to start consuming the blob before revoking it.
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
   };
 
   if (loading || !customer) {
     return <div className="pt-20 md:pt-24 min-h-screen flex items-center justify-center bg-ivory-50"><Loader className="animate-spin text-gold-700" size={32} /></div>;
+  }
+
+  if (loadError) {
+    return (
+      <div className="pt-20 md:pt-24 min-h-screen bg-ivory-50 px-4 py-12">
+        <div role="alert" className="mx-auto max-w-xl rounded-2xl border border-amber-200 bg-white p-8 text-center shadow-sm">
+          <FileText size={36} className="mx-auto mb-3 text-amber-600" />
+          <h1 className="text-xl font-bold text-gray-900">Payment history unavailable</h1>
+          <p className="mt-2 text-sm leading-6 text-gray-600">{loadError}</p>
+          <button type="button" onClick={() => navigate('customer-login')} className="mt-5 rounded-xl bg-[#0b1f3a] px-5 py-3 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a47c00] focus-visible:ring-offset-2">
+            Sign in again
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const totalPaid = payments.filter((p) => p.status === 'success').reduce((sum, p) => sum + p.amount, 0);
@@ -107,30 +202,30 @@ export default function CustomerPayments() {
               const cfg = statusConfig[p.status] ?? statusConfig.pending;
               const booking = p.reference_id ? bookings[p.reference_id] : null;
               return (
-                <div key={p.id} className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <div className="font-bold text-blue-700 text-sm">{p.payment_id}</div>
-                      <div className="font-extrabold text-gray-900 mt-0.5">{purposeLabels[p.purpose] ?? p.purpose}</div>
-                      {booking && <div className="text-xs text-gray-400 mt-0.5">{booking.service_category} · {booking.booking_number}</div>}
+                <div key={p.id} className="min-w-0 rounded-2xl border border-gold-200/60 bg-white p-4 shadow-[0_12px_35px_rgba(5,10,23,0.06)] sm:p-5">
+                  <div className="mb-4 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0 flex-1">
+                      <div className="break-all text-sm font-bold text-blue-700">{p.payment_id}</div>
+                      <div className="mt-1 break-words font-extrabold text-gray-900">{purposeLabels[p.purpose] ?? p.purpose}</div>
+                      {booking && <div className="mt-1 break-words text-xs text-gray-500">{booking.service_category} · {booking.booking_number}</div>}
                     </div>
-                    <div className="text-right">
+                    <div className="flex shrink-0 flex-row items-center justify-between gap-3 sm:flex-col sm:items-end sm:gap-1">
                       <div className="text-lg font-extrabold text-gray-900">₹{p.amount.toLocaleString('en-IN')}</div>
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border ${cfg.color}`}>
+                      <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold ${cfg.color}`}>
                         <cfg.icon size={12} /> {cfg.label}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between text-sm text-gray-500">
-                    <div className="flex items-center gap-3">
-                      <span>{new Date(p.created_at).toLocaleDateString('en-IN')}</span>
-                      {p.utr && <span className="font-mono text-xs">UTR: {p.utr}</span>}
-                      <span className="text-xs">UPI: {p.upi_id}</span>
+                  <div className="flex min-w-0 flex-col gap-3 border-t border-gray-100 pt-3 text-sm text-gray-500 sm:flex-row sm:items-end sm:justify-between">
+                    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-2">
+                      <span className="shrink-0">{new Date(p.created_at).toLocaleDateString('en-IN')}</span>
+                      {p.utr && <span className="max-w-full break-all font-mono text-xs">UTR: {p.utr}</span>}
+                      <span className="max-w-full break-all text-xs">UPI: {p.upi_id}</span>
                     </div>
                     {p.status === 'success' && (
-                      <button onClick={() => downloadInvoice(p)} className="flex items-center gap-1 text-gold-700 font-semibold hover:underline">
-                        <Download size={14} /> Invoice
+                      <button type="button" onClick={() => downloadInvoice(p)} className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 self-start rounded-lg px-3 py-2 font-semibold text-gold-700 hover:bg-amber-50 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a47c00] focus-visible:ring-offset-2 sm:self-auto">
+                        <Download size={14} /> Download invoice
                       </button>
                     )}
                   </div>
@@ -144,12 +239,29 @@ export default function CustomerPayments() {
   );
 }
 
+function escapeInvoiceText(value: unknown): string {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
 function generateInvoiceHTML(payment: PaymentRecord, booking: BookingRef | null, customer: Customer | null): string {
+  const safePaymentId = escapeInvoiceText(payment.payment_id);
+  const safeCustomerName = escapeInvoiceText(customer?.full_name ?? payment.payee_name ?? 'N/A');
+  const safeMobile = escapeInvoiceText(payment.payee_id);
+  const safeServiceCategory = escapeInvoiceText(booking?.service_category);
+  const safeBookingNumber = escapeInvoiceText(booking?.booking_number);
+  const safePurpose = escapeInvoiceText(purposeLabels[payment.purpose] ?? payment.purpose);
+  const safeUpiId = escapeInvoiceText(payment.upi_id);
+  const safeUtr = escapeInvoiceText(payment.utr);
   return `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
-<title>Invoice ${payment.payment_id}</title>
+<title>Invoice ${safePaymentId}</title>
 <style>
   body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; color: #333; }
   .header { text-align: center; border-bottom: 3px solid #1e3a8a; padding-bottom: 20px; margin-bottom: 30px; }
@@ -164,25 +276,27 @@ function generateInvoiceHTML(payment: PaymentRecord, booking: BookingRef | null,
   .footer { text-align: center; margin-top: 40px; font-size: 12px; color: #999; }
   .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
   .status-success { background: #dcfce7; color: #166534; }
+  .status-pending { background: #fef3c7; color: #92400e; }
+  .status-failed { background: #fee2e2; color: #991b1b; }
 </style>
 </head>
 <body>
   <div class="header">
     <div class="logo">VATTAMS</div>
-    <div class="subtitle">Home Services</div>
+    <div class="subtitle">Hybrid Service Marketplace</div>
   </div>
   <div class="invoice-title">Payment Invoice</div>
-  <div class="row"><span class="label">Invoice Number</span><span class="value">${payment.payment_id}</span></div>
+  <div class="row"><span class="label">Invoice Number</span><span class="value">${safePaymentId}</span></div>
   <div class="row"><span class="label">Date</span><span class="value">${new Date(payment.created_at).toLocaleDateString('en-IN')}</span></div>
-  <div class="row"><span class="label">Customer Name</span><span class="value">${customer?.full_name ?? payment.payee_name ?? 'N/A'}</span></div>
-  <div class="row"><span class="label">Mobile Number</span><span class="value">${payment.payee_id}</span></div>
-  ${booking ? `<div class="row"><span class="label">Service</span><span class="value">${booking.service_category}</span></div><div class="row"><span class="label">Booking Number</span><span class="value">${booking.booking_number}</span></div>` : ''}
-  <div class="row"><span class="label">Payment Purpose</span><span class="value">${purposeLabels[payment.purpose] ?? payment.purpose}</span></div>
-  <div class="row"><span class="label">UPI ID</span><span class="value">${payment.upi_id}</span></div>
-  ${payment.utr ? `<div class="row"><span class="label">UTR Number</span><span class="value">${payment.utr}</span></div>` : ''}
-  <div class="row"><span class="label">Status</span><span class="value"><span class="status-badge status-success">Paid</span></span></div>
+  <div class="row"><span class="label">Customer Name</span><span class="value">${safeCustomerName}</span></div>
+  <div class="row"><span class="label">Mobile Number</span><span class="value">${safeMobile}</span></div>
+  ${booking ? `<div class="row"><span class="label">Service</span><span class="value">${safeServiceCategory}</span></div><div class="row"><span class="label">Booking Number</span><span class="value">${safeBookingNumber}</span></div>` : ''}
+  <div class="row"><span class="label">Payment Purpose</span><span class="value">${safePurpose}</span></div>
+  <div class="row"><span class="label">UPI ID</span><span class="value">${safeUpiId}</span></div>
+  ${payment.utr ? `<div class="row"><span class="label">UTR Number</span><span class="value">${safeUtr}</span></div>` : ''}
+  <div class="row"><span class="label">Status</span><span class="value"><span class="status-badge status-${payment.status}">${payment.status === 'success' ? 'Paid' : payment.status === 'pending' ? 'Pending' : 'Failed'}</span></span></div>
   <div class="total"><div class="row" style="border:none"><span class="label" style="font-size:16px">Total Amount</span><span class="value">₹${payment.amount.toLocaleString('en-IN')}</span></div></div>
-  <div class="footer">This is a computer-generated invoice from VATTAMS Home Services.<br>For queries, call +91 81898 00757 or WhatsApp us.</div>
+  <div class="footer">This is a computer-generated invoice from VATTAMS Hybrid Service Marketplace.<br>For queries, call +91 63740 68296 or WhatsApp us.</div>
 </body>
 </html>`;
 }

@@ -24,7 +24,12 @@ export function calculatePricing(
   const totalAmount = Math.round((basePrice + gstAmount + platformFee) * 100) / 100;
   const commissionAmount = Math.round((basePrice * commissionRate / 100) * 100) / 100;
   const technicianEarnings = Math.round((basePrice - commissionAmount - callRateFee) * 100) / 100;
-  const finalAmount = Math.max(0, Math.round((totalAmount - discountAmount) * 100) / 100);
+  // Normalize and cap discounts at the payable subtotal so the breakdown
+  // reports the amount actually applied, matching booking-ops on the server.
+  const normalizedDiscount = Number.isFinite(discountAmount)
+    ? Math.min(Math.max(0, Math.round(discountAmount * 100) / 100), totalAmount)
+    : 0;
+  const finalAmount = Math.max(0, Math.round((totalAmount - normalizedDiscount) * 100) / 100);
 
   return {
     basePrice,
@@ -34,7 +39,7 @@ export function calculatePricing(
     callRateFee,
     totalAmount,
     technicianEarnings,
-    discountAmount,
+    discountAmount: normalizedDiscount,
     finalAmount,
   };
 }
@@ -100,9 +105,11 @@ export function getPricingFromServicePrice(sp: ServicePrice): PricingBreakdown {
 }
 
 export function formatINR(amount: number): string {
-  return `₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  const safeAmount = Number.isFinite(amount) ? amount : 0;
+  return `₹${safeAmount.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }
 
 export function formatCurrency(amount: number): string {
-  return `₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  const safeAmount = Number.isFinite(amount) ? amount : 0;
+  return `₹${safeAmount.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }

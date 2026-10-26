@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AlertCircle,
   ArrowLeft,
@@ -59,8 +59,14 @@ export default function CustomerBookings() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  const bookingRequestVersion = useRef(0);
+
+  useEffect(() => () => {
+    bookingRequestVersion.current += 1;
+  }, []);
 
   const loadBookings = useCallback(async (customerRecord: Customer, refresh = false) => {
+    const requestVersion = ++bookingRequestVersion.current;
     if (refresh) setRefreshing(true);
     else setLoading(true);
     setError('');
@@ -68,30 +74,71 @@ export default function CustomerBookings() {
       const result = await customerData<{ bookings: Booking[] }>('bookings', {
         mobile: customerRecord.mobile,
       });
-      setBookings(result?.bookings ?? []);
+      // customerData returns null when the session is missing or the endpoint
+      // rejects the request. Do not turn an unavailable response into a false
+      // "No bookings yet" state.
+      if (!result || !Array.isArray(result.bookings) ||
+          !result.bookings.every((booking) => booking && typeof booking.id === 'string' && booking.id.trim() &&
+            typeof booking.status === 'string' && booking.status.trim()) ||
+          new Set(result.bookings.map((booking) => booking.id.trim())).size !== result.bookings.length) {
+        throw new Error('We couldn’t verify your booking history. Please sign in again or retry shortly.');
+      }
+      if (requestVersion !== bookingRequestVersion.current) return;
+      setBookings(result.bookings);
     } catch (err) {
+      if (requestVersion !== bookingRequestVersion.current) return;
       setError(err instanceof Error ? err.message : 'Unable to load your bookings. Please try again.');
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (requestVersion === bookingRequestVersion.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }, []);
 
   useEffect(() => {
-    const stored = sessionStorage.getItem('vattams_customer');
-    if (!stored || !sessionStorage.getItem('vattams_customer_session')) {
+    const clearSession = () => {
+      try {
+        sessionStorage.removeItem('vattams_customer');
+        sessionStorage.removeItem('vattams_customer_session');
+        sessionStorage.removeItem('vattams_customer_expires');
+      } catch {
+        // The route still redirects if browser storage cleanup is blocked.
+      }
+    };
+
+    let stored: string | null;
+    let sessionToken: string | null;
+    let expiresAt: string | null;
+    try {
+      stored = sessionStorage.getItem('vattams_customer');
+      sessionToken = sessionStorage.getItem('vattams_customer_session');
+      expiresAt = sessionStorage.getItem('vattams_customer_expires');
+    } catch {
+      clearSession();
       navigate('customer-login');
       return;
     }
+
+    const expiry = Number(expiresAt);
+    if (!stored || !sessionToken || !expiresAt || !Number.isFinite(expiry) || expiry <= Date.now()) {
+      clearSession();
+      navigate('customer-login');
+      return;
+    }
+
     try {
-      const record = JSON.parse(stored) as Customer;
-      if (!record?.mobile) {
-        navigate('customer-login');
-        return;
+      const parsed = JSON.parse(stored) as Partial<Customer>;
+      if (typeof parsed.id !== 'string' || !parsed.id.trim() ||
+          typeof parsed.mobile !== 'string' || !parsed.mobile.trim() ||
+          typeof parsed.full_name !== 'string' || !parsed.full_name.trim()) {
+        throw new Error('Stored customer profile is incomplete.');
       }
+      const record = parsed as Customer;
       setCustomer(record);
       void loadBookings(record);
     } catch {
+      clearSession();
       navigate('customer-login');
     }
   }, [loadBookings, navigate]);
@@ -106,7 +153,7 @@ export default function CustomerBookings() {
         <button
           type="button"
           onClick={() => navigate('customer-dashboard')}
-          className="mb-5 inline-flex items-center gap-2 text-sm font-semibold text-[#0b1f3a] hover:underline"
+          className="mb-5 inline-flex items-center gap-2 text-sm font-semibold text-[#0b1f3a] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a47c00] focus-visible:ring-offset-2 rounded"
         >
           <ArrowLeft size={16} /> Back to dashboard
         </button>
@@ -124,7 +171,7 @@ export default function CustomerBookings() {
               type="button"
               onClick={() => customer && void loadBookings(customer, true)}
               disabled={!customer || loading || refreshing}
-              className="inline-flex items-center gap-2 rounded-xl border border-white/25 bg-white/10 px-4 py-2.5 text-sm font-bold hover:bg-white/20 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/25 bg-white/10 px-4 py-2.5 text-sm font-bold hover:bg-white/20 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e8c75a] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1f3a]"
             >
               <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
               Refresh
@@ -137,19 +184,20 @@ export default function CustomerBookings() {
         )}
 
         {loading ? (
-          <div className="flex min-h-64 items-center justify-center rounded-2xl bg-white">
-            <Loader2 size={30} className="animate-spin text-[#a47c00]" />
+          <div role="status" aria-live="polite" aria-label="Loading your bookings" className="flex min-h-64 items-center justify-center rounded-2xl bg-white">
+            <Loader2 size={30} aria-hidden="true" className="animate-spin text-[#a47c00]" />
+            <span className="sr-only">Loading your bookings…</span>
           </div>
         ) : error ? (
-          <div className="rounded-2xl border border-red-200 bg-white p-8 text-center">
-            <AlertCircle size={34} className="mx-auto mb-3 text-red-500" />
+          <div role="alert" aria-live="assertive" className="rounded-2xl border border-red-200 bg-white p-8 text-center">
+            <AlertCircle size={34} aria-hidden="true" className="mx-auto mb-3 text-red-500" />
             <h2 className="text-lg font-bold text-gray-900">Bookings could not be loaded</h2>
             <p className="mt-2 text-sm text-gray-600">{error}</p>
             <button
               type="button"
               onClick={() => customer && void loadBookings(customer, true)}
               disabled={!customer || refreshing}
-              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#0b1f3a] px-5 py-3 text-sm font-bold text-white disabled:opacity-50"
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#0b1f3a] px-5 py-3 text-sm font-bold text-white disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a47c00] focus-visible:ring-offset-2"
             >
               <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} /> Try again
             </button>
@@ -164,7 +212,7 @@ export default function CustomerBookings() {
             <button
               type="button"
               onClick={() => navigate('booking')}
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#0b1f3a] px-6 py-3 font-bold text-white hover:bg-[#17365b]"
+              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#0b1f3a] px-6 py-3 font-bold text-white hover:bg-[#17365b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a47c00] focus-visible:ring-offset-2"
             >
               Book a service <ArrowRight size={17} />
             </button>
@@ -187,19 +235,21 @@ export default function CustomerBookings() {
             </div>
 
             {bookings.map((booking) => {
-              const status = booking.status || 'pending';
-              const amount = Number(booking.total_amount ?? booking.amount ?? 0);
+              const status = booking.status || 'unknown';
+              const rawAmount = booking.total_amount ?? booking.amount;
+              const parsedAmount = rawAmount == null || rawAmount === '' ? null : Number(rawAmount);
+              const amount = parsedAmount !== null && Number.isFinite(parsedAmount) && parsedAmount >= 0 ? parsedAmount : null;
               return (
                 <article key={booking.id} className="rounded-2xl border border-[#e8e1d2] bg-white p-5 shadow-sm md:p-6">
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Booking {booking.booking_number}</p>
+                      <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Booking {typeof booking.booking_number === 'string' && booking.booking_number.trim() ? booking.booking_number : 'Reference unavailable'}</p>
                       <h2 className="mt-1 text-lg font-extrabold text-[#0b1f3a]">
-                        {booking.service_category}{booking.service_type ? ' · ' + booking.service_type : ''}
+                        {booking.service_category || 'Service details unavailable'}{booking.service_type ? ' · ' + booking.service_type : ''}
                       </h2>
                     </div>
                     <span className={'inline-flex rounded-full border px-3 py-1.5 text-xs font-bold ' + (statusClasses[status] ?? 'bg-gray-50 text-gray-700 border-gray-200')}>
-                      {statusLabels[status] ?? status.split('_').join(' ')}
+                      {statusLabels[status] ?? (status === 'unknown' ? 'Status unavailable' : status.split('_').join(' '))}
                     </span>
                   </div>
 
@@ -222,14 +272,14 @@ export default function CustomerBookings() {
                       <MapPin size={18} className="mt-0.5 shrink-0 text-[#a47c00]" />
                       <div>
                         <p className="text-xs font-semibold uppercase text-gray-500">Service address</p>
-                        <p className="mt-1 text-sm text-gray-700">{booking.address}, {booking.city}</p>
+                        <p className="mt-1 text-sm text-gray-700">{[booking.address, booking.city].filter((value) => typeof value === 'string' && value.trim()).join(', ') || 'Address unavailable'}</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
                       <Receipt size={18} className="mt-0.5 shrink-0 text-[#a47c00]" />
                       <div>
                         <p className="text-xs font-semibold uppercase text-gray-500">Customer total</p>
-                        <p className="mt-1 text-sm font-extrabold text-gray-900">{formatCurrency(amount)}</p>
+                        <p className="mt-1 text-sm font-extrabold text-gray-900">{amount === null ? 'Amount unavailable' : formatCurrency(amount)}</p>
                         <p className="mt-1 text-xs text-gray-500">Parts or additional work require your approval.</p>
                       </div>
                     </div>

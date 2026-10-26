@@ -153,7 +153,7 @@ export function generateOfferPoster(festivalName: string, offer: string, service
     voice_over_script: null,
     video_script: null,
     thumbnail_text: `${festivalName} Offer!`,
-    poster_text: `${festivalName} Special!\n${offer}\n${service ? `${service} - ` : ''}Book Now!\nVATTAMS Home Services`,
+    poster_text: `${festivalName} Special!\n${offer}\n${service ? `${service} - ` : ''}Book Now!\nVATTAMS Hybrid Service Marketplace`,
     body_content: null,
     meta_description: `${festivalName} special offer from VATTAMS. ${offer} on AC, washing machine or refrigerator service.`,
     target_keywords: [festivalName, 'offer', 'discount', 'VATTAMS', service ?? 'appliance service'],

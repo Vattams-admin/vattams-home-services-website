@@ -172,7 +172,11 @@ export const STEPS: StepDef[] = [
     field: 'experience_years',
     type: 'number',
     placeholder: 'e.g. 5',
-    validate: (v) => { const n = Number(v); return (isNaN(n) || n < 0 || n > 50) ? 'Enter a valid number (0-50)' : null; },
+    validate: (v) => {
+      if (!v.trim()) return 'Enter your years of experience';
+      const n = Number(v);
+      return (!Number.isFinite(n) || n < 0 || n > 50) ? 'Enter a valid number (0-50)' : null;
+    },
   },
   {
     key: 'available_days',
@@ -269,7 +273,13 @@ export const STEPS: StepDef[] = [
     type: 'text',
     placeholder: 'e.g. yourname@paytm',
     optional: true,
-    validate: (v) => v.trim() && !/^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z][a-zA-Z0-9]{1,64}$/.test(v.trim()) ? 'Enter a valid UPI ID (e.g. yourname@paytm) or type "skip"' : null,
+    validate: (v) => {
+      const value = v.trim();
+      return value && value.toLowerCase() !== 'skip'
+        && !/^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z][a-zA-Z0-9]{1,64}$/.test(value)
+        ? 'Enter a valid UPI ID (e.g. yourname@paytm) or type "skip"'
+        : null;
+    },
   },
   {
     key: 'password',
@@ -277,7 +287,9 @@ export const STEPS: StepDef[] = [
     field: 'password',
     type: 'password',
     placeholder: 'Create a password',
-    validate: (v) => v.length < 6 ? 'Password must be at least 6 characters' : null,
+    validate: (v) => !v.trim() || v.length < 6
+      ? 'Password must be at least 6 characters and cannot contain only spaces'
+      : null,
   },
   {
     key: 'review',
@@ -289,25 +301,25 @@ export const STEPS: StepDef[] = [
 
 export function calculateProfileScore(form: TechnicianFormData): { score: number; missing: string[] } {
   const checks: { label: string; done: boolean }[] = [
-    { label: 'Full Name', done: !!form.full_name },
-    { label: 'Mobile Number', done: !!form.mobile },
+    { label: 'Full Name', done: !!form.full_name.trim() },
+    { label: 'Mobile Number', done: !!form.mobile.trim() },
     
-    { label: 'WhatsApp Number', done: !!form.whatsapp_number },
-    { label: 'Email', done: !!form.email },
-    { label: 'City', done: !!form.city },
-    { label: 'Area', done: !!form.area },
-    { label: 'PIN Code', done: !!form.pincode },
+    { label: 'WhatsApp Number', done: !!form.whatsapp_number.trim() },
+    { label: 'Email', done: !!form.email.trim() },
+    { label: 'City', done: !!form.city.trim() },
+    { label: 'Area', done: !!form.area.trim() },
+    { label: 'PIN Code', done: !!form.pincode.trim() },
     { label: 'Service Categories', done: form.service_categories.length > 0 },
-    { label: 'Experience', done: !!form.experience_years },
+    { label: 'Experience', done: !!form.experience_years.trim() },
     { label: 'Available Days', done: form.available_days.length > 0 },
-    { label: 'Working Time', done: !!form.working_time },
+    { label: 'Working Time', done: !!form.working_time.trim() },
     { label: 'Vehicle Info', done: form.has_vehicle !== null },
     { label: 'Tools Info', done: form.has_tools !== null },
     { label: 'Aadhaar Upload', done: !!form.aadhaar_url },
     { label: 'PAN Upload', done: !!form.pan_url },
     { label: 'Profile Photo', done: !!form.profile_photo_url },
-    { label: 'Bank Details', done: !!form.bank_account_number && !!form.bank_ifsc },
-    { label: 'UPI ID', done: !!form.upi_id },
+    { label: 'Bank Details', done: !!form.bank_account_number.trim() && !!form.bank_ifsc.trim() },
+    { label: 'UPI ID', done: !!form.upi_id.trim() && form.upi_id.trim().toLowerCase() !== 'skip' },
   ];
   const completed = checks.filter((c) => c.done).length;
   const score = Math.round((completed / checks.length) * 100);
@@ -482,13 +494,36 @@ const TECHNICIAN_AUTH_URL = 'https://nfcibyprftnowaiwlxxc.supabase.co/functions/
 const TECHNICIAN_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mY2lieXByZnRub3dhaXdseHhjIiwiaWF0IjoxNzgzODgzMzk4LCJleHAiOjIwOTk0NTkzOTh9.5ZMjWYOuRBKNKG3ZonXXOBAfBapm54naphNXrHxq16k';
 
 async function postTechnicianAuth(action: string, payload: Record<string, unknown>): Promise<any> {
-  const response = await fetch(`${TECHNICIAN_AUTH_URL}/${action}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${TECHNICIAN_ANON_KEY}` },
-    body: JSON.stringify(payload),
-  });
-  const result = await response.json();
-  if (!response.ok || result.error) throw new Error(result.error || 'Request failed.');
+  let response: Response;
+  try {
+    response = await fetch(`${TECHNICIAN_AUTH_URL}/${action}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${TECHNICIAN_ANON_KEY}` },
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    throw new Error('Unable to reach technician registration. Check your connection and try again.');
+  }
+
+  let result: Record<string, unknown> = {};
+  try {
+    const parsed: unknown = await response.json();
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      result = parsed as Record<string, unknown>;
+    }
+  } catch {
+    // Empty, malformed, or non-JSON responses are handled as request failures below.
+  }
+
+  if (!response.ok || typeof result.error === 'string') {
+    const message = typeof result.error === 'string' && result.error.trim()
+      ? result.error
+      : `Technician request failed (HTTP ${response.status}).`;
+    throw new Error(message);
+  }
+  if (Object.keys(result).length === 0) {
+    throw new Error('Technician service returned an invalid response.');
+  }
   return result;
 }
 
@@ -501,21 +536,35 @@ function technicianRegistrationPayload(form: TechnicianFormData, registrationPay
     working_time: form.working_time, has_vehicle: form.has_vehicle, has_tools: form.has_tools, aadhaar_url: form.aadhaar_url,
     pan_url: form.pan_url, dl_url: form.dl_url || undefined, profile_photo_url: form.profile_photo_url, bank_name: form.bank_name,
     bank_holder_name: form.bank_holder_name, bank_account_number: form.bank_account_number, bank_ifsc: form.bank_ifsc,
-    upi_id: form.upi_id || undefined, profile_score: score, registration_payment_id: registrationPaymentId,
+    upi_id: form.upi_id.trim() && form.upi_id.trim().toLowerCase() !== 'skip' ? form.upi_id.trim() : undefined,
+    profile_score: score, registration_payment_id: registrationPaymentId,
   };
 }
 
 export async function submitTechnicianApplication(form: TechnicianFormData, registrationPaymentId?: string): Promise<any> {
-  if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+  const email = typeof form?.email === 'string' ? form.email.trim() : '';
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     throw new Error('A valid email address is required to register as a technician.');
   }
   return postTechnicianAuth('send-registration-otp', technicianRegistrationPayload(form, registrationPaymentId));
 }
 
 export async function verifyTechnicianRegistrationEmail(form: TechnicianFormData, code: string): Promise<any> {
-  return postTechnicianAuth('verify-registration-otp', { mobile: form.mobile, code: code.trim() });
+  const mobile = typeof form?.mobile === 'string' ? form.mobile.trim() : '';
+  if (!/^[6-9]\d{9}$/.test(mobile)) {
+    throw new Error('Enter a valid 10-digit Indian mobile number before verifying the code.');
+  }
+  const normalizedCode = typeof code === 'string' ? code.trim() : '';
+  if (!/^\d{6}$/.test(normalizedCode)) {
+    throw new Error('Enter the 6-digit email verification code.');
+  }
+  return postTechnicianAuth('verify-registration-otp', { mobile, code: normalizedCode });
 }
 
 export async function resendTechnicianRegistrationEmailOtp(form: TechnicianFormData): Promise<any> {
-  return postTechnicianAuth('resend-registration-otp', { mobile: form.mobile });
+  const mobile = typeof form?.mobile === 'string' ? form.mobile.trim() : '';
+  if (!/^[6-9]\d{9}$/.test(mobile)) {
+    throw new Error('Enter a valid 10-digit Indian mobile number before requesting a new code.');
+  }
+  return postTechnicianAuth('resend-registration-otp', { mobile });
 }

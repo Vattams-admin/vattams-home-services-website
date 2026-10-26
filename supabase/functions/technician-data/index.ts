@@ -5,6 +5,13 @@ const supabase=createClient(Deno.env.get("SUPABASE_URL")!,Deno.env.get("SUPABASE
 async function auth(token:string){const {data}=await supabase.from("technician_auth_sessions").select("technician_id,expires_at").eq("token",token).maybeSingle();if(!data||new Date(data.expires_at)<=new Date())return null;return data.technician_id;}
 function out(data:unknown,status=200){return new Response(JSON.stringify(data),{status,headers:{...corsHeaders,"Content-Type":"application/json"}})}
 Deno.serve(async req=>{if(req.method==="OPTIONS")return new Response(null,{status:200,headers:corsHeaders});try{const body=await req.json();const technicianId=await auth(body.session_token||"");if(!technicianId)return out({error:"Unauthorized"},401);
+const {data:sessionTechnician,error:sessionTechnicianError}=await supabase.from("technicians").select("id,full_name,mobile,email,city,status,created_at").eq("id",technicianId).maybeSingle();
+if(sessionTechnicianError)return out({error:"Unable to verify technician account status"},503);
+if(!sessionTechnician)return out({error:"Technician account not found"},401);
+if(sessionTechnician.status!=="active"){
+  if(body.action==="account")return out({technician:sessionTechnician,jobs:[],transactions:[],recharges:[],notifications:[],jobNotifications:[]});
+  return out({error:"Your technician account is not active. Protected actions are unavailable until approval."},403);
+}
 switch(body.action){
 case "account":{const [{data:technician},{data:jobs},{data:transactions},{data:recharges},{data:notifications},{data:jobNotifications}]=await Promise.all([
 supabase.from("technicians").select("id,full_name,mobile,email,city,service_categories,experience_years,status,whatsapp_number,area,pincode,available_days,working_time,has_vehicle,has_tools,profile_photo_url,rating,total_jobs,completed_jobs,is_online,last_active_at,wallet_balance,wallet_locked,created_at,updated_at").eq("id",technicianId).single(),

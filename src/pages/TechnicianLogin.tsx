@@ -14,8 +14,14 @@ export default function TechnicianLogin() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    if (loading) return;
     setError('');
+    const normalizedIdentifier = identifier.trim();
+    if (!normalizedIdentifier || !password) {
+      setError('Please enter your mobile number or email and password.');
+      return;
+    }
+    setLoading(true);
 
     try {
       const response = await fetch(`${SUPABASE_URL}/functions/v1/technician-auth/login`, {
@@ -24,29 +30,63 @@ export default function TechnicianLogin() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
         },
-        body: JSON.stringify({ identifier, password }),
+        body: JSON.stringify({ identifier: normalizedIdentifier, password }),
       });
 
-      const data = await response.json();
+      const parsed: unknown = await response.json().catch(() => null);
+      const data = parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+        ? parsed as Record<string, unknown>
+        : {};
 
       if (!response.ok) {
-        setError(data.error || 'Login failed. Please try again.');
+        setError(typeof data.error === 'string' ? data.error : 'Login failed. Please try again.');
         setLoading(false);
         return;
       }
 
-      const technician = data.technician as Technician;
-
-      // technician-auth/login now returns the technician record for every
-      // application status (not just 'active') so that a pending/rejected/
-      // suspended technician has somewhere real to land after a correct
-      // login, instead of a dead-end error message on this form.
-      sessionStorage.setItem('vattams_technician_id', technician.id);
-      sessionStorage.setItem('vattams_technician_session', data.sessionToken);
-      sessionStorage.setItem('vattams_technician_expires', data.expiresAt);
-      if (technician.mobile) {
-        sessionStorage.setItem('vattams_technician_mobile', technician.mobile);
+      const candidate = data.technician;
+      if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)
+        || typeof (candidate as Record<string, unknown>).id !== 'string'
+        || !(candidate as Record<string, unknown>).id.trim()
+        || typeof data.sessionToken !== 'string' || !data.sessionToken.trim()
+        || typeof data.expiresAt !== 'string' && typeof data.expiresAt !== 'number') {
+        setError('The login service returned an invalid response. Please try again.');
+        setLoading(false);
+        return;
       }
+
+      const technician = candidate as Technician;
+      const expiryTime = new Date(data.expiresAt).getTime();
+      if (!Number.isFinite(expiryTime) || expiryTime <= Date.now()) {
+        setError('The login session is invalid or expired. Please try again.');
+        setLoading(false);
+        return;
+      }
+
+      // technician-auth/login returns a profile for every application status.
+      // Store the session atomically so blocked storage cannot leave partial credentials.
+      try {
+        sessionStorage.setItem('vattams_technician_id', technician.id);
+        sessionStorage.setItem('vattams_technician_session', data.sessionToken);
+        sessionStorage.setItem('vattams_technician_expires', new Date(expiryTime).toISOString());
+        if (typeof technician.mobile === 'string' && technician.mobile.trim()) {
+          sessionStorage.setItem('vattams_technician_mobile', technician.mobile);
+        } else {
+          sessionStorage.removeItem('vattams_technician_mobile');
+        }
+      } catch {
+        for (const key of [
+          'vattams_technician_id',
+          'vattams_technician_session',
+          'vattams_technician_expires',
+          'vattams_technician_mobile',
+        ]) {
+          try { sessionStorage.removeItem(key); } catch { /* Browser storage may be blocked. */ }
+        }
+        throw new Error('Unable to save your sign-in session in this browser. Please enable site storage and try again.');
+      }
+
+      setPassword('');
 
       if (technician.status === 'active') {
         void registerServiceWorker();
@@ -58,10 +98,11 @@ export default function TechnicianLogin() {
         navigate('technician-status');
       }
     } catch (err) {
-      setError('Network error. Please try again.');
+      setError(err instanceof Error ? err.message : 'Unable to sign in. Please try again.');
       console.error('Login error:', err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -69,7 +110,7 @@ export default function TechnicianLogin() {
       <div className="max-w-md w-full">
         <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl p-8 shadow-2xl">
           <div className="text-center mb-8">
-            <img src="/logo.svg" alt="VATTAMS HOME SERVICES" className="h-20 w-auto mx-auto mb-4 rounded-xl" />
+            <img src="/logo.svg" alt="VATTAMS Hybrid Service Marketplace" className="h-20 w-auto mx-auto mb-4 rounded-xl" />
             <div className="inline-flex items-center gap-2 text-[#e8dcc0] text-sm font-semibold mb-2">
               <Wrench size={16} /> Technician Portal
             </div>
@@ -87,11 +128,14 @@ export default function TechnicianLogin() {
                   {identifier.includes('@') ? <Mail size={16} /> : <Phone size={16} />}
                 </span>
                 <input
-                  type="text" required value={identifier}
+                  type="text" aria-label="Mobile number or email" required value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-blue-200/50 focus:border-[#c9a227] focus:ring-2 focus:ring-[#c9a227]/30 outline-none transition-all"
                   placeholder="e.g. 9876543210 or you@example.com"
                   autoComplete="username"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  maxLength={254}
                 />
               </div>
             </div>
@@ -100,13 +144,18 @@ export default function TechnicianLogin() {
               <label className="block text-sm font-medium text-[#f3ead7] mb-1.5">Password</label>
               <div className="relative">
                 <input
-                  type={showPassword ? 'text' : 'password'} required value={password}
+                  type={showPassword ? 'text' : 'password'} aria-label="Password" required value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-4 pr-10 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-blue-200/50 focus:border-[#c9a227] focus:ring-2 focus:ring-[#c9a227]/30 outline-none transition-all"
                   placeholder="Enter your password"
                   autoComplete="current-password"
+                  maxLength={128}
                 />
-                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                <button
+                  type="button"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-pressed={showPassword}
+                  onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-3.5 text-[#e8dcc0]/50 hover:text-[#e8dcc0]">
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -114,7 +163,7 @@ export default function TechnicianLogin() {
             </div>
 
             {error && (
-              <div className="bg-red-500/20 border border-red-400/30 text-red-200 text-sm rounded-xl px-4 py-3 flex items-start gap-2">
+              <div role="alert" aria-live="assertive" className="bg-red-500/20 border border-red-400/30 text-red-200 text-sm rounded-xl px-4 py-3 flex items-start gap-2">
                 <AlertCircle size={16} className="shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>

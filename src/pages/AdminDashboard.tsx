@@ -872,18 +872,25 @@ export default function AdminDashboard() {
         technician_id: assignTechId,
       });
       const assignedTech = technicians.find((t) => t.id === assignTechId);
-      await Promise.all([
+      // Assignment is already persisted by adminData. Notification failures must
+      // not make the UI imply that the assignment itself failed.
+      const notificationResults = await Promise.allSettled([
         notifyCustomer.technicianAssigned(
           selectedBooking.mobile_number,
           selectedBooking.booking_number,
           assignedTech?.full_name ?? 'A technician',
           selectedBooking.id
         ),
-        job ? notifyTechnician.jobAssigned(assignTechId, selectedBooking.booking_number, job.id) : null,
+        ...(job ? [notifyTechnician.jobAssigned(assignTechId, selectedBooking.booking_number, job.id)] : []),
       ]);
       setBookings((prev) => prev.map((b) => b.id === selectedBooking.id ? { ...b, ...booking } : b));
       setSelectedBooking(null);
       setAssignTechId('');
+      const failedNotifications = notificationResults.filter((result) => result.status === 'rejected').length;
+      if (failedNotifications > 0) {
+        console.error('[AdminDashboard] assignment saved but notification delivery failed', { failedNotifications });
+        alert(`Technician assigned successfully, but ${failedNotifications} notification(s) failed. Please review notification delivery; a retry action is not available here.`);
+      }
     } catch (error) {
       console.error('[AdminDashboard] secure assignment failed:', error);
       alert(error instanceof Error ? error.message : 'Failed to assign technician.');
@@ -911,7 +918,18 @@ export default function AdminDashboard() {
       if (error) {
         setAutoAssignResult(error.message || 'Auto assignment failed.');
       } else if (data?.assigned) {
-        setAutoAssignResult('Technician auto-assigned.');
+        const notificationsCreated = data.notification_created === true && data.customer_notification_created === true;
+        setAutoAssignResult(
+          notificationsCreated
+            ? 'Technician auto-assigned and assignment notifications were created.'
+            : 'Technician auto-assigned, but one or more notifications were not confirmed as created. Check notification delivery before retrying.'
+        );
+        if (!notificationsCreated) {
+          console.warn('[AdminDashboard] auto-assignment succeeded with incomplete notification creation status', {
+            notification_created: data.notification_created,
+            customer_notification_created: data.customer_notification_created,
+          });
+        }
         setBookings((prev) =>
           prev.map((b) =>
             b.id === selectedBooking.id
@@ -923,14 +941,22 @@ export default function AdminDashboard() {
           prev ? { ...prev, assigned_technician_id: data.technician_id, status: 'assigned' } : prev
         );
         setAssignTechId(data.technician_id ?? '');
+      } else if (data?.reason === 'technician_became_busy') {
+        setAutoAssignResult('The selected technician just received another active job. Please retry automatic assignment.');
+      } else if (data?.reason === 'booking_not_assignable') {
+        setAutoAssignResult('This booking is no longer eligible for automatic assignment. Refresh the booking details.');
+      } else if (data?.reason === 'already_assigned') {
+        setAutoAssignResult('This booking is already assigned. Refresh the booking details.');
+      } else if (data?.reason === 'no_eligible_technician') {
+        setAutoAssignResult('No eligible technician is currently available. Please try again later.');
       } else {
-        setAutoAssignResult('No eligible technician available for automatic assignment.');
+        setAutoAssignResult('Automatic assignment did not complete. Refresh the booking details before retrying.');
       }
     } catch (err) {
       setAutoAssignResult(err instanceof Error ? err.message : 'Auto assignment failed.');
+    } finally {
+      setAutoAssigning(false);
     }
-
-    setAutoAssigning(false);
   };
 
   const updateTechStatus = async (
@@ -1104,8 +1130,8 @@ export default function AdminDashboard() {
       {/* Sidebar */}
       <aside className="vattams-admin-sidebar lg:w-64 shrink-0 border-b lg:border-b-0 lg:border-r">
         <div className="vattams-admin-brand px-5 py-5 flex items-center gap-3">
-          <img src="/logo.svg" alt="VATTAMS HOME SERVICES" className="h-10 w-10 rounded-xl object-contain bg-white/95 p-1" />
-          <div className="min-w-0"><div className="font-extrabold tracking-wide text-white">VATTAMS</div><div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-200">Home Services</div></div>
+          <img src="/logo.svg" alt="VATTAMS Hybrid Service Marketplace" className="h-10 w-10 rounded-xl object-contain bg-white/95 p-1" />
+          <div className="min-w-0"><div className="font-extrabold tracking-wide text-white">VATTAMS</div><div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-200">Hybrid Service Marketplace</div></div>
         </div>
 
         <nav className="vattams-admin-nav flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible px-3 pb-4">

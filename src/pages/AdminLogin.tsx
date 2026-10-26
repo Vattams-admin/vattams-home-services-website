@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Lock, Loader, AlertCircle, Mail } from 'lucide-react';
 import { useRouter } from '@/lib/router';
-import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase';
 import { initFCM } from '@/lib/fcm';
 import './AdminLogin.css';
 
@@ -16,13 +16,13 @@ export default function AdminLogin() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
 
     setError('');
     setLoading(true);
 
     try {
       const cleanEmail = email.trim().toLowerCase();
-      const cleanPassword = password.trim();
 
       if (!cleanEmail || !password) {
         setError('Please enter your email and password.');
@@ -37,25 +37,57 @@ export default function AdminLogin() {
             'Content-Type': 'application/json',
             apikey: SUPABASE_ANON_KEY,
           },
-          body: JSON.stringify({ email: cleanEmail, password: cleanPassword }),
+          // Passwords are opaque credentials: preserve spaces exactly as entered.
+          body: JSON.stringify({ email: cleanEmail, password }),
         }
       );
 
-      const authData = await response.json();
+      const parsed: unknown = await response.json().catch(() => null);
+      const authData = parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+        ? parsed as Record<string, unknown>
+        : {};
+      const admin = authData.admin && typeof authData.admin === 'object' && !Array.isArray(authData.admin)
+        ? authData.admin as Record<string, unknown>
+        : {};
+      const expiryTime = typeof authData.expiresAt === 'string' || typeof authData.expiresAt === 'number'
+        ? new Date(authData.expiresAt).getTime()
+        : Number.NaN;
 
-      if (!response.ok || !authData?.sessionToken || !authData?.admin?.id) {
-        setError(authData?.error || 'Invalid admin email or password.');
+      if (!response.ok || typeof authData.sessionToken !== 'string' || !authData.sessionToken.trim()
+        || typeof admin.id !== 'string' || !admin.id.trim()
+        || !Number.isFinite(expiryTime) || expiryTime <= Date.now()
+        || typeof admin.role !== 'string' || !admin.role.trim()) {
+        setError(typeof authData.error === 'string' ? authData.error : 'Invalid admin login response or expired session.');
         return;
       }
 
-      const expiresAt = new Date(authData.expiresAt);
-      sessionStorage.setItem('vattams_admin', authData.sessionToken);
-      sessionStorage.setItem('vattams_admin_id', authData.admin.id);
-      sessionStorage.setItem('vattams_admin_email', authData.admin.email ?? cleanEmail);
-      sessionStorage.setItem('vattams_admin_expires', expiresAt.toISOString());
-      sessionStorage.setItem('vattams_admin_role', authData.admin.role);
-      if (authData.admin.full_name) sessionStorage.setItem('vattams_admin_name', authData.admin.full_name);
-      void initFCM('admin', authData.admin.id);
+      const expiresAt = new Date(expiryTime);
+      try {
+        sessionStorage.setItem('vattams_admin', authData.sessionToken);
+        sessionStorage.setItem('vattams_admin_id', admin.id);
+        sessionStorage.setItem('vattams_admin_email', typeof admin.email === 'string' ? admin.email : cleanEmail);
+        sessionStorage.setItem('vattams_admin_expires', expiresAt.toISOString());
+        sessionStorage.setItem('vattams_admin_role', admin.role);
+        if (typeof admin.full_name === 'string' && admin.full_name.trim()) {
+          sessionStorage.setItem('vattams_admin_name', admin.full_name);
+        } else {
+          sessionStorage.removeItem('vattams_admin_name');
+        }
+      } catch {
+        for (const key of [
+          'vattams_admin',
+          'vattams_admin_id',
+          'vattams_admin_email',
+          'vattams_admin_expires',
+          'vattams_admin_role',
+          'vattams_admin_name',
+        ]) {
+          try { sessionStorage.removeItem(key); } catch { /* Browser storage may be blocked. */ }
+        }
+        throw new Error('Unable to save your admin sign-in session in this browser. Please enable site storage and try again.');
+      }
+      void initFCM('admin', admin.id);
+      setPassword('');
 
       /*
        * Go to admin dashboard only after successful RPC
@@ -85,7 +117,7 @@ export default function AdminLogin() {
           <div className="text-center mb-8">
             <img
               src="/logo.svg"
-              alt="VATTAMS HOME SERVICES"
+              alt="VATTAMS Hybrid Service Marketplace"
               className="h-20 w-auto mx-auto mb-4 rounded-xl"
             />
 
@@ -101,18 +133,22 @@ export default function AdminLogin() {
           {/* Login Form */}
           <form
             onSubmit={handleSubmit}
+            aria-busy={loading}
             className="space-y-4"
           >
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-blue-100 mb-1.5">
+              <label htmlFor="admin-email" className="block text-sm font-medium text-blue-100 mb-1.5">
                 Admin Email
               </label>
 
               <div className="relative">
                 <input
+                  id="admin-email"
                   type="email"
+                  disabled={loading}
+                  maxLength={254}
                   required
                   value={email}
                   onChange={(e) => {
@@ -134,14 +170,16 @@ export default function AdminLogin() {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-blue-100 mb-1.5">
+              <label htmlFor="admin-password" className="block text-sm font-medium text-blue-100 mb-1.5">
                 Password
               </label>
 
               <div className="relative">
 
                 <input
+                  id="admin-password"
                   type="password"
+                  disabled={loading}
                   required
                   value={password}
                   onChange={(e) => {
@@ -151,6 +189,7 @@ export default function AdminLogin() {
                   className="w-full pl-4 pr-10 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-blue-200/50 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 outline-none transition-all"
                   placeholder="Enter password"
                   autoComplete="current-password"
+                  maxLength={128}
                 />
 
                 <Lock
@@ -163,7 +202,7 @@ export default function AdminLogin() {
 
             {/* Error */}
             {error && (
-              <div className="flex items-start gap-2 bg-red-500/20 border border-red-400/30 text-red-200 text-sm rounded-xl px-4 py-3">
+              <div role="alert" aria-live="assertive" className="flex items-start gap-2 bg-red-500/20 border border-red-400/30 text-red-200 text-sm rounded-xl px-4 py-3">
 
                 <AlertCircle
                   size={16}

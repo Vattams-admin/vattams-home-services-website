@@ -40,7 +40,8 @@ export default function CommunicationCenter({
     <div className={'grid grid-cols-1 sm:grid-cols-2 gap-3 ' + className}>
       <a
         href={`tel:${SUPPORT_PHONE}`}
-        className="flex items-center gap-3 px-5 py-4 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-xl transition-colors border border-blue-200"
+        aria-label="Call VATTAMS customer support"
+        className="flex items-center gap-3 px-5 py-4 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-xl transition-colors border border-blue-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-navy-700"
       >
         <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center shrink-0">
           <Phone size={18} className="text-white" />
@@ -53,8 +54,9 @@ export default function CommunicationCenter({
       <a
         href={waLink}
         target="_blank"
-        rel="noreferrer"
-        className="flex items-center gap-3 px-5 py-4 bg-green-50 hover:bg-green-100 text-green-700 font-bold rounded-xl transition-colors border border-green-200"
+        rel="noopener noreferrer"
+        aria-label="Open VATTAMS support chat on WhatsApp in a new tab"
+        className="flex items-center gap-3 px-5 py-4 bg-green-50 hover:bg-green-100 text-green-700 font-bold rounded-xl transition-colors border border-green-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-navy-700"
       >
         <div className="w-10 h-10 rounded-lg bg-green-500 flex items-center justify-center shrink-0">
           <MessageCircle size={18} className="text-white" />
@@ -72,15 +74,17 @@ export default function CommunicationCenter({
     <div className={'flex flex-wrap gap-2 ' + className}>
       <a
         href={`tel:${SUPPORT_PHONE}`}
-        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg transition-colors border border-blue-200"
+        aria-label="Call VATTAMS customer support"
+        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg transition-colors border border-blue-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-navy-700"
       >
         <Phone size={14} /> Call VATTAMS Support
       </a>
       <a
         href={waLink}
         target="_blank"
-        rel="noreferrer"
-        className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 hover:bg-green-100 text-green-700 text-xs font-semibold rounded-lg transition-colors border border-green-200"
+        rel="noopener noreferrer"
+        aria-label="Open VATTAMS support chat on WhatsApp in a new tab"
+        className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 hover:bg-green-100 text-green-700 text-xs font-semibold rounded-lg transition-colors border border-green-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-navy-700"
       >
         <MessageCircle size={14} /> Chat with VATTAMS
       </a>
