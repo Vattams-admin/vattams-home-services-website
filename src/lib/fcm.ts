@@ -138,7 +138,17 @@ export async function getTokensForUser(
       session_token: session.token,
       admin_id: userType === 'admin' ? session.id : undefined,
     });
-    return Array.isArray(data.tokens) ? data.tokens.map((r: { token: string }) => r.token) : [];
+    if (!Array.isArray(data.tokens)) return [];
+    // Treat gateway data as untrusted: return only bounded, non-empty token strings
+    // and remove duplicates before callers use the device-token list.
+    const tokens = data.tokens
+      .filter((row): row is { token: string } =>
+        Boolean(row && typeof row === 'object'
+          && typeof (row as { token?: unknown }).token === 'string'
+          && (row as { token: string }).token.trim().length > 0
+          && (row as { token: string }).token.length <= 4096))
+      .map((row) => row.token);
+    return [...new Set(tokens)];
   } catch {
     return [];
   }
