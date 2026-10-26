@@ -37,6 +37,7 @@ export default function PaymentModal({
   const [loadingQr, setLoadingQr] = useState(false);
   const paymentKeyRef = useRef('');
   const inFlightPaymentKeyRef = useRef('');
+  const paymentAttemptVersionRef = useRef(0);
 
   const initPayment = useCallback(async () => {
     const paymentKey = [payeeType, payeeId, amount, purpose, referenceId || ''].join(':');
@@ -44,6 +45,7 @@ export default function PaymentModal({
     if (paymentKeyRef.current === paymentKey && (paymentRecordId || inFlightPaymentKeyRef.current === paymentKey)) return;
     paymentKeyRef.current = paymentKey;
     inFlightPaymentKeyRef.current = paymentKey;
+    const attemptVersion = ++paymentAttemptVersionRef.current;
     setPaymentRecordId(null);
     setPaymentActionToken(null);
     setQrDataUrl('');
@@ -70,6 +72,8 @@ export default function PaymentModal({
       if (inFlightPaymentKeyRef.current === paymentKey) inFlightPaymentKeyRef.current = '';
     }
 
+    if (attemptVersion !== paymentAttemptVersionRef.current) return;
+
     if (!record) {
       setErrorMsg('Could not create payment record. Please try again.');
       setStep('error');
@@ -82,13 +86,15 @@ export default function PaymentModal({
 
     try {
       const qr = await generateUpiQrCode(amount, note);
+      if (attemptVersion !== paymentAttemptVersionRef.current) return;
       setQrDataUrl(qr);
       setUpiLink(buildUpiLink(amount, note));
     } catch {
+      if (attemptVersion !== paymentAttemptVersionRef.current) return;
       setErrorMsg('Could not generate QR code.');
       setStep('error');
     }
-    setLoadingQr(false);
+    if (attemptVersion === paymentAttemptVersionRef.current) setLoadingQr(false);
   }, [amount, note, payeeType, payeeId, payeeName, purpose, referenceId, paymentRecordId]);
 
   useEffect(() => {
