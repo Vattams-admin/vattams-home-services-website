@@ -30,10 +30,11 @@ export interface PaymentRecord {
 function parsePaymentRecord(value: unknown): PaymentRecord | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const payment = value as Partial<PaymentRecord>;
-  if (typeof payment.id !== 'string' || !payment.id.trim()
-    || typeof payment.payment_id !== 'string' || !payment.payment_id.trim()
-    || typeof payment.payment_action_token !== 'string' || !payment.payment_action_token.trim()
-    || typeof payment.payee_id !== 'string'
+  if (typeof payment.id !== 'string' || !payment.id.trim() || payment.id.length > 200
+    || typeof payment.payment_id !== 'string' || !payment.payment_id.trim() || payment.payment_id.length > 200
+    || typeof payment.payment_action_token !== 'string' || !payment.payment_action_token.trim() || payment.payment_action_token.length > 1000
+    || typeof payment.payee_id !== 'string' || !payment.payee_id.trim() || payment.payee_id.length > 200
+    || typeof payment.upi_id !== 'string' || !payment.upi_id.trim() || payment.upi_id.length > 255
     || !['customer', 'technician'].includes(String(payment.payee_type))
     || !['booking', 'registration_fee', 'wallet_recharge', 'commission'].includes(String(payment.purpose))
     || !['pending', 'success', 'failed'].includes(String(payment.status))
