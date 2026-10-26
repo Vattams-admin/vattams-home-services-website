@@ -99,6 +99,12 @@ export async function createPaymentRecord(params: {
     console.error('Rejected invalid payment record parameters.');
     return null;
   }
+  if ((params.payee_name !== undefined && typeof params.payee_name !== 'string')
+    || (params.reference_id !== undefined && typeof params.reference_id !== 'string')
+    || (params.notes !== undefined && typeof params.notes !== 'string')) {
+    console.error('Rejected invalid payment record parameters.');
+    return null;
+  }
   if (!Number.isFinite(params.amount) || params.amount <= 0
     || Math.abs(params.amount * 100 - Math.round(params.amount * 100)) > 1e-7
     || !['customer', 'technician'].includes(params.payee_type)
