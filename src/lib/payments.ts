@@ -87,6 +87,10 @@ export async function createPaymentRecord(params: {
   if (!Number.isFinite(params.amount) || params.amount <= 0
     || Math.abs(params.amount * 100 - Math.round(params.amount * 100)) > 1e-7
     || !['customer', 'technician'].includes(params.payee_type)
+    || typeof params.payee_id !== 'string' || !params.payee_id.trim() || params.payee_id.length > 200
+    || (params.payee_name !== undefined && (typeof params.payee_name !== 'string' || params.payee_name.length > 200))
+    || (params.reference_id !== undefined && (typeof params.reference_id !== 'string' || params.reference_id.length > 200))
+    || (params.notes !== undefined && (typeof params.notes !== 'string' || params.notes.length > 500))
     || !['booking', 'registration_fee', 'wallet_recharge', 'commission'].includes(params.purpose)) {
     console.error('Rejected invalid payment record parameters.');
     return null;
