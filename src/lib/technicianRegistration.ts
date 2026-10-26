@@ -301,24 +301,24 @@ export const STEPS: StepDef[] = [
 
 export function calculateProfileScore(form: TechnicianFormData): { score: number; missing: string[] } {
   const checks: { label: string; done: boolean }[] = [
-    { label: 'Full Name', done: !!form.full_name },
-    { label: 'Mobile Number', done: !!form.mobile },
+    { label: 'Full Name', done: !!form.full_name.trim() },
+    { label: 'Mobile Number', done: !!form.mobile.trim() },
     
-    { label: 'WhatsApp Number', done: !!form.whatsapp_number },
-    { label: 'Email', done: !!form.email },
-    { label: 'City', done: !!form.city },
-    { label: 'Area', done: !!form.area },
-    { label: 'PIN Code', done: !!form.pincode },
+    { label: 'WhatsApp Number', done: !!form.whatsapp_number.trim() },
+    { label: 'Email', done: !!form.email.trim() },
+    { label: 'City', done: !!form.city.trim() },
+    { label: 'Area', done: !!form.area.trim() },
+    { label: 'PIN Code', done: !!form.pincode.trim() },
     { label: 'Service Categories', done: form.service_categories.length > 0 },
-    { label: 'Experience', done: !!form.experience_years },
+    { label: 'Experience', done: !!form.experience_years.trim() },
     { label: 'Available Days', done: form.available_days.length > 0 },
-    { label: 'Working Time', done: !!form.working_time },
+    { label: 'Working Time', done: !!form.working_time.trim() },
     { label: 'Vehicle Info', done: form.has_vehicle !== null },
     { label: 'Tools Info', done: form.has_tools !== null },
     { label: 'Aadhaar Upload', done: !!form.aadhaar_url },
     { label: 'PAN Upload', done: !!form.pan_url },
     { label: 'Profile Photo', done: !!form.profile_photo_url },
-    { label: 'Bank Details', done: !!form.bank_account_number && !!form.bank_ifsc },
+    { label: 'Bank Details', done: !!form.bank_account_number.trim() && !!form.bank_ifsc.trim() },
     { label: 'UPI ID', done: !!form.upi_id.trim() && form.upi_id.trim().toLowerCase() !== 'skip' },
   ];
   const completed = checks.filter((c) => c.done).length;
