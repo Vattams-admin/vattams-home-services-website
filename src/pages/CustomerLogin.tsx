@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader, Phone, Lock, LogIn } from 'lucide-react';
+import { Loader, Phone, Lock, LogIn, Eye, EyeOff } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase';
 import { initFCM, registerServiceWorker } from '@/lib/fcm';
@@ -7,6 +7,7 @@ export default function CustomerLogin() {
   const { navigate } = useRouter();
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -95,9 +96,13 @@ export default function CustomerLogin() {
           </div>
           <div className="relative">
             <Lock size={16} className="absolute left-3 top-3.5 text-gray-400" />
-            <input type="password" name="password" aria-label="Password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} maxLength={128}
+            <input type={showPassword ? 'text' : 'password'} name="password" aria-label="Password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} maxLength={128}
               placeholder="Password"
-              className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
+              className="w-full pl-10 pr-12 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
+            <button type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? 'Hide password' : 'Show password'} aria-pressed={showPassword}
+              className="absolute right-3 top-3 text-gray-500 hover:text-navy-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 rounded">
+              {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+            </button>
           </div>
           <button type="submit" disabled={loading}
             className="w-full flex items-center justify-center gap-2 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2">
