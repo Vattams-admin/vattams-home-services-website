@@ -22,7 +22,6 @@ export default function AdminLogin() {
 
     try {
       const cleanEmail = email.trim().toLowerCase();
-      const cleanPassword = password.trim();
 
       if (!cleanEmail || !password) {
         setError('Please enter your email and password.');
@@ -37,7 +36,8 @@ export default function AdminLogin() {
             'Content-Type': 'application/json',
             apikey: SUPABASE_ANON_KEY,
           },
-          body: JSON.stringify({ email: cleanEmail, password: cleanPassword }),
+          // Passwords are opaque credentials: preserve spaces exactly as entered.
+          body: JSON.stringify({ email: cleanEmail, password }),
         }
       );
 
