@@ -319,7 +319,7 @@ export function calculateProfileScore(form: TechnicianFormData): { score: number
     { label: 'PAN Upload', done: !!form.pan_url },
     { label: 'Profile Photo', done: !!form.profile_photo_url },
     { label: 'Bank Details', done: !!form.bank_account_number && !!form.bank_ifsc },
-    { label: 'UPI ID', done: !!form.upi_id },
+    { label: 'UPI ID', done: !!form.upi_id.trim() && form.upi_id.trim().toLowerCase() !== 'skip' },
   ];
   const completed = checks.filter((c) => c.done).length;
   const score = Math.round((completed / checks.length) * 100);
