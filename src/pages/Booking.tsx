@@ -339,6 +339,17 @@ export default function Booking() {
       alert('Pricing is not available for this service yet. Please choose another service or contact VATTAMS.');
       return;
     }
+    const bookingClock = getIndiaBookingClock();
+    if (form.preferred_date && form.preferred_date < bookingClock.date) {
+      setSubmitError('The preferred date has already passed. Please choose today or a future date.');
+      return;
+    }
+    if (form.preferred_date === bookingClock.date
+      && form.preferred_time
+      && isTimeSlotInPastToday(form.preferred_time, form.preferred_date)) {
+      setSubmitError('That time slot has already started or passed. Please choose a later appointment time.');
+      return;
+    }
     // Do not submit while coupon validation is unresolved: otherwise a fast
     // submit could race the validation response and use a stale coupon state.
     if (validatingCoupon) {
