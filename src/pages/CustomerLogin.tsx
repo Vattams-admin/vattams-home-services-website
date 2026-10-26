@@ -24,7 +24,8 @@ export default function CustomerLogin() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
         body: JSON.stringify({ mobile, password }),
       });
-      const data: unknown = await res.json();
+      // Treat empty or malformed JSON as an invalid response instead of leaking a parser error.
+      const data: unknown = await res.json().catch(() => null);
       if (!res.ok) {
         const message = data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
           ? data.error
