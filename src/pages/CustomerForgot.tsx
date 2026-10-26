@@ -206,7 +206,7 @@ export default function CustomerForgot() {
               {loading ? <Loader size={18} className="animate-spin" /> : <ShieldCheck size={18} />} Verify OTP
             </button>
             <div className="flex items-center justify-between text-sm">
-              <button type="button" onClick={() => setStep('request')} className="text-gray-500 hover:underline">Back</button>
+              <button type="button" onClick={() => setStep('request')} disabled={loading} className="text-gray-500 hover:underline disabled:opacity-50 disabled:cursor-not-allowed">Back</button>
               {resendTimer > 0 ? <span className="text-gray-400">Resend in {resendTimer}s</span>
                 : <button type="button" onClick={handleResendOtp} disabled={loading || resendTimer > 0} className="text-gold-700 font-semibold hover:underline disabled:opacity-50 disabled:cursor-not-allowed">Resend OTP</button>}
             </div>
