@@ -121,6 +121,7 @@ export default function CustomerForgot() {
   };
 
   const handleResendOtp = async () => {
+    if (loading || resendTimer > 0) return;
     setError('');
     setLoading(true);
     try {
@@ -196,7 +197,7 @@ export default function CustomerForgot() {
             <div className="flex items-center justify-between text-sm">
               <button type="button" onClick={() => setStep('request')} className="text-gray-500 hover:underline">Back</button>
               {resendTimer > 0 ? <span className="text-gray-400">Resend in {resendTimer}s</span>
-                : <button type="button" onClick={handleResendOtp} className="text-gold-700 font-semibold hover:underline">Resend OTP</button>}
+                : <button type="button" onClick={handleResendOtp} disabled={loading || resendTimer > 0} className="text-gold-700 font-semibold hover:underline disabled:opacity-50 disabled:cursor-not-allowed">Resend OTP</button>}
             </div>
           </form>
         )}
