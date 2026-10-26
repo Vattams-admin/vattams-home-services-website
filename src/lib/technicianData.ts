@@ -18,7 +18,16 @@ export async function technicianData<T = any>(action: string, extra: Record<stri
     // Do not allow caller-supplied fields to replace the action or session token.
     body: JSON.stringify({ ...extra, action, session_token: sessionToken }),
   });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok || data.error) throw new Error(data.error || 'Technician request failed');
+  const parsed: unknown = await response.json().catch(() => null);
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error(`Technician service returned an invalid response (HTTP ${response.status}).`);
+  }
+  const data = parsed as Record<string, unknown>;
+  if (!response.ok || typeof data.error === 'string') {
+    const message = typeof data.error === 'string' && data.error.trim()
+      ? data.error
+      : 'Technician request failed';
+    throw new Error(message);
+  }
   return data as T;
 }
