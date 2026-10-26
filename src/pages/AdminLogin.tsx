@@ -41,21 +41,33 @@ export default function AdminLogin() {
         }
       );
 
-      const authData = await response.json();
+      const parsed: unknown = await response.json().catch(() => null);
+      const authData = parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+        ? parsed as Record<string, unknown>
+        : {};
+      const admin = authData.admin && typeof authData.admin === 'object' && !Array.isArray(authData.admin)
+        ? authData.admin as Record<string, unknown>
+        : {};
+      const expiryTime = typeof authData.expiresAt === 'string' || typeof authData.expiresAt === 'number'
+        ? new Date(authData.expiresAt).getTime()
+        : Number.NaN;
 
-      if (!response.ok || !authData?.sessionToken || !authData?.admin?.id) {
-        setError(authData?.error || 'Invalid admin email or password.');
+      if (!response.ok || typeof authData.sessionToken !== 'string' || !authData.sessionToken.trim()
+        || typeof admin.id !== 'string' || !admin.id.trim()
+        || !Number.isFinite(expiryTime) || expiryTime <= Date.now()
+        || typeof admin.role !== 'string' || !admin.role.trim()) {
+        setError(typeof authData.error === 'string' ? authData.error : 'Invalid admin login response or expired session.');
         return;
       }
 
-      const expiresAt = new Date(authData.expiresAt);
+      const expiresAt = new Date(expiryTime);
       sessionStorage.setItem('vattams_admin', authData.sessionToken);
-      sessionStorage.setItem('vattams_admin_id', authData.admin.id);
-      sessionStorage.setItem('vattams_admin_email', authData.admin.email ?? cleanEmail);
+      sessionStorage.setItem('vattams_admin_id', admin.id);
+      sessionStorage.setItem('vattams_admin_email', typeof admin.email === 'string' ? admin.email : cleanEmail);
       sessionStorage.setItem('vattams_admin_expires', expiresAt.toISOString());
-      sessionStorage.setItem('vattams_admin_role', authData.admin.role);
-      if (authData.admin.full_name) sessionStorage.setItem('vattams_admin_name', authData.admin.full_name);
-      void initFCM('admin', authData.admin.id);
+      sessionStorage.setItem('vattams_admin_role', admin.role);
+      if (typeof admin.full_name === 'string' && admin.full_name) sessionStorage.setItem('vattams_admin_name', admin.full_name);
+      void initFCM('admin', admin.id);
 
       /*
        * Go to admin dashboard only after successful RPC
