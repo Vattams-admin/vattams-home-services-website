@@ -529,7 +529,8 @@ function technicianRegistrationPayload(form: TechnicianFormData, registrationPay
 }
 
 export async function submitTechnicianApplication(form: TechnicianFormData, registrationPaymentId?: string): Promise<any> {
-  if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+  const email = typeof form?.email === 'string' ? form.email.trim() : '';
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     throw new Error('A valid email address is required to register as a technician.');
   }
   return postTechnicianAuth('send-registration-otp', technicianRegistrationPayload(form, registrationPaymentId));
