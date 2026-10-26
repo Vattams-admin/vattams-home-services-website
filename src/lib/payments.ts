@@ -117,7 +117,11 @@ export async function updatePaymentStatus(
   paymentActionToken?: string,
   verifiedBy?: string,
 ): Promise<PaymentRecord | null> {
-  if (!paymentId.trim() || !['pending', 'success', 'failed'].includes(status)) {
+  if (typeof paymentId !== 'string' || !paymentId.trim() || paymentId.length > 200
+    || !['pending', 'success', 'failed'].includes(status)
+    || (utr !== undefined && (typeof utr !== 'string' || utr.trim().length > 100))
+    || (paymentActionToken !== undefined && (typeof paymentActionToken !== 'string' || !paymentActionToken.trim() || paymentActionToken.length > 1000))
+    || (verifiedBy !== undefined && (typeof verifiedBy !== 'string' || verifiedBy.length > 200))) {
     console.error('Rejected invalid payment status update parameters.');
     return null;
   }
