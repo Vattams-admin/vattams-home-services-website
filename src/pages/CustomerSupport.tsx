@@ -89,6 +89,13 @@ export default function CustomerSupport() {
       showToast('error', 'Please shorten your subject or message and try again.');
       return;
     }
+    // Reject invisible control characters that can corrupt support records,
+    // while preserving normal line breaks and tabs in the message body.
+    if (/[\u0000-\u001f\u007f]/.test(cleanSubject)
+      || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(cleanMessage)) {
+      showToast('error', 'Please remove unsupported control characters and try again.');
+      return;
+    }
 
     setSending(true);
     try {
