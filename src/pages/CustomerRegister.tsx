@@ -188,12 +188,12 @@ export default function CustomerRegister() {
 
         {step === 'form' && (
           <form onSubmit={handleRegister} aria-busy={loading} className="bg-white rounded-3xl border border-gold-200/70 shadow-[0_18px_50px_rgba(5,10,23,0.08)] p-6 md:p-7 space-y-4">
-            <Input icon={User} name="full_name" placeholder="Full Name *" value={form.full_name} onChange={handleChange} maxLength={100} />
-            <Input icon={Phone} name="mobile" type="tel" placeholder="10-digit Mobile Number *" value={form.mobile} onChange={handleChange} maxLength={10} />
-            <Input icon={Lock} name="password" type="password" autoComplete="new-password" placeholder="Password (min 6 chars) *" value={form.password} onChange={handleChange} minLength={6} maxLength={128} />
-            <Input icon={Mail} name="email" type="email" placeholder="Email address *" required value={form.email} onChange={handleChange} maxLength={254} />
-            <Input icon={MapPin} name="city" placeholder="City (optional)" value={form.city} onChange={handleChange} maxLength={100} />
-            <Input icon={Home} name="address" placeholder="Address (optional)" value={form.address} onChange={handleChange} maxLength={250} />
+            <Input icon={User} name="full_name" placeholder="Full Name *" value={form.full_name} onChange={handleChange} maxLength={100} disabled={loading} />
+            <Input icon={Phone} name="mobile" type="tel" placeholder="10-digit Mobile Number *" value={form.mobile} onChange={handleChange} maxLength={10} disabled={loading} />
+            <Input icon={Lock} name="password" type="password" autoComplete="new-password" placeholder="Password (min 6 chars) *" value={form.password} onChange={handleChange} minLength={6} maxLength={128} disabled={loading} />
+            <Input icon={Mail} name="email" type="email" placeholder="Email address *" required value={form.email} onChange={handleChange} maxLength={254} disabled={loading} />
+            <Input icon={MapPin} name="city" placeholder="City (optional)" value={form.city} onChange={handleChange} maxLength={100} disabled={loading} />
+            <Input icon={Home} name="address" placeholder="Address (optional)" value={form.address} onChange={handleChange} maxLength={250} disabled={loading} />
             <button type="submit" disabled={loading}
               className="w-full flex items-center justify-center gap-2 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2">
               {loading ? <Loader size={18} className="animate-spin" /> : <ShieldCheck size={18} />} Send Email OTP
