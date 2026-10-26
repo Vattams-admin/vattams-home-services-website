@@ -183,5 +183,7 @@ export const cities: CityData[] = cityConfigs.map((c) => {
 });
 
 export function getCityBySlug(slug: string): CityData | undefined {
-  return cities.find((c) => c.slug === slug);
+  if (typeof slug !== 'string') return undefined;
+  const normalizedSlug = slug.trim().toLowerCase();
+  return cities.find((c) => c.slug === normalizedSlug);
 }
