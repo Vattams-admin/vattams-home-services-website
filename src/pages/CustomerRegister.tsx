@@ -189,7 +189,7 @@ export default function CustomerRegister() {
         {step === 'form' && (
           <form onSubmit={handleRegister} aria-busy={loading} className="bg-white rounded-3xl border border-gold-200/70 shadow-[0_18px_50px_rgba(5,10,23,0.08)] p-6 md:p-7 space-y-4">
             <Input icon={User} name="full_name" autoComplete="name" placeholder="Full Name *" value={form.full_name} onChange={handleChange} maxLength={100} disabled={loading} />
-            <Input icon={Phone} name="mobile" type="tel" placeholder="10-digit Mobile Number *" value={form.mobile} onChange={handleChange} maxLength={10} disabled={loading} />
+            <Input icon={Phone} name="mobile" type="tel" autoComplete="tel" inputMode="numeric" placeholder="10-digit Mobile Number *" value={form.mobile} onChange={handleChange} maxLength={10} disabled={loading} />
             <Input icon={Lock} name="password" type="password" autoComplete="new-password" placeholder="Password (min 6 chars) *" value={form.password} onChange={handleChange} minLength={6} maxLength={128} disabled={loading} />
             <Input icon={Mail} name="email" type="email" autoComplete="email" placeholder="Email address *" required value={form.email} onChange={handleChange} maxLength={254} disabled={loading} />
             <Input icon={MapPin} name="city" autoComplete="address-level2" placeholder="City (optional)" value={form.city} onChange={handleChange} maxLength={100} disabled={loading} />
