@@ -91,10 +91,11 @@ export default function TechnicianLogin() {
         navigate('technician-status');
       }
     } catch (err) {
-      setError('Network error. Please try again.');
+      setError(err instanceof Error ? err.message : 'Unable to sign in. Please try again.');
       console.error('Login error:', err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
