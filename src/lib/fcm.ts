@@ -106,6 +106,7 @@ export async function registerFCMToken(
 }
 
 export async function unregisterFCMToken(token: string): Promise<boolean> {
+  if (typeof token !== 'string' || !token.trim() || token.length > 4096) return false;
   for (const userType of ['customer', 'technician', 'admin'] as UserType[]) {
     const session = sessionFor(userType);
     if (!session?.token) continue;
