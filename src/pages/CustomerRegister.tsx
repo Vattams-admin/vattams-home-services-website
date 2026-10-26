@@ -213,7 +213,7 @@ export default function CustomerRegister() {
               {loading ? <Loader size={18} className="animate-spin" /> : <ShieldCheck size={18} />} Verify Email & Create Account
             </button>
             <div className="flex items-center justify-between text-sm">
-              <button type="button" onClick={() => setStep('form')} className="text-gray-500 hover:underline">Back</button>
+              <button type="button" onClick={() => setStep('form')} disabled={loading} className="text-gray-500 hover:underline disabled:opacity-50 disabled:cursor-not-allowed">Back</button>
               {resendTimer > 0 ? (
                 <span className="text-gray-400">Resend in {resendTimer}s</span>
               ) : (
