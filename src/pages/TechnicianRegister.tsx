@@ -543,6 +543,7 @@ export default function TechnicianRegister() {
     try {
       await verifyTechnicianRegistrationEmail(form, emailOtp);
       clearRegistrationDraft();
+      setEmailOtp('');
       setEmailOtpPending(false);
       setSuccess(true);
     } catch (err: any) {
