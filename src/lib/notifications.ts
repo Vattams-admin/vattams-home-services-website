@@ -105,10 +105,15 @@ export async function createNotificationsBatch(inputs: CreateNotificationInput[]
 }
 
 export async function fetchNotifications(recipientType: NotificationRecipientType, recipientId: string, limit = 50): Promise<NotificationRow[]> {
+  if (!['customer', 'technician', 'admin'].includes(recipientType)
+    || typeof recipientId !== 'string' || !recipientId.trim() || recipientId.length > 200) {
+    return [];
+  }
+  const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.min(1000, Math.floor(limit))) : 50;
   try {
     if (recipientType === 'admin') {
-      const { notifications } = await adminData<{ notifications: NotificationRow[] }>('notifications', { limit });
-      return notifications ?? [];
+      const { notifications } = await adminData<{ notifications: NotificationRow[] }>('notifications', { limit: safeLimit });
+      return Array.isArray(notifications) ? notifications.slice(0, safeLimit) : [];
     }
     const endpoint = recipientType === 'technician' ? 'technician-data' : 'customer-data';
     const sessionKey = recipientType === 'technician' ? 'vattams_technician_session' : 'vattams_customer_session';
@@ -129,7 +134,7 @@ export async function fetchNotifications(recipientType: NotificationRecipientTyp
         && typeof (row as NotificationRow).id === 'string'
         && typeof (row as NotificationRow).title === 'string'
         && typeof (row as NotificationRow).is_read === 'boolean')
-    ) : [];
+    ).slice(0, safeLimit) : [];
   } catch { return []; }
 }
 
