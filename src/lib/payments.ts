@@ -93,7 +93,8 @@ export async function createPaymentRecord(params: {
   }
 
   const { data, error } = await supabase.functions.invoke('payment-auth', {
-    body: { action: 'create', ...params },
+    // Keep the operation authoritative even if an untyped caller supplies an extra `action` field.
+    body: { ...params, action: 'create' },
   });
 
   if (error) {
