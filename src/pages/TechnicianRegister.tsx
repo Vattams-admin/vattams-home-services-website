@@ -654,11 +654,15 @@ export default function TechnicianRegister() {
           <div className="mb-4 flex items-center justify-between gap-3 bg-[#f8f4e8] border border-blue-100 text-[#0b1f3a] text-xs font-semibold rounded-xl px-4 py-2.5">
             <span>
               Welcome back — we picked up where you left off.
+              {emailOtpPending && <span id="registration-otp-pending-note" className="block mt-1 font-normal">Finish email verification before starting over.</span>}
             </span>
 
             <button
+              type="button"
               onClick={handleStartOver}
-              className="flex items-center gap-1 text-[#0b1f3a] hover:text-blue-900 underline shrink-0"
+              disabled={submitting || emailOtpPending}
+              aria-describedby={emailOtpPending ? 'registration-otp-pending-note' : undefined}
+              className="flex items-center gap-1 text-[#0b1f3a] hover:text-blue-900 underline shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <RotateCcw size={12} />
               Start Over
