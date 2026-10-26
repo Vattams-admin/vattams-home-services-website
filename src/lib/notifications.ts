@@ -187,6 +187,9 @@ export async function markAllAsRead(recipientType: NotificationRecipientType, re
 }
 
 export async function deleteNotification(notificationId: string): Promise<boolean> {
+  if (typeof notificationId !== 'string' || !notificationId.trim() || notificationId.length > 200) {
+    return false;
+  }
   try {
     if (typeof sessionStorage === 'undefined' || !sessionStorage.getItem('vattams_admin')) {
       return false;
