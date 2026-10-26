@@ -133,6 +133,7 @@ export default function AdminLogin() {
           {/* Login Form */}
           <form
             onSubmit={handleSubmit}
+            aria-busy={loading}
             className="space-y-4"
           >
 
@@ -146,6 +147,7 @@ export default function AdminLogin() {
                 <input
                   id="admin-email"
                   type="email"
+                  disabled={loading}
                   maxLength={254}
                   required
                   value={email}
@@ -177,6 +179,7 @@ export default function AdminLogin() {
                 <input
                   id="admin-password"
                   type="password"
+                  disabled={loading}
                   required
                   value={password}
                   onChange={(e) => {
