@@ -61,8 +61,13 @@ export function buildUpiLink(amount: number, note: string, upiId: string = DEFAU
     throw new Error('Payment note must be 200 characters or fewer.');
   }
 
+  const normalizedUpiId = upiId.trim();
+  if (!/^[^\s@]+@[^\s@]+$/.test(normalizedUpiId)) {
+    throw new Error('Enter a valid UPI ID.');
+  }
+
   const params = new URLSearchParams({
-    pa: upiId.trim(),
+    pa: normalizedUpiId,
     pn: PAYEE_NAME,
     am: amount.toFixed(2),
     cu: 'INR',
