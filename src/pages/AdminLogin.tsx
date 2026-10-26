@@ -197,7 +197,7 @@ export default function AdminLogin() {
 
             {/* Error */}
             {error && (
-              <div className="flex items-start gap-2 bg-red-500/20 border border-red-400/30 text-red-200 text-sm rounded-xl px-4 py-3">
+              <div role="alert" aria-live="assertive" className="flex items-start gap-2 bg-red-500/20 border border-red-400/30 text-red-200 text-sm rounded-xl px-4 py-3">
 
                 <AlertCircle
                   size={16}
