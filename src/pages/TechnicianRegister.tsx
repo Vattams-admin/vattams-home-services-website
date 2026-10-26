@@ -781,10 +781,11 @@ export default function TechnicianRegister() {
                   aria-label="6-digit email verification code"
                   maxLength={6}
                   value={emailOtp}
+                  disabled={submitting}
                   onChange={(event) => setEmailOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
                   onKeyDown={(event) => { if (event.key === 'Enter') handleVerifyEmailOtp(); }}
                   placeholder="6-digit email OTP"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-100 outline-none text-sm"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-100 outline-none text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                 />
                 <button
                   onClick={handleVerifyEmailOtp}
