@@ -142,7 +142,7 @@ export default function CustomerRegister() {
       const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-auth/resend-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
-        body: JSON.stringify({ mobile: form.mobile, purpose: 'registration' }),
+        body: JSON.stringify({ mobile: form.mobile.trim(), purpose: 'registration' }),
       });
       const data: unknown = await res.json().catch(() => null);
       const responseError = data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
