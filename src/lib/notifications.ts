@@ -152,8 +152,13 @@ export async function fetchNotifications(recipientType: NotificationRecipientTyp
     return Array.isArray(rows) ? rows.filter((row): row is NotificationRow =>
       Boolean(row && typeof row === 'object'
         && typeof (row as NotificationRow).id === 'string'
+        && (row as NotificationRow).id.trim()
         && typeof (row as NotificationRow).title === 'string'
-        && typeof (row as NotificationRow).is_read === 'boolean')
+        && typeof (row as NotificationRow).message === 'string'
+        && typeof (row as NotificationRow).recipient_id === 'string'
+        && typeof (row as NotificationRow).is_read === 'boolean'
+        && typeof (row as NotificationRow).created_at === 'string'
+        && Number.isFinite(Date.parse((row as NotificationRow).created_at)))
     ).slice(0, safeLimit) : [];
   } catch { return []; }
 }
