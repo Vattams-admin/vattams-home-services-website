@@ -158,5 +158,15 @@ export async function fetchActiveCoupons(): Promise<Coupon[]> {
     return [];
   }
 
-  return (data ?? []) as Coupon[];
+  if (!Array.isArray(data)) return [];
+  return data.filter((row): row is Coupon => {
+    if (!row || typeof row !== 'object' || Array.isArray(row)) return false;
+    const coupon = row as Partial<Coupon>;
+    return typeof coupon.id === 'string' && Boolean(coupon.id.trim())
+      && typeof coupon.code === 'string' && Boolean(coupon.code.trim())
+      && ['percentage', 'flat'].includes(String(coupon.discount_type))
+      && typeof coupon.discount_value === 'number' && Number.isFinite(coupon.discount_value) && coupon.discount_value > 0
+      && typeof coupon.used_count === 'number' && Number.isSafeInteger(coupon.used_count) && coupon.used_count >= 0
+      && typeof coupon.is_active === 'boolean' && coupon.is_active === true;
+  }) as Coupon[];
 }
