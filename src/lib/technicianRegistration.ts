@@ -281,7 +281,9 @@ export const STEPS: StepDef[] = [
     field: 'password',
     type: 'password',
     placeholder: 'Create a password',
-    validate: (v) => v.length < 6 ? 'Password must be at least 6 characters' : null,
+    validate: (v) => !v.trim() || v.length < 6
+      ? 'Password must be at least 6 characters and cannot contain only spaces'
+      : null,
   },
   {
     key: 'review',
