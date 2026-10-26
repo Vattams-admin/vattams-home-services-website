@@ -176,6 +176,9 @@ export async function updatePaymentStatus(
     return null;
   }
   const payment = parsePaymentRecord(data?.payment);
-  if (!payment) console.error('Payment service returned an invalid payment record.');
+  if (!payment || payment.payment_id !== paymentId || payment.status !== status) {
+    console.error('Payment service returned an invalid or mismatched payment update.');
+    return null;
+  }
   return payment;
 }
