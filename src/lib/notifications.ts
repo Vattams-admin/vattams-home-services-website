@@ -99,10 +99,10 @@ export async function createNotification(input: CreateNotificationInput): Promis
     if (!notification
       || typeof notification.id !== 'string'
       || !notification.id.trim()
-      || typeof notification.recipient_type !== 'string'
-      || typeof notification.recipient_id !== 'string'
-      || typeof notification.title !== 'string'
-      || typeof notification.type !== 'string') {
+      || notification.recipient_type !== input.recipientType
+      || notification.recipient_id !== input.recipientId
+      || notification.title !== input.title
+      || notification.type !== input.type) {
       console.error('[notifications] gateway returned an incomplete notification response');
       return null;
     }
