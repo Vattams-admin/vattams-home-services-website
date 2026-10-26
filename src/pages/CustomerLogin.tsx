@@ -63,6 +63,8 @@ export default function CustomerLogin() {
       }
       void registerServiceWorker();
       void initFCM('customer', customer.mobile);
+      setPassword('');
+      setMobile('');
       navigate('customer-dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Network error. Please try again.');
