@@ -41,7 +41,7 @@ export default function CustomerLogin() {
       }
       const customer = payload.customer as { id?: unknown; mobile?: unknown; full_name?: unknown };
       if (typeof customer.id !== 'string' || !customer.id.trim() ||
-          typeof customer.mobile !== 'string' || !/^[6-9]\\d{9}$/.test(customer.mobile) ||
+          typeof customer.mobile !== 'string' || !/^[6-9]\d{9}$/.test(customer.mobile) ||
           typeof customer.full_name !== 'string' || !customer.full_name.trim()) {
         throw new Error('Login response contained an invalid customer profile. Please try again.');
       }
