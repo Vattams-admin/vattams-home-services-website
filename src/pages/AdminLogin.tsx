@@ -87,6 +87,7 @@ export default function AdminLogin() {
         throw new Error('Unable to save your admin sign-in session in this browser. Please enable site storage and try again.');
       }
       void initFCM('admin', admin.id);
+      setPassword('');
 
       /*
        * Go to admin dashboard only after successful RPC
