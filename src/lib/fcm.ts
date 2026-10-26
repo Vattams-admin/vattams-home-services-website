@@ -264,6 +264,10 @@ export function onForegroundMessage(
 }
 
 export async function unregisterUserFCM(userType: UserType, userId: string): Promise<void> {
+  if (!['customer', 'technician', 'admin'].includes(userType)
+    || typeof userId !== 'string' || !userId.trim() || userId.length > 200) {
+    return;
+  }
   try {
     const messaging = await getMessagingInstance();
     if (messaging) await deleteToken(messaging);
