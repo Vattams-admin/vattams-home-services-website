@@ -124,7 +124,7 @@ export async function redeemCoupon(
   // derives the authoritative customer identity from this server-side token.
   if (typeof couponId !== 'string' || !couponId.trim() || couponId.length > 200
     || typeof bookingId !== 'string' || !bookingId.trim() || bookingId.length > 200
-    || !Number.isFinite(discountAmount) || discountAmount < 0
+    || !Number.isFinite(discountAmount) || discountAmount < 0 || discountAmount > 1000000000
     || Math.abs(discountAmount * 100 - Math.round(discountAmount * 100)) > 1e-7) {
     console.error('[coupons] rejected invalid redemption parameters');
     return false;
