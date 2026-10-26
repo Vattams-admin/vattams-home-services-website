@@ -1,6 +1,8 @@
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from './supabase';
 
 export async function customerData<T>(action:string, extra:Record<string,unknown>={}) : Promise<T|null> {
+  if (typeof action !== 'string' || !action.trim() || action.length > 100) return null;
+  if (!extra || typeof extra !== 'object' || Array.isArray(extra)) return null;
   if (typeof sessionStorage === 'undefined') return null;
 
   let sessionToken: string | null;
