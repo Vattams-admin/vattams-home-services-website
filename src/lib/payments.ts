@@ -90,6 +90,10 @@ export async function createPaymentRecord(params: {
   reference_id?: string;
   notes?: string;
 }): Promise<PaymentRecord | null> {
+  if (!params || typeof params !== 'object' || Array.isArray(params)) {
+    console.error('Rejected invalid payment record parameters.');
+    return null;
+  }
   if (!Number.isFinite(params.amount) || params.amount <= 0
     || Math.abs(params.amount * 100 - Math.round(params.amount * 100)) > 1e-7
     || !['customer', 'technician'].includes(params.payee_type)
