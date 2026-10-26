@@ -126,7 +126,7 @@ export default function TechnicianLogin() {
                   {identifier.includes('@') ? <Mail size={16} /> : <Phone size={16} />}
                 </span>
                 <input
-                  type="text" required value={identifier}
+                  type="text" aria-label="Mobile number or email" required value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-blue-200/50 focus:border-[#c9a227] focus:ring-2 focus:ring-[#c9a227]/30 outline-none transition-all"
                   placeholder="e.g. 9876543210 or you@example.com"
@@ -142,7 +142,7 @@ export default function TechnicianLogin() {
               <label className="block text-sm font-medium text-[#f3ead7] mb-1.5">Password</label>
               <div className="relative">
                 <input
-                  type={showPassword ? 'text' : 'password'} required value={password}
+                  type={showPassword ? 'text' : 'password'} aria-label="Password" required value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-4 pr-10 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-blue-200/50 focus:border-[#c9a227] focus:ring-2 focus:ring-[#c9a227]/30 outline-none transition-all"
                   placeholder="Enter your password"
