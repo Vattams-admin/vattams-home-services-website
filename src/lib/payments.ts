@@ -57,6 +57,14 @@ export async function createPaymentRecord(params: {
   reference_id?: string;
   notes?: string;
 }): Promise<PaymentRecord | null> {
+  if (!Number.isFinite(params.amount) || params.amount <= 0
+    || Math.abs(params.amount * 100 - Math.round(params.amount * 100)) > 1e-7
+    || !['customer', 'technician'].includes(params.payee_type)
+    || !['booking', 'registration_fee', 'wallet_recharge', 'commission'].includes(params.purpose)) {
+    console.error('Rejected invalid payment record parameters.');
+    return null;
+  }
+
   const { data, error } = await supabase.functions.invoke('payment-auth', {
     body: { action: 'create', ...params },
   });
@@ -75,15 +83,24 @@ export async function updatePaymentStatus(
   paymentActionToken?: string,
   verifiedBy?: string,
 ): Promise<PaymentRecord | null> {
+  if (!paymentId.trim() || !['pending', 'success', 'failed'].includes(status)) {
+    console.error('Rejected invalid payment status update parameters.');
+    return null;
+  }
+
   const action = status === 'pending' ? 'submit-utr' : 'verify';
-  const adminId =
-    status === 'pending'
-      ? undefined
-      : sessionStorage.getItem('vattams_admin_id') || undefined;
-  const adminSessionToken =
-    status === 'pending'
-      ? undefined
-      : sessionStorage.getItem('vattams_admin') || undefined;
+  let adminId: string | undefined;
+  let adminSessionToken: string | undefined;
+  if (status !== 'pending') {
+    try {
+      if (typeof sessionStorage === 'undefined') return null;
+      adminId = sessionStorage.getItem('vattams_admin_id') || undefined;
+      adminSessionToken = sessionStorage.getItem('vattams_admin') || undefined;
+    } catch {
+      return null;
+    }
+    if (!adminId || !adminSessionToken) return null;
+  }
 
   const { data, error } = await supabase.functions.invoke('payment-auth', {
     body: {
