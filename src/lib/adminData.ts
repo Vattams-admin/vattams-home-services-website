@@ -20,9 +20,12 @@ export async function adminData<T = unknown>(action: string, payload: Record<str
     throw new Error('Admin session unavailable. Please sign in again.');
   }
 
+  adminId = adminId.trim();
+  adminSessionToken = adminSessionToken.trim();
   if (!adminId || !adminSessionToken) {
     throw new Error('Admin session unavailable. Please sign in again.');
   }
+  const cleanAction = action.trim();
 
   const response = await fetch(`${SUPABASE_URL}/functions/v1/admin-data`, {
     method: 'POST',
@@ -31,7 +34,7 @@ export async function adminData<T = unknown>(action: string, payload: Record<str
       Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     },
     // Keep trusted session fields and the requested action authoritative.
-    body: JSON.stringify({ ...payload, action, admin_id: adminId, admin_session_token: adminSessionToken }),
+    body: JSON.stringify({ ...payload, action: cleanAction, admin_id: adminId, admin_session_token: adminSessionToken }),
   });
   const parsed: unknown = await response.json().catch(() => null);
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
