@@ -14,12 +14,16 @@ export async function technicianData<T = any>(action: string, extra: Record<stri
   if (typeof action !== 'string' || !action.trim() || action.length > 100) {
     throw new Error('Invalid technician request. Please try again.');
   }
+  if (!extra || typeof extra !== 'object' || Array.isArray(extra)) {
+    throw new Error('Invalid technician request payload. Please try again.');
+  }
+  const cleanAction = action.trim();
 
   const response = await fetch(`${SUPABASE_URL}/functions/v1/technician-data`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
     // Do not allow caller-supplied fields to replace the action or session token.
-    body: JSON.stringify({ ...extra, action, session_token: sessionToken }),
+    body: JSON.stringify({ ...extra, action: cleanAction, session_token: sessionToken }),
   });
   const parsed: unknown = await response.json().catch(() => null);
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
