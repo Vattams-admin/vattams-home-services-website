@@ -45,6 +45,7 @@ export default function CustomerRegister() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setError('');
     if (!form.full_name.trim() || !form.mobile.trim() || !form.password.trim() || !form.email.trim()) {
       setError('Name, mobile, password, and email are required. Verify your email OTP to finish registration.');
