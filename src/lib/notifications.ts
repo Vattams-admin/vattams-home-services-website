@@ -196,7 +196,11 @@ export async function markAllAsRead(recipientType: NotificationRecipientType, re
     return false;
   }
   try {
-    if (recipientType === 'admin') { await adminData('notifications_read_all'); return true; }
+    if (recipientType === 'admin') {
+      const result = await adminData<unknown>('notifications_read_all');
+      return Boolean(result && typeof result === 'object' && !Array.isArray(result)
+        && (result as Record<string, unknown>).success === true);
+    }
     const endpoint=recipientType==='technician'?'technician-data':'customer-data';
     const token=sessionStorage.getItem(recipientType==='technician'?'vattams_technician_session':'vattams_customer_session');
     if(!token) return false;
