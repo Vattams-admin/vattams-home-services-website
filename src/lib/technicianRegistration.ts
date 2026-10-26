@@ -482,11 +482,16 @@ const TECHNICIAN_AUTH_URL = 'https://nfcibyprftnowaiwlxxc.supabase.co/functions/
 const TECHNICIAN_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mY2lieXByZnRub3dhaXdseHhjIiwiaWF0IjoxNzgzODgzMzk4LCJleHAiOjIwOTk0NTkzOTh9.5ZMjWYOuRBKNKG3ZonXXOBAfBapm54naphNXrHxq16k';
 
 async function postTechnicianAuth(action: string, payload: Record<string, unknown>): Promise<any> {
-  const response = await fetch(`${TECHNICIAN_AUTH_URL}/${action}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${TECHNICIAN_ANON_KEY}` },
-    body: JSON.stringify(payload),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${TECHNICIAN_AUTH_URL}/${action}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${TECHNICIAN_ANON_KEY}` },
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    throw new Error('Unable to reach technician registration. Check your connection and try again.');
+  }
 
   let result: Record<string, unknown> = {};
   try {
