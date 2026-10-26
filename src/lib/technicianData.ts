@@ -19,12 +19,17 @@ export async function technicianData<T = any>(action: string, extra: Record<stri
   }
   const cleanAction = action.trim();
 
-  const response = await fetch(`${SUPABASE_URL}/functions/v1/technician-data`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
-    // Do not allow caller-supplied fields to replace the action or session token.
-    body: JSON.stringify({ ...extra, action: cleanAction, session_token: sessionToken }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${SUPABASE_URL}/functions/v1/technician-data`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+      // Do not allow caller-supplied fields to replace the action or session token.
+      body: JSON.stringify({ ...extra, action: cleanAction, session_token: sessionToken }),
+    });
+  } catch {
+    throw new Error('Unable to reach the technician service. Check your connection and try again.');
+  }
   const parsed: unknown = await response.json().catch(() => null);
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
     throw new Error(`Technician service returned an invalid response (HTTP ${response.status}).`);
