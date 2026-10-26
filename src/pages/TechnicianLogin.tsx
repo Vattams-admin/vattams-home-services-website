@@ -57,15 +57,27 @@ export default function TechnicianLogin() {
         return;
       }
 
-      // technician-auth/login now returns the technician record for every
-      // application status (not just 'active') so that a pending/rejected/
-      // suspended technician has somewhere real to land after a correct
-      // login, instead of a dead-end error message on this form.
-      sessionStorage.setItem('vattams_technician_id', technician.id);
-      sessionStorage.setItem('vattams_technician_session', data.sessionToken);
-      sessionStorage.setItem('vattams_technician_expires', new Date(expiryTime).toISOString());
-      if (technician.mobile) {
-        sessionStorage.setItem('vattams_technician_mobile', technician.mobile);
+      // technician-auth/login returns a profile for every application status.
+      // Store the session atomically so blocked storage cannot leave partial credentials.
+      try {
+        sessionStorage.setItem('vattams_technician_id', technician.id);
+        sessionStorage.setItem('vattams_technician_session', data.sessionToken);
+        sessionStorage.setItem('vattams_technician_expires', new Date(expiryTime).toISOString());
+        if (typeof technician.mobile === 'string' && technician.mobile.trim()) {
+          sessionStorage.setItem('vattams_technician_mobile', technician.mobile);
+        } else {
+          sessionStorage.removeItem('vattams_technician_mobile');
+        }
+      } catch {
+        for (const key of [
+          'vattams_technician_id',
+          'vattams_technician_session',
+          'vattams_technician_expires',
+          'vattams_technician_mobile',
+        ]) {
+          try { sessionStorage.removeItem(key); } catch { /* Browser storage may be blocked. */ }
+        }
+        throw new Error('Unable to save your sign-in session in this browser. Please enable site storage and try again.');
       }
 
       if (technician.status === 'active') {
