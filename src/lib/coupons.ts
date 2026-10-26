@@ -139,7 +139,7 @@ export async function redeemCoupon(
       discount_amount: discountAmount,
     },
   });
-  if (error || !data?.success) {
+  if (error || !data || typeof data !== 'object' || Array.isArray(data) || data.success !== true) {
     console.error('[coupons] redemption error:', error || data?.error);
     return false;
   }
