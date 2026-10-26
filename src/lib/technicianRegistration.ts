@@ -172,7 +172,11 @@ export const STEPS: StepDef[] = [
     field: 'experience_years',
     type: 'number',
     placeholder: 'e.g. 5',
-    validate: (v) => { const n = Number(v); return (isNaN(n) || n < 0 || n > 50) ? 'Enter a valid number (0-50)' : null; },
+    validate: (v) => {
+      if (!v.trim()) return 'Enter your years of experience';
+      const n = Number(v);
+      return (!Number.isFinite(n) || n < 0 || n > 50) ? 'Enter a valid number (0-50)' : null;
+    },
   },
   {
     key: 'available_days',
