@@ -23,7 +23,7 @@ let foregroundCallback: ((payload: { notification?: { title?: string; body?: str
 let foregroundListenerRegistered = false;
 
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
-  if (!('Notification' in window)) return 'denied';
+  if (typeof window === 'undefined' || !('Notification' in window)) return 'denied';
   if (Notification.permission === 'granted') return 'granted';
   return await Notification.requestPermission();
 }
