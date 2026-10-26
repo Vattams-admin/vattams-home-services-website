@@ -340,6 +340,19 @@ export default function Booking() {
       return;
     }
     const bookingClock = getIndiaBookingClock();
+    if (form.preferred_date) {
+      const dateParts = /^([0-9]{4})-([0-9]{2})-([0-9]{2})$/.exec(form.preferred_date);
+      const parsedDate = new Date(`${form.preferred_date}T00:00:00Z`);
+      if (!dateParts || Number.isNaN(parsedDate.getTime())
+        || parsedDate.toISOString().slice(0, 10) !== form.preferred_date) {
+        setSubmitError('Please choose a valid appointment date.');
+        return;
+      }
+    }
+    if (form.preferred_time && !timeSlots.includes(form.preferred_time)) {
+      setSubmitError('Please choose one of the available appointment time slots.');
+      return;
+    }
     if (form.preferred_date && form.preferred_date < bookingClock.date) {
       setSubmitError('The preferred date has already passed. Please choose today or a future date.');
       return;
