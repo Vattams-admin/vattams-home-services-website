@@ -56,7 +56,7 @@ function sessionFor(userType: UserType): { token: string; id: string } | null {
   }
 }
 
-async function fcmData(body: Record<string, unknown>): Promise<any> {
+async function fcmData(body: Record<string, unknown>): Promise<Record<string, unknown>> {
   const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fcm-data`, {
     method: 'POST',
     headers: {
@@ -65,8 +65,16 @@ async function fcmData(body: Record<string, unknown>): Promise<any> {
     },
     body: JSON.stringify(body),
   });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error || 'FCM request failed');
+  const parsed: unknown = await response.json().catch(() => null);
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error(`FCM service returned an invalid response (HTTP ${response.status}).`);
+  }
+  const data = parsed as Record<string, unknown>;
+  if (!response.ok || typeof data.error === 'string') {
+    throw new Error(typeof data.error === 'string' && data.error.trim()
+      ? data.error
+      : 'FCM request failed');
+  }
   return data;
 }
 
