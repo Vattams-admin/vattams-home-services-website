@@ -15,6 +15,8 @@ import {
   FileText,
   RotateCcw,
   ShieldCheck,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import PaymentModal from '@/components/PaymentModal';
@@ -55,6 +57,7 @@ export default function TechnicianRegister() {
   const [stepIndex, setStepIndex] = useState(0);
   const [form, setForm] = useState<TechnicianFormData>(EMPTY_FORM);
   const [inputValue, setInputValue] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -813,7 +816,7 @@ export default function TechnicianRegister() {
                     currentStep.type === 'number'
                       ? 'number'
                       : currentStep.type === 'password'
-                      ? 'password'
+                      ? (showPassword ? 'text' : 'password')
                       : currentStep.type === 'tel'
                       ? 'tel'
                       : 'text'
@@ -838,8 +841,21 @@ export default function TechnicianRegister() {
                   autoFocus
                 />
 
+                {currentStep.type === 'password' && (
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((visible) => !visible)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    aria-pressed={showPassword}
+                    className="px-3 py-2.5 text-gray-600 hover:text-gray-900 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+                  >
+                    {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+                  </button>
+                )}
                 <button
-                  onClick={handleNext}
+                  type="button"
+                  onClick={() => { setShowPassword(false); handleNext(); }}
+                  aria-label="Continue to next registration step"
                   className="px-4 py-2.5 bg-[#c9a227] hover:bg-[#b08b18] text-white rounded-xl transition-colors"
                 >
                   <Send size={18} />
