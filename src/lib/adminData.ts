@@ -26,7 +26,13 @@ export async function adminData<T = unknown>(action: string, payload: Record<str
     // Keep trusted session fields and the requested action authoritative.
     body: JSON.stringify({ ...payload, action, admin_id: adminId, admin_session_token: adminSessionToken }),
   });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error || 'Admin request failed.');
+  const parsed: unknown = await response.json().catch(() => null);
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error(`Admin service returned an invalid response (HTTP ${response.status}).`);
+  }
+  const data = parsed as Record<string, unknown>;
+  if (!response.ok || typeof data.error === 'string') {
+    throw new Error(typeof data.error === 'string' && data.error.trim() ? data.error : 'Admin request failed.');
+  }
   return data as T;
 }
