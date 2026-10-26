@@ -61,12 +61,30 @@ export default function AdminLogin() {
       }
 
       const expiresAt = new Date(expiryTime);
-      sessionStorage.setItem('vattams_admin', authData.sessionToken);
-      sessionStorage.setItem('vattams_admin_id', admin.id);
-      sessionStorage.setItem('vattams_admin_email', typeof admin.email === 'string' ? admin.email : cleanEmail);
-      sessionStorage.setItem('vattams_admin_expires', expiresAt.toISOString());
-      sessionStorage.setItem('vattams_admin_role', admin.role);
-      if (typeof admin.full_name === 'string' && admin.full_name) sessionStorage.setItem('vattams_admin_name', admin.full_name);
+      try {
+        sessionStorage.setItem('vattams_admin', authData.sessionToken);
+        sessionStorage.setItem('vattams_admin_id', admin.id);
+        sessionStorage.setItem('vattams_admin_email', typeof admin.email === 'string' ? admin.email : cleanEmail);
+        sessionStorage.setItem('vattams_admin_expires', expiresAt.toISOString());
+        sessionStorage.setItem('vattams_admin_role', admin.role);
+        if (typeof admin.full_name === 'string' && admin.full_name.trim()) {
+          sessionStorage.setItem('vattams_admin_name', admin.full_name);
+        } else {
+          sessionStorage.removeItem('vattams_admin_name');
+        }
+      } catch {
+        for (const key of [
+          'vattams_admin',
+          'vattams_admin_id',
+          'vattams_admin_email',
+          'vattams_admin_expires',
+          'vattams_admin_role',
+          'vattams_admin_name',
+        ]) {
+          try { sessionStorage.removeItem(key); } catch { /* Browser storage may be blocked. */ }
+        }
+        throw new Error('Unable to save your admin sign-in session in this browser. Please enable site storage and try again.');
+      }
       void initFCM('admin', admin.id);
 
       /*
