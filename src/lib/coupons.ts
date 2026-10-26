@@ -110,7 +110,22 @@ export async function redeemCoupon(
 ): Promise<boolean> {
   // customerId is retained for API compatibility only. The Edge Function
   // derives the authoritative customer identity from this server-side token.
-  const sessionToken = sessionStorage.getItem('vattams_customer_session') || '';
+  if (!couponId.trim() || !bookingId.trim()
+    || !Number.isFinite(discountAmount) || discountAmount < 0
+    || Math.abs(discountAmount * 100 - Math.round(discountAmount * 100)) > 1e-7) {
+    console.error('[coupons] rejected invalid redemption parameters');
+    return false;
+  }
+
+  let sessionToken = '';
+  try {
+    if (typeof sessionStorage === 'undefined') return false;
+    sessionToken = sessionStorage.getItem('vattams_customer_session') || '';
+  } catch {
+    return false;
+  }
+  if (!sessionToken) return false;
+
   const { data, error } = await supabase.functions.invoke('coupon-ops', {
     body: {
       action: 'redeem',
