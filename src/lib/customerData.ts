@@ -1,7 +1,9 @@
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from './supabase';
 
 export async function customerData<T>(action:string, extra:Record<string,unknown>={}) : Promise<T|null> {
-  if (typeof action !== 'string' || !action.trim() || action.length > 100) return null;
+  if (typeof action !== 'string') return null;
+  const cleanAction = action.trim();
+  if (!cleanAction || cleanAction.length > 100) return null;
   if (!extra || typeof extra !== 'object' || Array.isArray(extra)) return null;
   if (typeof sessionStorage === 'undefined') return null;
 
@@ -34,7 +36,8 @@ export async function customerData<T>(action:string, extra:Record<string,unknown
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
       },
-      body: JSON.stringify({ ...extra, action, session_token: sessionToken }),
+      // Send a canonical action and keep the authenticated session token authoritative.
+      body: JSON.stringify({ ...extra, action: cleanAction, session_token: sessionToken }),
     });
   } catch {
     // Network failures should follow the same unavailable-data path as HTTP errors.
