@@ -15,8 +15,13 @@ export default function TechnicianLogin() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
-    setLoading(true);
     setError('');
+    const normalizedIdentifier = identifier.trim();
+    if (!normalizedIdentifier || !password) {
+      setError('Please enter your mobile number or email and password.');
+      return;
+    }
+    setLoading(true);
 
     try {
       const response = await fetch(`${SUPABASE_URL}/functions/v1/technician-auth/login`, {
@@ -25,7 +30,7 @@ export default function TechnicianLogin() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
         },
-        body: JSON.stringify({ identifier, password }),
+        body: JSON.stringify({ identifier: normalizedIdentifier, password }),
       });
 
       const parsed: unknown = await response.json().catch(() => null);
