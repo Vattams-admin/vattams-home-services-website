@@ -148,5 +148,7 @@ export async function updatePaymentStatus(
     console.error('Failed to update payment status:', error);
     return null;
   }
-  return (data?.payment ?? null) as PaymentRecord | null;
+  const payment = parsePaymentRecord(data?.payment);
+  if (!payment) console.error('Payment service returned an invalid payment record.');
+  return payment;
 }
