@@ -43,6 +43,11 @@ function parsePaymentRecord(value: unknown): PaymentRecord | null {
     || !['customer', 'technician'].includes(String(payment.payee_type))
     || !['booking', 'registration_fee', 'wallet_recharge', 'commission'].includes(String(payment.purpose))
     || !['pending', 'success', 'failed'].includes(String(payment.status))
+    || typeof payment.created_at !== 'string' || !payment.created_at.trim()
+    || !Number.isFinite(Date.parse(payment.created_at))
+    || (payment.verified_at !== null && payment.verified_at !== undefined
+      && (typeof payment.verified_at !== 'string' || !payment.verified_at.trim()
+        || !Number.isFinite(Date.parse(payment.verified_at))))
     || typeof payment.amount !== 'number' || !Number.isFinite(payment.amount) || payment.amount <= 0) {
     return null;
   }
