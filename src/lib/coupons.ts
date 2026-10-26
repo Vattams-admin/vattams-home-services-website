@@ -145,7 +145,7 @@ export async function redeemCoupon(
       coupon_id: couponId,
       booking_id: bookingId,
       customer_session_token: sessionToken,
-      discount_amount: discountAmount,
+      discount_amount: Math.round(discountAmount * 100) / 100,
     },
   });
   if (error || !data || typeof data !== 'object' || Array.isArray(data) || data.success !== true) {
