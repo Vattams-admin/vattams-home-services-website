@@ -126,6 +126,28 @@ export default function PaymentModal({
     setStep('utr');
   };
 
+  const handleRetryPayment = async () => {
+    // If the payment record exists, retry QR generation without creating a second record.
+    if (paymentRecordId) {
+      setLoadingQr(true);
+      setErrorMsg('');
+      setStep('qr');
+      try {
+        const qr = await generateUpiQrCode(amount, note);
+        setQrDataUrl(qr);
+        setUpiLink(buildUpiLink(amount, note));
+      } catch {
+        setErrorMsg('Could not generate QR code. Please try again.');
+        setStep('error');
+      } finally {
+        setLoadingQr(false);
+      }
+      return;
+    }
+    await initPayment();
+  };
+
+
   if (!open) return null;
 
   const purposeLabel: Record<PaymentPurpose, string> = {
@@ -285,7 +307,7 @@ export default function PaymentModal({
                 <h3 className="text-xl font-extrabold text-gray-900 mb-1">Payment Error</h3>
                 <p className="text-sm text-gray-500">{errorMsg}</p>
               </div>
-              <button onClick={initPayment}
+              <button onClick={handleRetryPayment}
                 className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors">
                 Try Again
               </button>
