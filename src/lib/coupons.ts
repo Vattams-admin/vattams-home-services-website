@@ -173,7 +173,14 @@ export async function fetchActiveCoupons(): Promise<Coupon[]> {
       && typeof coupon.code === 'string' && Boolean(coupon.code.trim())
       && ['percentage', 'flat'].includes(String(coupon.discount_type))
       && typeof coupon.discount_value === 'number' && Number.isFinite(coupon.discount_value) && coupon.discount_value > 0
+      && (coupon.discount_type !== 'percentage' || coupon.discount_value <= 100)
       && typeof coupon.used_count === 'number' && Number.isSafeInteger(coupon.used_count) && coupon.used_count >= 0
+      && (coupon.max_uses === null || coupon.max_uses === undefined
+        || (typeof coupon.max_uses === 'number' && Number.isSafeInteger(coupon.max_uses) && coupon.max_uses >= 0))
+      && typeof coupon.valid_from === 'string' && Number.isFinite(new Date(coupon.valid_from).getTime())
+      && (coupon.valid_until === null || coupon.valid_until === undefined
+        || (typeof coupon.valid_until === 'string' && Number.isFinite(new Date(coupon.valid_until).getTime())
+          && new Date(coupon.valid_until).getTime() >= new Date(coupon.valid_from).getTime()))
       && typeof coupon.is_active === 'boolean' && coupon.is_active === true;
   }) as Coupon[];
 }
