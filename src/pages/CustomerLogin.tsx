@@ -93,7 +93,7 @@ export default function CustomerLogin() {
           </div>
           <div className="relative">
             <Lock size={16} className="absolute left-3 top-3.5 text-gray-400" />
-            <input type="password" name="password" aria-label="Password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)}
+            <input type="password" name="password" aria-label="Password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} maxLength={128}
               placeholder="Password"
               className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
           </div>
