@@ -89,6 +89,7 @@ export default function CustomerRegister() {
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setError('');
     if (!/^\d{6}$/.test(otp)) { setError('Please enter the 6-digit OTP using numbers only.'); return; }
 
