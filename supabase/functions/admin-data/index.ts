@@ -63,6 +63,55 @@ const {data,error}=await db.from("customer_service_prices").select("id,service_c
 if(error)return out({error:"Unable to load customer job prices"},500);
 return out({prices:data||[]});
 }
+case "initialize_customer_service_prices":{
+const defaults=[
+{service_category:"AC Service",service_type:"General Service",base_price:499,price_label:"AC general service",is_active:true},
+{service_category:"AC Service",service_type:"Installation",base_price:1499,price_label:"AC installation",is_active:true},
+{service_category:"AC Service",service_type:"Gas Filling",base_price:1999,price_label:"AC gas filling",is_active:true},
+{service_category:"AC Service",service_type:"Pump Water Service",base_price:499,price_label:"AC pump water service",is_active:true},
+{service_category:"AC Service",service_type:"Coil Service",base_price:1499,price_label:"AC coil service",is_active:true},
+{service_category:"AC Repair",service_type:"General Service",base_price:499,price_label:"AC general service",is_active:true},
+{service_category:"AC Repair",service_type:"Installation",base_price:1499,price_label:"AC installation",is_active:true},
+{service_category:"AC Repair",service_type:"Gas Filling",base_price:1999,price_label:"AC gas filling",is_active:true},
+{service_category:"AC Repair",service_type:"Pump Water Service",base_price:499,price_label:"AC pump water service",is_active:true},
+{service_category:"AC Repair",service_type:"Coil Service",base_price:1499,price_label:"AC coil service",is_active:true},
+{service_category:"Washing Machine",service_type:"Washing Machine Service",base_price:399,price_label:"Washing machine service",is_active:true},
+{service_category:"Washing Machine Repair",service_type:"Washing Machine Service",base_price:399,price_label:"Washing machine service",is_active:true},
+{service_category:"Refrigerator",service_type:"Refrigerator Service",base_price:399,price_label:"Refrigerator service",is_active:true},
+{service_category:"Refrigerator Repair",service_type:"Refrigerator Service",base_price:399,price_label:"Refrigerator service",is_active:true}
+];
+const {error}=await db.from("customer_service_prices").upsert(defaults,{onConflict:"service_category,service_type",ignoreDuplicates:true});
+if(error)return out({error:"Unable to initialize customer price catalogue"},400);
+const feeDefaults=[
+{service_name:"AC Service",base_price:499,gst_rate:18,platform_fee:30,commission_rate:0,call_rate_fee:49,is_active:true},
+{service_name:"AC Repair",base_price:499,gst_rate:18,platform_fee:30,commission_rate:0,call_rate_fee:49,is_active:true},
+{service_name:"Washing Machine",base_price:399,gst_rate:18,platform_fee:30,commission_rate:0,call_rate_fee:39,is_active:true},
+{service_name:"Washing Machine Repair",base_price:399,gst_rate:18,platform_fee:30,commission_rate:0,call_rate_fee:39,is_active:true},
+{service_name:"Refrigerator",base_price:399,gst_rate:18,platform_fee:30,commission_rate:0,call_rate_fee:39,is_active:true},
+{service_name:"Refrigerator Repair",base_price:399,gst_rate:18,platform_fee:30,commission_rate:0,call_rate_fee:39,is_active:true}
+];
+const {error:feeError}=await db.from("service_prices").upsert(feeDefaults,{onConflict:"service_name",ignoreDuplicates:true});
+if(feeError)return out({error:"Customer prices were restored, but checkout fee settings could not be initialized. Contact support before publishing."},400);
+const callRateDefaults=[
+{service_category:"AC Service",service_type:"General Service",call_rate_fee:150,is_active:true},
+{service_category:"AC Service",service_type:"Installation",call_rate_fee:500,is_active:true},
+{service_category:"AC Service",service_type:"Gas Filling",call_rate_fee:500,is_active:true},
+{service_category:"AC Service",service_type:"Pump Water Service",call_rate_fee:500,is_active:true},
+{service_category:"AC Service",service_type:"Coil Service",call_rate_fee:800,is_active:true},
+{service_category:"AC Repair",service_type:"General Service",call_rate_fee:150,is_active:true},
+{service_category:"AC Repair",service_type:"Installation",call_rate_fee:500,is_active:true},
+{service_category:"AC Repair",service_type:"Gas Filling",call_rate_fee:500,is_active:true},
+{service_category:"AC Repair",service_type:"Pump Water Service",call_rate_fee:500,is_active:true},
+{service_category:"AC Repair",service_type:"Coil Service",call_rate_fee:800,is_active:true},
+{service_category:"Washing Machine",service_type:"Washing Machine Service",call_rate_fee:200,is_active:true},
+{service_category:"Washing Machine Repair",service_type:"Washing Machine Service",call_rate_fee:200,is_active:true},
+{service_category:"Refrigerator",service_type:"Refrigerator Service",call_rate_fee:200,is_active:true},
+{service_category:"Refrigerator Repair",service_type:"Refrigerator Service",call_rate_fee:200,is_active:true}
+];
+const {error:callRateError}=await db.from("technician_call_rates").upsert(callRateDefaults,{onConflict:"service_category,service_type",ignoreDuplicates:true});
+if(callRateError)return out({error:"Customer prices and checkout fees were restored, but technician call rates could not be initialized. Contact support before accepting bookings."},400);
+return out({success:true,customer_price_rows:defaults.length,checkout_fee_rows:feeDefaults.length,technician_call_rate_rows:callRateDefaults.length,insert_missing_only:true});
+}
 case "save_customer_service_prices":{
 const updates=Array.isArray(b.updates)?b.updates:[];
 if(updates.length>100)return out({error:"Too many customer price updates"},400);
