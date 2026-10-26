@@ -585,7 +585,7 @@ export default function Booking() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <Field icon={User} label="Customer Name *">
-                    <input type="text" required value={form.customer_name}
+                    <input type="text" required maxLength={100} autoComplete="name" value={form.customer_name}
                       onChange={(e) => setForm({ ...form, customer_name: e.target.value })}
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all"
                       placeholder="Your full name" />
@@ -712,14 +712,14 @@ export default function Booking() {
                 )}
 
                 <Field icon={MapPin} label="Address *">
-                  <textarea required rows={2} value={form.address}
+                  <textarea required rows={2} maxLength={250} autoComplete="street-address" value={form.address}
                     onChange={(e) => setForm({ ...form, address: e.target.value })}
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all resize-none"
                     placeholder="Full address with landmark" />
                 </Field>
 
                 <Field icon={FileText} label="Problem Description">
-                  <textarea rows={3} value={form.problem_description}
+                  <textarea rows={3} maxLength={1000} value={form.problem_description}
                     onChange={(e) => setForm({ ...form, problem_description: e.target.value })}
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all resize-none"
                     placeholder="Describe the issue you're facing..." />
