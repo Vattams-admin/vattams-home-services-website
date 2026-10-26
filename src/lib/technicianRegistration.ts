@@ -536,7 +536,11 @@ export async function submitTechnicianApplication(form: TechnicianFormData, regi
 }
 
 export async function verifyTechnicianRegistrationEmail(form: TechnicianFormData, code: string): Promise<any> {
-  return postTechnicianAuth('verify-registration-otp', { mobile: form.mobile, code: code.trim() });
+  const normalizedCode = typeof code === 'string' ? code.trim() : '';
+  if (!/^\d{6}$/.test(normalizedCode)) {
+    throw new Error('Enter the 6-digit email verification code.');
+  }
+  return postTechnicianAuth('verify-registration-otp', { mobile: form.mobile, code: normalizedCode });
 }
 
 export async function resendTechnicianRegistrationEmailOtp(form: TechnicianFormData): Promise<any> {
