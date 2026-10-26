@@ -221,8 +221,10 @@ Deno.serve(async (req: Request) => {
         if (!mobile?.trim()) return errorResponse("Mobile number is required");
         const mobileErr = validateMobile(mobile);
         if (mobileErr) return errorResponse(mobileErr);
-        const { data: customer } = await supabase.from("customers").select("id").eq("mobile", mobile).maybeSingle();
+        const { data: customer } = await supabase.from("customers").select("id,email").eq("mobile", mobile).maybeSingle();
         if (!customer) return errorResponse("No account found with this mobile number");
+        const destinationEmail = String(customer.email || "").trim().toLowerCase();
+        if (!destinationEmail) return errorResponse("This account does not have a verified email address.");
 
         const recentCutoff = new Date(Date.now() - 60 * 1000).toISOString();
         const { data: recentOtp } = await supabase.from("otp_codes").select("id").eq("mobile", mobile).eq("purpose", "forgot_password").gte("created_at", recentCutoff).limit(1).maybeSingle();
@@ -231,10 +233,18 @@ Deno.serve(async (req: Request) => {
         const otp = generateOTP();
         const otpHash = await hashOTP(otp);
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-        await supabase.from("otp_codes").delete().eq("mobile", mobile).eq("purpose", "forgot_password");
-        const { error: otpError } = await supabase.from("otp_codes").insert({ mobile, code: otpHash, purpose: "forgot_password", expires_at: expiresAt });
-        if (otpError) return errorResponse("Failed to generate OTP. Please try again.");
-        return jsonResponse({ success: true, message: "OTP sent successfully" });
+        const { data: otpRow, error: otpError } = await supabase.from("otp_codes")
+          .insert({ mobile, code: otpHash, purpose: "forgot_password", expires_at: expiresAt })
+          .select("id").single();
+        if (otpError || !otpRow) return errorResponse("Failed to generate OTP. Please try again.");
+        if (!await sendEmailOtp(destinationEmail, otp, "forgot_password")) {
+          await supabase.from("otp_codes").delete().eq("id", otpRow.id);
+          return errorResponse("We could not send the verification email. Please try again later.", 503);
+        }
+        const { error: cleanupError } = await supabase.from("otp_codes")
+          .delete().eq("mobile", mobile).eq("purpose", "forgot_password").neq("id", otpRow.id);
+        if (cleanupError) console.error("Could not remove superseded password-reset OTP rows:", cleanupError.message);
+        return jsonResponse({ success: true, message: "Password-reset code sent to your email address" });
       }
 
       case "reset-password": {
