@@ -85,22 +85,28 @@ const JOB_STATUS_CLASSES: Record<string, string> = {
 function formatDate(value?: string | null) {
   if (!value) return '—';
 
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+
   try {
-    return new Date(value).toLocaleDateString('en-IN', {
+    return date.toLocaleDateString('en-IN', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
     });
   } catch {
-    return value;
+    return '—';
   }
 }
 
 function formatDateTime(value?: string | null) {
   if (!value) return '—';
 
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+
   try {
-    return new Date(value).toLocaleString('en-IN', {
+    return date.toLocaleString('en-IN', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
@@ -108,7 +114,7 @@ function formatDateTime(value?: string | null) {
       minute: '2-digit',
     });
   } catch {
-    return value;
+    return '—';
   }
 }
 
