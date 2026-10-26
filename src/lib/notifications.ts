@@ -113,8 +113,11 @@ export async function createNotification(input: CreateNotificationInput): Promis
 }
 
 export async function createNotificationsBatch(inputs: CreateNotificationInput[]): Promise<number> {
+  if (!Array.isArray(inputs) || inputs.length === 0) return 0;
+  // Bound batch size to avoid accidental unbounded sequential gateway requests.
+  const batch = inputs.slice(0, 100);
   let count = 0;
-  for (const input of inputs) {
+  for (const input of batch) {
     if (await createNotification(input)) count++;
   }
   return count;
