@@ -54,7 +54,8 @@ export async function createNotification(input: CreateNotificationInput): Promis
       input.recipientType === 'technician' ? 'vattams_technician_session' :
       'vattams_customer_session';
     if (typeof sessionStorage === 'undefined') return null;
-    const token = input.bookingActionToken || sessionStorage.getItem(sessionKey) || '';
+    // A booking action token authorizes a booking-specific operation; it is not an account session.
+    const token = sessionStorage.getItem(sessionKey) || '';
     if (!token.trim()) return null;
     const body: Record<string, unknown> = {
       input: {
