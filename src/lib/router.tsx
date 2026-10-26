@@ -137,7 +137,13 @@ export function RouterProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const navigate = (page: Page, slug?: string) => {
-    const guarded = guardRoute({ page, ...(slug ? { citySlug: slug } : {}) });
+    const normalizedSlug = typeof slug === 'string' ? slug.trim().toLowerCase() : '';
+    const route: RouteState = page === 'city-landing'
+      ? (/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(normalizedSlug)
+        ? { page, citySlug: normalizedSlug }
+        : { page: 'not-found' })
+      : { page, ...(slug ? { citySlug: slug } : {}) };
+    const guarded = guardRoute(route);
     const publicPath = publicPathFor(guarded);
     if (publicPath !== null) {
       if (window.location.pathname !== publicPath || window.location.hash) {
