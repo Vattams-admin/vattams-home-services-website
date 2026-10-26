@@ -40,7 +40,7 @@ export default function PaymentModal({
   const paymentAttemptVersionRef = useRef(0);
 
   const initPayment = useCallback(async () => {
-    const paymentKey = [payeeType, payeeId, amount, purpose, referenceId || ''].join(':');
+    const paymentKey = [payeeType, payeeId, payeeName || '', amount, purpose, referenceId || '', note].join(':');
     // Avoid duplicate requests from rapid reopen or React StrictMode while creation is pending.
     if (paymentKeyRef.current === paymentKey && (paymentRecordId || inFlightPaymentKeyRef.current === paymentKey)) return;
     paymentKeyRef.current = paymentKey;
@@ -141,18 +141,21 @@ export default function PaymentModal({
   const handleRetryPayment = async () => {
     // If the payment record exists, retry QR generation without creating a second record.
     if (paymentRecordId) {
+      const attemptVersion = paymentAttemptVersionRef.current;
       setLoadingQr(true);
       setErrorMsg('');
       setStep('qr');
       try {
         const qr = await generateUpiQrCode(amount, note);
+        if (attemptVersion !== paymentAttemptVersionRef.current) return;
         setQrDataUrl(qr);
         setUpiLink(buildUpiLink(amount, note));
       } catch {
+        if (attemptVersion !== paymentAttemptVersionRef.current) return;
         setErrorMsg('Could not generate QR code. Please try again.');
         setStep('error');
       } finally {
-        setLoadingQr(false);
+        if (attemptVersion === paymentAttemptVersionRef.current) setLoadingQr(false);
       }
       return;
     }
