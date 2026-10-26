@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { X, Loader, Copy, CheckCircle, AlertCircle, Smartphone } from 'lucide-react';
 import {
   DEFAULT_UPI_ID, PAYEE_NAME,
@@ -35,8 +35,17 @@ export default function PaymentModal({
   const [copied, setCopied] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [loadingQr, setLoadingQr] = useState(false);
+  const paymentKeyRef = useRef('');
 
   const initPayment = useCallback(async () => {
+    const paymentKey = [payeeType, payeeId, amount, purpose, referenceId || ''].join(':');
+    // Reuse the existing payment attempt when this modal is reopened with the same inputs.
+    if (paymentRecordId && paymentKeyRef.current === paymentKey) return;
+    paymentKeyRef.current = paymentKey;
+    setPaymentRecordId(null);
+    setPaymentActionToken(null);
+    setQrDataUrl('');
+    setUpiLink('');
     setLoadingQr(true);
     setErrorMsg('');
     setStep('qr');
@@ -71,7 +80,7 @@ export default function PaymentModal({
       setStep('error');
     }
     setLoadingQr(false);
-  }, [amount, note, payeeType, payeeId, payeeName, purpose, referenceId]);
+  }, [amount, note, payeeType, payeeId, payeeName, purpose, referenceId, paymentRecordId]);
 
   useEffect(() => {
     if (open) initPayment();
