@@ -71,6 +71,7 @@ export default function CustomerForgot() {
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setError('');
     if (!/^\d{6}$/.test(otp)) { setError('Please enter the 6-digit OTP using numbers only.'); return; }
 
@@ -97,6 +98,7 @@ export default function CustomerForgot() {
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setError('');
     if (newPassword.length < 6) { setError('Password must be at least 6 characters.'); return; }
 
