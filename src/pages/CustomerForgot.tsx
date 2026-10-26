@@ -121,6 +121,8 @@ export default function CustomerForgot() {
         throw new Error(responseError || 'Password reset failed. Please try again.');
       }
       setNewPassword('');
+      setOtp('');
+      setMobile('');
       setStep('done');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Network error.');
