@@ -76,9 +76,11 @@ function parseHash(rawHash: string): RouteState {
   if (!hash) return { page: 'home' };
   try { hash = decodeURIComponent(hash); } catch { /* keep malformed fragment as-is */ }
   if ((KNOWN_PAGES as string[]).includes(hash)) return guardRoute({ page: hash as Page });
-  if (hash.startsWith('city-')) {
-    const citySlug = hash.slice('city-'.length);
-    return citySlug ? { page: 'city-landing', citySlug } : { page: 'not-found' };
+  if (hash.toLowerCase().startsWith('city-')) {
+    const citySlug = hash.slice('city-'.length).trim().toLowerCase();
+    return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(citySlug)
+      ? { page: 'city-landing', citySlug }
+      : { page: 'not-found' };
   }
   return { page: 'not-found' };
 }
@@ -99,7 +101,12 @@ function parseCurrentRoute(): RouteState {
   if (pathname === '/' && window.location.hash) return parseHash(window.location.hash);
   if (PUBLIC_PATHS[pathname]) return { page: PUBLIC_PATHS[pathname] };
   const cityMatch = pathname.match(/^\/areas\/([a-z0-9-]+)$/i);
-  if (cityMatch) return { page: 'city-landing', citySlug: cityMatch[1] };
+  if (cityMatch) {
+    const citySlug = cityMatch[1].toLowerCase();
+    if (/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(citySlug)) {
+      return { page: 'city-landing', citySlug };
+    }
+  }
   if (window.location.hash) return parseHash(window.location.hash);
   return { page: 'not-found' };
 }
