@@ -93,6 +93,12 @@ export async function registerFCMToken(
   try {
     const session = sessionFor(userType);
     if (!session?.token) return false;
+    // When the cached signed-in identity is available, never register a device
+    // token against a different account ID supplied by the caller.
+    if (session.id && session.id !== userId) {
+      console.warn('[fcm] rejected token registration for a mismatched account identity');
+      return false;
+    }
     await fcmData({
       action: 'register', user_type: userType, user_id: userId, token,
       device_info: deviceInfo ?? null, session_token: session.token,
