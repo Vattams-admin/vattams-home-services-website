@@ -119,6 +119,7 @@ export default function CustomerRegister() {
   };
 
   const handleResendOtp = async () => {
+    if (loading || resendTimer > 0) return;
     setError('');
     setLoading(true);
     try {
@@ -195,7 +196,7 @@ export default function CustomerRegister() {
               {resendTimer > 0 ? (
                 <span className="text-gray-400">Resend in {resendTimer}s</span>
               ) : (
-                <button type="button" onClick={handleResendOtp} className="text-gold-700 font-semibold hover:text-gold-800 hover:underline">Resend OTP</button>
+                <button type="button" onClick={handleResendOtp} disabled={loading || resendTimer > 0} className="text-gold-700 font-semibold hover:text-gold-800 hover:underline disabled:opacity-50 disabled:cursor-not-allowed">Resend OTP</button>
               )}
             </div>
           </form>
