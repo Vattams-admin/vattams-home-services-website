@@ -86,6 +86,8 @@ export default function TechnicianLogin() {
         throw new Error('Unable to save your sign-in session in this browser. Please enable site storage and try again.');
       }
 
+      setPassword('');
+
       if (technician.status === 'active') {
         void registerServiceWorker();
         void initFCM('technician', technician.id);
