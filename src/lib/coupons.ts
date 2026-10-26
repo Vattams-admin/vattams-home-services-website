@@ -22,6 +22,9 @@ export interface CouponResult {
 }
 
 export async function validateCoupon(code: string, orderAmount: number): Promise<CouponResult> {
+  if (typeof code !== 'string' || code.length > 100) {
+    return { valid: false, error: 'Enter a valid coupon code and order amount', discountAmount: 0 };
+  }
   const normalizedCode = code.trim().toUpperCase();
   if (!normalizedCode || !Number.isFinite(orderAmount) || orderAmount <= 0
     || Math.abs(orderAmount * 100 - Math.round(orderAmount * 100)) > 1e-7) {
