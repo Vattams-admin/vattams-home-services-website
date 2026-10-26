@@ -154,7 +154,7 @@ export async function fetchNotifications(recipientType: NotificationRecipientTyp
 
 export async function fetchUnreadCount(recipientType: NotificationRecipientType, recipientId: string): Promise<number> {
   const rows = await fetchNotifications(recipientType, recipientId, 1000);
-  return rows.filter((n) => !n.is_read).length;
+  return rows.reduce((count, row) => count + (row.is_read === false ? 1 : 0), 0);
 }
 
 export async function markAsRead(notificationId: string): Promise<boolean> {
