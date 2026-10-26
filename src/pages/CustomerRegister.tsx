@@ -20,7 +20,7 @@ export default function CustomerRegister() {
     const value = e.target.name === 'mobile'
       ? e.target.value.replace(/\D/g, '').slice(0, 10)
       : e.target.value;
-    setForm({ ...form, [e.target.name]: value });
+    setForm((previous) => ({ ...previous, [e.target.name]: value }));
   };
 
   const clearResendTimer = () => {
