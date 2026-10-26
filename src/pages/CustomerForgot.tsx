@@ -217,9 +217,9 @@ export default function CustomerForgot() {
           <form onSubmit={handleResetPassword} aria-busy={loading} className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-6 space-y-4">
             <div className="relative">
               <Lock size={16} className="absolute left-3 top-3.5 text-gray-400" />
-              <input type="password" name="new-password" aria-label="New password" autoComplete="new-password" required minLength={6} maxLength={128} value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+              <input type="password" name="new-password" aria-label="New password" autoComplete="new-password" required minLength={6} maxLength={128} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} disabled={loading}
                 placeholder="New Password (min 6 chars)"
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm disabled:opacity-60 disabled:cursor-not-allowed" />
             </div>
             <button type="submit" disabled={loading}
               className="w-full flex items-center justify-center gap-2 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors">
