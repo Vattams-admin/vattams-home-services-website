@@ -9,7 +9,28 @@ async function auth(token:string){
   if(!data || new Date(data.expires_at)<=new Date()) return null;
   return data.customer_id;
 }
-function out(data:unknown,status=200){return new Response(JSON.stringify(data),{status,headers:{...corsHeaders,"Content-Type":"application/json"}})}
+function sanitizeSensitiveFields(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(sanitizeSensitiveFields);
+  if (!value || typeof value !== "object") return value;
+  const source = value as Record<string, unknown>;
+  const safe: Record<string, unknown> = {};
+  for (const [key, item] of Object.entries(source)) {
+    // These are server-side capabilities/secrets, not customer dashboard data.
+    if (["start_otp", "complete_otp", "booking_action_token", "payment_action_token"].includes(key)) continue;
+    safe[key] = sanitizeSensitiveFields(item);
+  }
+  return safe;
+}
+function out(data:unknown,status=200){return new Response(JSON.stringify(sanitizeSensitiveFields(data)),{status,headers:{...corsHeaders,"Content-Type":"application/json"}})}
+const CUSTOMER_BOOKING_COLUMNS = [
+  "id", "booking_number", "customer_name", "mobile_number", "city", "address",
+  "service_category", "service_type", "problem_description", "preferred_date",
+  "preferred_time", "status", "assigned_technician_id", "amount", "base_price", "gst_amount", "platform_fee",
+  "total_amount", "created_at", "updated_at", "job_started_at", "job_completed_at",
+  "otp_verification_status", "job_duration_minutes", "coupon_code", "discount_amount",
+  "invoice_number", "urgency", "ai_booking",
+].join(",");
+
 Deno.serve(async req=>{
   if(req.method==="OPTIONS") return new Response(null,{status:200,headers:corsHeaders});
   try{
@@ -19,7 +40,7 @@ Deno.serve(async req=>{
       case "account":{
         const {data:customer}=await supabase.from("customers").select("id,full_name,mobile,email,city,address,created_at,updated_at").eq("id",customerId).single();if(!customer)return out({error:"Customer not found"},404);const customerMobile=customer.mobile;
         const [{data:bookings},{data:notifications},{data:reviews}]=await Promise.all([
-          supabase.from("bookings").select("*").eq("customer_id",customerId).order("created_at",{ascending:false}),
+          supabase.from("bookings").select(CUSTOMER_BOOKING_COLUMNS).eq("customer_id",customerId).order("created_at",{ascending:false}),
           supabase.from("notifications").select("*").eq("recipient_type","customer").eq("recipient_id",customerMobile).order("created_at",{ascending:false}).limit(20),
           supabase.from("reviews").select("*").eq("customer_id",customerId).order("created_at",{ascending:false})
         ]);
@@ -31,7 +52,7 @@ Deno.serve(async req=>{
         return out({payments:data||[]});
       }
       case "bookings":{
-        const {data}=await supabase.from("bookings").select("*").eq("customer_id",customerId).order("created_at",{ascending:false});
+        const {data}=await supabase.from("bookings").select(CUSTOMER_BOOKING_COLUMNS).eq("customer_id",customerId).order("created_at",{ascending:false});
         return out({bookings:data||[]});
       }
       case "booking_refs":{
@@ -45,7 +66,7 @@ Deno.serve(async req=>{
         return out({customer:data});
       }
       case "reviews":{ return out({reviews:(await supabase.from("reviews").select("*").eq("customer_id",customerId).order("created_at",{ascending:false})).data||[]}); }
-      case "completed_bookings":{ return out({bookings:(await supabase.from("bookings").select("*").eq("customer_id",customerId).eq("status","completed").order("created_at",{ascending:false})).data||[]}); }
+      case "completed_bookings":{ return out({bookings:(await supabase.from("bookings").select(CUSTOMER_BOOKING_COLUMNS).eq("customer_id",customerId).eq("status","completed").order("created_at",{ascending:false})).data||[]}); }
       case "notification_read":{if(!body.notification_id)return out({error:"Notification ID is required"},400);const {data:customer}=await supabase.from("customers").select("mobile").eq("id",customerId).single();const {error}=await supabase.from("notifications").update({is_read:true,read_at:new Date().toISOString(),status:"read"}).eq("id",body.notification_id).eq("recipient_type","customer").eq("recipient_id",customer?.mobile||"");if(error)return out({error:"Unable to update notification"},400);return out({success:true});}
       case "notifications_read_all":{const {data:customer}=await supabase.from("customers").select("mobile").eq("id",customerId).single();const {error}=await supabase.from("notifications").update({is_read:true,read_at:new Date().toISOString(),status:"read"}).eq("recipient_type","customer").eq("recipient_id",customer?.mobile||"").eq("is_read",false);if(error)return out({error:"Unable to update notifications"},400);return out({success:true});}
       case "support":{

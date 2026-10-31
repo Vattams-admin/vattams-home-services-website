@@ -2030,9 +2030,9 @@ export default function AdminDashboard() {
               )}
 
               {([
-                ['aadhaar', 'Aadhaar Card', selectedTech.aadhaar_url],
-                ['pan', 'PAN Card', selectedTech.pan_url],
-                ['dl', 'Driving License', selectedTech.dl_url],
+                ['aadhaar', 'Aadhaar Card', selectedTech.has_aadhaar],
+                ['pan', 'PAN Card', selectedTech.has_pan],
+                ['dl', 'Driving License', selectedTech.has_dl],
               ] as const).map(([docType, label, hasDoc]) => (
                 <div
                   key={docType}

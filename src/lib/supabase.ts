@@ -56,8 +56,6 @@ export interface Booking {
   commission_amount: number | null;
   call_rate_fee: number;
   total_amount: number | null;
-  start_otp: string | null;
-  complete_otp: string | null;
   otp_verified_at: string | null;
   job_started_at: string | null;
   job_completed_at: string | null;
@@ -130,6 +128,9 @@ export interface Technician {
   aadhaar_url: string | null;
   pan_url: string | null;
   dl_url: string | null;
+  has_aadhaar?: boolean;
+  has_pan?: boolean;
+  has_dl?: boolean;
   profile_score: number;
   rejection_reason: string | null;
   suspend_reason: string | null;

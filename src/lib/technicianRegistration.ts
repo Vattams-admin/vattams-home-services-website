@@ -392,7 +392,7 @@ export function uploadDocumentWithProgress(
     xhr.open('POST', `${SUPABASE_URL}/storage/v1/object/${bucket}/${encodeURIComponent(path).replace(/%2F/g, '/')}`);
     xhr.setRequestHeader('Authorization', `Bearer ${SUPABASE_ANON_KEY}`);
     xhr.setRequestHeader('apikey', SUPABASE_ANON_KEY);
-    xhr.setRequestHeader('x-upsert', 'true');
+    // KYC objects are create-only; anonymous overwrite is denied by Storage RLS.
     xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
 
     xhr.upload.onprogress = (event) => {
