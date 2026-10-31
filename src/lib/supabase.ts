@@ -56,8 +56,6 @@ export interface Booking {
   commission_amount: number | null;
   call_rate_fee: number;
   total_amount: number | null;
-  start_otp: string | null;
-  complete_otp: string | null;
   otp_verified_at: string | null;
   job_started_at: string | null;
   job_completed_at: string | null;
