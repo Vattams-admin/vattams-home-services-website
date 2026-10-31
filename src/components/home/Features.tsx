@@ -1,7 +1,7 @@
 import { ShieldCheck, BadgeCheck, Clock, Package, Star, Radio } from 'lucide-react';
 
 const features = [
-  { icon: ShieldCheck, title: 'OTP Job Checkpoints', description: 'Job start and completion use OTP verification in the supported booking workflow.', gradient: 'from-gold-500 to-gold-700' },
+  { icon: ShieldCheck, title: 'Job Status Checkpoints', description: 'Follow technician progress through the booking status updates shown in your account.', gradient: 'from-gold-500 to-gold-700' },
   { icon: BadgeCheck, title: 'Clear Price Breakdown', description: 'Review listed base prices and applicable GST and platform fees before confirming.', gradient: 'from-gold-400 to-gold-600' },
   { icon: Clock, title: 'Appointment Options', description: 'Check the available dates and times for your address and selected job type.', gradient: 'from-gold-500 to-gold-700' },
   { icon: Package, title: 'Extra Work by Approval', description: 'Parts and additional repairs are separate; request a quote and approve before proceeding.', gradient: 'from-gold-400 to-gold-600' },
