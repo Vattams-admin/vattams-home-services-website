@@ -1,3 +1,25 @@
+-- A registration payment must not be attached to more than one technician.
+-- Fail safely if historical data already contains a duplicate instead of
+-- silently choosing a payment row or changing historical records.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT registration_payment_id
+    FROM public.technicians
+    WHERE registration_payment_id IS NOT NULL
+      AND btrim(registration_payment_id) <> ''
+    GROUP BY registration_payment_id
+    HAVING count(*) > 1
+  ) THEN
+    RAISE EXCEPTION 'Duplicate technician registration_payment_id values exist; reconcile them before applying the unique index';
+  END IF;
+END;
+$$;
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_technicians_registration_payment_id
+  ON public.technicians(registration_payment_id)
+  WHERE registration_payment_id IS NOT NULL AND btrim(registration_payment_id) <> '';
+
 -- Require independently verified settlement before a technician can be activated.
 -- Keep the existing ₹49 amount unchanged pending business/bank reconciliation of PR #36's ₹50 proposal.
 
