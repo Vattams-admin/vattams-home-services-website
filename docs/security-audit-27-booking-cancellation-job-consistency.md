@@ -21,6 +21,7 @@ The technician-data handler updated `technician_jobs` first, then separately upd
 ## Changes committed on the security branch
 
 1. New migration `20261031170000_atomic_booking_cancellation_and_job_transitions.sql`
+   - Expands the `technician_jobs_status_check` constraint to include the workflow states already used by the application: `on_the_way`, `job_started`, and `job_completed` (along with the existing states).
    - Adds service-role-only `cancel_booking_atomic(uuid)`.
    - Locks the booking and permits cancellation only before work has started: pending, confirmed, assigned, accepted, or on_the_way.
    - Changes active technician-job rows for that booking to `rejected`, preserving the job records for audit history.
@@ -40,7 +41,7 @@ The technician-data handler updated `technician_jobs` first, then separately upd
 ## Validation performed
 
 - Inspected the existing atomic assignment migration and confirmed both manual and automatic assignment use the RPC.
-- Inspected the original `technician_jobs` schema: `rejected` is an existing allowed job status, so cancellation retains history rather than deleting job records.
+- Inspected the original `technician_jobs` schema and found its CHECK constraint lagged behind the application workflow: it did not permit `on_the_way`, `job_started`, or `job_completed`. The migration now aligns the constraint with the existing application state model; `rejected` remains a valid status so cancellation retains history rather than deleting job records.
 - Confirmed booking status constraint includes `cancelled`, `job_started`, `job_completed`, and the other states used by the new transition function.
 - Confirmed both new RPCs revoke execution from PUBLIC, anon and authenticated, granting execution only to service_role. Edge Functions perform session authorization before calling them.
 - Re-fetched updated source files and confirmed admin cancellation and technician transitions call the new RPCs.
