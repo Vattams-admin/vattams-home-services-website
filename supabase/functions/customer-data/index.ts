@@ -25,7 +25,7 @@ function out(data:unknown,status=200){return new Response(JSON.stringify(sanitiz
 const CUSTOMER_BOOKING_COLUMNS = [
   "id", "booking_number", "customer_name", "mobile_number", "city", "address",
   "service_category", "service_type", "problem_description", "preferred_date",
-  "preferred_time", "status", "amount", "base_price", "gst_amount", "platform_fee",
+  "preferred_time", "status", "assigned_technician_id", "amount", "base_price", "gst_amount", "platform_fee",
   "total_amount", "created_at", "updated_at", "job_started_at", "job_completed_at",
   "otp_verification_status", "job_duration_minutes", "coupon_code", "discount_amount",
   "invoice_number", "urgency", "ai_booking",
