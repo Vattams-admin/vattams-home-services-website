@@ -3,7 +3,25 @@ import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 const corsHeaders={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"POST,OPTIONS","Access-Control-Allow-Headers":"Content-Type,Authorization,X-Client-Info,Apikey"};
 const db=createClient(Deno.env.get("SUPABASE_URL")!,Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 async function admin(token:string,id:string){const {data:s}=await db.from("admin_auth_sessions").select("admin_id,expires_at").eq("token",token).maybeSingle();if(!s||s.admin_id!==id||new Date(s.expires_at)<=new Date())return false;const {data:a}=await db.from("admin_users").select("id,role,is_active").eq("id",id).maybeSingle();return !!a&&a.role==="super_admin"&&a.is_active===true;}
-function out(data:unknown,status=200){return new Response(JSON.stringify(data),{status,headers:{...corsHeaders,"Content-Type":"application/json"}})}
+function sanitizeSensitiveFields(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(sanitizeSensitiveFields);
+  if (!value || typeof value !== "object") return value;
+  const source = value as Record<string, unknown>;
+  const safe: Record<string, unknown> = {};
+  for (const [key, item] of Object.entries(source)) {
+    // OTPs and bearer capabilities must not be copied into broad dashboard payloads.
+    if (["start_otp", "complete_otp", "booking_action_token", "payment_action_token"].includes(key)) continue;
+    // Admin UI only needs to know whether a KYC file exists; the object path is
+    // used server-side by technician-auth/doc-url and must not leave the API.
+    if (["aadhaar_url", "pan_url", "dl_url"].includes(key)) {
+      safe[`has_${key.replace("_url", "")}`] = Boolean(item);
+      continue;
+    }
+    safe[key] = sanitizeSensitiveFields(item);
+  }
+  return safe;
+}
+function out(data:unknown,status=200){return new Response(JSON.stringify(sanitizeSensitiveFields(data)),{status,headers:{...corsHeaders,"Content-Type":"application/json"}})}
 Deno.serve(async req=>{if(req.method==="OPTIONS")return new Response(null,{status:200,headers:corsHeaders});try{const b=await req.json();if(!await admin(String(b.admin_session_token||""),String(b.admin_id||"")))return out({error:"Unauthorized"},401);
 switch(b.action){
 case "analytics_summary":{const [{data:bookings},{data:technicians},{data:customers},{data:reviews}]=await Promise.all([db.from("bookings").select("status,created_at,total_amount,amount,job_completed_at,customer_id,mobile_number"),db.from("technicians").select("status,wallet_locked"),db.from("customers").select("id"),db.from("reviews").select("rating")]);const today=new Date().toISOString().split("T")[0];const bs=bookings||[];const ts=technicians||[];const cs=customers||[];const rs=reviews||[];const todayBs=bs.filter((b:any)=>b.created_at?.startsWith(today));const active=new Set(bs.filter((b:any)=>b.created_at>new Date(Date.now()-30*86400000).toISOString()).map((b:any)=>b.customer_id||b.mobile_number));const avg=rs.length?rs.reduce((n:any,r:any)=>n+Number(r.rating||0),0)/rs.length:0;return out({summary:{todayRevenue:todayBs.filter((b:any)=>b.status==="completed").reduce((n:any,b:any)=>n+Number(b.total_amount??b.amount??0),0),pendingBookings:bs.filter((b:any)=>["pending","assigned","in_progress","job_started"].includes(b.status)).length,cancelledJobs:bs.filter((b:any)=>b.status==="cancelled").length,availableTechnicians:ts.filter((t:any)=>t.status==="active"&&!t.wallet_locked).length,inactiveCustomers:Math.max(0,cs.length-active.size),totalCustomers:cs.length,totalTechnicians:ts.length,newBookingsToday:todayBs.length,completedJobsToday:bs.filter((b:any)=>b.status==="completed"&&b.job_completed_at?.startsWith(today)).length,avgRating:Math.round(avg*10)/10}});}
