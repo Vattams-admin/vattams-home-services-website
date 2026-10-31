@@ -299,9 +299,9 @@ async function handleRegister(supabase: ReturnType<typeof createClient>, body: R
     registrationPayment.payee_id !== normalizedMobile ||
     Number(registrationPayment.amount) !== 49 ||
     registrationPayment.purpose !== "registration_fee" ||
-    !registrationPayment.utr ||
+    !String(registrationPayment.utr || "").trim() ||
     registrationPayment.status !== "success" ||
-    !registrationPayment.verified_by ||
+    !String(registrationPayment.verified_by || "").trim() ||
     !registrationPayment.verified_at ||
     !Number.isFinite(Date.parse(String(registrationPayment.verified_at)))
   ) {
