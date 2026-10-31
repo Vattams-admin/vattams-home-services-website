@@ -22,10 +22,6 @@ function isFeaturedApplianceService(name: unknown): boolean {
     || value.includes('fridge');
 }
 
-function generateOTP(): string {
-  return String(Math.floor(1000 + Math.random() * 9000));
-}
-
 function getPublicAppUrl(): string {
   const configuredUrl = Deno.env.get("PUBLIC_APP_URL");
   if (configuredUrl) {
@@ -968,81 +964,22 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === "generate_otp") {
-      return new Response(JSON.stringify({ error: "Deprecated action" }), { status: 410, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      // Generate OTP for start or complete job
-      const otpCode = generateOTP();
-      const column = purpose === "start" ? "start_otp" : "complete_otp";
-
-      await supabase.from("bookings").update({
-        [column]: otpCode,
-        updated_at: new Date().toISOString(),
-      }).eq("id", booking_id);
-
-      return new Response(JSON.stringify({
-        success: true,
-        otp: otpCode,
-        purpose,
-      }), {
+      return new Response(JSON.stringify({ error: "Deprecated action" }), {
+        status: 410,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     if (action === "verify_otp") {
-      return new Response(JSON.stringify({ error: "Deprecated action" }), { status: 410, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      const { data: booking } = await supabase
-        .from("bookings")
-        .select("*")
-        .eq("id", booking_id)
-        .maybeSingle() as { data: Record<string, unknown> | null; error: unknown };
-
-      if (!booking) {
-        return new Response(JSON.stringify({ error: "Booking not found" }), {
-          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      const storedOTP = purpose === "start" ? booking.start_otp : booking.complete_otp;
-
-      if (storedOTP !== otp) {
-        return new Response(JSON.stringify({ error: "Invalid OTP" }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      // Update booking status based on purpose
-      const now = new Date().toISOString();
-      if (purpose === "start") {
-        await supabase.from("bookings").update({
-          status: "job_started",
-          otp_verified_at: now,
-          job_started_at: now,
-          updated_at: now,
-        }).eq("id", booking_id);
-      } else {
-        await supabase.from("bookings").update({
-          status: "job_completed",
-          job_completed_at: now,
-          updated_at: now,
-        }).eq("id", booking_id);
-      }
-
-      return new Response(JSON.stringify({
-        success: true,
-        verified: true,
-        purpose,
-      }), {
+      return new Response(JSON.stringify({ error: "Deprecated action" }), {
+        status: 410,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     if (action === "update_status") {
-      return new Response(JSON.stringify({ error: "Deprecated action" }), { status: 410, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      await supabase.from("bookings").update({
-        status,
-        updated_at: new Date().toISOString(),
-      }).eq("id", booking_id);
-
-      return new Response(JSON.stringify({ success: true }), {
+      return new Response(JSON.stringify({ error: "Deprecated action" }), {
+        status: 410,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
