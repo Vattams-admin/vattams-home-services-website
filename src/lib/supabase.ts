@@ -128,6 +128,9 @@ export interface Technician {
   aadhaar_url: string | null;
   pan_url: string | null;
   dl_url: string | null;
+  has_aadhaar?: boolean;
+  has_pan?: boolean;
+  has_dl?: boolean;
   profile_score: number;
   rejection_reason: string | null;
   suspend_reason: string | null;
