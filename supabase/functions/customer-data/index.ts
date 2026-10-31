@@ -9,7 +9,19 @@ async function auth(token:string){
   if(!data || new Date(data.expires_at)<=new Date()) return null;
   return data.customer_id;
 }
-function out(data:unknown,status=200){return new Response(JSON.stringify(data),{status,headers:{...corsHeaders,"Content-Type":"application/json"}})}
+function sanitizeSensitiveFields(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(sanitizeSensitiveFields);
+  if (!value || typeof value !== "object") return value;
+  const source = value as Record<string, unknown>;
+  const safe: Record<string, unknown> = {};
+  for (const [key, item] of Object.entries(source)) {
+    // These are server-side capabilities/secrets, not customer dashboard data.
+    if (["start_otp", "complete_otp", "booking_action_token", "payment_action_token"].includes(key)) continue;
+    safe[key] = sanitizeSensitiveFields(item);
+  }
+  return safe;
+}
+function out(data:unknown,status=200){return new Response(JSON.stringify(sanitizeSensitiveFields(data)),{status,headers:{...corsHeaders,"Content-Type":"application/json"}})}
 Deno.serve(async req=>{
   if(req.method==="OPTIONS") return new Response(null,{status:200,headers:corsHeaders});
   try{
