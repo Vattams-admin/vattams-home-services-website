@@ -113,15 +113,21 @@ async function verifyPayment(body: Record<string, unknown>) {
     return json({ error: "Not authorized" }, 401);
   }
 
-  const { data, error } = await supabase.from("payments")
+  let verificationQuery = supabase.from("payments")
     .update({
       status,
       verified_by: adminId,
       verified_at: status === "success" ? new Date().toISOString() : null,
     })
     .eq("payment_id", paymentId)
-    .eq("status", "pending")
-    .select("*").single();
+    .eq("status", "pending");
+
+  // An administrator may approve only a payment with a submitted UTR.
+  // A UTR is still not independent bank settlement evidence; the admin must
+  // reconcile it before choosing success.
+  if (status === "success") verificationQuery = verificationQuery.not("utr", "is", null);
+
+  const { data, error } = await verificationQuery.select("*").single();
 
   if (error || !data) return json({ error: error?.message || "Payment is no longer pending or could not be updated" }, 409);
   return json({ payment: data });
