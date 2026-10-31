@@ -1,3 +1,20 @@
+-- Align the technician_jobs status constraint with the already-defined
+-- technician workflow and BookingStatus/JobStatus application types.
+ALTER TABLE public.technician_jobs
+  DROP CONSTRAINT IF EXISTS technician_jobs_status_check;
+ALTER TABLE public.technician_jobs
+  ADD CONSTRAINT technician_jobs_status_check
+  CHECK (status IN (
+    'assigned',
+    'accepted',
+    'on_the_way',
+    'in_progress',
+    'job_started',
+    'job_completed',
+    'completed',
+    'rejected'
+  ));
+
 -- Keep booking cancellation and technician-job transitions in one transaction.
 -- Service-role-only RPCs: callers must authenticate and authorize before invoking.
 
