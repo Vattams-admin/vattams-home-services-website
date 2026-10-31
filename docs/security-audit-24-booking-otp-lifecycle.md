@@ -6,7 +6,7 @@
 
 ## Executive finding
 
-The repository does **not** currently contain an active job-start/job-completion OTP verification flow. The legacy `booking-ops` actions `generate_otp` and `verify_otp` immediately return HTTP 410 (`Deprecated action`). The older code below those returns is unreachable but remains in the source.
+The repository does **not** currently contain an active job-start/job-completion OTP verification flow. The legacy `booking-ops` actions `generate_otp` and `verify_otp` immediately return HTTP 410 (`Deprecated action`). The unreachable legacy OTP implementation has now been removed from this branch; the action names remain explicit HTTP 410 responses.
 
 The active technician workflow instead updates job statuses directly through `technician-data` after validating the technician session, active technician account, job ID, technician ownership, and allowed status transition. It does not require an OTP.
 
@@ -28,7 +28,7 @@ The unreachable legacy code is unsafe if ever reactivated:
 - No expiry, attempt counter, resend throttling, or one-time atomic consumption is implemented in that old branch.
 - The old generator returns the OTP in the HTTP response.
 
-**Recommendation:** remove the unreachable legacy implementations in a dedicated cleanup, and keep the deprecated action names returning 410 until a complete server-side replacement is designed and tested.
+**Remediation in this branch:** removed the unreachable legacy OTP generator and verifier implementations and retained explicit HTTP 410 responses until a complete server-side replacement is designed and tested.
 
 ### 2. Active technician status updates bypass OTP
 
@@ -81,7 +81,7 @@ The customer email OTP implementation must not be mistaken for booking start/com
 ## Release assessment
 
 **Booking OTP lifecycle:** not implemented for job start/completion.  
-**Legacy unsafe code:** unreachable due to 410 guards, but should be deleted.  
+**Legacy unsafe code:** removed from this branch; deprecated action guards remain.  
 **Active status workflow:** authenticated and technician-scoped, but does not provide customer OTP assurance.  
 **Production classification:** NOT PRODUCTION READY pending the broader KYC and sensitive-response blockers already recorded in PR #51, plus a documented decision and verification for the job-completion integrity model.
 
