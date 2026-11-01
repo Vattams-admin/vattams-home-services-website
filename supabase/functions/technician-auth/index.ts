@@ -89,7 +89,7 @@ async function sendEmailOtp(to: string, otp: string): Promise<boolean> {
   }
 }
 function otpJson(data: Record<string, unknown>, status = 200) {
-  return new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  return new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" } });
 }
 
 interface KycUploadSession {
@@ -133,6 +133,15 @@ async function startKycUploadSession(
     return otpJson({ error: "A valid mobile number and email are required before KYC upload." }, 400);
   }
 
+  const recentCutoff = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { data: recentSessions, error: rateLimitError } = await supabase.from("otp_codes")
+    .select("id").eq("mobile", mobile).eq("purpose", "technician_kyc_upload")
+    .gte("created_at", recentCutoff).limit(3);
+  if (rateLimitError) return otpJson({ error: "Could not start secure document upload. Please try again." }, 500);
+  if ((recentSessions || []).length >= 3) {
+    return otpJson({ error: "Too many document upload sessions. Please wait before restarting registration." }, 429);
+  }
+
   const tokenBytes = new Uint8Array(32);
   crypto.getRandomValues(tokenBytes);
   const uploadToken = Array.from(tokenBytes).map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -155,7 +164,11 @@ async function startKycUploadSession(
 }
 
 async function uploadKycDocument(supabase: ReturnType<typeof createClient>, req: Request) {
-  const contentLength = Number(req.headers.get("content-length") || 0);
+  const rawContentLength = req.headers.get("content-length");
+  const contentLength = Number(rawContentLength || 0);
+  if (!rawContentLength || !Number.isFinite(contentLength) || contentLength <= 0) {
+    return otpJson({ error: "A valid upload content length is required." }, 411);
+  }
   if (contentLength > 5 * 1024 * 1024 + 64 * 1024) {
     return otpJson({ error: "KYC files must be 5 MB or smaller." }, 413);
   }
