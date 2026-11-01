@@ -64,9 +64,11 @@ This change replaces direct anonymous browser uploads of Aadhaar, PAN, and drivi
   - email OTP creation validates the upload draft;
   - frontend calls the new upload action and submits the capability;
   - the migration exists in the branch.
-- Confirmed the live `technician-auth` function is still deployed as version 12. The branch changes are not deployed.
-- No GitHub Actions workflow run was available for the latest commit.
-- A local `npm run typecheck`, `npm run lint`, and `npm run build` have not been run in this environment. Static checks are not a substitute for those tests.
+- Confirmed the live `technician-auth` function is still deployed as version 12. The branch changes are not deployed to Supabase.
+- Cloudflare Pages created a branch preview for commit `49a96aa3b1a42dbb85e09868f6c481833827fa66`; GitHub's Cloudflare check run completed with `success` and reported `Deployed successfully`. This is a preview deployment, not a production deployment.
+- GitHub Actions reported no workflow runs for the latest commit at the time of verification, so the repository CI typecheck/build result remains unavailable.
+- A local `npm run typecheck`, `npm run lint`, and `npm run build` have not been run in this environment. Static checks and a successful Cloudflare preview deployment are not substitutes for those tests.
+- A draft PR #52 was opened to make the work reviewable. The branch currently compares as 563 commits ahead and 32 behind `main`, with a 137-file diff; it is intentionally not merge-ready and must not be merged without reconciling the branch history and reviewing the full diff.
 
 ## Release blockers / required tests
 
