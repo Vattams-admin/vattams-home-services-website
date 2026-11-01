@@ -546,6 +546,7 @@ export default function TechnicianRegister() {
     try {
       await verifyTechnicianRegistrationEmail(form, emailOtp);
       clearRegistrationDraft();
+      clearKycUploadSession();
       setEmailOtp('');
       setEmailOtpPending(false);
       setSuccess(true);
