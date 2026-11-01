@@ -11,7 +11,7 @@ export type PayeeType = 'customer' | 'technician';
 export interface PaymentRecord {
   id: string;
   payment_id: string;
-  payment_action_token: string;
+  payment_action_token?: string;
   payee_type: PayeeType;
   payee_id: string;
   payee_name: string | null;
@@ -27,12 +27,12 @@ export interface PaymentRecord {
   verified_at: string | null;
 }
 
-function parsePaymentRecord(value: unknown): PaymentRecord | null {
+function parsePaymentRecord(value: unknown, requireActionToken = false): PaymentRecord | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const payment = value as Partial<PaymentRecord>;
   if (typeof payment.id !== 'string' || !payment.id.trim() || payment.id.length > 200
     || typeof payment.payment_id !== 'string' || !payment.payment_id.trim() || payment.payment_id.length > 200
-    || typeof payment.payment_action_token !== 'string' || !payment.payment_action_token.trim() || payment.payment_action_token.length > 1000
+    || (requireActionToken && (typeof payment.payment_action_token !== 'string' || !payment.payment_action_token.trim() || payment.payment_action_token.length > 1000))
     || typeof payment.payee_id !== 'string' || !payment.payee_id.trim() || payment.payee_id.length > 200
     || typeof payment.upi_id !== 'string' || !payment.upi_id.trim() || payment.upi_id.length > 255
     || (payment.payee_name !== null && payment.payee_name !== undefined && (typeof payment.payee_name !== 'string' || payment.payee_name.length > 200))
@@ -131,7 +131,7 @@ export async function createPaymentRecord(params: {
     console.error('Failed to create payment record:', error);
     return null;
   }
-  const payment = parsePaymentRecord(data?.payment);
+  const payment = parsePaymentRecord(data?.payment, true);
   if (!payment) console.error('Payment service returned an invalid payment record.');
   return payment;
 }
@@ -150,7 +150,7 @@ export async function updatePaymentStatus(
     || (verifiedBy !== undefined && (typeof verifiedBy !== 'string' || verifiedBy.length > 200 || /[\\u0000-\\u001f\\u007f]/.test(verifiedBy)))
     || (status === 'pending' && (typeof utr !== 'string' || !utr.trim() || utr.trim().length > 100
       || typeof paymentActionToken !== 'string' || !paymentActionToken.trim()))
-    || (status !== 'pending' && (typeof paymentActionToken !== 'string' || !paymentActionToken.trim()))) {
+    ) {
     console.error('Rejected invalid payment status update parameters.');
     return null;
   }
