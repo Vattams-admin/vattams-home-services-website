@@ -33,6 +33,7 @@ import {
   saveRegistrationDraft,
   loadRegistrationDraft,
   clearRegistrationDraft,
+  clearKycUploadSession,
   type TechnicianFormData,
   type DocType,
 } from '@/lib/technicianRegistration';
@@ -418,7 +419,8 @@ export default function TechnicianRegister() {
               progress: percent,
             },
           }));
-        }
+        },
+        form.email
       );
 
       setForm((previous) => ({
@@ -450,6 +452,7 @@ export default function TechnicianRegister() {
 
   const handleStartOver = () => {
     clearRegistrationDraft();
+    clearKycUploadSession();
     setForm(EMPTY_FORM);
     setStepIndex(0);
     setChatHistory([]);
