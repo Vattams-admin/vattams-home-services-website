@@ -327,13 +327,13 @@ export function calculateProfileScore(form: TechnicianFormData): { score: number
   return { score, missing };
 }
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 
 export function validateFile(file: File): string | null {
   if (!file) return 'Please choose a file';
   if (file.size === 0) return 'This file appears to be empty. Please choose another file';
-  if (file.size > MAX_FILE_SIZE) return 'File size must be under 10MB';
+  if (file.size > MAX_FILE_SIZE) return 'File size must be 5MB or smaller';
   if (!ALLOWED_MIME_TYPES.includes(file.type)) return 'Only JPG, PNG, WebP, and PDF files are allowed';
   return null;
 }
@@ -355,21 +355,67 @@ function bucketForDocType(docType: DocType): string {
 }
 
 /**
- * Uploads a document/photo directly to Supabase Storage using a raw XHR
- * request so we can report real upload progress (the supabase-js client
- * does not expose progress events). Uses only the public anon key — the
- * upload is permitted by a scoped Storage RLS policy (see migrations),
- * never a service_role key.
+ * Uploads KYC documents through the technician-auth Edge Function. The
+ * browser receives only a short-lived registration-scoped capability; the
+ * capability is stored server-side as a SHA-256 hash. The service-role key
+ * never leaves the Edge Function. Profile photos remain in their separate
+ * public bucket and use the existing public upload path.
  *
- * Returns:
- *  - the storage object PATH for private docs (aadhaar/pan/dl)
- *  - the public URL for the profile photo
+ * Returns the private Storage object path for KYC documents or the public
+ * URL for a profile photo.
  */
+const KYC_UPLOAD_SESSION_KEY = 'vattams_technician_kyc_upload_session_v1';
+
+type KycUploadSession = {
+  mobile: string;
+  email: string;
+  upload_token: string;
+  draft_id: string;
+  expires_at: string;
+};
+
+function readKycUploadSession(mobile: string, email: string): KycUploadSession | null {
+  try {
+    const raw = window.sessionStorage.getItem(KYC_UPLOAD_SESSION_KEY);
+    if (!raw) return null;
+    const session = JSON.parse(raw) as KycUploadSession;
+    if (session.mobile !== mobile || session.email !== email.toLowerCase() ||
+        !session.upload_token || Date.parse(session.expires_at) <= Date.now() + 30_000) return null;
+    return session;
+  } catch {
+    return null;
+  }
+}
+
+async function getKycUploadSession(mobile: string, email: string): Promise<KycUploadSession> {
+  const existing = readKycUploadSession(mobile, email);
+  if (existing) return existing;
+  const result = await postTechnicianAuth('start-kyc-upload-session', { mobile, email });
+  if (!result.upload_token || !result.draft_id || !result.expires_at) {
+    throw new Error('Secure document upload session could not be created. Please try again.');
+  }
+  const session: KycUploadSession = {
+    mobile, email: email.toLowerCase(), upload_token: String(result.upload_token),
+    draft_id: String(result.draft_id), expires_at: String(result.expires_at),
+  };
+  window.sessionStorage.setItem(KYC_UPLOAD_SESSION_KEY, JSON.stringify(session));
+  return session;
+}
+
+export function clearKycUploadSession(): void {
+  try {
+    window.sessionStorage.removeItem(KYC_UPLOAD_SESSION_KEY);
+  } catch {
+    // ignore unavailable browser storage
+  }
+}
+
 export function uploadDocumentWithProgress(
   file: File,
   technicianMobile: string,
   docType: DocType,
-  onProgress?: (percent: number) => void
+  onProgress?: (percent: number) => void,
+  technicianEmail = ''
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const validationError = validateFile(file);
@@ -379,55 +425,72 @@ export function uploadDocumentWithProgress(
     }
 
     const mobile = (technicianMobile || '').trim();
-    if (!/^[6-9]\d{9}$/.test(mobile)) {
+    if (!/^[6-9]\\d{9}$/.test(mobile)) {
       reject(new Error('We need your mobile number before uploading documents. Please go back and complete that step first.'));
       return;
     }
 
-    const ext = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+    const isPrivateKyc = PRIVATE_DOC_TYPES.includes(docType);
     const bucket = bucketForDocType(docType);
+    const ext = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
     const path = `${mobile}/${docType}.${ext}`;
 
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', `${SUPABASE_URL}/storage/v1/object/${bucket}/${encodeURIComponent(path).replace(/%2F/g, '/')}`);
-    xhr.setRequestHeader('Authorization', `Bearer ${SUPABASE_ANON_KEY}`);
-    xhr.setRequestHeader('apikey', SUPABASE_ANON_KEY);
-    // KYC objects are create-only; anonymous overwrite is denied by Storage RLS.
-    xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
-
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable && onProgress) {
-        onProgress(Math.round((event.loaded / event.total) * 100));
-      }
-    };
-
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        onProgress?.(100);
-
-        if (PRIVATE_DOC_TYPES.includes(docType)) {
-          resolve(path);
-        } else {
-          const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-          resolve(data.publicUrl);
+    const sendRequest = async () => {
+      let uploadUrl: string;
+      let formData: FormData | null = null;
+      if (isPrivateKyc) {
+        if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(technicianEmail.trim())) {
+          throw new Error('Enter your email address before uploading identity documents.');
         }
+        const session = await getKycUploadSession(mobile, technicianEmail.trim().toLowerCase());
+        uploadUrl = `${TECHNICIAN_AUTH_URL}/upload-kyc-document`;
+        formData = new FormData();
+        formData.append('mobile', mobile);
+        formData.append('upload_token', session.upload_token);
+        formData.append('doc_type', docType);
+        formData.append('file', file, file.name);
       } else {
-        let message = `Upload failed (${xhr.status}). Please try again.`;
-        try {
-          const parsed = JSON.parse(xhr.responseText);
-          message = parsed.message || parsed.error || message;
-        } catch {
-          // ignore parse errors, keep default message
-        }
-        reject(new Error(message));
+        uploadUrl = `${SUPABASE_URL}/storage/v1/object/${bucket}/${encodeURIComponent(path).replace(/%2F/g, '/')}`;
       }
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', uploadUrl);
+      xhr.setRequestHeader('Authorization', `Bearer ${isPrivateKyc ? TECHNICIAN_ANON_KEY : SUPABASE_ANON_KEY}`);
+      xhr.setRequestHeader('apikey', isPrivateKyc ? TECHNICIAN_ANON_KEY : SUPABASE_ANON_KEY);
+      if (!isPrivateKyc) xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable && onProgress) onProgress(Math.round((event.loaded / event.total) * 100));
+      };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          let result: Record<string, unknown> = {};
+          try { result = JSON.parse(xhr.responseText) as Record<string, unknown>; } catch { /* handled below */ }
+          onProgress?.(100);
+          if (isPrivateKyc) {
+            if (typeof result.path !== 'string' || !result.path) {
+              reject(new Error('Secure upload service returned an invalid document path.'));
+              return;
+            }
+            resolve(result.path);
+          } else {
+            const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+            resolve(data.publicUrl);
+          }
+        } else {
+          let message = `Upload failed (${xhr.status}). Please try again.`;
+          try {
+            const parsed = JSON.parse(xhr.responseText);
+            message = parsed.message || parsed.error || message;
+          } catch { /* keep default */ }
+          reject(new Error(message));
+        }
+      };
+      xhr.onerror = () => reject(new Error('Network error during upload. Check your connection and try again.'));
+      xhr.send(formData || file);
     };
 
-    xhr.onerror = () => {
-      reject(new Error('Network error during upload. Check your connection and try again.'));
-    };
-
-    xhr.send(file);
+    sendRequest().catch((error) => reject(error instanceof Error ? error : new Error('Secure upload failed.')));
   });
 }
 
@@ -546,7 +609,12 @@ export async function submitTechnicianApplication(form: TechnicianFormData, regi
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     throw new Error('A valid email address is required to register as a technician.');
   }
-  return postTechnicianAuth('send-registration-otp', technicianRegistrationPayload(form, registrationPaymentId));
+  const session = readKycUploadSession(form.mobile.trim(), email.toLowerCase());
+  if (!session) throw new Error('Your secure KYC upload session has expired. Please re-upload your Aadhaar and PAN documents.');
+  return postTechnicianAuth('send-registration-otp', {
+    ...technicianRegistrationPayload(form, registrationPaymentId),
+    kyc_upload_token: session.upload_token,
+  });
 }
 
 export async function verifyTechnicianRegistrationEmail(form: TechnicianFormData, code: string): Promise<any> {
