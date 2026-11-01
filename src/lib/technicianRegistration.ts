@@ -425,7 +425,7 @@ export function uploadDocumentWithProgress(
     }
 
     const mobile = (technicianMobile || '').trim();
-    if (!/^[6-9]\\d{9}$/.test(mobile)) {
+    if (!/^[6-9]\d{9}$/.test(mobile)) {
       reject(new Error('We need your mobile number before uploading documents. Please go back and complete that step first.'));
       return;
     }
@@ -439,7 +439,7 @@ export function uploadDocumentWithProgress(
       let uploadUrl: string;
       let formData: FormData | null = null;
       if (isPrivateKyc) {
-        if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(technicianEmail.trim())) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(technicianEmail.trim())) {
           throw new Error('Enter your email address before uploading identity documents.');
         }
         const session = await getKycUploadSession(mobile, technicianEmail.trim().toLowerCase());
