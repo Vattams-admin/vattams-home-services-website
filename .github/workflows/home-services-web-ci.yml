@@ -12,6 +12,7 @@ on:
       - 'vite.config.*'
       - 'tsconfig*.json'
       - 'supabase/functions/**'
+      - 'scripts/**'
       - '.github/workflows/home-services-web-ci.yml'
       - '.github/workflows/deploy-supabase-production.yml'
   pull_request:
@@ -32,5 +33,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run test:security
       - run: npm run typecheck
       - run: npm run build
