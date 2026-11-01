@@ -17,7 +17,7 @@ const checks = [
   ['UTR response uses a safe explicit field list', paymentAuth.includes('.select("id,payment_id,payee_type')],
   ['payment responses disable caching', paymentAuth.includes('"Cache-Control": "no-store"')],
   ['frontend requires capability only on creation', paymentsLib.includes('parsePaymentRecord(data?.payment, true)') && paymentsLib.includes('const payment = parsePaymentRecord(data?.payment);')],
-  ['payment inputs reject control characters', paymentsLib.includes('/[\\u0000-\\u001f\\u007f]/')],
+  ['payment inputs reject control characters', (paymentsLib.match(/\\/\\[\\\\u0000-\\\\u001f\\\\u007f\\\\]\\//g) || []).length === 2],
   ['admin payload sanitizer strips payment capabilities', adminData.includes('"payment_action_token"') && adminData.includes('sanitizeSensitiveFields(data)')],
   ['customer payload sanitizer strips payment capabilities', customerData.includes('"payment_action_token"') && customerData.includes('sanitizeSensitiveFields(data)')],
   ['KYC upload checks content signatures', technicianAuth.includes('detectKycFile(bytes)')],
