@@ -99,3 +99,11 @@ This change replaces direct anonymous browser uploads of Aadhaar, PAN, and drivi
 - No Cloudflare Pages deployment.
 - No existing Storage object deletion, movement, or content inspection.
 - No change to the public profile-photo upload policy.
+
+## Consolidated branch review note
+
+The draft PR represents the accumulated security-audit branch (audits 24–91), not only the KYC upload change. The branch comparison reports 563 commits ahead, 32 behind `main`, and 137 changed files. The complete diff and branch base must be reviewed/reconciled before merge.
+
+A comparison of `technician-auth/index.ts` confirmed that this branch retains the stricter registration-fee settlement gate: payment status must be `success`, `verified_by` must be non-empty, and `verified_at` must parse as a valid timestamp. The current `main` version inspected during this review instead accepts `pending` or `success` based on UTR presence. Do not accidentally replace the stricter branch logic with the weaker main-branch check.
+
+The KYC capability/upload work is still untested end-to-end. In particular, confirm the browser XHR multipart request includes a usable Content-Length header in the deployed Edge runtime; the upload endpoint currently returns HTTP 411 if that header is absent. If the deployed runtime legitimately omits it, replace this assumption with a bounded streaming/body-size enforcement strategy before release.
