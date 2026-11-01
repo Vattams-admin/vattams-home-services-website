@@ -207,7 +207,7 @@ async function uploadKycDocument(supabase: ReturnType<typeof createClient>, req:
 
   const draftId = String(session.registration_data.draft_id);
   if (!/^[0-9a-f-]{36}$/i.test(draftId)) return otpJson({ error: "Invalid upload session." }, 401);
-  const objectPath = `${draftId}/${docType}.${detected.extension}`;
+  const objectPath = draftId + "/" + docType;
 
   const { data, error } = await supabase.storage.from("technician-docs").upload(objectPath, bytes, {
     contentType: detected.mime,
@@ -246,11 +246,7 @@ async function resolveKycPaths(
   if (listError || !files) return null;
 
   const findPath = (type: string) => {
-    const lowerType = type.toLowerCase();
-    const extensions = [".jpg", ".png", ".webp", ".pdf"];
-    const matches = files.filter((item) =>
-      extensions.some((extension) => item.name.toLowerCase() === lowerType + extension)
-    );
+    const matches = files.filter((item) => item.name.toLowerCase() === type.toLowerCase());
     return matches.length === 1 ? draftId + "/" + matches[0].name : null;
   };
   const aadhaar = findPath("aadhaar");
