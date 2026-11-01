@@ -38,6 +38,7 @@ interface RegisterBody {
   profile_score?: number;
   mobile_verified?: boolean;
   registration_payment_id?: string;
+  kyc_upload_token?: string;
 }
 
 interface LoginBody {
@@ -90,6 +91,249 @@ async function sendEmailOtp(to: string, otp: string): Promise<boolean> {
 function otpJson(data: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 }
+
+interface KycUploadSession {
+  id: string;
+  mobile: string;
+  code: string;
+  expires_at: string;
+  verified: boolean;
+  registration_data: { draft_id?: string; email?: string } | null;
+}
+
+async function sha256Hex(value: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function detectKycFile(bytes: Uint8Array): { mime: string; extension: string } | null {
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+    return { mime: "image/jpeg", extension: "jpg" };
+  }
+  if (bytes.length >= 8 && [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every((v, i) => bytes[i] === v)) {
+    return { mime: "image/png", extension: "png" };
+  }
+  if (bytes.length >= 12 && new TextDecoder().decode(bytes.slice(0, 4)) === "RIFF" &&
+      new TextDecoder().decode(bytes.slice(8, 12)) === "WEBP") {
+    return { mime: "image/webp", extension: "webp" };
+  }
+  if (bytes.length >= 5 && new TextDecoder().decode(bytes.slice(0, 5)) === "%PDF-") {
+    return { mime: "application/pdf", extension: "pdf" };
+  }
+  return null;
+}
+
+async function startKycUploadSession(
+  supabase: ReturnType<typeof createClient>,
+  body: Record<string, unknown>,
+) {
+  const mobile = String(body.mobile || "").replace(/\D/g, "");
+  const email = String(body.email || "").trim().toLowerCase();
+  if (!/^[6-9]\d{9}$/.test(mobile) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return otpJson({ error: "A valid mobile number and email are required before KYC upload." }, 400);
+  }
+
+  const tokenBytes = new Uint8Array(32);
+  crypto.getRandomValues(tokenBytes);
+  const uploadToken = Array.from(tokenBytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+  const draftId = crypto.randomUUID();
+  const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+
+  const { error } = await supabase.from("otp_codes").insert({
+    mobile,
+    code: await sha256Hex(uploadToken),
+    purpose: "technician_kyc_upload",
+    expires_at: expiresAt,
+    registration_data: { draft_id: draftId, email },
+  });
+  if (error) {
+    console.error("Could not create technician KYC upload session:", error.message);
+    return otpJson({ error: "Could not start secure document upload. Please try again." }, 500);
+  }
+
+  return otpJson({ success: true, upload_token: uploadToken, draft_id: draftId, expires_at: expiresAt });
+}
+
+async function uploadKycDocument(supabase: ReturnType<typeof createClient>, req: Request) {
+  const contentLength = Number(req.headers.get("content-length") || 0);
+  if (contentLength > 5 * 1024 * 1024 + 64 * 1024) {
+    return otpJson({ error: "KYC files must be 5 MB or smaller." }, 413);
+  }
+
+  const form = await req.formData();
+  const mobile = String(form.get("mobile") || "").replace(/\D/g, "");
+  const token = String(form.get("upload_token") || "");
+  const docType = String(form.get("doc_type") || "");
+  const file = form.get("file");
+
+  if (!/^[6-9]\d{9}$/.test(mobile) || !/^[a-f0-9]{64}$/.test(token) ||
+      !["aadhaar", "pan", "dl"].includes(docType) || !(file instanceof File)) {
+    return otpJson({ error: "Invalid KYC upload request." }, 400);
+  }
+  if (file.size <= 0 || file.size > 5 * 1024 * 1024) {
+    return otpJson({ error: "KYC files must be between 1 byte and 5 MB." }, 413);
+  }
+
+  const tokenHash = await sha256Hex(token);
+  const { data: session, error: sessionError } = await supabase.from("otp_codes")
+    .select("id,mobile,code,expires_at,verified,registration_data")
+    .eq("mobile", mobile).eq("purpose", "technician_kyc_upload")
+    .eq("code", tokenHash).eq("verified", false)
+    .gt("expires_at", new Date().toISOString())
+    .order("created_at", { ascending: false }).limit(1).maybeSingle();
+
+  if (sessionError || !session?.registration_data?.draft_id) {
+    return otpJson({ error: "KYC upload session is invalid or expired. Restart document upload." }, 401);
+  }
+
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const detected = detectKycFile(bytes);
+  if (!detected || (file.type && file.type !== detected.mime)) {
+    return otpJson({ error: "File content does not match an allowed JPG, PNG, WebP, or PDF document." }, 415);
+  }
+
+  const draftId = String(session.registration_data.draft_id);
+  if (!/^[0-9a-f-]{36}$/i.test(draftId)) return otpJson({ error: "Invalid upload session." }, 401);
+  const objectPath = `${draftId}/${docType}.${detected.extension}`;
+
+  const { data, error } = await supabase.storage.from("technician-docs").upload(objectPath, bytes, {
+    contentType: detected.mime,
+    cacheControl: "3600",
+    upsert: false,
+  });
+  if (error || !data) {
+    const message = error?.message || "Storage upload failed.";
+    const status = /already exists|duplicate/i.test(message) ? 409 : 400;
+    return otpJson({ error: status === 409 ? "This document is already uploaded for this registration draft." : "Secure document upload failed." }, status);
+  }
+
+  return otpJson({ success: true, path: data.path, doc_type: docType });
+}
+
+async function resolveKycPaths(
+  supabase: ReturnType<typeof createClient>,
+  mobile: string,
+  email: string,
+  uploadToken: string,
+) {
+  if (!/^[a-f0-9]{64}$/.test(uploadToken)) return null;
+  const { data: session, error } = await supabase.from("otp_codes")
+    .select("id,registration_data,expires_at,verified")
+    .eq("mobile", mobile).eq("purpose", "technician_kyc_upload")
+    .eq("code", await sha256Hex(uploadToken)).eq("verified", false)
+    .gt("expires_at", new Date().toISOString())
+    .order("created_at", { ascending: false }).limit(1).maybeSingle();
+  if (error || !session?.registration_data?.draft_id ||
+      String(session.registration_data.email || "").toLowerCase() !== email) return null;
+
+  const draftId = String(session.registration_data.draft_id);
+  const { data: files, error: listError } = await supabase.storage.from("technician-docs")
+    .list(draftId, { limit: 20, offset: 0 });
+  if (listError || !files) return null;
+
+  const findPath = (type: string) => {
+    const matches = files.filter((item) => new RegExp(`^${type}\\.(jpg|png|webp|pdf)import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import bcrypt from "npm:bcryptjs@2.4.3";
+import { createClient } from "npm:@supabase/supabase-js@2.45.4";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
+};
+
+interface RegisterBody {
+  full_name: string;
+  mobile: string;
+  email?: string;
+  city: string;
+  service_categories?: string[];
+  experience_years?: number;
+  id_proof_type?: string;
+  id_proof_number?: string;
+  password: string;
+  password_hash?: string;
+  whatsapp_number?: string;
+  area?: string;
+  pincode?: string;
+  available_days?: string[];
+  working_time?: string;
+  has_vehicle?: boolean;
+  has_tools?: boolean;
+  aadhaar_url?: string;
+  pan_url?: string;
+  dl_url?: string;
+  profile_photo_url?: string;
+  bank_name?: string;
+  bank_holder_name?: string;
+  bank_account_number?: string;
+  bank_ifsc?: string;
+  upi_id?: string;
+  profile_score?: number;
+  mobile_verified?: boolean;
+  registration_payment_id?: string;
+}
+
+interface LoginBody {
+  identifier: string;
+  password: string;
+}
+
+interface DocUrlBody {
+  admin_id: string;
+  admin_session_token?: string;
+  technician_id: string;
+  doc_type: "aadhaar" | "pan" | "dl";
+}
+
+function generateEmailOtp(): string {
+  const bytes = new Uint32Array(1);
+  crypto.getRandomValues(bytes);
+  return String(100000 + (bytes[0] % 900000));
+}
+async function hashEmailOtp(otp: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(otp));
+  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+async function sendEmailOtp(to: string, otp: string): Promise<boolean> {
+  const apiKey = Deno.env.get("RESEND_API_KEY");
+  const from = Deno.env.get("EMAIL_FROM");
+  if (!apiKey || !from) {
+    console.error("Email OTP unavailable: RESEND_API_KEY and EMAIL_FROM must be configured.");
+    return false;
+  }
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from, to: [to], subject: "Verify your VATTAMS technician registration email",
+        html: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:24px"><h2>VATTAMS Home Services</h2><p>Use this one-time code to verify the email address for your technician registration.</p><div style="font-size:32px;font-weight:700;letter-spacing:8px;padding:18px 0">${otp}</div><p>This code expires in 10 minutes. Do not share it with anyone.</p></div>`,
+      }),
+    });
+    if (!response.ok) {
+      console.error("Email provider rejected technician OTP", response.status, await response.text());
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error("Technician email OTP delivery failed", error);
+    return false;
+  }
+}
+function otpJson(data: Record<string, unknown>, status = 200) {
+  return new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+}
+, "i").test(item.name));
+    return matches.length === 1 ? `${draftId}/${matches[0].name}` : null;
+  };
+  const aadhaar = findPath("aadhaar");
+  const pan = findPath("pan");
+  if (!aadhaar || !pan) return null;
+
+  return { sessionId: session.id, aadhaar_url: aadhaar, pan_url: pan, dl_url: findPath("dl") };
+}
+
 async function startTechnicianRegistrationOtp(supabase: ReturnType<typeof createClient>, body: RegisterBody) {
   const mobile = String(body.mobile || "").replace(/\D/g, "");
   const email = String(body.email || "").trim().toLowerCase();
@@ -104,13 +348,18 @@ async function startTechnicianRegistrationOtp(supabase: ReturnType<typeof create
   const recentCutoff = new Date(Date.now() - 60 * 1000).toISOString();
   const { data: recent } = await supabase.from("otp_codes").select("id").eq("mobile", mobile).eq("purpose", "technician_registration").gte("created_at", recentCutoff).limit(1).maybeSingle();
   if (recent) return otpJson({ error: "Please wait 60 seconds before requesting another code." }, 429);
+  const uploadToken = String((body as RegisterBody & { kyc_upload_token?: string }).kyc_upload_token || "");
+  const kycPaths = await resolveKycPaths(supabase, mobile, email, uploadToken);
+  if (!kycPaths) return otpJson({ error: "Upload your Aadhaar and PAN documents through the secure registration upload flow before requesting email verification." }, 400);
+
   const otp = generateEmailOtp();
   const otpHash = await hashEmailOtp(otp);
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
   const passwordHash = await bcrypt.hash(body.password, await bcrypt.genSalt(10));
+  const { kyc_upload_token: _uploadToken, ...safeBody } = body as RegisterBody & { kyc_upload_token?: string };
   const { data: row, error } = await supabase.from("otp_codes").insert({
     mobile, code: otpHash, purpose: "technician_registration", expires_at: expiresAt,
-    registration_data: { ...body, mobile, email, password: undefined, password_hash: passwordHash },
+    registration_data: { ...safeBody, ...kycPaths, mobile, email, password: undefined, password_hash: passwordHash },
   }).select("id").single();
   if (error || !row) return otpJson({ error: "Could not start registration. Please try again." }, 500);
   if (!await sendEmailOtp(email, otp)) {
@@ -206,6 +455,9 @@ async function verifyTechnicianRegistrationOtp(supabase: ReturnType<typeof creat
     const { error: cleanupError } = await supabase.from("otp_codes")
       .update({ registration_data: null })
       .eq("mobile", mobile).eq("purpose", "technician_registration");
+    const { error: uploadCleanupError } = await supabase.from("otp_codes")
+      .delete().eq("mobile", mobile).eq("purpose", "technician_kyc_upload");
+    if (uploadCleanupError) console.error("Could not clear consumed KYC upload session:", uploadCleanupError.message);
     if (cleanupError) {
       console.error("Could not clear sensitive registration data from consumed OTP:", cleanupError.message);
     }
@@ -227,9 +479,15 @@ Deno.serve(async (req: Request) => {
     const url = new URL(req.url);
     const action = url.pathname.split("/").pop();
 
+    if (action === "upload-kyc-document") {
+      return await uploadKycDocument(supabase, req);
+    }
+
     const body = await req.json();
 
-    if (action === "register") {
+    if (action === "start-kyc-upload-session") {
+      return await startKycUploadSession(supabase, body as Record<string, unknown>);
+    } else if (action === "register") {
       return otpJson({ error: "Email verification is required. Use send-registration-otp, then verify-registration-otp to finish registration." }, 403);
     } else if (action === "send-registration-otp") {
       return await startTechnicianRegistrationOtp(supabase, body as RegisterBody);
