@@ -107,3 +107,16 @@ The draft PR represents the accumulated security-audit branch (audits 24–91), 
 A comparison of `technician-auth/index.ts` confirmed that this branch retains the stricter registration-fee settlement gate: payment status must be `success`, `verified_by` must be non-empty, and `verified_at` must parse as a valid timestamp. The current `main` version inspected during this review instead accepts `pending` or `success` based on UTR presence. Do not accidentally replace the stricter branch logic with the weaker main-branch check.
 
 The KYC capability/upload work is still untested end-to-end. In particular, confirm the browser XHR multipart request includes a usable Content-Length header in the deployed Edge runtime; the upload endpoint currently returns HTTP 411 if that header is absent. If the deployed runtime legitimately omits it, replace this assumption with a bounded streaming/body-size enforcement strategy before release.
+
+## Payment capability response hardening (branch-only)
+
+A follow-on P0 code change was added to the same branch after reviewing deployed `payment-auth` v5:
+
+- Payment creation explicitly selects the required fields and issues the `payment_action_token` only to the initiating payment flow, because the unauthenticated UTR form currently requires this scoped capability.
+- Successful UTR submission atomically rotates the stored UUID capability and returns an explicit safe field list without the replacement token. The previous capability can no longer be replayed.
+- Admin verification responses also use an explicit safe field list and omit `payment_action_token`.
+- Payment API responses now carry `Cache-Control: no-store`.
+- Frontend parsing requires the capability only for the creation response; sanitized update responses no longer require it. Admin verification relies on its existing super-admin session rather than the payment capability.
+- The admin-data recursive sanitizer already removes `payment_action_token` from broad dashboard payloads on this branch.
+
+Static source assertions passed for the above contract. These changes are not deployed. End-to-end tests must verify one-time UTR submission, replay denial, admin verification, and no token in admin/customer responses. The initial capability is still intentionally delivered once to the initiating browser; removing even that exposure requires replacing the current pre-auth UTR flow with a separately authenticated server-side confirmation process.
