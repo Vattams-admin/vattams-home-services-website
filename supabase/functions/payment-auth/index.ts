@@ -57,9 +57,11 @@ async function createPayment(body: Record<string, unknown>) {
     reference_id: payeeId,
     status: "pending",
     notes,
-  }).select("*").single();
+  }).select("id,payment_id,payment_action_token,payee_type,payee_id,payee_name,upi_id,amount,purpose,reference_id,utr,status,notes,verified_by,created_at,verified_at").single();
 
   if (error || !data) return json({ error: error?.message || "Unable to create payment record" }, 500);
+  // The action capability is issued once to the initiating browser so it can
+  // submit the UTR. It is never repeated in subsequent payment responses.
   return json({ payment: data });
 }
 
@@ -76,13 +78,15 @@ async function submitUtr(body: Record<string, unknown>) {
   }
 
   const { data, error } = await supabase.from("payments")
-    .update({ utr, status: "pending" })
+    .update({ utr, status: "pending", payment_action_token: crypto.randomUUID() })
     .eq("payment_id", paymentId)
     .eq("payment_action_token", actionToken)
     .eq("status", "pending")
-    .select("*").single();
+    .select("id,payment_id,payee_type,payee_id,payee_name,upi_id,amount,purpose,reference_id,utr,status,notes,verified_by,created_at,verified_at").single();
 
   if (error || !data) return json({ error: "Payment is no longer pending or authorization is invalid" }, 409);
+  // Rotate the one-time capability on UTR submission; the old token can no
+  // longer be replayed and the replacement token is not returned to clients.
   return json({ payment: data });
 }
 
@@ -127,7 +131,7 @@ async function verifyPayment(body: Record<string, unknown>) {
   // reconcile it before choosing success.
   if (status === "success") verificationQuery = verificationQuery.not("utr", "is", null);
 
-  const { data, error } = await verificationQuery.select("*").single();
+  const { data, error } = await verificationQuery.select("id,payment_id,payee_type,payee_id,payee_name,upi_id,amount,purpose,reference_id,utr,status,notes,verified_by,created_at,verified_at").single();
 
   if (error || !data) return json({ error: error?.message || "Payment is no longer pending or could not be updated" }, 409);
   return json({ payment: data });
@@ -136,6 +140,6 @@ async function verifyPayment(body: Record<string, unknown>) {
 function json(data: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" },
   });
 }
