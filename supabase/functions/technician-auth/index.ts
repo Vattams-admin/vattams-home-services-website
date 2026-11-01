@@ -240,105 +240,18 @@ async function resolveKycPaths(
       String(session.registration_data.email || "").toLowerCase() !== email) return null;
 
   const draftId = String(session.registration_data.draft_id);
+  if (!/^[0-9a-f-]{36}$/i.test(draftId)) return null;
   const { data: files, error: listError } = await supabase.storage.from("technician-docs")
     .list(draftId, { limit: 20, offset: 0 });
   if (listError || !files) return null;
 
   const findPath = (type: string) => {
-    const matches = files.filter((item) => new RegExp(`^${type}\\.(jpg|png|webp|pdf)import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import bcrypt from "npm:bcryptjs@2.4.3";
-import { createClient } from "npm:@supabase/supabase-js@2.45.4";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
-};
-
-interface RegisterBody {
-  full_name: string;
-  mobile: string;
-  email?: string;
-  city: string;
-  service_categories?: string[];
-  experience_years?: number;
-  id_proof_type?: string;
-  id_proof_number?: string;
-  password: string;
-  password_hash?: string;
-  whatsapp_number?: string;
-  area?: string;
-  pincode?: string;
-  available_days?: string[];
-  working_time?: string;
-  has_vehicle?: boolean;
-  has_tools?: boolean;
-  aadhaar_url?: string;
-  pan_url?: string;
-  dl_url?: string;
-  profile_photo_url?: string;
-  bank_name?: string;
-  bank_holder_name?: string;
-  bank_account_number?: string;
-  bank_ifsc?: string;
-  upi_id?: string;
-  profile_score?: number;
-  mobile_verified?: boolean;
-  registration_payment_id?: string;
-}
-
-interface LoginBody {
-  identifier: string;
-  password: string;
-}
-
-interface DocUrlBody {
-  admin_id: string;
-  admin_session_token?: string;
-  technician_id: string;
-  doc_type: "aadhaar" | "pan" | "dl";
-}
-
-function generateEmailOtp(): string {
-  const bytes = new Uint32Array(1);
-  crypto.getRandomValues(bytes);
-  return String(100000 + (bytes[0] % 900000));
-}
-async function hashEmailOtp(otp: string): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(otp));
-  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-async function sendEmailOtp(to: string, otp: string): Promise<boolean> {
-  const apiKey = Deno.env.get("RESEND_API_KEY");
-  const from = Deno.env.get("EMAIL_FROM");
-  if (!apiKey || !from) {
-    console.error("Email OTP unavailable: RESEND_API_KEY and EMAIL_FROM must be configured.");
-    return false;
-  }
-  try {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        from, to: [to], subject: "Verify your VATTAMS technician registration email",
-        html: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:24px"><h2>VATTAMS Home Services</h2><p>Use this one-time code to verify the email address for your technician registration.</p><div style="font-size:32px;font-weight:700;letter-spacing:8px;padding:18px 0">${otp}</div><p>This code expires in 10 minutes. Do not share it with anyone.</p></div>`,
-      }),
-    });
-    if (!response.ok) {
-      console.error("Email provider rejected technician OTP", response.status, await response.text());
-      return false;
-    }
-    return true;
-  } catch (error) {
-    console.error("Technician email OTP delivery failed", error);
-    return false;
-  }
-}
-function otpJson(data: Record<string, unknown>, status = 200) {
-  return new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-}
-, "i").test(item.name));
-    return matches.length === 1 ? `${draftId}/${matches[0].name}` : null;
+    const lowerType = type.toLowerCase();
+    const extensions = [".jpg", ".png", ".webp", ".pdf"];
+    const matches = files.filter((item) =>
+      extensions.some((extension) => item.name.toLowerCase() === lowerType + extension)
+    );
+    return matches.length === 1 ? draftId + "/" + matches[0].name : null;
   };
   const aadhaar = findPath("aadhaar");
   const pan = findPath("pan");
