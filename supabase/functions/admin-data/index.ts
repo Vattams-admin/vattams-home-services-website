@@ -12,7 +12,7 @@ function sanitizeSensitiveFields(value: unknown): unknown {
     // Never return authentication material or one-time payment capabilities.
     if (["payment_action_token", "password_hash", "password_salt", "admin_session_token", "token"].includes(key)) continue;
     if (key === "bank_account_number") {
-      const digits = String(item ?? "").replace(/\\D/g, "");
+      const digits = String(item ?? "").replace(/\D/g, "");
       safe[key] = digits.length >= 4 ? `••••${digits.slice(-4)}` : null;
       continue;
     }
