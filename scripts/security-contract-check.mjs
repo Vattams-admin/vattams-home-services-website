@@ -58,6 +58,7 @@ const checks = [
   ['recharge decisions are conditional on pending state and reject stale repeats', adminData.includes('.eq("id",b.recharge_id).eq("status","pending").select("*").maybeSingle()') && adminData.includes('Recharge is no longer pending; refresh the list before taking another action.')],
   ['technician dashboard excludes job_completed from finalized jobs and earnings', technicianDashboard.includes("jobs.filter((job) => job.status === 'completed')") && !technicianDashboard.includes("'completed',\n          'job_completed'")],
   ['technician mark-all-read sends one combined backend request', technicianDashboard.includes("await technicianData('notifications_read_all');") && !technicianDashboard.includes("Promise.all([\n          technicianData('notifications_read_all')")],
+  ['technician dashboard labels the in_progress transition as Start Job', technicianDashboard.includes("updateJobStatus(\n                  job,\n                  'job_started'") && technicianDashboard.includes('Start Job')],
   ['technician dashboard follows in_progress → job_started → job_completed', technicianDashboard.includes("job.status ===\n            'in_progress'") && technicianDashboard.includes("updateJobStatus(\n                  job,\n                  'job_started'") && technicianDashboard.includes("job.status ===\n            'job_started'") && technicianDashboard.includes("updateJobStatus(\n                  job,\n                  'job_completed'")],
 ];
 
