@@ -43,6 +43,7 @@ const checks = [
   ['homepage does not claim OTP verification is available', homeFeatures.includes('OTP verification is not currently available')],
   ['admin booking cancellation uses the atomic cancellation RPC', adminData.includes('db.rpc("cancel_booking_atomic"')],
   ['admin direct non-cancellation status writes are rejected', adminData.includes('Direct booking status changes are disabled') && !adminData.includes('db.from("bookings").update({status:b.status')],
+  ['admin dashboard exposes only eligible cancellation action', adminDashboard.includes('cancellableBookingStatuses.has(selectedBooking.status)') && adminDashboard.includes("updateStatus(selectedBooking.id, 'cancelled')") && !adminDashboard.includes('onClick={() => updateStatus(selectedBooking.id, s)}')],
   ['technician transition locks booking before locking the job', bookingLifecycleMigration.indexOf('FOR UPDATE') > bookingLifecycleMigration.indexOf('FROM public.bookings') && bookingLifecycleMigration.indexOf('FROM public.bookings') < bookingLifecycleMigration.lastIndexOf('FOR UPDATE')],
   ['technician transition revalidates the locked job parent relationship', bookingLifecycleMigration.includes('AND booking_id = v_booking_id')],
   ['technician transition retains service-role-only execute grant', bookingLifecycleMigration.includes('REVOKE ALL ON FUNCTION public.transition_technician_job_atomic(uuid, uuid, text) FROM PUBLIC, anon, authenticated') && bookingLifecycleMigration.includes('GRANT EXECUTE ON FUNCTION public.transition_technician_job_atomic(uuid, uuid, text) TO service_role')],
