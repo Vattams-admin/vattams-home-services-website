@@ -263,12 +263,7 @@ export default function TechnicianDashboard() {
 
   const completedJobs = useMemo(
     () =>
-      jobs.filter((job) =>
-        [
-          'completed',
-          'job_completed',
-        ].includes(job.status)
-      ),
+      jobs.filter((job) => job.status === 'completed'),
     [jobs]
   );
 
