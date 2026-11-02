@@ -364,10 +364,7 @@ export default function TechnicianDashboard() {
       if (!technician) return;
 
       try {
-        await Promise.all([
-          technicianData('notifications_read_all'),
-          technicianData('notifications_read_all'),
-        ]);
+        await technicianData('notifications_read_all');
 
         setNotifications((current) =>
           current.map((item) => ({
