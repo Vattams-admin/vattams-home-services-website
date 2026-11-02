@@ -47,7 +47,7 @@ export default function TechnicianLogin() {
       const candidate = data.technician;
       if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)
         || typeof (candidate as Record<string, unknown>).id !== 'string'
-        || !(candidate as Record<string, unknown>).id.trim()
+        || !String((candidate as Record<string, unknown>).id).trim()
         || typeof data.sessionToken !== 'string' || !data.sessionToken.trim()
         || typeof data.expiresAt !== 'string' && typeof data.expiresAt !== 'number') {
         setError('The login service returned an invalid response. Please try again.');
