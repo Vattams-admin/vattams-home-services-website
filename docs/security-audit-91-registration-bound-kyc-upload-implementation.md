@@ -128,3 +128,7 @@ Static source assertions passed for the above contract. These changes are not de
 - Corrected both UTR and verifier identity validation in `src/lib/payments.ts` to reject ASCII control characters. The verifier regex had been double-escaped and did not enforce the intended control-character rejection.
 - GitHub currently reports no Actions workflow runs for this branch/PR, despite the PR-targeted workflow being present. Therefore the new security script has been committed but has NOT yet been executed in CI or locally. Do not report these tests as passed until a run actually completes.
 - Latest branch comparison after these additions: 575 commits ahead, 32 behind `main`, 140 files changed (11,668 changed lines). This is a consolidated audit branch and must not be merged as a KYC-only change. Reconciliation of the branch base and review of the full diff remain a blocking gate.
+
+## CI typecheck remediation (2026-11-02)
+
+The first real security-branch CI run executed all 12 security contract checks successfully, then exposed seven pre-existing TypeScript errors in payment modal optional-token handling, customer booking amount/status typing, ES2020 invoice escaping, and technician login response narrowing. The corresponding frontend files were corrected on this branch. A fresh run against the resulting branch head is required; the earlier run remains failed and must not be treated as a successful build.
