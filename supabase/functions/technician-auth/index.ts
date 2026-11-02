@@ -616,7 +616,16 @@ async function handleLogin(supabase: ReturnType<typeof createClient>, body: Logi
   if (error || !technician) {
     return new Response(
       JSON.stringify({ error: "No account found with this " + (isEmail ? "email" : "mobile number") }),
-      { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" } },
+    );
+  }
+
+  // Only approved technicians may establish a new session. This check must
+  // happen before session creation so suspended/rejected accounts cannot log in.
+  if (technician.status !== "active") {
+    return new Response(
+      JSON.stringify({ error: "Your technician account is not active. Please contact support." }),
+      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" } },
     );
   }
 
@@ -638,7 +647,14 @@ async function handleLogin(supabase: ReturnType<typeof createClient>, body: Logi
   // Mint an opaque server-side session. The browser never uses the technician id as proof of identity.
   const sessionToken = crypto.randomUUID() + crypto.randomUUID();
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-  await supabase.from("technician_auth_sessions").delete().eq("technician_id", technician.id);
+  const { error: revokeError } = await supabase.from("technician_auth_sessions").delete().eq("technician_id", technician.id);
+  if (revokeError) {
+    console.error("Could not revoke prior technician sessions:", revokeError.message);
+    return new Response(
+      JSON.stringify({ error: "Unable to securely replace the previous login session. Please try again." }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" } },
+    );
+  }
   const { error: sessionError } = await supabase.from("technician_auth_sessions").insert({
     technician_id: technician.id,
     token: sessionToken,
