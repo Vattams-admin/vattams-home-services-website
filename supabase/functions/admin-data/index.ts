@@ -3,58 +3,21 @@ import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 const corsHeaders={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"POST,OPTIONS","Access-Control-Allow-Headers":"Content-Type,Authorization,X-Client-Info,Apikey"};
 const db=createClient(Deno.env.get("SUPABASE_URL")!,Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 async function admin(token:string,id:string){const {data:s}=await db.from("admin_auth_sessions").select("admin_id,expires_at").eq("token",token).maybeSingle();if(!s||s.admin_id!==id||new Date(s.expires_at)<=new Date())return false;const {data:a}=await db.from("admin_users").select("id,role,is_active").eq("id",id).maybeSingle();return !!a&&a.role==="super_admin"&&a.is_active===true;}
-function sanitizeSensitiveFields(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(sanitizeSensitiveFields);
-  if (!value || typeof value !== "object") return value;
-  const source = value as Record<string, unknown>;
-  const safe: Record<string, unknown> = {};
-  for (const [key, item] of Object.entries(source)) {
-    if (["password", "password_hash", "password_salt", "start_otp", "complete_otp", "booking_action_token", "payment_action_token"].includes(key)) continue;
-    if (key === "bank_account_number") {
-      const digits = String(item ?? "").replace(/\D/g, "");
-      safe[key] = digits.length > 4 ? `••••${digits.slice(-4)}` : (digits ? "••••" : "");
-      continue;
-    }
-    if (["aadhaar_url", "pan_url", "dl_url"].includes(key)) {
-      safe[`has_${key.replace("_url", "")}`] = Boolean(item);
-      continue;
-    }
-    safe[key] = sanitizeSensitiveFields(item);
-  }
-  return safe;
-}
-function out(data:unknown,status=200){return new Response(JSON.stringify(sanitizeSensitiveFields(data)),{status,headers:{...corsHeaders,"Content-Type":"application/json"}})}
+function out(data:unknown,status=200){return new Response(JSON.stringify(data),{status,headers:{...corsHeaders,"Content-Type":"application/json"}})}
 Deno.serve(async req=>{if(req.method==="OPTIONS")return new Response(null,{status:200,headers:corsHeaders});try{const b=await req.json();if(!await admin(String(b.admin_session_token||""),String(b.admin_id||"")))return out({error:"Unauthorized"},401);
 switch(b.action){
 case "analytics_summary":{const [{data:bookings},{data:technicians},{data:customers},{data:reviews}]=await Promise.all([db.from("bookings").select("status,created_at,total_amount,amount,job_completed_at,customer_id,mobile_number"),db.from("technicians").select("status,wallet_locked"),db.from("customers").select("id"),db.from("reviews").select("rating")]);const today=new Date().toISOString().split("T")[0];const bs=bookings||[];const ts=technicians||[];const cs=customers||[];const rs=reviews||[];const todayBs=bs.filter((b:any)=>b.created_at?.startsWith(today));const active=new Set(bs.filter((b:any)=>b.created_at>new Date(Date.now()-30*86400000).toISOString()).map((b:any)=>b.customer_id||b.mobile_number));const avg=rs.length?rs.reduce((n:any,r:any)=>n+Number(r.rating||0),0)/rs.length:0;return out({summary:{todayRevenue:todayBs.filter((b:any)=>b.status==="completed").reduce((n:any,b:any)=>n+Number(b.total_amount??b.amount??0),0),pendingBookings:bs.filter((b:any)=>["pending","assigned","in_progress","job_started"].includes(b.status)).length,cancelledJobs:bs.filter((b:any)=>b.status==="cancelled").length,availableTechnicians:ts.filter((t:any)=>t.status==="active"&&!t.wallet_locked).length,inactiveCustomers:Math.max(0,cs.length-active.size),totalCustomers:cs.length,totalTechnicians:ts.length,newBookingsToday:todayBs.length,completedJobsToday:bs.filter((b:any)=>b.status==="completed"&&b.job_completed_at?.startsWith(today)).length,avgRating:Math.round(avg*10)/10}});}
 case "analytics_revenue":{const days=Math.min(90,Math.max(1,Number(b.days)||30));const {data:bookings,error}=await db.from("bookings").select("total_amount,amount,status,created_at").order("created_at",{ascending:true}).limit(2000);if(error)return out({error:"Unable to load analytics"},500);const cutoff=Date.now()-days*86400000;const map=new Map<string,{revenue:number;bookings:number}>();for(const x of (bookings||[]) as any[]){if(new Date(x.created_at).getTime()<cutoff)continue;const date=x.created_at.split("T")[0];const v=map.get(date)||{revenue:0,bookings:0};v.bookings++;if(x.status==="completed")v.revenue+=Number(x.total_amount??x.amount??0);map.set(date,v)}return out({revenueData:Array.from(map.entries()).map(([date,v])=>({date,...v}))});}
 case "analytics_service_revenue":{const {data,error}=await db.from("bookings").select("service_category,total_amount,amount,status").eq("status","completed");if(error)return out({error:"Unable to load service analytics"},500);const map=new Map<string,{revenue:number;count:number}>();for(const x of (data||[]) as any[]){const service=String(x.service_category||"Unknown");const v=map.get(service)||{revenue:0,count:0};v.revenue+=Number(x.total_amount??x.amount??0);v.count++;map.set(service,v)}return out({data:Array.from(map.entries()).map(([service,v])=>({service,revenue:Math.round(v.revenue*100)/100,count:v.count})).sort((a,b)=>b.revenue-a.revenue)});}
 case "analytics_city_revenue":{const {data,error}=await db.from("bookings").select("city,total_amount,amount,status").eq("status","completed");if(error)return out({error:"Unable to load city analytics"},500);const map=new Map<string,{revenue:number;count:number}>();for(const x of (data||[]) as any[]){const city=String(x.city||"Unknown");const v=map.get(city)||{revenue:0,count:0};v.revenue+=Number(x.total_amount??x.amount??0);v.count++;map.set(city,v)}return out({data:Array.from(map.entries()).map(([city,v])=>({city,revenue:Math.round(v.revenue*100)/100,count:v.count})).sort((a,b)=>b.revenue-a.revenue)});}
-case "analytics_technician_performance":{const [{data:techs,error:te},{data:bookings,error:be}]=await Promise.all([db.from("technicians").select("*"),db.from("bookings").select("assigned_technician_id,base_price,commission_amount,call_rate_fee,status")]);if(te||be)return out({error:"Unable to load technician analytics"},500);const stats=new Map<string,{completedJobs:number;earnings:number}>();for(const x of (bookings||[]) as any[]){if(x.status!=="completed"||!x.assigned_technician_id)continue;const id=String(x.assigned_technician_id);const v=stats.get(id)||{completedJobs:0,earnings:0};v.completedJobs++;const base=Number(x.base_price)||0;const commission=Number(x.commission_amount)||0;const callRate=Number(x.call_rate_fee)||0;v.earnings+=Math.round((base-commission-callRate)*100)/100;stats.set(id,v)}const data=(techs||[]).map((technician:any)=>{const v=stats.get(String(technician.id))||{completedJobs:0,earnings:0};return {technician,completedJobs:v.completedJobs,earnings:Math.round(v.earnings*100)/100,rating:Number(technician.rating||0)}}).sort((a,b)=>b.completedJobs-a.completedJobs||b.earnings-a.earnings);return out({data});}
+case "analytics_technician_performance":{const [{data:techs,error:te},{data:bookings,error:be}]=await Promise.all([db.from("technicians").select("*"),db.from("bookings").select("assigned_technician_id,total_amount,amount,status")]);if(te||be)return out({error:"Unable to load technician analytics"},500);const stats=new Map<string,{completedJobs:number;earnings:number}>();for(const x of (bookings||[]) as any[]){if(x.status!=="completed"||!x.assigned_technician_id)continue;const id=String(x.assigned_technician_id);const v=stats.get(id)||{completedJobs:0,earnings:0};v.completedJobs++;v.earnings+=Number(x.total_amount??x.amount??0);stats.set(id,v)}const data=(techs||[]).map((technician:any)=>{const v=stats.get(String(technician.id))||{completedJobs:0,earnings:0};return {technician,completedJobs:v.completedJobs,earnings:Math.round(v.earnings*100)/100,rating:Number(technician.rating||0)}}).sort((a,b)=>b.completedJobs-a.completedJobs||b.earnings-a.earnings);return out({data});}
 case "bookings":{const {data,error}=await db.from("bookings").select("*").order("created_at",{ascending:false});if(error)return out({error:"Unable to load bookings"},500);return out({bookings:data||[]});}
 case "technicians":{const {data,error}=await db.from("technicians").select("*").order("created_at",{ascending:false});if(error)return out({error:"Unable to load technicians"},500);return out({technicians:data||[]});}
 case "customers":{const {data,error}=await db.from("customers").select("*").order("created_at",{ascending:false});if(error)return out({error:"Unable to load customers"},500);return out({customers:data||[]});}
-case "booking_status":{
-const allowed=["pending","confirmed","assigned","accepted","on_the_way","in_progress","job_started","job_completed","completed","cancelled"];
-const requested=String(b.status||"");
-const bookingId=String(b.booking_id||"");
-if(!bookingId||!allowed.includes(requested))return out({error:"Booking and valid status are required"},400);
-const {data:current,error:readError}=await db.from("bookings").select("id,status").eq("id",bookingId).maybeSingle();
-if(readError||!current)return out({error:"Booking not found"},404);
-if(requested==="job_completed"||requested==="completed"){
-if(requested==="completed"&&current.status!=="job_completed")return out({error:"A booking can only be completed after the technician marks the job completed"},409);
-const {data:job,error:jobError}=await db.from("technician_jobs").select("id,status").eq("booking_id",bookingId).eq("status","job_completed").maybeSingle();
-if(jobError||!job)return out({error:"The technician job must be marked job_completed before an admin can set this booking to job_completed or completed"},409);
-}
-if(current.status==="completed"||current.status==="cancelled")return out({error:"Completed or cancelled bookings cannot be transitioned again"},409);
-if(requested===current.status)return out({error:"Booking already has this status"},409);
-const {data,error}=await db.from("bookings").update({status:requested,updated_at:new Date().toISOString()}).eq("id",bookingId).eq("status",current.status).select("*").maybeSingle();
-if(error)return out({error:"Unable to update booking"},400);
-if(!data)return out({error:"Booking status changed concurrently. Refresh and retry."},409);
-return out({booking:data});}
-case "assign":{if(!b.booking_id||!b.technician_id)return out({error:"Booking and technician are required"},400);const {data:bookingCheck,error:bookingCheckError}=await db.from("bookings").select("*").eq("id",b.booking_id).maybeSingle();if(bookingCheckError||!bookingCheck)return out({error:"Booking not found"},404);if(!["pending","confirmed"].includes(String(bookingCheck.status))||bookingCheck.assigned_technician_id)return out({error:"Booking is already assigned or not assignable"},409);const {data:technician,error:technicianError}=await db.from("technicians").select("id,city,status,wallet_locked,service_categories").eq("id",b.technician_id).maybeSingle();if(technicianError||!technician)return out({error:"Technician not found"},404);if(technician.status!=="active")return out({error:"Only active technicians can be assigned"},409);if(technician.wallet_locked===true)return out({error:"Technician wallet is locked"},409);const normalize=(value:unknown)=>String(value??"").trim().toLowerCase().replace(/\s+/g," ");if(normalize(technician.city)!==normalize(bookingCheck.city))return out({error:"Technician is not available in the booking city"},409);const aliases:Record<string,string[]>={"ac service":["ac service","ac technician","ac repair","air conditioner service"],"washing machine":["washing machine","washing machine repair","washing machine technician","home appliance repair"],"refrigerator":["refrigerator","refrigerator repair","fridge","home appliance repair"]};const requested=normalize(bookingCheck.service_category);const accepted=aliases[requested]??[requested];if(!(technician.service_categories??[]).some((category:string)=>accepted.includes(normalize(category))))return out({error:"Technician does not support this service category"},409);const {data:busyJobs,error:busyJobsError}=await db.from("technician_jobs").select("id").eq("technician_id",b.technician_id).in("status",["assigned","accepted","on_the_way","in_progress","job_started"]).limit(1);if(busyJobsError)return out({error:"Unable to verify technician workload"},500);if((busyJobs||[]).length>0)return out({error:"Technician already has an active job"},409);const {data:booking,error:be}=await db.from("bookings").update({assigned_technician_id:b.technician_id,status:"assigned",updated_at:new Date().toISOString()}).eq("id",b.booking_id).in("status",["pending","confirmed"]).is("assigned_technician_id",null).select("*").maybeSingle();if(be)return out({error:"Unable to assign booking"},400);if(!booking)return out({error:"Booking was assigned by another request or is no longer assignable"},409);const {data:job,error:je}=await db.from("technician_jobs").insert({booking_id:b.booking_id,technician_id:b.technician_id,status:"assigned",job_amount:Number(booking.base_price??0),call_rate_fee:Number(booking.call_rate_fee)||0,service_type:booking.service_type||null}).select().single();if(je){await db.from("bookings").update({assigned_technician_id:null,status:"pending",updated_at:new Date().toISOString()}).eq("id",b.booking_id).eq("assigned_technician_id",b.technician_id);return out({error:"Unable to create technician job"},400);}return out({booking,job});}
-case "technician_status":{if(!["active","inactive","rejected","suspended"].includes(String(b.status)))return out({error:"Invalid technician status"},400);const update:any={status:b.status};if(["rejected","inactive"].includes(b.status))update.rejection_reason=b.reason||null;if(b.status==="suspended")update.suspend_reason=b.reason||null;if(b.status==="active"){update.rejection_reason=null;update.suspend_reason=null;}const {data,error}=await db.from("technicians").update(update).eq("id",b.technician_id).select("*").single();if(error)return out({error:"Unable to update technician"},400);return out({technician:data});}
-case "recharge_status":{if(!["approved","rejected"].includes(String(b.status)))return out({error:"Invalid recharge status"},400);const update:any={status:b.status,approved_at:new Date().toISOString(),approved_by:String(b.admin_id)};if(b.status==="rejected")update.admin_notes=b.reason||null;const {data,error}=await db.from("wallet_recharges").update(update).eq("id",b.recharge_id).eq("status","pending").select("*").single();if(error)return out({error:"Unable to update recharge"},400);return out({recharge:data});}
+case "booking_status":{const allowed=["pending","confirmed","assigned","accepted","on_the_way","in_progress","job_started","job_completed","completed","cancelled"];if(!allowed.includes(String(b.status)))return out({error:"Invalid booking status"},400);const {data,error}=await db.from("bookings").update({status:b.status,updated_at:new Date().toISOString()}).eq("id",b.booking_id).select("*").single();if(error)return out({error:"Unable to update booking"},400);return out({booking:data});}
+case "assign":{if(!b.booking_id||!b.technician_id)return out({error:"Booking and technician are required"},400);const {data,error}=await db.rpc("assign_technician_job_atomic",{p_booking_id:b.booking_id,p_technician_id:b.technician_id});if(error||!data?.booking||!data?.job){const message=String(error?.message??"");if(message.includes("BOOKING_NOT_FOUND")||message.includes("TECHNICIAN_NOT_FOUND"))return out({error:"Booking or technician not found"},404);if(message.includes("BOOKING_NOT_ASSIGNABLE"))return out({error:"Booking is already assigned or not assignable"},409);if(message.includes("TECHNICIAN_NOT_ELIGIBLE"))return out({error:"Technician is not eligible for this booking"},409);if(message.includes("TECHNICIAN_ALREADY_BUSY"))return out({error:"Technician already has an active job"},409);return out({error:"Unable to atomically assign technician"},500);}return out({booking:data.booking,job:data.job});}
+case "technician_status":{if(!["active","inactive","rejected","suspended"].includes(String(b.status)))return out({error:"Invalid technician status"},400);const update:any={status:b.status};if(["rejected","inactive"].includes(b.status))update.rejection_reason=b.reason||null;if(b.status==="suspended")update.suspend_reason=b.reason||null;if(b.status==="active"){update.rejection_reason=null;update.suspend_reason=null;const {error:revokeError}=await db.from("technician_auth_sessions").delete().eq("technician_id",b.technician_id);if(revokeError)return out({error:"Unable to revoke old technician sessions; account remains inactive"},500);}const {data,error}=await db.from("technicians").update(update).eq("id",b.technician_id).select("*").single();if(error)return out({error:"Unable to update technician"},400);if(b.status!=="active"){const {error:revokeError}=await db.from("technician_auth_sessions").delete().eq("technician_id",b.technician_id);if(revokeError)return out({error:"Technician status changed but session revocation failed; account access remains blocked"},500);}return out({technician:data});}
+case "recharge_status":{if(!["approved","rejected"].includes(String(b.status)))return out({error:"Invalid recharge status"},400);const update:any={status:b.status,approved_at:new Date().toISOString(),approved_by:String(b.admin_id)};if(b.status==="rejected")update.admin_notes=b.reason||null;const {data,error}=await db.from("wallet_recharges").update(update).eq("id",b.recharge_id).select("*").single();if(error)return out({error:"Unable to update recharge"},400);return out({recharge:data});}
 case "wallet_transactions":{const {data,error}=await db.from("wallet_transactions").select("*").order("created_at",{ascending:false}).limit(100);if(error)return out({error:"Unable to load wallet transactions"},500);return out({transactions:data||[]});}
 case "recharges":{const {data,error}=await db.from("wallet_recharges").select("*, technician:technicians(full_name)").order("created_at",{ascending:false}).limit(50);if(error)return out({error:"Unable to load recharge requests"},500);return out({recharges:data||[]});}
 case "payments":{const {data,error}=await db.from("payments").select("*").order("created_at",{ascending:false});if(error)return out({error:"Unable to load payments"},500);return out({payments:data||[]});}
@@ -62,125 +25,8 @@ case "notifications":{const {data,error}=await db.from("notifications").select("
 case "notification_read":{const {data,error}=await db.from("notifications").update({is_read:true,read_at:new Date().toISOString(),status:"read"}).eq("id",b.notification_id).eq("recipient_type","admin").eq("recipient_id","admin").select("*").single();if(error)return out({error:"Unable to update notification"},400);return out({notification:data});}
 case "notifications_read_all":{const {error}=await db.from("notifications").update({is_read:true,read_at:new Date().toISOString(),status:"read"}).eq("recipient_type","admin").eq("recipient_id","admin").eq("is_read",false);if(error)return out({error:"Unable to update notifications"},400);return out({success:true});}
 case "notification_delete":{const {error}=await db.from("notifications").delete().eq("id",b.notification_id).eq("recipient_type","admin").eq("recipient_id","admin");if(error)return out({error:"Unable to delete notification"},400);return out({success:true});}
-case "technician_call_rates":{
-const {data,error}=await db.from("technician_call_rates").select("id,service_category,service_type,call_rate_fee,is_active,updated_at").order("service_category").order("service_type");
-if(error)return out({error:"Unable to load technician call-rate fees"},500);
-return out({rates:data||[]});
-}
-case "save_technician_call_rates":{
-const updates=Array.isArray(b.updates)?b.updates:[];
-if(updates.length>100)return out({error:"Too many technician fee updates"},400);
-const allowedTypes:Record<string,string[]>={
-"AC Service":["General Service","Installation","Gas Filling","Pump Water Service","Coil Service"],
-"AC Repair":["General Service","Installation","Gas Filling","Pump Water Service","Coil Service"],
-"Washing Machine":["Washing Machine Service"],
-"Washing Machine Repair":["Washing Machine Service"],
-"Refrigerator":["Refrigerator Service"],
-"Refrigerator Repair":["Refrigerator Service"]
-};
-for(const u of updates){
-const fee=Number(u?.call_rate_fee);
-if(!u?.id||!Number.isFinite(fee)||fee<0||typeof u.is_active!=="boolean")
-return out({error:"Invalid technician call-rate fee"},400);
-const {data:current,error:lookupError}=await db.from("technician_call_rates").select("id,service_category,service_type").eq("id",String(u.id)).maybeSingle();
-if(lookupError||!current)return out({error:"Technician call-rate row not found"},404);
-if(!allowedTypes[String(current.service_category)]?.includes(String(current.service_type)))
-return out({error:"This technician job type is not supported"},400);
-const {error}=await db.from("technician_call_rates").update({
-call_rate_fee:fee,
-is_active:u.is_active,
-updated_at:new Date().toISOString()
-}).eq("id",String(u.id));
-if(error)return out({error:"Unable to save technician call-rate fee"},400);
-}
-return out({success:true});
-}
-case "customer_service_prices":{
-const {data,error}=await db.from("customer_service_prices").select("id,service_category,service_type,base_price,price_label,is_active,updated_at").order("service_category").order("service_type");
-if(error)return out({error:"Unable to load customer job prices"},500);
-return out({prices:data||[]});
-}
-case "initialize_customer_service_prices":{
-const defaults=[
-{service_category:"AC Service",service_type:"General Service",base_price:499,price_label:"AC general service",is_active:true},
-{service_category:"AC Service",service_type:"Installation",base_price:1499,price_label:"AC installation",is_active:true},
-{service_category:"AC Service",service_type:"Gas Filling",base_price:1999,price_label:"AC gas filling",is_active:true},
-{service_category:"AC Service",service_type:"Pump Water Service",base_price:499,price_label:"AC pump water service",is_active:true},
-{service_category:"AC Service",service_type:"Coil Service",base_price:1499,price_label:"AC coil service",is_active:true},
-{service_category:"AC Repair",service_type:"General Service",base_price:499,price_label:"AC general service",is_active:true},
-{service_category:"AC Repair",service_type:"Installation",base_price:1499,price_label:"AC installation",is_active:true},
-{service_category:"AC Repair",service_type:"Gas Filling",base_price:1999,price_label:"AC gas filling",is_active:true},
-{service_category:"AC Repair",service_type:"Pump Water Service",base_price:499,price_label:"AC pump water service",is_active:true},
-{service_category:"AC Repair",service_type:"Coil Service",base_price:1499,price_label:"AC coil service",is_active:true},
-{service_category:"Washing Machine",service_type:"Washing Machine Service",base_price:399,price_label:"Washing machine service",is_active:true},
-{service_category:"Washing Machine Repair",service_type:"Washing Machine Service",base_price:399,price_label:"Washing machine service",is_active:true},
-{service_category:"Refrigerator",service_type:"Refrigerator Service",base_price:399,price_label:"Refrigerator service",is_active:true},
-{service_category:"Refrigerator Repair",service_type:"Refrigerator Service",base_price:399,price_label:"Refrigerator service",is_active:true}
-];
-const {error}=await db.from("customer_service_prices").upsert(defaults,{onConflict:"service_category,service_type",ignoreDuplicates:true});
-if(error)return out({error:"Unable to initialize customer price catalogue"},400);
-const feeDefaults=[
-{service_name:"AC Service",base_price:499,gst_rate:18,platform_fee:30,commission_rate:0,call_rate_fee:49,is_active:true},
-{service_name:"AC Repair",base_price:499,gst_rate:18,platform_fee:30,commission_rate:0,call_rate_fee:49,is_active:true},
-{service_name:"Washing Machine",base_price:399,gst_rate:18,platform_fee:30,commission_rate:0,call_rate_fee:39,is_active:true},
-{service_name:"Washing Machine Repair",base_price:399,gst_rate:18,platform_fee:30,commission_rate:0,call_rate_fee:39,is_active:true},
-{service_name:"Refrigerator",base_price:399,gst_rate:18,platform_fee:30,commission_rate:0,call_rate_fee:39,is_active:true},
-{service_name:"Refrigerator Repair",base_price:399,gst_rate:18,platform_fee:30,commission_rate:0,call_rate_fee:39,is_active:true}
-];
-const {error:feeError}=await db.from("service_prices").upsert(feeDefaults,{onConflict:"service_name",ignoreDuplicates:true});
-if(feeError)return out({error:"Customer prices were restored, but checkout fee settings could not be initialized. Contact support before publishing."},400);
-const callRateDefaults=[
-{service_category:"AC Service",service_type:"General Service",call_rate_fee:150,is_active:true},
-{service_category:"AC Service",service_type:"Installation",call_rate_fee:500,is_active:true},
-{service_category:"AC Service",service_type:"Gas Filling",call_rate_fee:500,is_active:true},
-{service_category:"AC Service",service_type:"Pump Water Service",call_rate_fee:500,is_active:true},
-{service_category:"AC Service",service_type:"Coil Service",call_rate_fee:800,is_active:true},
-{service_category:"AC Repair",service_type:"General Service",call_rate_fee:150,is_active:true},
-{service_category:"AC Repair",service_type:"Installation",call_rate_fee:500,is_active:true},
-{service_category:"AC Repair",service_type:"Gas Filling",call_rate_fee:500,is_active:true},
-{service_category:"AC Repair",service_type:"Pump Water Service",call_rate_fee:500,is_active:true},
-{service_category:"AC Repair",service_type:"Coil Service",call_rate_fee:800,is_active:true},
-{service_category:"Washing Machine",service_type:"Washing Machine Service",call_rate_fee:200,is_active:true},
-{service_category:"Washing Machine Repair",service_type:"Washing Machine Service",call_rate_fee:200,is_active:true},
-{service_category:"Refrigerator",service_type:"Refrigerator Service",call_rate_fee:200,is_active:true},
-{service_category:"Refrigerator Repair",service_type:"Refrigerator Service",call_rate_fee:200,is_active:true}
-];
-const {error:callRateError}=await db.from("technician_call_rates").upsert(callRateDefaults,{onConflict:"service_category,service_type",ignoreDuplicates:true});
-if(callRateError)return out({error:"Customer prices and checkout fees were restored, but technician call rates could not be initialized. Contact support before accepting bookings."},400);
-return out({success:true,customer_price_rows:defaults.length,checkout_fee_rows:feeDefaults.length,technician_call_rate_rows:callRateDefaults.length,insert_missing_only:true});
-}
-case "save_customer_service_prices":{
-const updates=Array.isArray(b.updates)?b.updates:[];
-if(updates.length>100)return out({error:"Too many customer price updates"},400);
-const allowedTypes:Record<string,string[]>={
-"AC Service":["General Service","Installation","Gas Filling","Pump Water Service","Coil Service"],
-"AC Repair":["General Service","Installation","Gas Filling","Pump Water Service","Coil Service"],
-"Washing Machine":["Washing Machine Service"],
-"Washing Machine Repair":["Washing Machine Service"],
-"Refrigerator":["Refrigerator Service"],
-"Refrigerator Repair":["Refrigerator Service"]
-};
-for(const u of updates){
-const basePrice=Number(u?.base_price);
-const priceLabel=String(u?.price_label??"").trim();
-if(!u?.id||!Number.isFinite(basePrice)||basePrice<0||typeof u.is_active!=="boolean"||!priceLabel||priceLabel.length>120)
-return out({error:"Invalid customer job price"},400);
-const {data:current,error:lookupError}=await db.from("customer_service_prices").select("id,service_category,service_type").eq("id",String(u.id)).maybeSingle();
-if(lookupError||!current)return out({error:"Customer job price not found"},404);
-if(!allowedTypes[String(current.service_category)]?.includes(String(current.service_type)))
-return out({error:"This customer job type is not supported"},400);
-const {error}=await db.from("customer_service_prices").update({
-base_price:basePrice,
-price_label:priceLabel,
-is_active:u.is_active,
-updated_at:new Date().toISOString()
-}).eq("id",String(u.id));
-if(error)return out({error:"Unable to save customer job price"},400);
-}
-return out({success:true});
-}
 case "service_prices":{const {data,error}=await db.from("service_prices").select("*").order("service_name");if(error)return out({error:"Unable to load service prices"},500);return out({prices:data||[]});}
-case "save_service_prices":{const updates=Array.isArray(b.updates)?b.updates:[];if(updates.length>200)return out({error:"Too many price updates"},400);for(const u of updates){const basePrice=Number(u?.base_price);const gstRate=Number(u?.gst_rate);const platformFee=Number(u?.platform_fee);const callRateFee=Number(u?.call_rate_fee);if(!u?.id||![basePrice,gstRate,platformFee,callRateFee].every(Number.isFinite)||basePrice<0||gstRate<0||gstRate>100||platformFee<0||callRateFee<0||typeof u.is_active!=="boolean")return out({error:"Invalid service price"},400);const {data:current,error:lookupError}=await db.from("service_prices").select("service_name").eq("id",String(u.id)).maybeSingle();if(lookupError||!current)return out({error:"Service price not found"},404);const appliance=["AC Repair","AC Service","Washing Machine","Washing Machine Repair","Refrigerator","Refrigerator Repair"].includes(String(current.service_name));if(u.is_active&&!appliance)return out({error:"Only AC, washing machine, and refrigerator services can be active"},400);const {error}=await db.from("service_prices").update({base_price:basePrice,gst_rate:gstRate,platform_fee:platformFee,commission_rate:0,call_rate_fee:callRateFee,is_active:u.is_active,updated_at:new Date().toISOString()}).eq("id",String(u.id));if(error)return out({error:"Unable to save service prices"},400);}return out({success:true});}
+case "save_service_prices":{const updates=Array.isArray(b.updates)?b.updates:[];if(updates.length>200)return out({error:"Too many price updates"},400);for(const u of updates){if(!u?.id||Number(u.base_price)<0||Number(u.gst_rate)<0||Number(u.platform_fee)<0||!Number.isFinite(Number(u.call_rate_fee))||Number(u.call_rate_fee)<0)return out({error:"Invalid service price"},400);const {data:current,error:lookupError}=await db.from("service_prices").select("service_name").eq("id",String(u.id)).maybeSingle();if(lookupError||!current)return out({error:"Service price not found"},404);const appliance=["AC Repair","AC Service","Washing Machine","Washing Machine Repair","Refrigerator","Refrigerator Repair"].includes(String(current.service_name));if(Boolean(u.is_active)&&!appliance)return out({error:"Only AC, washing machine, and refrigerator services can be active"},400);const {error}=await db.from("service_prices").update({base_price:Number(u.base_price)||0,gst_rate:Number(u.gst_rate)||0,platform_fee:Number(u.platform_fee)||0,commission_rate:0,call_rate_fee:Number(u.call_rate_fee)||0,is_active:Boolean(u.is_active),updated_at:new Date().toISOString()}).eq("id",String(u.id));if(error)return out({error:"Unable to save service prices"},400);}return out({success:true});}
 case "site_settings":{const {data,error}=await db.from("site_settings").select("*").eq("id",1).maybeSingle();if(error)return out({error:"Unable to load site settings"},500);return out({settings:data||null});}
 case "save_site_settings":{const input=b.input||{};const urlFields=["google_business_url","facebook_url","instagram_url","twitter_url","youtube_url","website_url"];for(const key of urlFields){const value=String(input[key]||"").trim();if(value){try{const u=new URL(value);if(!["http:","https:"].includes(u.protocol))return out({error:"Invalid site URL"},400);}catch{return out({error:"Invalid site URL"},400);}}}const wa=String(input.whatsapp_number||"").replace(/\D/g,"");if(wa&& (wa.length<10||wa.length>15))return out({error:"Invalid WhatsApp number"},400);const payload={id:1,google_business_url:String(input.google_business_url||"").trim()||null,facebook_url:String(input.facebook_url||"").trim()||null,instagram_url:String(input.instagram_url||"").trim()||null,twitter_url:String(input.twitter_url||"").trim()||null,youtube_url:String(input.youtube_url||"").trim()||null,whatsapp_number:String(input.whatsapp_number||"").trim()||null,website_url:String(input.website_url||"").trim()||null,updated_at:new Date().toISOString(),updated_by:String(b.admin_id)};const {error}=await db.from("site_settings").upsert(payload,{onConflict:"id"});if(error)return out({error:"Unable to save site settings"},400);return out({success:true});}
 case "ai_content_drafts_list":{const limit=Math.min(100,Math.max(1,Number(b.limit)||50));let query=db.from("ai_content_drafts").select("*").order("created_at",{ascending:false}).limit(limit);if(b.content_type)query=query.eq("content_type",String(b.content_type).slice(0,80));const {data,error}=await query;if(error)return out({error:"Unable to load content drafts"},500);return out({drafts:data||[]});}
@@ -189,7 +35,6 @@ case "ai_content_draft_update":{const id=String(b.id||"");const status=String(b.
 case "crm_reminders_list":{const limit=Math.min(250,Math.max(1,Number(b.limit)||100));let query=db.from("crm_reminders").select("*").order(b.status==="pending"?"scheduled_for":"created_at",{ascending:b.status==="pending"}).limit(limit);if(["pending","sent","cancelled","failed"].includes(String(b.status)))query=query.eq("status",String(b.status));const {data,error}=await query;if(error)return out({error:"Unable to load CRM reminders"},500);return out({reminders:data||[]});}
 case "crm_reminder_create":{const input=b.input||{};const reminderType=String(input.reminder_type||"");const recipientType=String(input.recipient_type||"");const recipientId=String(input.recipient_id||"").trim();const title=String(input.title||"").trim();const message=String(input.message||"").trim();const scheduledFor=String(input.scheduled_for||"");const allowedTypes=["booking_reminder","review_request","amc_reminder","warranty_reminder","festival_offer","inactive_followup","birthday_greeting","technician_renewal"];if(!allowedTypes.includes(reminderType)||!["customer","technician"].includes(recipientType)||!recipientId||recipientId.length>120||!title||title.length>300||!message||message.length>5000||!Number.isFinite(Date.parse(scheduledFor)))return out({error:"Invalid CRM reminder"},400);const metadata=input.metadata&&typeof input.metadata==="object"&&!Array.isArray(input.metadata)?input.metadata:null;const {data,error}=await db.from("crm_reminders").insert({reminder_type:reminderType,recipient_type:recipientType,recipient_id:recipientId,recipient_name:typeof input.recipient_name==="string"?input.recipient_name.slice(0,200):null,title,message,scheduled_for:new Date(scheduledFor).toISOString(),status:"pending",metadata}).select("*").single();if(error)return out({error:"Unable to create CRM reminder"},400);return out({reminder:data});}
 case "crm_reminder_mark_sent":{const id=String(b.reminder_id||"");if(!id)return out({error:"Reminder ID is required"},400);const {data,error}=await db.from("crm_reminders").update({status:"sent",sent_at:new Date().toISOString()}).eq("id",id).select("*").single();if(error)return out({error:"Unable to mark reminder sent"},400);return out({reminder:data});}
-
 case "marketplace_services_list": {
   const { data, error } = await db.from("marketplace_services").select("*").order("category").order("name");
   if (error) return out({ error: "Unable to load marketplace services" }, 500);
