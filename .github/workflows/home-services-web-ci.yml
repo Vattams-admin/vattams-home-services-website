@@ -2,7 +2,7 @@ name: Home Services Web CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'security/frontend-backend-contract-audit-2026-10-31']
     paths:
       - 'src/**'
       - 'public/**'
