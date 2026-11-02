@@ -235,9 +235,9 @@ export default function CustomerBookings() {
             </div>
 
             {bookings.map((booking) => {
-              const status = booking.status || 'unknown';
+              const status = booking.status;
               const rawAmount = booking.total_amount ?? booking.amount;
-              const parsedAmount = rawAmount == null || rawAmount === '' ? null : Number(rawAmount);
+              const parsedAmount = rawAmount == null || (typeof rawAmount === 'string' && rawAmount.trim() === '') ? null : Number(rawAmount);
               const amount = parsedAmount !== null && Number.isFinite(parsedAmount) && parsedAmount >= 0 ? parsedAmount : null;
               return (
                 <article key={booking.id} className="rounded-2xl border border-[#e8e1d2] bg-white p-5 shadow-sm md:p-6">
@@ -249,7 +249,7 @@ export default function CustomerBookings() {
                       </h2>
                     </div>
                     <span className={'inline-flex rounded-full border px-3 py-1.5 text-xs font-bold ' + (statusClasses[status] ?? 'bg-gray-50 text-gray-700 border-gray-200')}>
-                      {statusLabels[status] ?? (status === 'unknown' ? 'Status unavailable' : status.split('_').join(' '))}
+                      {statusLabels[status] ?? status.split('_').join(' ')}
                     </span>
                   </div>
 
