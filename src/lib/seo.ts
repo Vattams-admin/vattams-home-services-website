@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
 const BASE_URL = 'https://vattams.net';
-const DEFAULT_IMAGE = `${BASE_URL}/icons/icon-512.png`;
+const DEFAULT_IMAGE = `${BASE_URL}/pwa-icon-512.svg`;
 
 export interface SEOConfig {
   title: string;

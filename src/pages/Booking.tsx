@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Loader, CheckCircle, XCircle, Calendar, User, Phone, MapPin, Wrench, FileText, Clock, ArrowRight, LogIn, Receipt, LucideIcon, Tag, Briefcase, Sparkles } from 'lucide-react';
 import { supabase, ServiceCategory, Customer, ServicePrice } from '@/lib/supabase';
 import { useRouter } from '@/lib/router';
@@ -45,6 +45,30 @@ const isFeaturedApplianceService = (name: string) => {
 
 const timeSlots = ['07:00 - 09:00', '09:00 - 11:00', '11:00 - 13:00', '13:00 - 15:00', '15:00 - 17:00', '17:00 - 19:00', '19:00 - 21:00'];
 
+const getIndiaBookingClock = () => {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return {
+    date: `${values.year}-${values.month}-${values.day}`,
+    minutes: Number(values.hour) * 60 + Number(values.minute),
+  };
+};
+
+const isTimeSlotInPastToday = (slot: string, preferredDate: string) => {
+  const clock = getIndiaBookingClock();
+  if (preferredDate !== clock.date) return false;
+  const [hour, minute] = slot.split(' - ')[0].split(':').map(Number);
+  return hour * 60 + minute <= clock.minutes;
+};
+
 export default function Booking() {
   const { navigate } = useRouter();
   const [services, setServices] = useState<ServiceCategory[]>([]);
@@ -52,9 +76,13 @@ export default function Booking() {
   const [customerServicePrices, setCustomerServicePrices] = useState<Record<string, CustomerServicePrice>>({});
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [catalogueRetryCount, setCatalogueRetryCount] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const bookingSubmitInFlight = useRef(false);
+  const [submitError, setSubmitError] = useState('');
   const [couponCode, setCouponCode] = useState('');
   const [couponResult, setCouponResult] = useState<{ valid: boolean; error?: string; discountAmount: number; coupon?: Coupon } | null>(null);
+  const couponValidationRequest = useRef(0);
   const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [success, setSuccess] = useState<{ number: string; id: string } | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
@@ -65,20 +93,49 @@ export default function Booking() {
   });
 
   useEffect(() => {
-    // Pre-fill from customer session
-    const stored = sessionStorage.getItem('vattams_customer');
-    if (stored) {
+    // Pre-fill only from a complete, unexpired customer session.
+    // Invalid saved profile data must not be trusted for a new booking.
+    let stored: string | null = null;
+    let sessionToken: string | null = null;
+    let expiresAt = Number.NaN;
+    const clearCustomerSession = () => {
       try {
-        const c = JSON.parse(stored) as Customer;
+        sessionStorage.removeItem('vattams_customer');
+        sessionStorage.removeItem('vattams_customer_session');
+        sessionStorage.removeItem('vattams_customer_expires');
+      } catch {
+        // Booking can continue as a guest if browser storage is blocked.
+      }
+    };
+    try {
+      stored = sessionStorage.getItem('vattams_customer');
+      sessionToken = sessionStorage.getItem('vattams_customer_session');
+      expiresAt = Number(sessionStorage.getItem('vattams_customer_expires'));
+    } catch {
+      clearCustomerSession();
+    }
+    if (!stored || !sessionToken || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+      clearCustomerSession();
+    } else {
+      try {
+        const parsed = JSON.parse(stored) as Partial<Customer>;
+        if (typeof parsed.id !== 'string' || !parsed.id.trim() ||
+            typeof parsed.full_name !== 'string' || !parsed.full_name.trim() ||
+            typeof parsed.mobile !== 'string' || !/^[6-9]\d{9}$/.test(parsed.mobile)) {
+          throw new Error('Saved customer profile is invalid.');
+        }
+        const c = parsed as Customer;
         setCustomer(c);
         setForm((f) => ({
           ...f,
           customer_name: c.full_name,
           mobile_number: c.mobile,
-          city: c.city || 'Chennai',
-          address: c.address || '',
+          city: typeof c.city === 'string' && c.city.trim() ? c.city : 'Chennai',
+          address: typeof c.address === 'string' ? c.address : '',
         }));
-      } catch { /* ignore */ }
+      } catch {
+        clearCustomerSession();
+      }
     }
 
     let aiDraft: Record<string, unknown> | null = null;
@@ -86,21 +143,56 @@ export default function Booking() {
       const draft = sessionStorage.getItem('vattams_ai_booking_draft');
       if (draft) aiDraft = JSON.parse(draft) as Record<string, unknown>;
     } catch {
-      sessionStorage.removeItem('vattams_ai_booking_draft');
+      try {
+        try {
+          sessionStorage.removeItem('vattams_ai_booking_draft');
+        } catch {
+          // Draft cleanup is best-effort; it must not invalidate the loaded catalogue.
+        }
+      } catch {
+        // The draft was already read defensively; blocked cleanup must not
+        // invalidate a successfully loaded service catalogue.
+      }
     }
 
+    let active = true;
+    setLoading(true);
+    setLoadError('');
     Promise.all([
       supabase.from('service_categories').select('*').order('created_at'),
       supabase.from('service_prices').select('*').eq('is_active', true),
       supabase.from('customer_service_prices').select('*').eq('is_active', true),
     ]).then(([catRes, priceRes, customerPriceRes]) => {
+      if (!active) return;
+
+      // A partial catalogue is unsafe: clear all prior values so a retry failure
+      // cannot leave stale prices or categories available for a new booking.
+      if (catRes.error || !catRes.data || priceRes.error || !priceRes.data
+        || customerPriceRes.error || !customerPriceRes.data) {
+        setServices([]);
+        setServicePrices({});
+        setCustomerServicePrices({});
+        setLoadError(catRes.error || !catRes.data
+          ? 'Unable to load service categories. Please retry before booking.'
+          : 'Unable to load current service prices. Please retry before booking.');
+        setLoading(false);
+        return;
+      }
+
       let featuredServices: ServiceCategory[] = [];
       if (catRes.data) {
         featuredServices = catRes.data
           .filter((service) => isCustomerBookingCategory(service.name))
           .sort((a, b) => customerCategoryOrder.indexOf(a.name) - customerCategoryOrder.indexOf(b.name));
         setServices(featuredServices);
-        if (featuredServices[0]) setForm((f) => ({ ...f, service_category: featuredServices[0].name, service_type: getServiceTypes(featuredServices[0].name)[0] ?? '' }));
+        if (featuredServices[0]) setForm((f) => {
+          const selectedCategoryExists = featuredServices.some((service) => service.name === f.service_category);
+          const serviceCategory = selectedCategoryExists ? f.service_category : featuredServices[0].name;
+          const allowedTypes = getServiceTypes(serviceCategory);
+          const serviceType = allowedTypes.includes(f.service_type) ? f.service_type : (allowedTypes[0] ?? '');
+          return { ...f, service_category: serviceCategory, service_type: serviceType };
+        });
+        else setForm((f) => ({ ...f, service_category: '', service_type: '' }));
       }
 
       if (aiDraft) {
@@ -156,11 +248,19 @@ export default function Booking() {
       }
       setLoading(false);
     }).catch((error) => {
+      if (!active) return;
       console.error('[Booking] service/pricing load failed:', error);
+      // Promise.all can reject before individual results are available. Clear
+      // previous catalogue state here too, so a network exception cannot leave
+      // old prices selectable after a failed retry.
+      setServices([]);
+      setServicePrices({});
+      setCustomerServicePrices({});
       setLoadError('Service information could not be loaded. Check your connection and try again.');
       setLoading(false);
     });
-  }, []);
+    return () => { active = false; };
+  }, [catalogueRetryCount]);
 
   const selectedService = services.find((s) => s.name === form.service_category);
   const serviceTypes = getServiceTypes(form.service_category);
@@ -171,24 +271,66 @@ export default function Booking() {
       .map((type) => customerServicePrices[getCustomerPriceKey(category, type)])
       .filter((price): price is CustomerServicePrice => Boolean(price))
       .map((price) => Number(price.base_price))
-      .filter((price) => Number.isFinite(price) && price >= 0);
+      .filter((price) => Number.isFinite(price) && price > 0);
     return prices.length ? Math.min(...prices) : null;
   };
   const discount = couponResult?.valid ? couponResult.discountAmount : 0;
-  const pricing: PricingBreakdown | null = servicePrice && customerServicePrice
-    ? calculatePricing(Number(customerServicePrice.base_price), servicePrice.gst_rate ?? 18, servicePrice.platform_fee, servicePrice.commission_rate ?? 0, discount)
+  const customerBasePrice = Number(customerServicePrice?.base_price);
+  const gstRate = Number(servicePrice?.gst_rate);
+  const platformFee = Number(servicePrice?.platform_fee);
+  const commissionRate = Number(servicePrice?.commission_rate);
+  const pricingConfigValid = Boolean(servicePrice && customerServicePrice)
+    && Number.isFinite(customerBasePrice) && customerBasePrice > 0
+    && Number.isFinite(gstRate) && gstRate >= 0 && gstRate <= 100
+    && Number.isFinite(platformFee) && platformFee >= 0
+    && Number.isFinite(commissionRate) && commissionRate >= 0 && commissionRate <= 100;
+
+  // Keep the preview aligned with booking-ops: invalid configuration should
+  // appear unavailable, not silently turn malformed database values into zero.
+  const pricing: PricingBreakdown | null = pricingConfigValid
+    ? calculatePricing(
+      Math.round(customerBasePrice * 100) / 100,
+      gstRate,
+      Math.round(platformFee * 100) / 100,
+      commissionRate,
+      discount,
+    )
     : null;
 
   const handleValidateCoupon = async () => {
-    if (!couponCode.trim() || !pricing) return;
+    if (!couponCode.trim() || !pricing || validatingCoupon) return;
+    const requestId = ++couponValidationRequest.current;
+    const codeToValidate = couponCode.trim();
+    const amountToValidate = pricing.totalAmount;
     setValidatingCoupon(true);
-    const result = await validateCoupon(couponCode.trim(), pricing.totalAmount);
-    setCouponResult(result);
-    setValidatingCoupon(false);
+    try {
+      const result = await validateCoupon(codeToValidate, amountToValidate);
+      // Ignore stale responses if the selected service, price, or coupon changed.
+      if (requestId === couponValidationRequest.current
+        && codeToValidate === couponCode.trim()
+        && amountToValidate === pricing?.totalAmount) {
+        setCouponResult(result);
+      }
+    } catch (error) {
+      console.error('[Booking] coupon validation failed:', error);
+      if (requestId === couponValidationRequest.current) {
+        setCouponResult({
+          valid: false,
+          error: 'We couldn’t verify this coupon right now. Please try again.',
+          discountAmount: 0,
+        });
+      }
+    } finally {
+      if (requestId === couponValidationRequest.current) setValidatingCoupon(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // A ref lock closes the tiny gap before React commits the submitting state,
+    // preventing rapid double-clicks from issuing two create_booking requests.
+    if (bookingSubmitInFlight.current || submitting) return;
+    setSubmitError('');
     if (!isFeaturedApplianceService(form.service_category)) {
       alert('Please select AC, washing machine, or refrigerator service.');
       return;
@@ -201,12 +343,54 @@ export default function Booking() {
       alert('Pricing is not available for this service yet. Please choose another service or contact VATTAMS.');
       return;
     }
+    const bookingClock = getIndiaBookingClock();
+    if (form.preferred_date) {
+      const dateParts = /^([0-9]{4})-([0-9]{2})-([0-9]{2})$/.exec(form.preferred_date);
+      const parsedDate = new Date(`${form.preferred_date}T00:00:00Z`);
+      if (!dateParts || Number.isNaN(parsedDate.getTime())
+        || parsedDate.toISOString().slice(0, 10) !== form.preferred_date) {
+        setSubmitError('Please choose a valid appointment date.');
+        return;
+      }
+    }
+    if (form.preferred_time && !timeSlots.includes(form.preferred_time)) {
+      setSubmitError('Please choose one of the available appointment time slots.');
+      return;
+    }
+    if (form.preferred_date && form.preferred_date < bookingClock.date) {
+      setSubmitError('The preferred date has already passed. Please choose today or a future date.');
+      return;
+    }
+    if (form.preferred_date === bookingClock.date
+      && form.preferred_time
+      && isTimeSlotInPastToday(form.preferred_time, form.preferred_date)) {
+      setSubmitError('That time slot has already started or passed. Please choose a later appointment time.');
+      return;
+    }
+    // Do not submit while coupon validation is unresolved: otherwise a fast
+    // submit could race the validation response and use a stale coupon state.
+    if (validatingCoupon) {
+      setSubmitError('Please wait for coupon verification to finish before submitting your booking.');
+      return;
+    }
+    if (couponCode.trim() && !couponResult?.valid) {
+      setSubmitError('You entered a coupon code that has not been successfully applied. Apply the coupon again or clear the coupon field before booking.');
+      return;
+    }
+    bookingSubmitInFlight.current = true;
     trackMarketingEvent('booking_request_attempt', { service_category: form.service_category, service_type: form.service_type });
     setSubmitting(true);
+    try {
     const { data, error } = await supabase.functions.invoke('booking-ops', {
       body: {
         action: 'create_booking',
-        customer_session_token: sessionStorage.getItem('vattams_customer_session') || undefined,
+        customer_session_token: (() => {
+          try {
+            return sessionStorage.getItem('vattams_customer_session') || undefined;
+          } catch {
+            return undefined;
+          }
+        })(),
         booking: {customer_name: form.customer_name,
         mobile_number: form.mobile_number,
         city: form.city,
@@ -223,7 +407,7 @@ export default function Booking() {
         commission_amount: pricing?.commissionAmount ?? 0,
         total_amount: pricing?.finalAmount ?? pricing?.totalAmount ?? 0,
         coupon_code: couponResult?.valid ? couponResult.coupon?.code ?? null : null,
-        discount_amount: couponResult?.valid ? couponResult.discountAmount : 0,
+        discount_amount: couponResult?.valid ? pricing.discountAmount : 0,
         customer_id: customer?.id || null,
         status: 'pending',}
       }
@@ -232,25 +416,42 @@ export default function Booking() {
       error: response.error || (!response.data?.data ? new Error('Booking failed') : null),
     }));
 
-    setSubmitting(false);
-    if (error) {
-      alert('Booking failed. Please try again or call us.');
+    // Only show the confirmation screen when the server returns usable booking
+    // identifiers. Normalize them once so notifications and assignment use the
+    // same values that the customer sees; never invent a booking number locally.
+    const bookingId = typeof data?.id === 'string' ? data.id.trim() : '';
+    const bookingNumber = typeof data?.booking_number === 'string' ? data.booking_number.trim() : '';
+    if (error || !bookingId || !bookingNumber) {
+      setSubmitError('We couldn’t confirm that your booking was created. Please check with VATTAMS support before submitting again.');
       return;
     }
     trackMarketingEvent('generate_lead', { service_category: form.service_category, service_type: form.service_type });
-    setSuccess({ number: data.booking_number, id: data.id });
+    setSuccess({ number: bookingNumber, id: bookingId });
 
     // Notification delivery must not block technician assignment if the SMS/WhatsApp
     // provider fails or is temporarily unavailable.
-    void notifyCustomer.bookingReceived(form.mobile_number, data.booking_number, data.id, data.booking_action_token)
+    void notifyCustomer.bookingReceived(form.mobile_number, bookingNumber, bookingId, data.booking_action_token)
       .catch((notificationError) => console.error('[Booking] booking-received notification failed:', notificationError));
 
     // Automatically find and assign the best matching technician (no manual
     // accept needed). If none are eligible, the booking simply stays
     // pending and can still be picked up manually as a fallback.
     void supabase.functions.invoke('booking-ops', {
-      body: { action: 'auto_assign', booking_id: data.id, booking_action_token: data.booking_action_token },
+      body: { action: 'auto_assign', booking_id: bookingId, booking_action_token: data.booking_action_token },
+    }).then(({ error: assignmentError }) => {
+      if (assignmentError) {
+        console.error('[Booking] automatic technician assignment failed:', assignmentError);
+      }
+    }).catch((assignmentError) => {
+      console.error('[Booking] automatic technician assignment failed:', assignmentError);
     });
+    } catch (error) {
+      console.error('[Booking] submission failed:', error);
+      setSubmitError('The booking status could not be confirmed. Please contact VATTAMS support before submitting again, so we can check whether your booking was created.');
+    } finally {
+      bookingSubmitInFlight.current = false;
+      setSubmitting(false);
+    }
   };
 
   if (success) {
@@ -260,7 +461,7 @@ export default function Booking() {
           <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
             <CheckCircle size={40} className="text-green-600" />
           </div>
-          <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Booking Request Received!</h2>
+          <h2 aria-live="polite" className="text-2xl font-extrabold text-gray-900 mb-2">Booking Request Received!</h2>
           <p className="text-gray-500 mb-4">Your request is recorded and awaiting technician assignment. Our team will contact you shortly to confirm the appointment.</p>
           <div className="bg-gold-50 rounded-xl p-4 mb-6">
             <div className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Your Booking Number</div>
@@ -269,22 +470,22 @@ export default function Booking() {
           <div className="flex flex-col gap-3">
             {customer && (
               <button onClick={() => navigate('customer-bookings')}
-                className="flex items-center justify-center gap-2 py-3 bg-navy-900 hover:bg-navy-800 text-white font-semibold rounded-xl transition-colors">
+                className="flex items-center justify-center gap-2 py-3 bg-navy-900 hover:bg-navy-800 text-white font-semibold rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2">
                 View My Bookings
               </button>
             )}
             {!customer && (
               <button onClick={() => navigate('customer-register')}
-                className="flex items-center justify-center gap-2 py-3 bg-gold-50 hover:bg-gold-100 text-gold-700 font-semibold rounded-xl transition-colors border border-gold-200">
+                className="flex items-center justify-center gap-2 py-3 bg-gold-50 hover:bg-gold-100 text-gold-700 font-semibold rounded-xl transition-colors border border-gold-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2">
                 <LogIn size={18} /> Create Account to Track
               </button>
             )}
             <button onClick={() => navigate('home')}
-              className="py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors">
+              className="py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2">
               Back to Home
             </button>
             <button onClick={() => navigate('join-technician')}
-              className="flex items-center justify-center gap-2 py-3 bg-gold-400 hover:bg-gold-300 text-navy-950 text-white font-semibold rounded-xl transition-colors">
+              className="flex items-center justify-center gap-2 py-3 bg-gold-400 hover:bg-gold-300 text-navy-950 text-white font-semibold rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2">
               <Briefcase size={16} /> Join as a Technician
             </button>
           </div>
@@ -295,16 +496,37 @@ export default function Booking() {
 
   return (
     <div className="pt-20 md:pt-24">
-      <section className="bg-navy-950 py-14">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-3">Book Appliance Service</h1>
-          <p className="text-navy-100 max-w-lg mx-auto">
-            Choose AC, washing machine or refrigerator service and tell us how we can help.
-          </p>
+      <section className="relative isolate overflow-hidden bg-[#070B15] py-12 text-white sm:py-16">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_0%,rgba(212,175,55,.18),transparent_38%)]" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/60 to-transparent" />
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/35 bg-white/[0.04] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-[#E7D17D] sm:text-xs">
+              <Sparkles size={13} /> Your service, thoughtfully arranged
+            </p>
+            <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight text-white sm:text-5xl">
+              Let’s find the right <span className="text-[#DCC15D]">service for your home.</span>
+            </h1>
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base sm:leading-8">
+              Share a few details, choose your appliance and review applicable charges before submitting your request.
+            </p>
+            <div className="mx-auto mt-7 grid max-w-2xl grid-cols-3 gap-2 sm:gap-3">
+              {[
+                { n: '01', label: 'Your details' },
+                { n: '02', label: 'Choose service' },
+                { n: '03', label: 'Review request' },
+              ].map((step) => (
+                <div key={step.n} className="rounded-xl border border-white/10 bg-white/[0.035] px-2 py-3 text-left sm:px-4">
+                  <span className="block text-[10px] font-bold tracking-[0.16em] text-[#D4AF37]">{step.n}</span>
+                  <span className="mt-1 block text-[11px] font-semibold text-white sm:text-sm">{step.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="py-12 bg-ivory">
+      <section className="bg-gradient-to-b from-[#F1EEE5] to-[#F8F6F0] py-8 sm:py-12">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <button
             type="button"
@@ -320,10 +542,25 @@ export default function Booking() {
             </div>
           </button>
 
-          <div className="bg-white rounded-2xl border border-[#e8e1d2] shadow-sm p-6 md:p-8">
+          <div className="premium-surface rounded-2xl border bg-white p-5 shadow-xl shadow-slate-900/[0.04] sm:p-7 md:p-9">
             {loadError && (
-              <div role="alert" className="mb-5 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-                {loadError}
+              <div role="alert" className="mb-5 overflow-hidden rounded-2xl border border-amber-200 bg-white shadow-sm">
+                <div className="border-l-4 border-amber-400 bg-amber-50 p-4 sm:p-5">
+                  <div className="font-semibold text-[#10182B]">We can’t load the booking catalogue yet</div>
+                  <p className="mt-1 text-sm leading-6 text-amber-900">{loadError}</p>
+                  <p className="mt-2 text-xs leading-5 text-amber-900/80">Your request has not been submitted. Retry loading the live service catalogue before booking.</p>
+                  <button type="button" disabled={loading} onClick={() => { couponValidationRequest.current += 1; setValidatingCoupon(false); setCouponResult(null); setCouponCode(''); setLoading(true); setCatalogueRetryCount((count) => count + 1); }} className="mt-3 inline-flex min-h-10 items-center justify-center rounded-lg border border-amber-400 bg-white px-4 py-2 text-sm font-semibold text-amber-950 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-600 focus-visible:ring-offset-2">
+                    {loading ? 'Retrying…' : 'Retry service catalogue'}
+                  </button>
+                  <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                    <button type="button" onClick={() => window.location.reload()} className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#0A132A] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#142342]">
+                      Retry catalogue
+                    </button>
+                    <a href="tel:+916374068296" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#D4AF37]/45 bg-white px-5 py-3 text-sm font-semibold text-[#10182B] transition hover:bg-[#F8F4E5]">
+                      Contact VATTAMS support
+                    </a>
+                  </div>
+                </div>
               </div>
             )}
             {loading ? (
@@ -332,23 +569,30 @@ export default function Booking() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
+                {submitError && (
+                  <div role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 p-4 sm:p-5">
+                    <p className="font-semibold text-rose-950">Booking request not confirmed</p>
+                    <p className="mt-1 text-sm leading-6 text-rose-900">{submitError}</p>
+                    <a href="tel:+916374068296" className="mt-3 inline-flex min-h-10 items-center rounded-lg border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2">Contact VATTAMS support</a>
+                  </div>
+                )}
                 {!customer && (
                   <div className="bg-gold-50 border border-gold-200 rounded-xl p-3 text-sm text-gold-700 flex items-center justify-between">
                     <span>Have an account? Login to pre-fill your details.</span>
-                    <button type="button" onClick={() => navigate('customer-login')} className="font-bold hover:underline">Login</button>
+                    <button type="button" onClick={() => navigate('customer-login')} className="font-bold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2 rounded">Login</button>
                   </div>
                 )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <Field icon={User} label="Customer Name *">
-                    <input type="text" required value={form.customer_name}
+                    <input type="text" required aria-label="Customer full name" maxLength={100} autoComplete="name" value={form.customer_name}
                       onChange={(e) => setForm({ ...form, customer_name: e.target.value })}
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all"
                       placeholder="Your full name" />
                   </Field>
                   <Field icon={Phone} label="Mobile Number *">
-                    <input type="tel" required pattern="[0-9]{10}" value={form.mobile_number}
-                      onChange={(e) => setForm({ ...form, mobile_number: e.target.value })}
+                    <input type="tel" required aria-label="10-digit mobile number" inputMode="numeric" autoComplete="tel-national" maxLength={10} pattern="[0-9]{10}" value={form.mobile_number}
+                      onChange={(e) => setForm({ ...form, mobile_number: e.target.value.replace(/\D/g, '').slice(0, 10) })}
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all"
                       placeholder="10-digit mobile number" />
                   </Field>
@@ -364,7 +608,7 @@ export default function Booking() {
                   </Field>
                   <Field icon={Wrench} label="Service Category *">
                     <select required value={form.service_category}
-                      onChange={(e) => { setForm({ ...form, service_category: e.target.value, service_type: getServiceTypes(e.target.value)[0] ?? '' }); setCouponResult(null); setCouponCode(''); }}
+                      onChange={(e) => { couponValidationRequest.current += 1; setValidatingCoupon(false); setForm({ ...form, service_category: e.target.value, service_type: getServiceTypes(e.target.value)[0] ?? '' }); setCouponResult(null); setCouponCode(''); }}
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all bg-white">
                       {services.map((s) => {
                         const startingPrice = getCategoryStartingPrice(s.name);
@@ -380,12 +624,16 @@ export default function Booking() {
 
                 <Field icon={Wrench} label="Specific Job Type *">
                   <select required value={form.service_type}
-                    onChange={(e) => { setForm({ ...form, service_type: e.target.value }); setCouponResult(null); setCouponCode(''); }}
+                    onChange={(e) => { couponValidationRequest.current += 1; setValidatingCoupon(false); setForm({ ...form, service_type: e.target.value }); setCouponResult(null); setCouponCode(''); }}
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all bg-white">
                     {serviceTypes.map((type) => {
                       const listedPrice = customerServicePrices[getCustomerPriceKey(form.service_category, type)];
+                      const listedBasePrice = Number(listedPrice?.base_price);
+                      const hasListedPrice = Boolean(listedPrice)
+                        && Number.isFinite(listedBasePrice)
+                        && listedBasePrice > 0;
                       return <option key={type} value={type}>
-                        {type}{listedPrice ? ` — ${formatINR(Number(listedPrice.base_price))}` : ' — price unavailable'}
+                        {type}{hasListedPrice ? ` — ${formatINR(listedBasePrice)}` : ' — price unavailable'}
                       </option>;
                     })}
                   </select>
@@ -418,10 +666,10 @@ export default function Booking() {
                         <span className="text-gray-600">Platform Fee</span>
                         <span className="font-semibold text-gray-800">{formatINR(pricing.platformFee)}</span>
                       </div>
-                      {couponResult?.valid && couponResult.discountAmount > 0 && (
+                      {couponResult?.valid && pricing && pricing.discountAmount > 0 && (
                         <div className="flex justify-between text-green-600">
                           <span>Discount ({couponResult.coupon?.code})</span>
-                          <span className="font-semibold">-{formatINR(couponResult.discountAmount)}</span>
+                          <span className="font-semibold">-{formatINR(pricing.discountAmount)}</span>
                         </div>
                       )}
                       <div className="border-t border-gray-200 pt-1.5 flex justify-between">
@@ -442,21 +690,21 @@ export default function Booking() {
                       <span className="font-semibold text-gray-800 text-sm">Have a Coupon Code?</span>
                     </div>
                     <div className="flex gap-2">
-                      <input type="text" value={couponCode} onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponResult(null); }}
+                      <input type="text" value={couponCode} disabled={validatingCoupon || submitting} onChange={(e) => { couponValidationRequest.current += 1; setValidatingCoupon(false); setCouponCode(e.target.value.toUpperCase()); setCouponResult(null); }}
                         placeholder="Enter coupon code"
                         className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-gold-500 uppercase" />
-                      <button type="button" onClick={handleValidateCoupon} disabled={validatingCoupon || !couponCode.trim()}
-                        className="px-4 py-2 bg-navy-900 hover:bg-navy-800 disabled:bg-gray-300 text-white text-sm font-semibold rounded-lg transition-colors">
+                      <button type="button" onClick={handleValidateCoupon} disabled={validatingCoupon || submitting || !couponCode.trim()}
+                        className="px-4 py-2 bg-navy-900 hover:bg-navy-800 disabled:bg-gray-300 text-white text-sm font-semibold rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2">
                         {validatingCoupon ? '...' : 'Apply'}
                       </button>
                     </div>
                     {couponResult?.valid && (
-                      <p className="flex items-center gap-1.5 text-xs text-green-600 mt-2 font-semibold">
-                        <CheckCircle size={14} aria-hidden="true" /> Coupon applied! You save {formatINR(couponResult.discountAmount)}
+                      <p role="status" aria-live="polite" className="flex items-center gap-1.5 text-xs text-green-600 mt-2 font-semibold">
+                        <CheckCircle size={14} aria-hidden="true" /> Coupon applied! You save {formatINR(pricing.discountAmount)}
                       </p>
                     )}
                     {couponResult && !couponResult.valid && (
-                      <p className="flex items-center gap-1.5 text-xs text-red-600 mt-2 font-semibold">
+                      <p role="status" aria-live="polite" className="flex items-center gap-1.5 text-xs text-red-600 mt-2 font-semibold">
                         <XCircle size={14} aria-hidden="true" /> {couponResult.error}
                       </p>
                     )}
@@ -464,14 +712,14 @@ export default function Booking() {
                 )}
 
                 <Field icon={MapPin} label="Address *">
-                  <textarea required rows={2} value={form.address}
+                  <textarea required aria-label="Full service address with landmark" rows={2} maxLength={250} autoComplete="street-address" value={form.address}
                     onChange={(e) => setForm({ ...form, address: e.target.value })}
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all resize-none"
                     placeholder="Full address with landmark" />
                 </Field>
 
                 <Field icon={FileText} label="Problem Description">
-                  <textarea rows={3} value={form.problem_description}
+                  <textarea aria-label="Describe the service problem, optional" rows={3} maxLength={1000} value={form.problem_description}
                     onChange={(e) => setForm({ ...form, problem_description: e.target.value })}
                     className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all resize-none"
                     placeholder="Describe the issue you're facing..." />
@@ -479,22 +727,22 @@ export default function Booking() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <Field icon={Calendar} label="Preferred Date">
-                    <input type="date" value={form.preferred_date} min={new Date().toISOString().split('T')[0]}
-                      onChange={(e) => setForm({ ...form, preferred_date: e.target.value })}
+                    <input type="date" value={form.preferred_date} min={getIndiaBookingClock().date}
+                      onChange={(e) => { const preferred_date = e.target.value; setForm({ ...form, preferred_date, preferred_time: form.preferred_time && isTimeSlotInPastToday(form.preferred_time, preferred_date) ? '' : form.preferred_time }); }}
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all" />
                   </Field>
                   <Field icon={Clock} label="Preferred Time">
                     <select value={form.preferred_time}
-                      onChange={(e) => setForm({ ...form, preferred_time: e.target.value })}
+                      onChange={(e) => { const preferred_time = e.target.value; if (!preferred_time || !isTimeSlotInPastToday(preferred_time, form.preferred_date)) setForm({ ...form, preferred_time }); }}
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none transition-all bg-white">
                       <option value="">Any time</option>
-                      {timeSlots.map((t) => <option key={t} value={t}>{t}</option>)}
+                      {timeSlots.map((t) => <option key={t} value={t} disabled={isTimeSlotInPastToday(t, form.preferred_date)}>{t}</option>)}
                     </select>
                   </Field>
                 </div>
 
                 <button type="submit" disabled={submitting || !servicePrice || !customerServicePrice || !pricing}
-                  className="w-full flex items-center justify-center gap-2 py-4 bg-navy-900 hover:bg-navy-800 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors shadow-lg shadow-[#d8c58c]">
+                  className="w-full flex items-center justify-center gap-2 py-4 bg-navy-900 hover:bg-navy-800 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors shadow-lg shadow-[#d8c58c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2">
                   {submitting ? (
                     <><Loader size={18} className="animate-spin" /> Confirming...</>
                   ) : (

@@ -46,7 +46,7 @@ export function generateInvoiceHTML(booking: Booking): string {
 <div class="invoice">
   <div class="header">
     <h1>VATTAMS</h1>
-    <p>Home Services Invoice</p>
+    <p>Hybrid Service Marketplace Invoice</p>
   </div>
   <div class="invoice-meta">
     <div>
@@ -93,7 +93,7 @@ export function generateInvoiceHTML(booking: Booking): string {
     </div>
   </div>` : ''}
   <div class="footer">
-    <p>Thank you for choosing VATTAMS Home Services!</p>
+    <p>Thank you for choosing VATTAMS Hybrid Service Marketplace!</p>
     <p>Support: +91 81898 00757 | support@vattams.net</p>
     <p style="margin-top:8px;font-size:11px;color:#a3a3a3;">Government of India MSME (Udyam) Registered Enterprise | UDYAM-TN-02-0274720</p>
   </div>

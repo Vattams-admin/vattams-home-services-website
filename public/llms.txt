@@ -1,6 +1,6 @@
-# VATTAMS Home Services
+# VATTAMS Hybrid Service Marketplace
 
-> VATTAMS Home Services helps customers request AC, washing machine and refrigerator service. Customers can review listed base prices, see applicable checkout charges and check appointment options for their address.
+> VATTAMS Hybrid Service Marketplace helps customers request AC, washing machine and refrigerator service. Customers can review listed base prices, see applicable checkout charges and check appointment options for their address.
 
 ## Website
 - Home: https://vattams.net/
@@ -30,4 +30,4 @@
 - Email: admin@vattams.net
 
 ## Business information
-VATTAMS Home Services focuses on AC, washing machine and refrigerator service requests. The website includes booking status and job verification features. Do not infer unlisted warranty periods, guaranteed arrival times, customer ratings, or technician credentials unless VATTAMS publishes verified details for them.
+VATTAMS Hybrid Service Marketplace focuses on AC, washing machine and refrigerator service requests. The website includes booking status and job verification features. Do not infer unlisted warranty periods, guaranteed arrival times, customer ratings, or technician credentials unless VATTAMS publishes verified details for them.

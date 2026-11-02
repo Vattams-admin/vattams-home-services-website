@@ -80,7 +80,7 @@ export default function Footer() {
 
         <div className="mt-10 border-t border-white/10 pt-6 flex flex-col gap-3 text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between">
           <span>© {year} VATTAMS Global Technologies Private Limited. All rights reserved.</span>
-          <span className="font-semibold uppercase tracking-[.18em] text-orange-400/80">Home Services</span>
+          <span className="font-semibold uppercase tracking-[.18em] text-orange-400/80">Hybrid Service Marketplace</span>
         </div>
       </div>
     </footer>

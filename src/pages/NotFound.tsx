@@ -7,7 +7,7 @@ export default function NotFound() {
   const { navigate } = useRouter();
 
   useEffect(() => {
-    document.title = 'Page Not Found | VATTAMS Home Services';
+    document.title = 'Page Not Found | VATTAMS Hybrid Service Marketplace';
   }, []);
 
   return (

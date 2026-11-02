@@ -1,11 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Loader, Phone, KeyRound, Lock, ShieldCheck } from 'lucide-react';
 import { useRouter } from '@/lib/router';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase';
 
 type Step = 'request' | 'otp' | 'reset' | 'done';
 
-const SUPABASE_URL = 'https://nfcibyprftnowaiwlxxc.supabase.co';
-const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mY2lieXByZnRub3dhaXdseHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4ODMzOTgsImV4cCI6MjA5OTQ1OTM5OH0.5ZMjWYOuRBKNKG3ZonXXOBAfBapm54naphNXrHxq16k';
 
 export default function CustomerForgot() {
   const { navigate } = useRouter();
@@ -17,91 +16,144 @@ export default function CustomerForgot() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [resendTimer, setResendTimer] = useState(0);
+  const resendIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const clearResendTimer = () => {
+    if (resendIntervalRef.current !== null) {
+      clearInterval(resendIntervalRef.current);
+      resendIntervalRef.current = null;
+    }
+  };
+
+  useEffect(() => () => clearResendTimer(), []);
 
   const startResendTimer = () => {
+    clearResendTimer();
     setResendTimer(30);
-    const interval = setInterval(() => {
-      setResendTimer((prev) => { if (prev <= 1) { clearInterval(interval); return 0; } return prev - 1; });
+    resendIntervalRef.current = setInterval(() => {
+      setResendTimer((prev) => {
+        if (prev <= 1) {
+          clearResendTimer();
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
   };
 
   const handleRequest = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setError('');
-    if (!/^[6-9]\d{9}$/.test(mobile)) { setError('Please enter a valid 10-digit mobile number.'); return; }
+    const normalizedMobile = mobile.trim();
+    if (!/^[6-9]\d{9}$/.test(normalizedMobile)) { setError('Please enter a valid 10-digit mobile number.'); return; }
 
     setLoading(true);
     try {
       const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-auth/forgot-password`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ANON_KEY}` },
-        body: JSON.stringify({ mobile }),
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+        body: JSON.stringify({ mobile: normalizedMobile }),
       });
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error || 'Failed to send OTP');
+      const data: unknown = await res.json().catch(() => null);
+      const responseError = data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
+        ? data.error
+        : '';
+      if (!res.ok || !data || typeof data !== 'object' || responseError) {
+        throw new Error(responseError || 'Failed to send OTP. Please try again.');
+      }
       setStep('otp');
       startResendTimer();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Network error.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setError('');
-    if (otp.length !== 6) { setError('Please enter the 6-digit OTP.'); return; }
+    const normalizedOtp = otp.trim();
+    if (!/^\d{6}$/.test(normalizedOtp)) { setError('Please enter the 6-digit OTP using numbers only.'); return; }
 
     setLoading(true);
     try {
       const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-auth/verify-otp`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ANON_KEY}` },
-        body: JSON.stringify({ mobile, code: otp, purpose: 'forgot_password' }),
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+        body: JSON.stringify({ mobile: mobile.trim(), code: normalizedOtp, purpose: 'forgot_password' }),
       });
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error || 'Verification failed');
+      const data: unknown = await res.json().catch(() => null);
+      const responseError = data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
+        ? data.error
+        : '';
+      if (!res.ok || !data || typeof data !== 'object' || responseError) {
+        throw new Error(responseError || 'OTP verification failed. Please try again.');
+      }
       setStep('reset');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Network error.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setError('');
-    if (newPassword.length < 6) { setError('Password must be at least 6 characters.'); return; }
+    if (!newPassword.trim() || newPassword.length < 6) {
+      setError('Password must be at least 6 characters and cannot contain only spaces.');
+      return;
+    }
 
     setLoading(true);
     try {
       const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-auth/reset-password`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ANON_KEY}` },
-        body: JSON.stringify({ mobile, new_password: newPassword }),
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+        body: JSON.stringify({ mobile: mobile.trim(), new_password: newPassword }),
       });
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error || 'Failed to reset password');
+      const data: unknown = await res.json().catch(() => null);
+      const responseError = data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
+        ? data.error
+        : '';
+      if (!res.ok || !data || typeof data !== 'object' || responseError) {
+        throw new Error(responseError || 'Password reset failed. Please try again.');
+      }
+      setNewPassword('');
+      setOtp('');
+      setMobile('');
       setStep('done');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Network error.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleResendOtp = async () => {
+    if (loading || resendTimer > 0) return;
     setError('');
     setLoading(true);
     try {
       const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-auth/resend-otp`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ANON_KEY}` },
-        body: JSON.stringify({ mobile, purpose: 'forgot_password' }),
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+        body: JSON.stringify({ mobile: mobile.trim(), purpose: 'forgot_password' }),
       });
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error || 'Failed to resend');
+      const data: unknown = await res.json().catch(() => null);
+      const responseError = data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
+        ? data.error
+        : '';
+      if (!res.ok || !data || typeof data !== 'object' || responseError) {
+        throw new Error(responseError || 'Failed to resend OTP. Please try again.');
+      }
       setOtp('');
       startResendTimer();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Network error.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -123,51 +175,51 @@ export default function CustomerForgot() {
           </p>
         </div>
 
-        {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3 mb-4">{error}</div>}
+        {error && <div role="alert" aria-live="assertive" className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3 mb-4">{error}</div>}
 
         {step === 'request' && (
-          <form onSubmit={handleRequest} className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-6 space-y-4">
+          <form onSubmit={handleRequest} aria-busy={loading} className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-6 space-y-4">
             <div className="relative">
               <Phone size={16} className="absolute left-3 top-3.5 text-gray-400" />
-              <input type="tel" value={mobile} onChange={(e) => setMobile(e.target.value)} maxLength={10}
+              <input type="tel" name="mobile" aria-label="10-digit mobile number" autoComplete="tel" inputMode="numeric" required disabled={loading} value={mobile} onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))} maxLength={10}
                 placeholder="10-digit Mobile Number"
                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
             </div>
             <button type="submit" disabled={loading}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors">
+              className="w-full flex items-center justify-center gap-2 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2">
               {loading ? <Loader size={18} className="animate-spin" /> : <KeyRound size={18} />} Send OTP
             </button>
-            <button type="button" onClick={() => navigate('customer-login')} className="w-full text-center text-sm text-gray-500 hover:underline">Back to Login</button>
+            <button type="button" onClick={() => navigate('customer-login')} className="w-full text-center text-sm text-gray-500 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2 rounded">Back to Login</button>
           </form>
         )}
 
         {step === 'otp' && (
-          <form onSubmit={handleVerifyOtp} className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-6 space-y-4">
+          <form onSubmit={handleVerifyOtp} aria-busy={loading} className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-6 space-y-4">
             <div className="relative">
               <KeyRound size={16} className="absolute left-3 top-3.5 text-gray-400" />
-              <input value={otp} onChange={(e) => setOtp(e.target.value)} maxLength={6}
+              <input name="otp" aria-label="6-digit OTP" inputMode="numeric" autoComplete="one-time-code" required value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} maxLength={6} disabled={loading}
                 placeholder="6-digit OTP"
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm disabled:opacity-60 disabled:cursor-not-allowed" />
             </div>
             <button type="submit" disabled={loading}
               className="w-full flex items-center justify-center gap-2 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors">
               {loading ? <Loader size={18} className="animate-spin" /> : <ShieldCheck size={18} />} Verify OTP
             </button>
             <div className="flex items-center justify-between text-sm">
-              <button type="button" onClick={() => setStep('request')} className="text-gray-500 hover:underline">Back</button>
+              <button type="button" onClick={() => setStep('request')} disabled={loading} className="text-gray-500 hover:underline disabled:opacity-50 disabled:cursor-not-allowed">Back</button>
               {resendTimer > 0 ? <span className="text-gray-400">Resend in {resendTimer}s</span>
-                : <button type="button" onClick={handleResendOtp} className="text-gold-700 font-semibold hover:underline">Resend OTP</button>}
+                : <button type="button" onClick={handleResendOtp} disabled={loading || resendTimer > 0} className="text-gold-700 font-semibold hover:underline disabled:opacity-50 disabled:cursor-not-allowed">Resend OTP</button>}
             </div>
           </form>
         )}
 
         {step === 'reset' && (
-          <form onSubmit={handleResetPassword} className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-6 space-y-4">
+          <form onSubmit={handleResetPassword} aria-busy={loading} className="bg-white rounded-2xl border border-gold-200/60 shadow-[0_12px_35px_rgba(5,10,23,0.06)] p-6 space-y-4">
             <div className="relative">
               <Lock size={16} className="absolute left-3 top-3.5 text-gray-400" />
-              <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+              <input type="password" name="new-password" aria-label="New password" autoComplete="new-password" required minLength={6} maxLength={128} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} disabled={loading}
                 placeholder="New Password (min 6 chars)"
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm" />
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm disabled:opacity-60 disabled:cursor-not-allowed" />
             </div>
             <button type="submit" disabled={loading}
               className="w-full flex items-center justify-center gap-2 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 text-white font-bold rounded-xl transition-colors">
@@ -181,7 +233,7 @@ export default function CustomerForgot() {
             <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
               <ShieldCheck size={32} className="text-green-600" />
             </div>
-            <button onClick={() => navigate('customer-login')} className="w-full py-3 bg-navy-950 hover:bg-navy-900 text-white font-bold rounded-xl transition-colors">Login Now</button>
+            <button onClick={() => navigate('customer-login')} className="w-full py-3 bg-navy-950 hover:bg-navy-900 text-white font-bold rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500 focus-visible:ring-offset-2">Login Now</button>
           </div>
         )}
       </div>

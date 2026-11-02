@@ -34,12 +34,29 @@ export interface CreateNotificationInput {
 }
 
 export async function createNotification(input: CreateNotificationInput): Promise<NotificationRow | null> {
+  if (!input || typeof input !== 'object'
+    || !['customer', 'technician', 'admin'].includes(input.recipientType)
+    || typeof input.recipientId !== 'string' || !input.recipientId.trim() || input.recipientId.length > 200
+    || typeof input.title !== 'string' || !input.title.trim() || input.title.length > 200
+    || typeof input.message !== 'string' || !input.message.trim() || input.message.length > 5000
+    || typeof input.type !== 'string' || !input.type.trim() || input.type.length > 100
+    || (input.referenceType !== undefined && (typeof input.referenceType !== 'string' || input.referenceType.length > 100))
+    || (input.referenceId !== undefined && (typeof input.referenceId !== 'string' || input.referenceId.length > 200))
+    || (input.bookingActionToken !== undefined && (typeof input.bookingActionToken !== 'string' || !input.bookingActionToken.trim() || input.bookingActionToken.length > 2000))
+    || (input.channels !== undefined && (!Array.isArray(input.channels) || input.channels.length > 4
+      || new Set(input.channels).size !== input.channels.length
+      || input.channels.some((channel) => typeof channel !== 'string' || !['in_app', 'push', 'email', 'sms'].includes(channel))))) {
+    return null;
+  }
   try {
     const sessionKey =
       input.recipientType === 'admin' ? 'vattams_admin' :
       input.recipientType === 'technician' ? 'vattams_technician_session' :
       'vattams_customer_session';
-    const token = input.bookingActionToken || sessionStorage.getItem(sessionKey) || '';
+    if (typeof sessionStorage === 'undefined') return null;
+    // A booking action token authorizes a booking-specific operation; it is not an account session.
+    const token = sessionStorage.getItem(sessionKey) || '';
+    if (!token.trim()) return null;
     const body: Record<string, unknown> = {
       input: {
         recipientType: input.recipientType,
@@ -66,12 +83,30 @@ export async function createNotification(input: CreateNotificationInput): Promis
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
       body: JSON.stringify(body),
     });
-    const data = await response.json();
-    if (!response.ok || data.error) {
-      console.error('[notifications] gateway error:', data.error);
+    const parsed: unknown = await response.json().catch(() => null);
+    const data = parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? parsed as Record<string, any>
+      : {};
+    if (!response.ok || typeof data.error === 'string') {
+      console.error('[notifications] gateway error:', data.error ?? `HTTP ${response.status}`);
       return null;
     }
-    return data.notification as NotificationRow;
+
+    // A 2xx response alone does not prove a notification was persisted.
+    // Require the gateway to return a minimally identifiable notification
+    // before callers treat this operation as successful.
+    const notification = data?.notification;
+    if (!notification
+      || typeof notification.id !== 'string'
+      || !notification.id.trim()
+      || notification.recipient_type !== input.recipientType
+      || notification.recipient_id !== input.recipientId
+      || notification.title !== input.title
+      || notification.type !== input.type) {
+      console.error('[notifications] gateway returned an incomplete notification response');
+      return null;
+    }
+    return notification as NotificationRow;
   } catch (err) {
     console.error('[notifications] gateway error:', err);
     return null;
@@ -79,18 +114,26 @@ export async function createNotification(input: CreateNotificationInput): Promis
 }
 
 export async function createNotificationsBatch(inputs: CreateNotificationInput[]): Promise<number> {
+  if (!Array.isArray(inputs) || inputs.length === 0) return 0;
+  // Bound batch size to avoid accidental unbounded sequential gateway requests.
+  const batch = inputs.slice(0, 100);
   let count = 0;
-  for (const input of inputs) {
+  for (const input of batch) {
     if (await createNotification(input)) count++;
   }
   return count;
 }
 
 export async function fetchNotifications(recipientType: NotificationRecipientType, recipientId: string, limit = 50): Promise<NotificationRow[]> {
+  if (!['customer', 'technician', 'admin'].includes(recipientType)
+    || typeof recipientId !== 'string' || !recipientId.trim() || recipientId.length > 200) {
+    return [];
+  }
+  const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.min(1000, Math.floor(limit))) : 50;
   try {
     if (recipientType === 'admin') {
-      const { notifications } = await adminData<{ notifications: NotificationRow[] }>('notifications', { limit });
-      return notifications ?? [];
+      const { notifications } = await adminData<{ notifications: NotificationRow[] }>('notifications', { limit: safeLimit });
+      return Array.isArray(notifications) ? notifications.slice(0, safeLimit) : [];
     }
     const endpoint = recipientType === 'technician' ? 'technician-data' : 'customer-data';
     const sessionKey = recipientType === 'technician' ? 'vattams_technician_session' : 'vattams_customer_session';
@@ -101,17 +144,34 @@ export async function fetchNotifications(recipientType: NotificationRecipientTyp
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
       body: JSON.stringify({ action: 'account', session_token: token }),
     });
-    const data = await response.json();
-    return recipientType === 'technician' ? (data.jobNotifications ?? []) : (data.notifications ?? []);
+    if (!response.ok) return [];
+    const parsed: unknown = await response.json().catch(() => null);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return [];
+    const data = parsed as Record<string, unknown>;
+    const rows = recipientType === 'technician' ? data.jobNotifications : data.notifications;
+    return Array.isArray(rows) ? rows.filter((row): row is NotificationRow =>
+      Boolean(row && typeof row === 'object'
+        && typeof (row as NotificationRow).id === 'string'
+        && (row as NotificationRow).id.trim()
+        && typeof (row as NotificationRow).title === 'string'
+        && typeof (row as NotificationRow).message === 'string'
+        && typeof (row as NotificationRow).recipient_id === 'string'
+        && typeof (row as NotificationRow).is_read === 'boolean'
+        && typeof (row as NotificationRow).created_at === 'string'
+        && Number.isFinite(Date.parse((row as NotificationRow).created_at)))
+    ).slice(0, safeLimit) : [];
   } catch { return []; }
 }
 
 export async function fetchUnreadCount(recipientType: NotificationRecipientType, recipientId: string): Promise<number> {
   const rows = await fetchNotifications(recipientType, recipientId, 1000);
-  return rows.filter((n) => !n.is_read).length;
+  return rows.reduce((count, row) => count + (row.is_read === false ? 1 : 0), 0);
 }
 
 export async function markAsRead(notificationId: string): Promise<boolean> {
+  if (typeof notificationId !== 'string' || !notificationId.trim() || notificationId.length > 200) {
+    return false;
+  }
   try {
     const adminToken = sessionStorage.getItem('vattams_admin');
     if (adminToken) { await adminData('notification_read', { notification_id: notificationId }); return true; }
@@ -142,8 +202,16 @@ export async function markAsRead(notificationId: string): Promise<boolean> {
 }
 
 export async function markAllAsRead(recipientType: NotificationRecipientType, recipientId: string): Promise<boolean> {
+  if (!['customer', 'technician', 'admin'].includes(recipientType)
+    || typeof recipientId !== 'string' || !recipientId.trim() || recipientId.length > 200) {
+    return false;
+  }
   try {
-    if (recipientType === 'admin') { await adminData('notifications_read_all'); return true; }
+    if (recipientType === 'admin') {
+      // adminData throws for HTTP failures and gateway error payloads.
+      await adminData('notifications_read_all');
+      return true;
+    }
     const endpoint=recipientType==='technician'?'technician-data':'customer-data';
     const token=sessionStorage.getItem(recipientType==='technician'?'vattams_technician_session':'vattams_customer_session');
     if(!token) return false;
@@ -153,11 +221,19 @@ export async function markAllAsRead(recipientType: NotificationRecipientType, re
 }
 
 export async function deleteNotification(notificationId: string): Promise<boolean> {
-  if (sessionStorage.getItem('vattams_admin')) {
-    try { await adminData('notification_delete', { notification_id: notificationId }); return true; } catch { return false; }
+  if (typeof notificationId !== 'string' || !notificationId.trim() || notificationId.length > 200) {
+    return false;
+  }
+  try {
+    if (typeof sessionStorage === 'undefined' || !sessionStorage.getItem('vattams_admin')) {
+      return false;
+    }
+    await adminData('notification_delete', { notification_id: notificationId });
+    return true;
+  } catch {
+    return false;
   }
   // Notification deletion is intentionally not exposed to customer/technician clients.
-  return false;
 }
 
 export function subscribeToNotifications(

@@ -2,7 +2,7 @@ import { Calendar, Phone, ArrowRight } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 
 // Final call-to-action banner shown at the bottom of the Home page.
-// Focused exclusively on VATTAMS Home Services.
+// Focused on the VATTAMS Hybrid Service Marketplace.
 export default function CTASection() {
   const { navigate } = useRouter();
 

@@ -41,7 +41,7 @@ export default function About() {
 
   useSEO({
     title: 'About VATTAMS | Premium Appliance Care',
-    description: 'Learn about VATTAMS Home Services, focused on premium AC, washing machine and refrigerator care.',
+    description: 'Learn about VATTAMS Hybrid Service Marketplace, focused on premium AC, washing machine and refrigerator care.',
     path: '/about',
   });
 
@@ -63,7 +63,7 @@ export default function About() {
             <Sparkles size={14} className="text-gold-400" aria-hidden="true" />
             <span className="text-white/90 text-xs sm:text-sm font-medium tracking-widest uppercase">About Us</span>
           </div>
-          <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-bold text-white leading-tight mb-6">VATTAMS Home Services</h1>
+          <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-bold text-white leading-tight mb-6">VATTAMS Hybrid Service Marketplace</h1>
           <p className="text-transparent bg-clip-text bg-gradient-to-r from-gold-300 via-gold-400 to-gold-300 text-xl sm:text-2xl md:text-3xl font-bold mb-8 tracking-wide">Premium Appliance Care</p>
           <p className="text-navy-100/80 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto">
             VATTAMS focuses on AC, washing machine and refrigerator service, with clear booking and professional doorstep support.
@@ -75,7 +75,7 @@ export default function About() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="font-display text-2xl md:text-4xl font-bold text-[#0b1f3a] mb-6">About VATTAMS</h2>
           <p className="text-gray-600 text-base sm:text-lg leading-relaxed mb-6">
-            VATTAMS Home Services focuses on three essential appliances—air conditioners, washing machines and refrigerators—with a convenient booking experience and a professional service network.
+            VATTAMS Hybrid Service Marketplace focuses on three essential appliances—air conditioners, washing machines and refrigerators—with a convenient booking experience and a professional service network.
           </p>
           <button onClick={() => navigate('services')} className="inline-flex items-center gap-2 text-gold-700 font-semibold hover:text-gold-800 text-sm">
             Explore Home Services →
@@ -85,11 +85,11 @@ export default function About() {
 
       <section className="bg-[#f7f4ed] py-16 md:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14"><h2 className="font-display text-2xl md:text-4xl font-bold text-[#0b1f3a]">Our Home Services</h2></div>
+          <div className="text-center mb-14"><h2 className="font-display text-2xl md:text-4xl font-bold text-[#0b1f3a]">Our Marketplace Services</h2></div>
           <div className="max-w-3xl mx-auto bg-white rounded-2xl border border-[#e8e1d2] shadow-sm p-7 md:p-8">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-12 h-12 rounded-xl bg-[#0b1f3a] flex items-center justify-center shrink-0"><Wrench size={22} className="text-white" aria-hidden="true" /></div>
-              <h3 className="font-display font-bold text-[#0b1f3a] text-xl">VATTAMS Home Services</h3>
+              <h3 className="font-display font-bold text-[#0b1f3a] text-xl">VATTAMS Hybrid Service Marketplace</h3>
             </div>
             <p className="text-gray-500 text-sm leading-relaxed mb-6">Focused care for three essential appliances: ACs, washing machines and refrigerators.</p>
             <ul className="grid grid-cols-2 gap-3 mb-6">

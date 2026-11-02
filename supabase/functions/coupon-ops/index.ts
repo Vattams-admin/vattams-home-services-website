@@ -13,57 +13,109 @@ const headers = {
 };
 
 Deno.serve(async req => {
-  if (req.method === "OPTIONS") return new Response(null, { headers });
+  if (req.method === "OPTIONS") {
+    return new Response(null, {
+      headers: { ...headers, "Access-Control-Allow-Methods": "POST, OPTIONS" },
+    });
+  }
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { ...headers, "Allow": "POST, OPTIONS" },
+    });
+  }
 
   try {
+    let payload: unknown;
+    try {
+      payload = await req.json();
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        return new Response(JSON.stringify({ error: "Invalid JSON request body" }), { status: 400, headers });
+      }
+      throw error;
+    }
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+      return new Response(JSON.stringify({ error: "Request body must be a JSON object" }), { status: 400, headers });
+    }
     const {
       action,
       coupon_id,
       booking_id,
       discount_amount,
       customer_session_token,
-    } = await req.json();
+    } = payload as Record<string, unknown>;
 
     if (action !== "redeem") {
       return new Response(JSON.stringify({ error: "Unsupported action" }), { status: 400, headers });
     }
 
+    const isUuid = (value: unknown): value is string =>
+      typeof value === "string"
+      && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value.trim());
+
     if (
-      !coupon_id ||
-      !booking_id ||
-      !Number.isFinite(Number(discount_amount)) ||
-      Number(discount_amount) < 0
+      !isUuid(coupon_id) ||
+      !isUuid(booking_id) ||
+      typeof customer_session_token !== "string" ||
+      !customer_session_token.trim() || customer_session_token.length > 512 ||
+      typeof discount_amount !== "number" ||
+      !Number.isFinite(discount_amount) ||
+      discount_amount <= 0 ||
+      Math.abs(discount_amount * 100 - Math.round(discount_amount * 100)) > 1e-7
     ) {
       return new Response(JSON.stringify({ error: "Invalid redemption" }), { status: 400, headers });
     }
 
-    const { data: booking } = await db
+    const normalizedCouponId = coupon_id.trim();
+    const normalizedBookingId = booking_id.trim();
+
+    const { data: booking, error: bookingLookupError } = await db
       .from("bookings")
-      .select("id,total_amount,amount,coupon_code,discount_amount,customer_id")
-      .eq("id", booking_id)
+      .select("id,status,total_amount,amount,coupon_code,discount_amount,customer_id")
+      .eq("id", normalizedBookingId)
       .maybeSingle();
+
+    if (bookingLookupError) {
+      console.error("[coupon-ops] booking lookup failed");
+      return new Response(JSON.stringify({ error: "Unable to verify booking right now" }), { status: 503, headers });
+    }
 
     if (!booking) {
       return new Response(JSON.stringify({ error: "Booking not found" }), { status: 404, headers });
     }
 
+    // Coupons should only be redeemed against an active booking. Cancelled or
+    // completed jobs must not consume a coupon usage slot.
+    if (!["pending", "confirmed"].includes(String(booking.status ?? "").toLowerCase())) {
+      return new Response(JSON.stringify({ error: "Coupon redemption is unavailable for this booking status" }), { status: 409, headers });
+    }
+
     // Coupon redemption is a customer-owned operation. Never trust a
     // client-supplied customer_id; derive the identity from the server-side
     // customer session and require it to match the booking owner.
-    const sessionToken = String(customer_session_token || "");
+    const sessionToken = customer_session_token.trim();
     if (!sessionToken || !booking.customer_id) {
       return new Response(JSON.stringify({ error: "Customer authentication required" }), { status: 401, headers });
     }
 
-    const { data: session } = await db
+    const { data: session, error: sessionLookupError } = await db
       .from("customer_auth_sessions")
       .select("customer_id,expires_at")
       .eq("token", sessionToken)
       .maybeSingle();
 
+    if (sessionLookupError) {
+      console.error("[coupon-ops] customer session lookup failed");
+      return new Response(JSON.stringify({ error: "Unable to verify customer session right now" }), { status: 503, headers });
+    }
+
+    const sessionExpiresAt = session ? new Date(session.expires_at).getTime() : Number.NaN;
     if (
       !session ||
-      new Date(session.expires_at).getTime() <= Date.now() ||
+      !Number.isFinite(sessionExpiresAt) ||
+      sessionExpiresAt <= Date.now() ||
+      session.customer_id == null ||
       String(session.customer_id) !== String(booking.customer_id)
     ) {
       return new Response(JSON.stringify({ error: "Not authorized for this booking" }), { status: 401, headers });
@@ -73,40 +125,110 @@ Deno.serve(async req => {
       return new Response(JSON.stringify({ error: "Booking has no coupon" }), { status: 400, headers });
     }
 
-    const { data: coupon } = await db
+    const { data: coupon, error: couponLookupError } = await db
       .from("coupons")
       .select("*")
-      .eq("id", coupon_id)
+      .eq("id", normalizedCouponId)
       .eq("is_active", true)
       .maybeSingle();
+
+    if (couponLookupError) {
+      console.error("[coupon-ops] coupon lookup failed");
+      return new Response(JSON.stringify({ error: "Unable to verify coupon right now" }), { status: 503, headers });
+    }
 
     if (!coupon) {
       return new Response(JSON.stringify({ error: "Coupon unavailable" }), { status: 400, headers });
     }
 
-    if (String(coupon.code).toUpperCase() !== String(booking.coupon_code).toUpperCase()) {
+    if (String(coupon.code ?? "").trim().toUpperCase() !== String(booking.coupon_code ?? "").trim().toUpperCase()) {
       return new Response(JSON.stringify({ error: "Coupon does not match booking" }), { status: 400, headers });
     }
 
-    if (
-      Math.abs(Number(booking.discount_amount || 0) - Number(discount_amount)) > 0.01
-    ) {
+    const storedDiscount = Number(booking.discount_amount);
+    // `amount` stores the pre-discount subtotal; `total_amount` stores the final payable amount.
+    // Never treat a legacy final total as the original subtotal: the discount
+    // cannot be safely revalidated without the original amount.
+    const bookingTotalValue = booking.amount;
+    const bookingTotal = Number(bookingTotalValue);
+    const finalAmountValue = booking.total_amount;
+    const finalAmount = Number(finalAmountValue);
+    const expectedFinalAmount = Math.max(0, Math.round((bookingTotal - storedDiscount) * 100) / 100);
+
+    // Persisted booking amounts must be trustworthy and internally consistent
+    // before coupon redemption; NaN comparisons otherwise fail open.
+    if (booking.discount_amount == null
+      || !Number.isFinite(storedDiscount) || storedDiscount <= 0
+      || Math.abs(storedDiscount * 100 - Math.round(storedDiscount * 100)) > 1e-7
+      || bookingTotalValue == null || !Number.isFinite(bookingTotal) || bookingTotal <= 0
+      || Math.abs(bookingTotal * 100 - Math.round(bookingTotal * 100)) > 1e-7
+      || finalAmountValue == null || !Number.isFinite(finalAmount) || finalAmount < 0
+      || Math.abs(finalAmount * 100 - Math.round(finalAmount * 100)) > 1e-7
+      || storedDiscount > bookingTotal
+      || Math.abs(finalAmount - expectedFinalAmount) > 1e-7) {
+      console.error("[coupon-ops] invalid persisted booking pricing");
+      return new Response(JSON.stringify({ error: "Booking pricing needs review" }), { status: 503, headers });
+    }
+
+    if (Math.abs(storedDiscount - discount_amount) > 1e-7) {
       return new Response(JSON.stringify({ error: "Discount does not match booking" }), { status: 400, headers });
     }
 
-    if (coupon.valid_from && new Date(coupon.valid_from) > new Date()) {
+    const now = Date.now();
+    const validFrom = coupon.valid_from == null ? Number.NaN : new Date(coupon.valid_from).getTime();
+    const validUntil = coupon.valid_until == null ? null : new Date(coupon.valid_until).getTime();
+    const usedCount = Number(coupon.used_count);
+    const maxUses = coupon.max_uses == null ? null : Number(coupon.max_uses);
+
+    // Fail closed if coupon lifecycle/usage metadata is malformed.
+    if (!Number.isFinite(validFrom)
+      || (validUntil !== null && !Number.isFinite(validUntil))
+      || (validUntil !== null && validUntil < validFrom)
+      || !Number.isSafeInteger(usedCount) || usedCount < 0
+      || (maxUses !== null && (!Number.isSafeInteger(maxUses) || maxUses < 0))) {
+      console.error("[coupon-ops] invalid coupon lifecycle or usage configuration");
+      return new Response(JSON.stringify({ error: "Coupon configuration needs review" }), { status: 503, headers });
+    }
+
+    if (validFrom > now) {
       return new Response(JSON.stringify({ error: "Coupon not active" }), { status: 400, headers });
     }
 
-    if (coupon.valid_until && new Date(coupon.valid_until) < new Date()) {
+    if (validUntil !== null && validUntil < now) {
       return new Response(JSON.stringify({ error: "Coupon expired" }), { status: 400, headers });
     }
 
-    if (coupon.max_uses !== null && coupon.used_count >= coupon.max_uses) {
+    if (maxUses !== null && usedCount >= maxUses) {
       return new Response(JSON.stringify({ error: "Coupon usage limit reached" }), { status: 400, headers });
     }
 
-    if (Number(discount_amount) > Number(booking.total_amount ?? booking.amount ?? 0)) {
+    const discountValue = Number(coupon.discount_value);
+    const minimumOrderAmount = Number(coupon.min_order_amount ?? 0);
+    if (!Number.isFinite(discountValue) || discountValue <= 0
+      || !["percentage", "flat"].includes(String(coupon.discount_type))
+      || (coupon.discount_type === "percentage" && discountValue > 100)
+      || (coupon.discount_type === "flat" && Math.abs(discountValue * 100 - Math.round(discountValue * 100)) > 1e-7)
+      || !Number.isFinite(minimumOrderAmount) || minimumOrderAmount < 0
+      || Math.abs(minimumOrderAmount * 100 - Math.round(minimumOrderAmount * 100)) > 1e-7) {
+      console.error("[coupon-ops] invalid coupon discount configuration");
+      return new Response(JSON.stringify({ error: "Coupon configuration needs review" }), { status: 503, headers });
+    }
+
+    if (bookingTotal < minimumOrderAmount) {
+      return new Response(JSON.stringify({ error: "Booking does not meet the coupon minimum order amount" }), { status: 400, headers });
+    }
+
+    const expectedDiscount = Math.min(
+      coupon.discount_type === "percentage"
+        ? Math.round((bookingTotal * discountValue / 100) * 100) / 100
+        : Math.round(discountValue * 100) / 100,
+      bookingTotal,
+    );
+    if (Math.abs(expectedDiscount - storedDiscount) > 1e-7) {
+      return new Response(JSON.stringify({ error: "Coupon terms no longer match this booking" }), { status: 409, headers });
+    }
+
+    if (discount_amount > bookingTotal) {
       return new Response(JSON.stringify({ error: "Invalid discount" }), { status: 400, headers });
     }
 
@@ -114,8 +236,8 @@ Deno.serve(async req => {
     // This prevents concurrent requests from exceeding max_uses and prevents
     // a failed redemption insert from consuming a usage slot.
     const { data: redeemed, error: redeemError } = await db.rpc("redeem_coupon_atomic", {
-      p_coupon_id: coupon_id,
-      p_booking_id: booking_id,
+      p_coupon_id: normalizedCouponId,
+      p_booking_id: normalizedBookingId,
       p_customer_id: booking.customer_id,
       p_discount_amount: Number(discount_amount),
     });

@@ -1,7 +1,7 @@
 {
-  "name": "VATTAMS - Home Services",
+  "name": "VATTAMS Hybrid Service Marketplace",
   "short_name": "VATTAMS",
-  "description": "VATTAMS Home Services focuses on AC, washing machine and refrigerator service with convenient doorstep booking.",
+  "description": "VATTAMS Hybrid Service Marketplace focuses on AC, washing machine and refrigerator service with convenient doorstep booking.",
   "id": "/",
   "start_url": "/",
   "scope": "/",
@@ -11,21 +11,21 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
+      "src": "/pwa-icon-192.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "/pwa-icon-512.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512-maskable.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "/pwa-icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "maskable"
     },
     {
@@ -38,7 +38,7 @@
   "categories": [
     "home",
     "services",
-    "repair",
+    "repair"
   ],
   "lang": "en-IN"
 }
