@@ -400,7 +400,7 @@ export default function CustomerDashboard() {
                         <div className="flex items-center gap-1.5"><Clock size={14} className="text-gray-400" /> {b.preferred_time || "Time to be confirmed"}</div>
                         {(() => {
                           const rawAmount = b.total_amount ?? b.amount;
-                          const parsedAmount = rawAmount == null || (typeof rawAmount === 'string' && rawAmount.trim() === '') ? null : Number(rawAmount);
+                          const parsedAmount = rawAmount == null ? null : Number(rawAmount);
                           const amount = parsedAmount !== null && Number.isFinite(parsedAmount) && parsedAmount >= 0 ? parsedAmount : null;
                           return amount === null
                             ? <div className="text-xs text-gray-500">Price confirmation pending</div>
@@ -570,7 +570,7 @@ export default function CustomerDashboard() {
               )}
               {(() => {
                 const rawAmount = selected.total_amount ?? selected.amount;
-                const parsedAmount = rawAmount == null || (typeof rawAmount === 'string' && rawAmount.trim() === '') ? null : Number(rawAmount);
+                const parsedAmount = rawAmount == null ? null : Number(rawAmount);
                 const amount = parsedAmount !== null && Number.isFinite(parsedAmount) && parsedAmount >= 0 ? parsedAmount : null;
                 return (
                   <div className="flex items-center justify-between rounded-xl bg-ivory-50 p-3">
