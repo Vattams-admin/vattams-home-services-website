@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
-const [paymentAuth, paymentsLib, adminData, customerData, technicianAuth, technicianData, adminDashboard, technicianDashboard, paymentModal, homeFeatures, bookingLifecycleMigration, completionProofMigration] = await Promise.all([
+const [paymentAuth, paymentsLib, adminData, customerData, technicianAuth, technicianData, adminDashboard, technicianDashboard, paymentModal, homeFeatures, bookingLifecycleMigration, completionProofMigration, supabaseLib] = await Promise.all([
   read('supabase/functions/payment-auth/index.ts'),
   read('src/lib/payments.ts'),
   read('supabase/functions/admin-data/index.ts'),
@@ -15,6 +15,7 @@ const [paymentAuth, paymentsLib, adminData, customerData, technicianAuth, techni
   read('src/components/home/Features.tsx'),
   read('supabase/migrations/20261102193000_booking_job_lock_order.sql'),
   read('supabase/migrations/20261102200000_require_customer_proof_for_completion.sql'),
+  read('src/lib/supabase.ts'),
 ]);
 
 const controlCharRegex = String.raw`/[\u0000-\u001f\u007f]/`;
@@ -51,6 +52,8 @@ const checks = [
   ['technician transition retains service-role-only execute grant', bookingLifecycleMigration.includes('REVOKE ALL ON FUNCTION public.transition_technician_job_atomic(uuid, uuid, text) FROM PUBLIC, anon, authenticated') && bookingLifecycleMigration.includes('GRANT EXECUTE ON FUNCTION public.transition_technician_job_atomic(uuid, uuid, text) TO service_role')],
   ['technician cannot finalize booking without customer proof', completionProofMigration.includes("MESSAGE = 'CUSTOMER_COMPLETION_PROOF_REQUIRED'") && !completionProofMigration.includes("p_requested_status IN ('job_started', 'completed')") && technicianData.includes('CUSTOMER_COMPLETION_PROOF_REQUIRED')],
   ['technician-reported completion remains a non-final job_completed state', completionProofMigration.includes("p_requested_status = 'job_completed'") && completionProofMigration.includes("WHEN p_requested_status = 'job_completed' THEN now()")],
+  ['wallet transaction type includes recharge dues settlement', supabaseLib.includes("'recharge_dues_settlement'")],
+  ['technician dashboard treats recharge dues settlement as a positive payment allocation', technicianDashboard.includes("'recharge_dues_settlement',")],
   ['technician account response includes all wallet fields displayed by dashboard', technicianData.includes('wallet_balance,locked_deposit,available_balance,commission_due,wallet_locked')],
   ['recharge decisions are conditional on pending state and reject stale repeats', adminData.includes('.eq("id",b.recharge_id).eq("status","pending").select("*").maybeSingle()') && adminData.includes('Recharge is no longer pending; refresh the list before taking another action.')],
   ['technician dashboard excludes job_completed from finalized jobs and earnings', technicianDashboard.includes("jobs.filter((job) => job.status === 'completed')") && !technicianDashboard.includes("'completed',\n          'job_completed'")],
