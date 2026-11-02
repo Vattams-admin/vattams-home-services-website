@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
-const [paymentAuth, paymentsLib, adminData, customerData, technicianAuth, technicianData, adminDashboard, paymentModal, homeFeatures, bookingLifecycleMigration] = await Promise.all([
+const [paymentAuth, paymentsLib, adminData, customerData, technicianAuth, technicianData, adminDashboard, paymentModal, homeFeatures, bookingLifecycleMigration, completionProofMigration] = await Promise.all([
   read('supabase/functions/payment-auth/index.ts'),
   read('src/lib/payments.ts'),
   read('supabase/functions/admin-data/index.ts'),
@@ -13,6 +13,7 @@ const [paymentAuth, paymentsLib, adminData, customerData, technicianAuth, techni
   read('src/components/PaymentModal.tsx'),
   read('src/components/home/Features.tsx'),
   read('supabase/migrations/20261102193000_booking_job_lock_order.sql'),
+  read('supabase/migrations/20261102200000_require_customer_proof_for_completion.sql'),
 ]);
 
 const controlCharRegex = String.raw`/[\u0000-\u001f\u007f]/`;
@@ -47,6 +48,8 @@ const checks = [
   ['technician transition locks booking before locking the job', bookingLifecycleMigration.indexOf('FOR UPDATE') > bookingLifecycleMigration.indexOf('FROM public.bookings') && bookingLifecycleMigration.indexOf('FROM public.bookings') < bookingLifecycleMigration.lastIndexOf('FOR UPDATE')],
   ['technician transition revalidates the locked job parent relationship', bookingLifecycleMigration.includes('AND booking_id = v_booking_id')],
   ['technician transition retains service-role-only execute grant', bookingLifecycleMigration.includes('REVOKE ALL ON FUNCTION public.transition_technician_job_atomic(uuid, uuid, text) FROM PUBLIC, anon, authenticated') && bookingLifecycleMigration.includes('GRANT EXECUTE ON FUNCTION public.transition_technician_job_atomic(uuid, uuid, text) TO service_role')],
+  ['technician cannot finalize booking without customer proof', completionProofMigration.includes("MESSAGE = 'CUSTOMER_COMPLETION_PROOF_REQUIRED'") && !completionProofMigration.includes("p_requested_status IN ('job_started', 'completed')") && technicianData.includes('CUSTOMER_COMPLETION_PROOF_REQUIRED')],
+  ['technician-reported completion remains a non-final job_completed state', completionProofMigration.includes("p_requested_status = 'job_completed'") && completionProofMigration.includes("WHEN p_requested_status = 'job_completed' THEN now()")],
 ];
 
 for (const [label, passed] of checks) {
