@@ -21,6 +21,8 @@ const checks = [
   ['frontend requires capability only on creation', paymentsLib.includes('parsePaymentRecord(data?.payment, true)') && paymentsLib.includes('const payment = parsePaymentRecord(data?.payment);')],
   ['payment inputs reject control characters', (paymentsLib.split(controlCharRegex).length - 1) === 2],
   ['admin payload sanitizer strips payment capabilities', adminData.includes('"payment_action_token"') && adminData.includes('sanitizeSensitiveFields(data)')],
+  ['admin payload sanitizer never returns password hashes', adminData.includes('"password_hash"') && adminData.includes('"password_salt"')],
+  ['admin payload sanitizer masks payout account numbers', adminData.includes('key === "bank_account_number"') && adminData.includes('digits.slice(-4)')],
   ['customer payload sanitizer strips payment capabilities', customerData.includes('"payment_action_token"') && customerData.includes('sanitizeSensitiveFields(data)')],
   ['KYC upload checks content signatures', technicianAuth.includes('detectKycFile(bytes)')],
   ['KYC upload stores into the private technician-docs bucket', technicianAuth.includes('storage.from("technician-docs")')],
