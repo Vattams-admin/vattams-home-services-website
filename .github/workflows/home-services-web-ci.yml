@@ -13,11 +13,16 @@ on:
       - 'tsconfig*.json'
       - 'supabase/functions/**'
       - 'scripts/**'
+      - 'docs/**'
       - '.github/workflows/home-services-web-ci.yml'
       - '.github/workflows/deploy-supabase-production.yml'
   pull_request:
     branches: [main]
   workflow_dispatch:
+
+concurrency:
+  group: home-services-ci-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
