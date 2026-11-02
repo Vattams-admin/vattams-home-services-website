@@ -34,21 +34,18 @@ export default function TechnicianApplicationStatus() {
     setError('');
 
     try {
-      const storedId =
-        sessionStorage.getItem('vattams_technician_id') ||
-        sessionStorage.getItem('technician_id');
-
-      const storedMobile =
-        sessionStorage.getItem('vattams_technician_mobile') ||
-        sessionStorage.getItem('technician_mobile');
-
-      if (!storedId && !storedMobile) {
+      let token = '';
+      try {
+        if (typeof sessionStorage === 'undefined') {
+          navigate('technician-login');
+          return;
+        }
+        token = sessionStorage.getItem('vattams_technician_session') || '';
+      } catch {
         setTechnician(null);
-        navigate('technician-login');
+        setError('Browser session storage is unavailable. Please enable site storage and sign in again.');
         return;
       }
-
-      const token = sessionStorage.getItem('vattams_technician_session') || '';
       if (!token) {
         navigate('technician-login');
         return;
@@ -63,7 +60,11 @@ export default function TechnicianApplicationStatus() {
       }
 
       if (data.id) {
-        sessionStorage.setItem('vattams_technician_id', data.id);
+        try {
+          sessionStorage.setItem('vattams_technician_id', data.id);
+        } catch {
+          // The server response remains authoritative; cached ID is optional.
+        }
       }
 
       setTechnician(data as Technician);
@@ -81,10 +82,15 @@ export default function TechnicianApplicationStatus() {
   }, []);
 
   const logout = () => {
-    sessionStorage.removeItem('vattams_technician_id');
-    sessionStorage.removeItem('technician_id');
-    sessionStorage.removeItem('vattams_technician_mobile');
-    sessionStorage.removeItem('technician_mobile');
+    try {
+      sessionStorage.removeItem('vattams_technician_id');
+      sessionStorage.removeItem('technician_id');
+      sessionStorage.removeItem('vattams_technician_mobile');
+      sessionStorage.removeItem('technician_mobile');
+      sessionStorage.removeItem('vattams_technician_session');
+    } catch {
+      // Continue to the login screen even if browser storage cleanup is blocked.
+    }
     navigate('technician-login');
   };
 

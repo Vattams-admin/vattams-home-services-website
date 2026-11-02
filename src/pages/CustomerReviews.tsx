@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Loader, Star, CheckCircle, MessageSquare, ChevronRight } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import { Customer, Booking, Review, SUPABASE_ANON_KEY, SUPABASE_URL } from '@/lib/supabase';
@@ -15,49 +15,139 @@ export default function CustomerReviews() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
 
-  useEffect(() => {
-    const stored = sessionStorage.getItem('vattams_customer');
-    if (!stored) { navigate('customer-login'); return; }
+  const loadRequestVersion = useRef(0);
+
+  const load = useCallback(async (c: Customer) => {
+    const version = ++loadRequestVersion.current;
+    setLoading(true);
     try {
-      const c = JSON.parse(stored) as Customer;
-      setCustomer(c);
-      void load(c);
-    } catch { navigate('customer-login'); }
+      const [bookingResult, reviewResult] = await Promise.all([
+        customerData<{ bookings: unknown }>('completed_bookings', { mobile: c.mobile }),
+        customerData<{ reviews: unknown }>('reviews', { mobile: c.mobile }),
+      ]);
+      if (!bookingResult || !Array.isArray(bookingResult.bookings) ||
+          !bookingResult.bookings.every((booking) => booking && typeof booking === 'object' &&
+            typeof (booking as Booking).id === 'string' && (booking as Booking).id.trim() &&
+            typeof (booking as Booking).status === 'string' && (booking as Booking).status.trim() &&
+            typeof (booking as Booking).service_category === 'string' && (booking as Booking).service_category.trim() &&
+            typeof (booking as Booking).booking_number === 'string' && (booking as Booking).booking_number.trim() &&
+            typeof (booking as Booking).created_at === 'string' && Number.isFinite(Date.parse((booking as Booking).created_at))) ||
+          !reviewResult || !Array.isArray(reviewResult.reviews) ||
+          !reviewResult.reviews.every((review) => review && typeof review === 'object' &&
+            typeof (review as Review).id === 'string' && (review as Review).id.trim() &&
+            typeof (review as Review).booking_id === 'string' && (review as Review).booking_id.trim() &&
+            Number.isInteger((review as Review).rating) && (review as Review).rating >= 1 && (review as Review).rating <= 5 &&
+            typeof (review as Review).created_at === 'string' && Number.isFinite(Date.parse((review as Review).created_at)) &&
+            ((review as Review).review_text === null || typeof (review as Review).review_text === 'string'))) {
+        throw new Error('Review information could not be verified. Please retry.');
+      }
+      const validBookings = bookingResult.bookings as Booking[];
+      const validReviews = reviewResult.reviews as Review[];
+      if (new Set(validBookings.map((booking) => booking.id.trim())).size !== validBookings.length ||
+          new Set(validReviews.map((review) => review.id.trim())).size !== validReviews.length) {
+        throw new Error('Review information contained duplicate records. Please retry.');
+      }
+      if (version !== loadRequestVersion.current) return;
+      setBookings(validBookings);
+      setReviews(validReviews);
+    } catch (err) {
+      if (version !== loadRequestVersion.current) return;
+      setBookings([]);
+      setReviews([]);
+      setMessage(err instanceof Error ? err.message : 'Unable to load reviews. Please try again.');
+    } finally {
+      if (version === loadRequestVersion.current) setLoading(false);
+    }
   }, []);
 
-  const load = async (c: Customer) => {
-    const [bookingResult, reviewResult] = await Promise.all([
-      customerData<{ bookings: Booking[] }>('completed_bookings', { mobile: c.mobile }),
-      customerData<{ reviews: Review[] }>('reviews', { mobile: c.mobile }),
-    ]);
-    setBookings(bookingResult?.bookings ?? []);
-    setReviews(reviewResult?.reviews ?? []);
-    setLoading(false);
-  };
+  useEffect(() => {
+    const clearSession = () => {
+      try {
+        sessionStorage.removeItem('vattams_customer');
+        sessionStorage.removeItem('vattams_customer_session');
+        sessionStorage.removeItem('vattams_customer_expires');
+      } catch {
+        // Keep authentication failure handling even if storage cleanup is blocked.
+      }
+    };
+
+    let stored: string | null;
+    let sessionToken: string | null;
+    let expiresAt: number;
+    try {
+      stored = sessionStorage.getItem('vattams_customer');
+      sessionToken = sessionStorage.getItem('vattams_customer_session');
+      expiresAt = Number(sessionStorage.getItem('vattams_customer_expires'));
+    } catch {
+      clearSession();
+      navigate('customer-login');
+      setLoading(false);
+      return;
+    }
+
+    if (!stored || !sessionToken || !Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+      clearSession();
+      navigate('customer-login');
+      setLoading(false);
+      return;
+    }
+    try {
+      const parsed = JSON.parse(stored) as Partial<Customer>;
+      if (typeof parsed.id !== 'string' || !parsed.id.trim() ||
+          typeof parsed.mobile !== 'string' || !/^[6-9]\d{9}$/.test(parsed.mobile) ||
+          typeof parsed.full_name !== 'string' || !parsed.full_name.trim()) {
+        throw new Error('Stored customer profile is incomplete.');
+      }
+      const c = parsed as Customer;
+      setCustomer(c);
+      void load(c);
+    } catch {
+      clearSession();
+      navigate('customer-login');
+      setLoading(false);
+    }
+    return () => { loadRequestVersion.current += 1; };
+  }, [load, navigate]);
 
   const submitReview = async (booking: Booking) => {
-    if (!customer) return;
+    if (!customer || submitting !== null) return;
     const selectedRating = rating[booking.id] ?? 0;
-    if (!selectedRating) { setMessage('Please select a rating before submitting.'); return; }
+    if (!Number.isInteger(selectedRating) || selectedRating < 1 || selectedRating > 5) {
+      setMessage('Please select a rating from 1 to 5 before submitting.');
+      return;
+    }
 
     setSubmitting(booking.id);
     setMessage('');
     try {
+      let sessionToken: string | null;
+      try {
+        sessionToken = sessionStorage.getItem('vattams_customer_session');
+      } catch {
+        throw new Error('Browser storage is unavailable. Please sign in again before submitting a review.');
+      }
+      if (!sessionToken) {
+        throw new Error('Your session has expired. Please sign in again before submitting a review.');
+      }
+
       const res = await fetch(`${SUPABASE_URL}/functions/v1/customer-auth/submit-review`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
         body: JSON.stringify({
           booking_id: booking.id,
           customer_id: customer.id,
-          session_token: sessionStorage.getItem('vattams_customer_session'),
+          session_token: sessionToken,
           customer_name: customer.full_name,
           technician_id: booking.assigned_technician_id,
           rating: selectedRating,
-          review_text: reviewText[booking.id]?.trim() || null,
+          review_text: reviewText[booking.id]?.trim().slice(0, 2000) || null,
         }),
       });
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error || 'Failed to submit review');
+      const data: unknown = await res.json().catch(() => null);
+      const responseError = data && typeof data === 'object' && 'error' in data && typeof data.error === 'string' ? data.error : '';
+      if (!res.ok || responseError) {
+        throw new Error(responseError || 'Unable to confirm review submission. Please try again.');
+      }
       setMessage('Thank you. Your review has been submitted.');
       await load(customer);
     } catch (err) {
@@ -88,7 +178,7 @@ export default function CustomerReviews() {
           </div>
         </div>
 
-        {message && <div className="bg-white border border-gold-200 text-navy-800 rounded-2xl p-4 mb-5 text-sm font-medium">{message}</div>}
+        {message && <div role="status" aria-live="polite" className="bg-white border border-gold-200 text-navy-800 rounded-2xl p-4 mb-5 text-sm font-medium">{message}</div>}
 
         {pendingReviews.length > 0 && (
           <section className="mb-8">
@@ -118,7 +208,7 @@ export default function CustomerReviews() {
                         ))}
                       </div>
                     </div>
-                    <textarea value={reviewText[booking.id] ?? ''} onChange={(e) => setReviewText((current) => ({ ...current, [booking.id]: e.target.value }))} rows={3} placeholder="Tell us about your service experience (optional)" className="w-full mt-4 px-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm resize-none" />
+                    <textarea value={reviewText[booking.id] ?? ''} onChange={(e) => setReviewText((current) => ({ ...current, [booking.id]: e.target.value }))} rows={3} maxLength={2000} placeholder="Tell us about your service experience (optional)" className="w-full mt-4 px-4 py-3 rounded-xl border border-gray-200 focus:border-gold-500 focus:ring-2 focus:ring-gold-100 outline-none text-sm resize-none" />
                     <button type="button" disabled={submitting === booking.id} onClick={() => void submitReview(booking)} className="mt-4 inline-flex items-center justify-center gap-2 px-5 py-3 bg-navy-950 hover:bg-navy-900 disabled:opacity-60 text-white font-bold rounded-xl">
                       {submitting === booking.id ? <Loader size={16} className="animate-spin" /> : <MessageSquare size={16} />} Submit Review
                     </button>

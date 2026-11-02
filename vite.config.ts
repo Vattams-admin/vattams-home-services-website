@@ -108,9 +108,9 @@ function prerenderSeoPages() {
             {
               '@type': 'Organization',
               '@id': providerId,
-              name: 'VATTAMS Home Services',
+              name: 'VATTAMS Hybrid Service Marketplace',
               url: baseUrl,
-              logo: `${baseUrl}/VATTAMS_HOME_SERVICES_logo.svg`,
+              logo: `${baseUrl}/logo.svg`,
               telephone: '+91-63740-68296',
               email: 'admin@vattams.net',
               ...(city.isCurrentlyServed ? {
@@ -135,7 +135,7 @@ function prerenderSeoPages() {
             },
           ],
         };
-        const body = `<header><a href="/">VATTAMS Home Services</a>${serviceLinks}</header>
+        const body = `<header><a href="/">VATTAMS Hybrid Service Marketplace</a>${serviceLinks}</header>
           <main><nav aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/services">Services</a> / <span>${escapeHtml(city.name)}</span></nav>
           <h1>${escapeHtml(city.h1)}</h1><p>${escapeHtml(city.intro)}</p>
           <p>Appointment availability depends on your address, selected job type and technician schedule. Confirm availability in the booking flow.</p>
@@ -154,7 +154,7 @@ function prerenderSeoPages() {
       }
 
       const servicesCanonical = `${baseUrl}/services`;
-      const servicesBody = `<header><a href="/">VATTAMS Home Services</a>${serviceLinks}</header><main>
+      const servicesBody = `<header><a href="/">VATTAMS Hybrid Service Marketplace</a>${serviceLinks}</header><main>
         <h1>AC, Washing Machine and Refrigerator Service Prices</h1>
         <p>Explore AC general service, installation, gas filling, pump water service and coil service, plus washing machine and refrigerator service.</p>
         <p>Listed base prices and supported job types are loaded from the current service catalogue. Applicable GST and platform fees are displayed at checkout. Parts and additional work should be quoted separately and approved before proceeding.</p>
@@ -165,7 +165,7 @@ function prerenderSeoPages() {
       const servicesSchema = {
         '@context': 'https://schema.org',
         '@type': 'ItemList',
-        name: 'VATTAMS Home Services',
+        name: 'VATTAMS Hybrid Service Marketplace',
         url: servicesCanonical,
         itemListElement: ['AC Service', 'Washing Machine Service', 'Refrigerator Service'].map((name, index) => ({
           '@type': 'ListItem', position: index + 1, name,
@@ -183,7 +183,7 @@ function prerenderSeoPages() {
       }), 'utf8');
 
       const technicianCanonical = `${baseUrl}/join-technician`;
-      const technicianBody = `<header><a href="/">VATTAMS Home Services</a>${serviceLinks}</header><main>
+      const technicianBody = `<header><a href="/">VATTAMS Hybrid Service Marketplace</a>${serviceLinks}</header><main>
         <h1>Join the VATTAMS Appliance Technician Network</h1>
         <p>Apply for eligible AC, washing machine and refrigerator service requests. Job availability depends on service area, eligibility, technician schedule and customer demand.</p>
         <h2>Supported appliance work</h2><ul><li>AC general service, installation, gas filling, pump water service and coil service</li><li>Washing machine service</li><li>Refrigerator service</li></ul>

@@ -2,7 +2,7 @@ name: Home Services Web CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'security/frontend-backend-contract-audit-2026-10-31']
     paths:
       - 'src/**'
       - 'public/**'
@@ -12,11 +12,17 @@ on:
       - 'vite.config.*'
       - 'tsconfig*.json'
       - 'supabase/functions/**'
+      - 'scripts/**'
+      - 'docs/**'
       - '.github/workflows/home-services-web-ci.yml'
       - '.github/workflows/deploy-supabase-production.yml'
   pull_request:
     branches: [main]
   workflow_dispatch:
+
+concurrency:
+  group: home-services-ci-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -32,5 +38,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run test:security
       - run: npm run typecheck
       - run: npm run build

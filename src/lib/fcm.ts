@@ -23,33 +23,40 @@ let foregroundCallback: ((payload: { notification?: { title?: string; body?: str
 let foregroundListenerRegistered = false;
 
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
-  if (!('Notification' in window)) return 'denied';
+  if (typeof window === 'undefined' || !('Notification' in window)) return 'denied';
   if (Notification.permission === 'granted') return 'granted';
   return await Notification.requestPermission();
 }
 
 function sessionFor(userType: UserType): { token: string; id: string } | null {
-  if (typeof sessionStorage === 'undefined') return null;
-  if (userType === 'admin') return {
-    token: sessionStorage.getItem('vattams_admin') || '',
-    id: sessionStorage.getItem('vattams_admin_id') || '',
-  };
-  if (userType === 'technician') return {
-    token: sessionStorage.getItem('vattams_technician_session') || '',
-    id: sessionStorage.getItem('vattams_technician_id') || '',
-  };
-  let id = '';
+  if (typeof window === 'undefined') return null;
   try {
-    const customer = sessionStorage.getItem('vattams_customer');
-    id = customer ? String(JSON.parse(customer).id || '') : '';
-  } catch {}
-  return {
-    token: sessionStorage.getItem('vattams_customer_session') || '',
-    id,
-  };
+    if (userType === 'admin') return {
+      token: window.sessionStorage.getItem('vattams_admin') || '',
+      id: window.sessionStorage.getItem('vattams_admin_id') || '',
+    };
+    if (userType === 'technician') return {
+      token: window.sessionStorage.getItem('vattams_technician_session') || '',
+      id: window.sessionStorage.getItem('vattams_technician_id') || '',
+    };
+    let id = '';
+    try {
+      const customer = window.sessionStorage.getItem('vattams_customer');
+      id = customer ? String(JSON.parse(customer).id || '') : '';
+    } catch {
+      // The customer session token is still checked below; malformed profile cache is ignored.
+    }
+    return {
+      token: window.sessionStorage.getItem('vattams_customer_session') || '',
+      id,
+    };
+  } catch {
+    // Do not attempt push registration without readable session credentials.
+    return null;
+  }
 }
 
-async function fcmData(body: Record<string, unknown>): Promise<any> {
+async function fcmData(body: Record<string, unknown>): Promise<Record<string, unknown>> {
   const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fcm-data`, {
     method: 'POST',
     headers: {
@@ -58,8 +65,16 @@ async function fcmData(body: Record<string, unknown>): Promise<any> {
     },
     body: JSON.stringify(body),
   });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error || 'FCM request failed');
+  const parsed: unknown = await response.json().catch(() => null);
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error(`FCM service returned an invalid response (HTTP ${response.status}).`);
+  }
+  const data = parsed as Record<string, unknown>;
+  if (!response.ok || typeof data.error === 'string') {
+    throw new Error(typeof data.error === 'string' && data.error.trim()
+      ? data.error
+      : 'FCM request failed');
+  }
   return data;
 }
 
@@ -69,9 +84,21 @@ export async function registerFCMToken(
   token: string,
   deviceInfo?: string,
 ): Promise<boolean> {
+  if (!['customer', 'technician', 'admin'].includes(userType)
+    || typeof userId !== 'string' || !userId.trim() || userId.length > 200
+    || typeof token !== 'string' || !token.trim() || token.length > 4096
+    || (deviceInfo !== undefined && (typeof deviceInfo !== 'string' || deviceInfo.length > 200))) {
+    return false;
+  }
   try {
     const session = sessionFor(userType);
     if (!session?.token) return false;
+    // When the cached signed-in identity is available, never register a device
+    // token against a different account ID supplied by the caller.
+    if (session.id && session.id !== userId) {
+      console.warn('[fcm] rejected token registration for a mismatched account identity');
+      return false;
+    }
     await fcmData({
       action: 'register', user_type: userType, user_id: userId, token,
       device_info: deviceInfo ?? null, session_token: session.token,
@@ -85,6 +112,7 @@ export async function registerFCMToken(
 }
 
 export async function unregisterFCMToken(token: string): Promise<boolean> {
+  if (typeof token !== 'string' || !token.trim() || token.length > 4096) return false;
   for (const userType of ['customer', 'technician', 'admin'] as UserType[]) {
     const session = sessionFor(userType);
     if (!session?.token) continue;
@@ -104,6 +132,10 @@ export async function getTokensForUser(
   userType: UserType,
   userId: string,
 ): Promise<string[]> {
+  if (!['customer', 'technician', 'admin'].includes(userType)
+    || typeof userId !== 'string' || !userId.trim() || userId.length > 200) {
+    return [];
+  }
   try {
     const session = sessionFor(userType);
     if (!session?.token) return [];
@@ -112,7 +144,17 @@ export async function getTokensForUser(
       session_token: session.token,
       admin_id: userType === 'admin' ? session.id : undefined,
     });
-    return Array.isArray(data.tokens) ? data.tokens.map((r: { token: string }) => r.token) : [];
+    if (!Array.isArray(data.tokens)) return [];
+    // Treat gateway data as untrusted: return only bounded, non-empty token strings
+    // and remove duplicates before callers use the device-token list.
+    const tokens = data.tokens
+      .filter((row): row is { token: string } =>
+        Boolean(row && typeof row === 'object'
+          && typeof (row as { token?: unknown }).token === 'string'
+          && (row as { token: string }).token.trim().length > 0
+          && (row as { token: string }).token.length <= 4096))
+      .map((row) => row.token);
+    return [...new Set(tokens)];
   } catch {
     return [];
   }
@@ -158,6 +200,10 @@ export async function initFCM(
   userType: UserType,
   userId: string,
 ): Promise<string | null> {
+  if (!['customer', 'technician', 'admin'].includes(userType)
+    || typeof userId !== 'string' || !userId.trim() || userId.length > 200) {
+    return null;
+  }
   try {
     // Request permission before the first asynchronous wait. This allows the
     // dashboard's explicit Enable Notifications click to satisfy browsers'
@@ -230,10 +276,18 @@ export async function initFCM(
 export function onForegroundMessage(
   callback: (payload: { notification?: { title?: string; body?: string }; data?: Record<string, unknown> }) => void,
 ): void {
+  if (typeof callback !== 'function') {
+    foregroundCallback = null;
+    return;
+  }
   foregroundCallback = callback;
 }
 
 export async function unregisterUserFCM(userType: UserType, userId: string): Promise<void> {
+  if (!['customer', 'technician', 'admin'].includes(userType)
+    || typeof userId !== 'string' || !userId.trim() || userId.length > 200) {
+    return;
+  }
   try {
     const messaging = await getMessagingInstance();
     if (messaging) await deleteToken(messaging);

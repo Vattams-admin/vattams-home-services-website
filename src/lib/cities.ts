@@ -72,7 +72,7 @@ function generateContentSections(cityName: string, _knownFor: string, _populatio
   return [
     {
       heading: `Appliance Service in ${cityName}`,
-      body: `VATTAMS Home Services lets residents in ${cityName} request doorstep service for air conditioners, washing machines and refrigerators. Select the appliance and describe the issue to check the appointment options currently available for your address.`,
+      body: `VATTAMS Hybrid Service Marketplace lets residents in ${cityName} request doorstep service for air conditioners, washing machines and refrigerators. Select the appliance and describe the issue to check the appointment options currently available for your address.`,
     },
     {
       heading: `AC Service and Repair in ${cityName}`,
@@ -183,5 +183,7 @@ export const cities: CityData[] = cityConfigs.map((c) => {
 });
 
 export function getCityBySlug(slug: string): CityData | undefined {
-  return cities.find((c) => c.slug === slug);
+  if (typeof slug !== 'string') return undefined;
+  const normalizedSlug = slug.trim().toLowerCase();
+  return cities.find((c) => c.slug === normalizedSlug);
 }

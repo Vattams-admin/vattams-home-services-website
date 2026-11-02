@@ -21,7 +21,7 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
     if (this.state.hasError) {
       return (
         <div style={{ padding: '40px', fontFamily: 'system-ui, sans-serif', color: '#1e3a8a', textAlign: 'center' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '12px' }}>VATTAMS Home Services</h1>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '12px' }}>VATTAMS Hybrid Service Marketplace</h1>
           <p style={{ color: '#666', marginBottom: '8px' }}>Something went wrong loading the page.</p>
           <p style={{ color: '#999', fontSize: '14px' }}>{this.state.message}</p>
           <button
