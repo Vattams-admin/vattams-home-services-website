@@ -163,17 +163,61 @@ async function startKycUploadSession(
   return otpJson({ success: true, upload_token: uploadToken, draft_id: draftId, expires_at: expiresAt });
 }
 
-async function uploadKycDocument(supabase: ReturnType<typeof createClient>, req: Request) {
-  const rawContentLength = req.headers.get("content-length");
-  const contentLength = Number(rawContentLength || 0);
-  if (!rawContentLength || !Number.isFinite(contentLength) || contentLength <= 0) {
-    return otpJson({ error: "A valid upload content length is required." }, 411);
+async function readBoundedUploadBody(req: Request, maxBytes: number): Promise<Uint8Array | null> {
+  if (!req.body) return new Uint8Array();
+  const reader = req.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      totalBytes += value.byteLength;
+      if (totalBytes > maxBytes) {
+        await reader.cancel();
+        return null;
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
   }
-  if (contentLength > 5 * 1024 * 1024 + 64 * 1024) {
-    return otpJson({ error: "KYC files must be 5 MB or smaller." }, 413);
+  const body = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return body;
+}
+
+async function uploadKycDocument(supabase: ReturnType<typeof createClient>, req: Request) {
+  const maxRequestBytes = 5 * 1024 * 1024 + 64 * 1024;
+  const rawContentLength = req.headers.get("content-length");
+  if (rawContentLength !== null) {
+    const contentLength = Number(rawContentLength);
+    if (!Number.isSafeInteger(contentLength) || contentLength <= 0) {
+      return otpJson({ error: "Invalid upload content length." }, 400);
+    }
+    if (contentLength > maxRequestBytes) {
+      return otpJson({ error: "KYC files must be 5 MB or smaller." }, 413);
+    }
   }
 
-  const form = await req.formData();
+  // Content-Length is optional in browser/proxy requests. Enforce the same
+  // limit against the streamed bytes before multipart parsing buffers them.
+  const boundedBody = await readBoundedUploadBody(req, maxRequestBytes);
+  if (!boundedBody) {
+    return otpJson({ error: "KYC files must be 5 MB or smaller." }, 413);
+  }
+  const headers = new Headers(req.headers);
+  headers.delete("content-length");
+  let form: FormData;
+  try {
+    form = await new Request(req.url, { method: "POST", headers, body: boundedBody }).formData();
+  } catch {
+    return otpJson({ error: "Invalid multipart KYC upload request." }, 400);
+  }
   const mobile = String(form.get("mobile") || "").replace(/\D/g, "");
   const token = String(form.get("upload_token") || "");
   const docType = String(form.get("doc_type") || "");
