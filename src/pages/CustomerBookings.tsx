@@ -237,7 +237,7 @@ export default function CustomerBookings() {
             {bookings.map((booking) => {
               const status = booking.status;
               const rawAmount = booking.total_amount ?? booking.amount;
-              const parsedAmount = rawAmount == null || (typeof rawAmount === 'string' && rawAmount.trim() === '') ? null : Number(rawAmount);
+              const parsedAmount = rawAmount == null ? null : Number(rawAmount);
               const amount = parsedAmount !== null && Number.isFinite(parsedAmount) && parsedAmount >= 0 ? parsedAmount : null;
               return (
                 <article key={booking.id} className="rounded-2xl border border-[#e8e1d2] bg-white p-5 shadow-sm md:p-6">
