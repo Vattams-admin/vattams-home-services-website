@@ -29,6 +29,8 @@ const checks = [
   ['admin payload sanitizer masks payout account numbers', adminData.includes('key === "bank_account_number"') && adminData.includes('digits.slice(-4)')],
   ['customer payload sanitizer strips payment capabilities', customerData.includes('"payment_action_token"') && customerData.includes('sanitizeSensitiveFields(data)')],
   ['KYC upload checks content signatures', technicianAuth.includes('detectKycFile(bytes)')],
+  ['KYC upload does not require Content-Length', technicianAuth.includes('if (rawContentLength !== null)')],
+  ['KYC multipart body is size-bounded before parsing', technicianAuth.includes('readBoundedUploadBody(req, maxRequestBytes)') && technicianAuth.indexOf('readBoundedUploadBody(req, maxRequestBytes)') < technicianAuth.indexOf('.formData()')],
   ['KYC upload stores into the private technician-docs bucket', technicianAuth.includes('storage.from("technician-docs")')],
   ['registration derives KYC paths from the upload session', technicianAuth.includes('resolveKycPaths(') && technicianAuth.includes('kyc_upload_token')],
   ['technician-data blocks protected actions for inactive accounts', technicianData.includes('sessionTechnician.status!=="active"') && technicianData.includes('Protected actions are unavailable')],
