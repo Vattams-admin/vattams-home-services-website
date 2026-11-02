@@ -1683,7 +1683,7 @@ function JobCard({
               <CheckCircle
                 size={16}
               />
-              Mark Completed
+              Start Job
             </button>
           )}
 
