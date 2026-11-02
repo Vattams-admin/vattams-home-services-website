@@ -82,7 +82,7 @@ export default function PaymentModal({
     }
 
     setPaymentRecordId(record.payment_id);
-    setPaymentActionToken(record.payment_action_token);
+    setPaymentActionToken(record.payment_action_token ?? null);
 
     try {
       const qr = await generateUpiQrCode(amount, note);
