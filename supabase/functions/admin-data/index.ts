@@ -9,8 +9,14 @@ function sanitizeSensitiveFields(value: unknown): unknown {
   const source = value as Record<string, unknown>;
   const safe: Record<string, unknown> = {};
   for (const [key, item] of Object.entries(source)) {
-    // OTPs and bearer capabilities must not be copied into broad dashboard payloads.
-    if (["start_otp", "complete_otp", "booking_action_token", "payment_action_token"].includes(key)) continue;
+    // Credentials and bearer capabilities must never enter browser dashboard payloads.
+    if (["password", "password_hash", "password_salt", "start_otp", "complete_otp", "booking_action_token", "payment_action_token"].includes(key)) continue;
+    // Normal dashboard lists never expose full payout account numbers.
+    if (key === "bank_account_number") {
+      const digits = String(item ?? "").replace(/\D/g, "");
+      safe[key] = digits.length > 4 ? `••••${digits.slice(-4)}` : (digits ? "••••" : "");
+      continue;
+    }
     // Admin UI only needs to know whether a KYC file exists; the object path is
     // used server-side by technician-auth/doc-url and must not leave the API.
     if (["aadhaar_url", "pan_url", "dl_url"].includes(key)) {
