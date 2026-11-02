@@ -1899,6 +1899,7 @@ function WalletSection({
               (transaction, index) => {
                 const positive = [
                   'recharge_credit',
+                  'recharge_dues_settlement',
                   'deposit_release',
                   'adjustment',
                 ].includes(
