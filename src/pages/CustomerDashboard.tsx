@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Loader, Briefcase, Calendar, Clock, MapPin, Wrench, CheckCircle, X, ChevronRight, Bell, TrendingUp, CreditCard, Star, Phone, User } from 'lucide-react';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 import { Booking, Customer } from '@/lib/supabase';
 import { customerData } from '@/lib/customerData';
 import { formatCurrency } from '@/lib/pricing';
