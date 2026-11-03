@@ -508,7 +508,6 @@ export default function AdminDashboard() {
         text: error instanceof Error ? error.message : 'Unable to load pricing settings.',
       });
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
   // Re-fetch the latest notification records from the database every time
@@ -520,7 +519,6 @@ export default function AdminDashboard() {
     if (tab === 'notifications') {
       void loadNotifLogs();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
   const loadSiteSettings = async () => {
