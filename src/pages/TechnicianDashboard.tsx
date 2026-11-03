@@ -1898,6 +1898,8 @@ function WalletSection({
             {transactions.map(
               (transaction, index) => {
                 const isNeutralLedgerEvent = [
+                  'registration_fee',
+                  'deposit_lock',
                   'adjustment',
                   'recharge_dues_settlement',
                   'deposit_release',
