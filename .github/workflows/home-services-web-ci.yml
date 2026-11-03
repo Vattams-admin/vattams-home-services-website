@@ -38,6 +38,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Capture dependency advisory details
+        run: npm audit --json || true
       - run: npm run test:security
       - run: npm run typecheck
       - run: npm run build
