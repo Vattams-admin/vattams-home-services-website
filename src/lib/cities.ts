@@ -63,6 +63,8 @@ function generateFAQs(cityName: string): { q: string; a: string }[] {
 }
 
 function generateTestimonials(_cityName: string, _areas: string[]): { name: string; area: string; rating: number; text: string }[] {
+  void _cityName;
+  void _areas;
   // Never invent customer identities, ratings or testimonials for SEO pages.
   // The section remains data-driven and can be populated from approved real reviews later.
   return [];
