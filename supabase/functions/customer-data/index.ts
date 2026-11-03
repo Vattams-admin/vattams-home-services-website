@@ -59,6 +59,23 @@ Deno.serve(async req=>{
         const {data}=await supabase.from("bookings").select("id,service_category,booking_number").eq("customer_id",customerId);
         return out({bookings:data||[]});
       }
+      case "confirm_completion":{
+        const bookingId = typeof body.booking_id === "string" ? body.booking_id.trim() : "";
+        if (!bookingId) return out({error:"Booking ID is required"},400);
+        const {data,error}=await supabase.rpc("confirm_booking_completion_atomic",{
+          p_booking_id:bookingId,
+          p_customer_id:customerId
+        });
+        if(error){
+          const message=String(error.message||"");
+          if(message.includes("BOOKING_NOT_FOUND_OR_NOT_OWNED")) return out({error:"Booking not found or not owned by this customer"},404);
+          if(message.includes("BOOKING_NOT_AWAITING_CUSTOMER_CONFIRMATION") || message.includes("TECHNICIAN_JOB_NOT_AWAITING_CUSTOMER_CONFIRMATION")) return out({error:"This booking is not awaiting customer confirmation"},409);
+          if(message.includes("TECHNICIAN_JOB_NOT_FOUND") || message.includes("COMPLETED_BOOKING_JOB_MISMATCH")) return out({error:"The technician completion record could not be verified"},409);
+          return out({error:"Unable to confirm booking completion"},500);
+        }
+        if(!data?.booking || data.booking.customer_id !== customerId || data.booking.status !== "completed") return out({error:"Completion confirmation could not be verified"},409);
+        return out({success:true,booking:data.booking,already_completed:data.already_completed===true});
+      }
       case "profile":{
         const allowed={full_name:body.full_name,email:body.email||null,city:body.city||null,address:body.address||null,updated_at:new Date().toISOString()};
         const {data,error}=await supabase.from("customers").update(allowed).eq("id",customerId).select("id,full_name,mobile,email,city,address,created_at,updated_at").single();
