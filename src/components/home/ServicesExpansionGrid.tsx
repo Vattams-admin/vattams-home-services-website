@@ -20,7 +20,6 @@ import {
   HeartHandshake,
   Camera,
   Briefcase,
-  Wifi,
   Package,
   Building2,
   Paintbrush,

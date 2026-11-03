@@ -1,4 +1,4 @@
-import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase';
 import { adminData } from '@/lib/adminData';
 
 export type NotificationRecipientType = 'customer' | 'technician' | 'admin';
@@ -197,7 +197,9 @@ export async function markAsRead(notificationId: string): Promise<boolean> {
       const res=await fetch(`${SUPABASE_URL}/functions/v1/customer-data`, { method:'POST', headers:{'Content-Type':'application/json',Authorization:`Bearer ${SUPABASE_ANON_KEY}`}, body:JSON.stringify({action:'notification_read',session_token:customerToken,notification_id:notificationId}) });
       return res.ok;
     }
-  } catch {}
+  } catch {
+    // Mark-as-read is best-effort; retain the unread state on failure.
+  }
   return false;
 }
 
@@ -241,6 +243,9 @@ export function subscribeToNotifications(
   _recipientId: string,
   _onNew: (notification: NotificationRow) => void,
 ): (() => void) | null {
+  void _recipientType;
+  void _recipientId;
+  void _onNew;
   // Custom session authentication is not represented by Supabase Auth.
   // Do not expose notification rows through client Realtime.
   return null;

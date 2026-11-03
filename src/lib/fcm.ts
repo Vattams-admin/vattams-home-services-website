@@ -1,4 +1,3 @@
-import { supabase } from './supabase';
 import { getMessagingInstance, firebaseVapidKey } from './firebase-config';
 import { getToken, onMessage, deleteToken, Messaging } from 'firebase/messaging';
 
@@ -291,7 +290,9 @@ export async function unregisterUserFCM(userType: UserType, userId: string): Pro
   try {
     const messaging = await getMessagingInstance();
     if (messaging) await deleteToken(messaging);
-  } catch {}
+  } catch {
+    // Firebase token cleanup is best-effort; revoke the server session below.
+  }
   const session = sessionFor(userType);
   if (!session?.token) return;
   try {
@@ -312,6 +313,11 @@ export async function sendPushNotification(
   _body: string,
   _data?: Record<string, string>,
 ): Promise<boolean> {
+  void _userType;
+  void _userId;
+  void _title;
+  void _body;
+  void _data;
   console.warn('[fcm] direct client push dispatch is disabled; use notification-ops');
   return false;
 }
