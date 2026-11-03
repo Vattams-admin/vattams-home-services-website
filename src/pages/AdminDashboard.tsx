@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY, Booking, Technician, BookingStatus, WalletTransaction, WalletRecharge } from '@/lib/supabase';
 import { downloadOnboardingLetter } from '@/lib/onboardingLetter';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 import { updatePaymentStatus, PaymentRecord } from '@/lib/payments';
 import { adminData } from '@/lib/adminData';
 import { getPricingFromServicePrice, formatINR, type PricingBreakdown } from '@/lib/pricing';
