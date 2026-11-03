@@ -27,7 +27,6 @@ const [paymentAuth, paymentsLib, adminData, customerData, customerAuth, technici
   read('supabase/migrations/20261005074000_lock_legacy_public_data_reads.sql'),
 ]);
 
-const controlCharRegex = String.raw`/[\u0000-\u001f\u007f]/`;
 
 const extractLedgerEventTypes = (source, declaration) => {
   const match = source.match(new RegExp(`const ${declaration} = \\[([\\s\\S]*?)\\]`));
@@ -61,7 +60,7 @@ const checks = [
   ['UTR response uses a safe explicit field list', paymentAuth.includes('.select("id,payment_id,payee_type')],
   ['payment responses disable caching', paymentAuth.includes('"Cache-Control": "no-store"')],
   ['frontend requires capability only on creation', paymentsLib.includes('parsePaymentRecord(data?.payment, true)') && paymentsLib.includes('const payment = parsePaymentRecord(data?.payment);')],
-  ['payment inputs reject control characters', (paymentsLib.split(controlCharRegex).length - 1) === 2],
+  ['payment inputs reject control characters', paymentsLib.includes('function containsUnsupportedControlCharacters(value: string): boolean') && paymentsLib.includes('code <= 0x1f || code === 0x7f') && paymentsLib.includes('containsUnsupportedControlCharacters(utr)') && paymentsLib.includes('containsUnsupportedControlCharacters(verifiedBy)')],
   ['admin payload sanitizer strips payment capabilities', adminData.includes('"payment_action_token"') && adminData.includes('sanitizeSensitiveFields(data)')],
   ['admin payload sanitizer never returns password hashes', adminData.includes('"password_hash"') && adminData.includes('"password_salt"')],
   ['admin payload sanitizer masks payout account numbers', adminData.includes('key === "bank_account_number"') && adminData.includes('digits.slice(-4)')],
