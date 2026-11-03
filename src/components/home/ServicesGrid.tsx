@@ -1,5 +1,5 @@
 import { ArrowRight, Sparkles } from 'lucide-react';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 import CustomerServicePriceCards from '@/components/CustomerServicePriceCards';
 
 export default function ServicesGrid() {
