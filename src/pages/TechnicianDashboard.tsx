@@ -2549,7 +2549,7 @@ function EmptyState({
   title,
   description,
 }: {
-  icon: ComponentType<{ size?: number }>;
+  icon: LucideIcon;
   title: string;
   description: string;
 }) {
