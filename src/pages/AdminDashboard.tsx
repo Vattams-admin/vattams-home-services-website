@@ -1521,6 +1521,8 @@ export default function AdminDashboard() {
                 <tbody className="divide-y divide-gray-50">
                   {walletTxns.map((txn) => {
                     const isNonCashLedgerEvent = [
+                      'registration_fee',
+                      'deposit_lock',
                       'adjustment',
                       'recharge_dues_settlement',
                       'deposit_release',
