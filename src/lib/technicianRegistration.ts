@@ -605,7 +605,7 @@ function technicianRegistrationPayload(form: TechnicianFormData, registrationPay
   };
 }
 
-export async function submitTechnicianApplication(form: TechnicianFormData, registrationPaymentId?: string): Promise<any> {
+export async function submitTechnicianApplication(form: TechnicianFormData, registrationPaymentId?: string): Promise<Record<string, unknown>> {
   const email = typeof form?.email === 'string' ? form.email.trim() : '';
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     throw new Error('A valid email address is required to register as a technician.');
@@ -618,7 +618,7 @@ export async function submitTechnicianApplication(form: TechnicianFormData, regi
   });
 }
 
-export async function verifyTechnicianRegistrationEmail(form: TechnicianFormData, code: string): Promise<any> {
+export async function verifyTechnicianRegistrationEmail(form: TechnicianFormData, code: string): Promise<Record<string, unknown>> {
   const mobile = typeof form?.mobile === 'string' ? form.mobile.trim() : '';
   if (!/^[6-9]\d{9}$/.test(mobile)) {
     throw new Error('Enter a valid 10-digit Indian mobile number before verifying the code.');
@@ -630,7 +630,7 @@ export async function verifyTechnicianRegistrationEmail(form: TechnicianFormData
   return postTechnicianAuth('verify-registration-otp', { mobile, code: normalizedCode });
 }
 
-export async function resendTechnicianRegistrationEmailOtp(form: TechnicianFormData): Promise<any> {
+export async function resendTechnicianRegistrationEmailOtp(form: TechnicianFormData): Promise<Record<string, unknown>> {
   const mobile = typeof form?.mobile === 'string' ? form.mobile.trim() : '';
   if (!/^[6-9]\d{9}$/.test(mobile)) {
     throw new Error('Enter a valid 10-digit Indian mobile number before requesting a new code.');
