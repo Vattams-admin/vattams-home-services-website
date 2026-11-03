@@ -41,14 +41,14 @@ Deno.serve(async req=>{
         const {data:customer}=await supabase.from("customers").select("id,full_name,mobile,email,city,address,created_at,updated_at").eq("id",customerId).single();if(!customer)return out({error:"Customer not found"},404);const customerMobile=customer.mobile;
         const [{data:bookings},{data:notifications},{data:reviews}]=await Promise.all([
           supabase.from("bookings").select(CUSTOMER_BOOKING_COLUMNS).eq("customer_id",customerId).order("created_at",{ascending:false}),
-          supabase.from("notifications").select("*").eq("recipient_type","customer").eq("recipient_id",customerMobile).order("created_at",{ascending:false}).limit(20),
-          supabase.from("reviews").select("*").eq("customer_id",customerId).order("created_at",{ascending:false})
+          supabase.from("notifications").select("id,title,message,created_at,is_read").eq("recipient_type","customer").eq("recipient_id",customerMobile).order("created_at",{ascending:false}).limit(20),
+          supabase.from("reviews").select("id,booking_id,rating,review_text,created_at").eq("customer_id",customerId).order("created_at",{ascending:false})
         ]);
         return out({customer,bookings:bookings||[],notifications:notifications||[],reviews:reviews||[]});
       }
       case "payments":{
         const {data:customer}=await supabase.from("customers").select("mobile").eq("id",customerId).single();if(!customer)return out({error:"Customer not found"},404);
-        const {data}=await supabase.from("payments").select("*").eq("payee_type","customer").eq("payee_id",customer.mobile).order("created_at",{ascending:false});
+        const {data}=await supabase.from("payments").select("id,payment_id,amount,purpose,reference_id,utr,upi_id,status,created_at").eq("payee_type","customer").eq("payee_id",customer.mobile).order("created_at",{ascending:false});
         return out({payments:data||[]});
       }
       case "bookings":{
