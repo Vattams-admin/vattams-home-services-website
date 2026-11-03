@@ -4,7 +4,6 @@ import {
   Plus,
   Search,
   Edit3,
-  Trash2,
   CheckCircle,
   XCircle,
   Loader,
