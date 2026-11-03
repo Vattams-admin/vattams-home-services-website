@@ -92,15 +92,6 @@ function otpJson(data: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" } });
 }
 
-interface KycUploadSession {
-  id: string;
-  mobile: string;
-  code: string;
-  expires_at: string;
-  verified: boolean;
-  registration_data: { draft_id?: string; email?: string } | null;
-}
-
 async function sha256Hex(value: string): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
   return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -322,7 +313,8 @@ async function startTechnicianRegistrationOtp(supabase: ReturnType<typeof create
   const otpHash = await hashEmailOtp(otp);
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
   const passwordHash = await bcrypt.hash(body.password, await bcrypt.genSalt(10));
-  const { kyc_upload_token: _uploadToken, ...safeBody } = body as RegisterBody & { kyc_upload_token?: string };
+  const safeBody = { ...body } as RegisterBody;
+  delete (safeBody as RegisterBody & { kyc_upload_token?: string }).kyc_upload_token;
   const { data: row, error } = await supabase.from("otp_codes").insert({
     mobile, code: otpHash, purpose: "technician_registration", expires_at: expiresAt,
     registration_data: { ...safeBody, ...kycPaths, mobile, email, password: undefined, password_hash: passwordHash },
@@ -667,7 +659,8 @@ async function handleLogin(supabase: ReturnType<typeof createClient>, body: Logi
     );
   }
 
-  const { password_hash: _passwordHash, ...safeTech } = technician;
+  const safeTech = { ...technician };
+  delete (safeTech as typeof technician & { password_hash?: string }).password_hash;
   return new Response(
     JSON.stringify({ technician: safeTech, sessionToken, expiresAt }),
     { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
