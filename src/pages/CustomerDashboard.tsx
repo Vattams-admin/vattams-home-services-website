@@ -132,35 +132,6 @@ export default function CustomerDashboard() {
     };
   }, [selected]);
 
-  const refreshDashboard = useCallback(async (c: Customer) => {
-    const version = ++requestVersion.current;
-    setLoading(true);
-    setLoadError('');
-    const results = await Promise.allSettled([loadBookings(c), loadNotifications(c)]);
-    if (version !== requestVersion.current) return;
-
-    const bookingResult = results[0];
-    const notificationResult = results[1];
-    if (bookingResult.status === 'fulfilled') {
-      setBookings(bookingResult.value);
-      setBookingsLoaded(true);
-    } else {
-      setBookingsLoaded(false);
-      console.error('[CustomerDashboard] booking history load failed:', bookingResult.reason);
-    }
-    if (notificationResult.status === 'fulfilled') {
-      setNotifications(notificationResult.value);
-      setNotificationsLoaded(true);
-    } else {
-      setNotificationsLoaded(false);
-      console.error('[CustomerDashboard] notification load failed:', notificationResult.reason);
-    }
-
-    if (bookingResult.status === 'rejected') setLoadError('Your booking history could not be verified. Please retry.');
-    else if (notificationResult.status === 'rejected') setLoadError('Some dashboard information could not be loaded. Please retry.');
-    setLoading(false);
-  }, [loadBookings, loadNotifications]);
-
   const loadBookings = useCallback(async (c: Customer): Promise<Booking[]> => {
     const data = await customerData<{ bookings: unknown }>('bookings', { mobile: c.mobile });
     if (!data || !Array.isArray(data.bookings)) {
@@ -206,6 +177,35 @@ export default function CustomerDashboard() {
     }
     return validNotifications;
   }, []);
+
+  const refreshDashboard = useCallback(async (c: Customer) => {
+    const version = ++requestVersion.current;
+    setLoading(true);
+    setLoadError('');
+    const results = await Promise.allSettled([loadBookings(c), loadNotifications(c)]);
+    if (version !== requestVersion.current) return;
+
+    const bookingResult = results[0];
+    const notificationResult = results[1];
+    if (bookingResult.status === 'fulfilled') {
+      setBookings(bookingResult.value);
+      setBookingsLoaded(true);
+    } else {
+      setBookingsLoaded(false);
+      console.error('[CustomerDashboard] booking history load failed:', bookingResult.reason);
+    }
+    if (notificationResult.status === 'fulfilled') {
+      setNotifications(notificationResult.value);
+      setNotificationsLoaded(true);
+    } else {
+      setNotificationsLoaded(false);
+      console.error('[CustomerDashboard] notification load failed:', notificationResult.reason);
+    }
+
+    if (bookingResult.status === 'rejected') setLoadError('Your booking history could not be verified. Please retry.');
+    else if (notificationResult.status === 'rejected') setLoadError('Some dashboard information could not be loaded. Please retry.');
+    setLoading(false);
+  }, [loadBookings, loadNotifications]);
 
   useEffect(() => {
     let active = true;
