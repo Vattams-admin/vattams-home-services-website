@@ -1,5 +1,5 @@
 import { MapPin, ArrowRight, Briefcase } from 'lucide-react';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 
 const activeCities = [
   { name: 'Chennai', slug: 'chennai' },
