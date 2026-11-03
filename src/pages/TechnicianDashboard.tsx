@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { LucideIcon } from 'lucide-react';
+import type { ComponentType } from 'react';
 import {
   Briefcase,
   Wallet,
@@ -1284,7 +1284,7 @@ function StatCard({
   value,
   subtitle,
 }: {
-  icon: LucideIcon;
+  icon: ComponentType<{ size?: number }>;
   title: string;
   value: string;
   subtitle: string;
@@ -2557,7 +2557,7 @@ function EmptyState({
   title,
   description,
 }: {
-  icon: any;
+  icon: ComponentType<{ size?: number }>;
   title: string;
   description: string;
 }) {
