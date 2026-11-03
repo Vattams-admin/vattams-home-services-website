@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
-const [paymentAuth, paymentsLib, adminData, customerData, technicianAuth, technicianData, adminDashboard, technicianDashboard, paymentModal, homeFeatures, bookingLifecycleMigration, completionProofMigration, supabaseLib] = await Promise.all([
+const [paymentAuth, paymentsLib, adminData, customerData, technicianAuth, technicianData, adminDashboard, technicianDashboard, paymentModal, homeFeatures, bookingLifecycleMigration, completionProofMigration, supabaseLib, rechargeLedgerMigration] = await Promise.all([
   read('supabase/functions/payment-auth/index.ts'),
   read('src/lib/payments.ts'),
   read('supabase/functions/admin-data/index.ts'),
@@ -16,11 +16,16 @@ const [paymentAuth, paymentsLib, adminData, customerData, technicianAuth, techni
   read('supabase/migrations/20261102193000_booking_job_lock_order.sql'),
   read('supabase/migrations/20261102200000_require_customer_proof_for_completion.sql'),
   read('src/lib/supabase.ts'),
+  read('supabase/migrations/20261103120000_reconcile_recharge_ledger_allocations.sql'),
 ]);
 
 const controlCharRegex = String.raw`/[\u0000-\u001f\u007f]/`;
 
 const checks = [
+  ['recharge ledger records dues settlement separately from wallet credit', rechargeLedgerMigration.includes("'recharge_dues_settlement', dues_settled") && rechargeLedgerMigration.includes("'recharge_credit', wallet_credit")],
+  ['recharge credit ledger amount equals only the wallet balance increment', rechargeLedgerMigration.includes("wallet_balance = wallet_balance + wallet_credit") && !rechargeLedgerMigration.includes("'recharge_credit', NEW.amount")],
+  ['recharge ledger split preserves total payment allocation', rechargeLedgerMigration.includes("dues_settled := LEAST(c_due, NEW.amount)") && rechargeLedgerMigration.includes("wallet_credit := GREATEST(NEW.amount - c_due, 0)")],
+
   ['payment-auth avoids wildcard selects', !paymentAuth.includes('.select("*")')],
   ['payment creation explicitly returns the initial capability', paymentAuth.includes('select("id,payment_id,payment_action_token,')],
   ['UTR submission rotates the capability', paymentAuth.includes('payment_action_token: crypto.randomUUID()')],
