@@ -89,6 +89,7 @@ export default function CustomerProfile() {
   }, []);
 
   const loadBookingCount = async (_customerId: string) => {
+    void _customerId;
     const requestVersion = ++bookingCountRequestVersion.current;
     setBookingCountError(false);
     setBookingCountLoading(true);

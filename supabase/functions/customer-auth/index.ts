@@ -225,6 +225,7 @@ Deno.serve(async (req: Request) => {
         const { error: sessionError } = await supabase.from("customer_auth_sessions").insert({ customer_id: customer.id, token: sessionToken, expires_at: expiresAt });
         if (sessionError) return errorResponse("Unable to create secure login session. Please try again.", 500);
         const { password_hash, ...customerData } = customer;
+        void password_hash;
         return jsonResponse({ success: true, message: "Login successful", customer: customerData, sessionToken, expiresAt });
       }
 

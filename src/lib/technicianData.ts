@@ -1,6 +1,6 @@
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from './supabase';
 
-export async function technicianData<T = any>(action: string, extra: Record<string, unknown> = {}): Promise<T | null> {
+export async function technicianData<T = unknown>(action: string, extra: Record<string, unknown> = {}): Promise<T | null> {
   let sessionToken = '';
   try {
     if (typeof sessionStorage === 'undefined') {

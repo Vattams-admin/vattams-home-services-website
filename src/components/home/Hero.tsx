@@ -98,7 +98,7 @@ export default function Hero() {
             </div>
 
             <div className="mt-4 space-y-3">
-              {serviceShortcuts.map((service, index) => (
+              {serviceShortcuts.map((service) => (
                 <button
                   key={service.label}
                   onClick={() => navigate('booking')}
