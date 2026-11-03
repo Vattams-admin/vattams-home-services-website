@@ -523,7 +523,7 @@ export default function TechnicianRegister() {
       await resendTechnicianRegistrationEmailOtp(form);
       setEmailOtp('');
       setEmailOtpResendTimer(60);
-    } catch (err: any) {
+    } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not resend the email verification code.');
       if ((err instanceof Error && err.message.includes('60 seconds'))) setEmailOtpResendTimer(60);
     } finally {
@@ -548,7 +548,7 @@ export default function TechnicianRegister() {
       setEmailOtp('');
       setEmailOtpPending(false);
       setSuccess(true);
-    } catch (err: any) {
+    } catch (err) {
       setError(err instanceof Error ? err.message : 'Email verification failed. Please try again.');
     } finally {
       submittingRef.current = false;
