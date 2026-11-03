@@ -1,5 +1,4 @@
 import { resolveServiceIcon } from '@/lib/serviceIconResolver';
-import type { LucideIcon } from 'lucide-react';
 
 interface ServiceIconProps {
   service: string | null | undefined;
