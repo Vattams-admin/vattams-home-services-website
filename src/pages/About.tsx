@@ -4,7 +4,7 @@ import {
   PartyPopper, Cpu, Globe2, Lock, ClipboardCheck, UserCheck, HeartHandshake,
   CalendarCheck, LucideIcon,
 } from 'lucide-react';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 import { cities } from '@/lib/cities';
 import { useSEO } from '@/lib/seo';
 
