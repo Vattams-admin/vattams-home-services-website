@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Loader, Star, CheckCircle, MessageSquare, ChevronRight } from 'lucide-react';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 import { Customer, Booking, Review, SUPABASE_ANON_KEY, SUPABASE_URL } from '@/lib/supabase';
 import { customerData } from '@/lib/customerData';
 
