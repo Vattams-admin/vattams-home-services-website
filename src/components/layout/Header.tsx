@@ -21,7 +21,8 @@ import {
   CalendarCheck,
 } from 'lucide-react';
 
-import { useRouter, type Page } from '@/lib/router';
+import { type Page } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 
 interface CustomerSession {
   id?: string;
