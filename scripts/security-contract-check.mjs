@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
-const [paymentAuth, paymentsLib, adminData, customerData, customerAuth, technicianAuth, technicianData, adminDashboard, technicianDashboard, customerDashboard, customerBookings, paymentModal, homeFeatures, bookingLifecycleMigration, completionProofMigration, customerCompletionMigration, staleTransitionMigration, supabaseLib, rechargeLedgerMigration, paymentWriteLockMigration, paymentReadLockMigration] = await Promise.all([
+const [paymentAuth, paymentsLib, adminData, customerData, customerAuth, technicianAuth, technicianData, adminDashboard, technicianDashboard, customerDashboard, customerBookings, paymentModal, homeFeatures, bookingLifecycleMigration, completionProofMigration, customerCompletionMigration, staleTransitionMigration, rechargeHardeningMigration, supabaseLib, rechargeLedgerMigration, paymentWriteLockMigration, paymentReadLockMigration] = await Promise.all([
   read('supabase/functions/payment-auth/index.ts'),
   read('src/lib/payments.ts'),
   read('supabase/functions/admin-data/index.ts'),
@@ -20,6 +20,7 @@ const [paymentAuth, paymentsLib, adminData, customerData, customerAuth, technici
   read('supabase/migrations/20261102200000_require_customer_proof_for_completion.sql'),
   read('supabase/migrations/20261103130000_customer_confirm_booking_completion.sql'),
   read('supabase/migrations/20261103140000_reject_stale_technician_job_transitions.sql'),
+  read('supabase/migrations/20261103150000_harden_recharge_approval_bounds.sql'),
   read('src/lib/supabase.ts'),
   read('supabase/migrations/20261103120000_reconcile_recharge_ledger_allocations.sql'),
   read('supabase/migrations/20261005030000_lock_public_payment_writes.sql'),
@@ -42,6 +43,14 @@ const checks = [
   ['recharge ledger records dues settlement separately from wallet credit', rechargeLedgerMigration.includes("'recharge_dues_settlement', dues_settled") && rechargeLedgerMigration.includes("'recharge_credit', wallet_credit")],
   ['recharge credit ledger amount equals only the wallet balance increment', rechargeLedgerMigration.includes("wallet_balance = wallet_balance + wallet_credit") && !rechargeLedgerMigration.includes("'recharge_credit', NEW.amount")],
   ['recharge ledger split preserves total payment allocation', rechargeLedgerMigration.includes("dues_settled := LEAST(c_due, NEW.amount)") && rechargeLedgerMigration.includes("wallet_credit := GREATEST(NEW.amount - c_due, 0)")],
+  ['database enforces recharge amount bounds for new and updated rows', rechargeHardeningMigration.includes('CHECK (amount > 0 AND amount <= 100000) NOT VALID')],
+  ['recharge approval rejects non-pending status transitions', rechargeHardeningMigration.includes("OLD.status IS DISTINCT FROM 'pending'") && rechargeHardeningMigration.includes("MESSAGE = 'RECHARGE_NOT_PENDING'")],
+  ['recharge approval independently validates positive bounded amounts', rechargeHardeningMigration.includes('NEW.amount IS NULL OR NEW.amount <= 0 OR NEW.amount > 100000') && rechargeHardeningMigration.includes("MESSAGE = 'INVALID_RECHARGE_AMOUNT'")],
+  ['recharge approval fails closed when wallet settings are missing', rechargeHardeningMigration.includes('IF NOT FOUND OR settings.lock_threshold IS NULL') && rechargeHardeningMigration.includes("MESSAGE = 'WALLET_SETTINGS_NOT_CONFIGURED'")],
+  ['recharge approval fails closed when technician is missing', rechargeHardeningMigration.includes('IF NOT FOUND THEN') && rechargeHardeningMigration.includes("MESSAGE = 'TECHNICIAN_NOT_FOUND'")],
+  ['recharge allocation settles only actual dues and credits only the remainder', rechargeHardeningMigration.includes('dues_settled := LEAST(c_due, NEW.amount)') && rechargeHardeningMigration.includes('due_after := GREATEST(c_due - dues_settled, 0)') && rechargeHardeningMigration.includes('wallet_credit := NEW.amount - dues_settled')],
+  ['recharge approval serializes same-technician approvals with a row lock', rechargeHardeningMigration.includes('FROM public.technicians') && rechargeHardeningMigration.includes('FOR UPDATE')],
+
 
   ['payment write lockdown revokes direct browser-role mutation privileges', paymentWriteLockMigration.includes('REVOKE INSERT, UPDATE, DELETE ON TABLE payments FROM anon, authenticated')],
   ['payment read lockdown removes the original public read policy', paymentReadLockMigration.includes('DROP POLICY IF EXISTS "public_select_payments" ON payments')],
