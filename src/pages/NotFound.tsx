@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Home as HomeIcon, Briefcase, ArrowRight } from 'lucide-react';
+import { Home as HomeIcon } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import JoinTechnicianButton from '@/components/JoinTechnicianButton';
 
