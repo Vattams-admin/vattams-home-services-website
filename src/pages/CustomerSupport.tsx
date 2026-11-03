@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Mail, MapPin, Send, Loader, Headphones, ChevronRight } from 'lucide-react';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 import { Customer } from '@/lib/supabase';
 import { customerData } from '@/lib/customerData';
 import CommunicationCenter, { SUPPORT_PHONE } from '@/components/CommunicationCenter';
