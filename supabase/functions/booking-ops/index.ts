@@ -6,14 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
-interface SupabaseClient {
-  from: (table: string) => {
-    select: (columns: string) => { eq: (col: string, val: unknown) => { maybeSingle: () => Promise<{ data: unknown; error: unknown }> } };
-    update: (data: Record<string, unknown>) => { eq: (col: string, val: unknown) => Promise<{ error: unknown }> };
-    insert: (data: Record<string, unknown>) => { select: (columns: string) => { single: () => Promise<{ data: unknown; error: unknown }> } };
-  };
-}
-
 function isFeaturedApplianceService(name: unknown): boolean {
   const value = String(name ?? '').trim().toLowerCase();
   return /(^|\W)ac(\W|$)|air\s*condition/.test(value)
@@ -100,7 +92,7 @@ Deno.serve(async (req: Request) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const { action, booking_id, technician_id, otp, purpose, status, booking_action_token, admin_id, admin_session_token, customer_session_token, booking } = requestBody as Record<string, unknown>;
+    const { action, booking_id, technician_id, booking_action_token, admin_id, admin_session_token, customer_session_token, booking } = requestBody as Record<string, unknown>;
 
     if (action === "create_booking") {
       if (!booking || typeof booking !== "object" || Array.isArray(booking)) {
