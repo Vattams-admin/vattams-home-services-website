@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Lock, Loader, Eye, EyeOff, Phone, Mail, AlertCircle, Wrench } from 'lucide-react';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 import { Technician, SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase';
 import { initFCM, registerServiceWorker } from '@/lib/fcm';
 
