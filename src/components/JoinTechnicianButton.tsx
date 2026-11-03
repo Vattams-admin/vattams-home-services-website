@@ -1,5 +1,6 @@
 import { Briefcase } from 'lucide-react';
-import { useRouter, type Page } from '@/lib/router';
+import { type Page } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 
 interface Props {
   variant?: 'solid' | 'outline' | 'ghost';
