@@ -71,6 +71,8 @@ function generateTestimonials(_cityName: string, _areas: string[]): { name: stri
 }
 
 function generateContentSections(cityName: string, _knownFor: string, _population: string): { heading: string; body: string }[] {
+  void _knownFor;
+  void _population;
   return [
     {
       heading: `Appliance Service in ${cityName}`,
