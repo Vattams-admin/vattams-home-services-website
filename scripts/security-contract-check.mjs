@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
-const [paymentAuth, paymentsLib, adminData, customerData, customerAuth, technicianAuth, technicianData, adminDashboard, technicianDashboard, customerDashboard, customerBookings, paymentModal, homeFeatures, bookingLifecycleMigration, completionProofMigration, customerCompletionMigration, supabaseLib, rechargeLedgerMigration, paymentWriteLockMigration, paymentReadLockMigration] = await Promise.all([
+const [paymentAuth, paymentsLib, adminData, customerData, customerAuth, technicianAuth, technicianData, adminDashboard, technicianDashboard, customerDashboard, customerBookings, paymentModal, homeFeatures, bookingLifecycleMigration, completionProofMigration, customerCompletionMigration, staleTransitionMigration, supabaseLib, rechargeLedgerMigration, paymentWriteLockMigration, paymentReadLockMigration] = await Promise.all([
   read('supabase/functions/payment-auth/index.ts'),
   read('src/lib/payments.ts'),
   read('supabase/functions/admin-data/index.ts'),
@@ -19,6 +19,7 @@ const [paymentAuth, paymentsLib, adminData, customerData, customerAuth, technici
   read('supabase/migrations/20261102193000_booking_job_lock_order.sql'),
   read('supabase/migrations/20261102200000_require_customer_proof_for_completion.sql'),
   read('supabase/migrations/20261103130000_customer_confirm_booking_completion.sql'),
+  read('supabase/migrations/20261103140000_reject_stale_technician_job_transitions.sql'),
   read('src/lib/supabase.ts'),
   read('supabase/migrations/20261103120000_reconcile_recharge_ledger_allocations.sql'),
   read('supabase/migrations/20261005030000_lock_public_payment_writes.sql'),
@@ -90,6 +91,12 @@ const checks = [
   ['customer-data derives confirmation identity from the authenticated session', customerData.includes('p_customer_id:customerId') && customerData.includes('confirm_booking_completion_atomic') && customerData.includes('case "confirm_completion"')],
   ['customer dashboard exposes confirmation only for technician-reported completion', customerDashboard.includes("selected.status === 'job_completed'") && customerDashboard.includes('Confirm Service Completed')],
   ['customer booking history exposes completion confirmation for every eligible booking', customerBookings.includes("status === 'job_completed'") && customerBookings.includes('confirmBookingCompletion(booking)') && customerBookings.includes('Confirm Service Completed')],
+  ['stale technician rejection is blocked when booking assignment has changed', staleTransitionMigration.includes('IF v_booking.assigned_technician_id IS DISTINCT FROM p_technician_id THEN') && !staleTransitionMigration.includes("AND p_requested_status <> 'rejected'")],
+  ['stale technician transition checks booking assignment before any state update', staleTransitionMigration.indexOf('IF v_booking.assigned_technician_id IS DISTINCT FROM p_technician_id THEN') < staleTransitionMigration.indexOf('UPDATE public.technician_jobs')],
+  ['technician transition locks booking before the matching job row', staleTransitionMigration.indexOf('FROM public.bookings') < staleTransitionMigration.indexOf('FOR UPDATE') && staleTransitionMigration.indexOf('FOR UPDATE') < staleTransitionMigration.lastIndexOf('FROM public.technician_jobs')],
+  ['technician transition update rechecks current assignment and fails closed', staleTransitionMigration.includes('AND assigned_technician_id = p_technician_id') && staleTransitionMigration.includes("MESSAGE = 'BOOKING_ASSIGNMENT_CHANGED'")],
+  ['stale transition migration preserves service-role-only RPC execution', staleTransitionMigration.includes('REVOKE ALL ON FUNCTION public.transition_technician_job_atomic(uuid, uuid, text) FROM PUBLIC, anon, authenticated') && staleTransitionMigration.includes('GRANT EXECUTE ON FUNCTION public.transition_technician_job_atomic(uuid, uuid, text) TO service_role')],
+
 
   ['wallet transaction type includes recharge dues settlement', supabaseLib.includes("'recharge_dues_settlement'")],
   ['technician dashboard treats recharge dues settlement as a positive payment allocation', technicianDashboard.includes("'recharge_dues_settlement',")],
