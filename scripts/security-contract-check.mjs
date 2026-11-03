@@ -23,7 +23,7 @@ const [paymentAuth, paymentsLib, adminData, customerData, technicianAuth, techni
 const controlCharRegex = String.raw`/[\u0000-\u001f\u007f]/`;
 
 const checks = [
-  ['dues settlement and deposit release are not displayed as cash credits', technicianDashboard.includes("'adjustment',\n                  'recharge_dues_settlement',\n                  'deposit_release'") && technicianDashboard.includes("const positive = transaction.type === 'recharge_credit';")],
+  ['dues settlement and deposit release are not displayed as cash credits', technicianDashboard.includes("'adjustment',\n                  'recharge_dues_settlement',\n                  'deposit_release',\n                  'platform_fee_remittance',\n                  'gst_remittance',\n                  'call_rate_fee'") && technicianDashboard.includes("const positive = transaction.type === 'recharge_credit';")],
   ['recharge ledger records dues settlement separately from wallet credit', rechargeLedgerMigration.includes("'recharge_dues_settlement', dues_settled") && rechargeLedgerMigration.includes("'recharge_credit', wallet_credit")],
   ['recharge credit ledger amount equals only the wallet balance increment', rechargeLedgerMigration.includes("wallet_balance = wallet_balance + wallet_credit") && !rechargeLedgerMigration.includes("'recharge_credit', NEW.amount")],
   ['recharge ledger split preserves total payment allocation', rechargeLedgerMigration.includes("dues_settled := LEAST(c_due, NEW.amount)") && rechargeLedgerMigration.includes("wallet_credit := GREATEST(NEW.amount - c_due, 0)")],
