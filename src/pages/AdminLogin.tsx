@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Lock, Loader, AlertCircle, Mail } from 'lucide-react';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase';
 import { initFCM } from '@/lib/fcm';
 import './AdminLogin.css';
