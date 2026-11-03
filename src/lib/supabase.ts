@@ -182,7 +182,7 @@ export interface WalletRecharge {
   approved_by: string | null;
 }
 
-export type NotificationType = 'registration_fee' | 'deposit_released' | 'wallet_low' | 'account_locked' | 'account_unlocked' | 'recharge_approved' | 'commission_deducted';
+export type NotificationType = 'registration_fee' | 'deposit_released' | 'wallet_low' | 'account_locked' | 'account_unlocked' | 'recharge_approved' | 'commission_deducted' | 'call_rate_fee';
 
 export interface TechnicianNotification {
   id: string;
