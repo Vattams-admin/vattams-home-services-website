@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Loader, User, Phone, Lock, Mail, MapPin, Home, KeyRound, ShieldCheck } from 'lucide-react';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase';
 
 type Step = 'form' | 'otp' | 'success';
