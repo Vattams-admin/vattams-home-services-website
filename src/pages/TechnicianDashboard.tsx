@@ -1897,15 +1897,12 @@ function WalletSection({
           <div className="bg-white rounded-2xl border border-[#e8e1d2] overflow-hidden">
             {transactions.map(
               (transaction, index) => {
-                const isAdjustment =
-                  transaction.type === 'adjustment';
-                const positive = [
-                  'recharge_credit',
+                const isNeutralLedgerEvent = [
+                  'adjustment',
                   'recharge_dues_settlement',
                   'deposit_release',
-                ].includes(
-                  transaction.type
-                );
+                ].includes(transaction.type);
+                const positive = transaction.type === 'recharge_credit';
 
                 return (
                   <div
@@ -1921,14 +1918,14 @@ function WalletSection({
                     <div className="flex items-center gap-3 min-w-0">
                       <div
                         className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                          isAdjustment
+                          isNeutralLedgerEvent
                             ? 'bg-gray-100 text-gray-600'
                             : positive
                               ? 'bg-green-50 text-green-600'
                               : 'bg-red-50 text-red-600'
                         }`}
                       >
-                        {isAdjustment ? (
+                        {isNeutralLedgerEvent ? (
                           <Wallet size={18} />
                         ) : positive ? (
                           <IndianRupee size={18} />
@@ -1967,14 +1964,14 @@ function WalletSection({
                     <div className="text-right shrink-0">
                       <p
                         className={`font-extrabold ${
-                          isAdjustment
+                          isNeutralLedgerEvent
                             ? 'text-gray-600'
                             : positive
                               ? 'text-green-600'
                               : 'text-red-600'
                         }`}
                       >
-                        {isAdjustment
+                        {isNeutralLedgerEvent
                           ? ''
                           : positive
                             ? '+'
