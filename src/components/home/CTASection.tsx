@@ -1,5 +1,5 @@
 import { Calendar, Phone, ArrowRight } from 'lucide-react';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 
 // Final call-to-action banner shown at the bottom of the Home page.
 // Focused on the VATTAMS Hybrid Service Marketplace.
