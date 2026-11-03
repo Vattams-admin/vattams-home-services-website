@@ -2,11 +2,12 @@ import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
-const [paymentAuth, paymentsLib, adminData, customerData, technicianAuth, technicianData, adminDashboard, technicianDashboard, paymentModal, homeFeatures, bookingLifecycleMigration, completionProofMigration, supabaseLib, rechargeLedgerMigration, paymentWriteLockMigration, paymentReadLockMigration] = await Promise.all([
+const [paymentAuth, paymentsLib, adminData, customerData, customerAuth, technicianAuth, technicianData, adminDashboard, technicianDashboard, paymentModal, homeFeatures, bookingLifecycleMigration, completionProofMigration, supabaseLib, rechargeLedgerMigration, paymentWriteLockMigration, paymentReadLockMigration] = await Promise.all([
   read('supabase/functions/payment-auth/index.ts'),
   read('src/lib/payments.ts'),
   read('supabase/functions/admin-data/index.ts'),
   read('supabase/functions/customer-data/index.ts'),
+  read('supabase/functions/customer-auth/index.ts'),
   read('supabase/functions/technician-auth/index.ts'),
   read('supabase/functions/technician-data/index.ts'),
   read('src/pages/AdminDashboard.tsx'),
