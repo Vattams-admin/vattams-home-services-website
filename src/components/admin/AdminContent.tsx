@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { FileText, Loader, Sparkles, Save, Send, Globe, Facebook, Instagram, Youtube, MessageCircle, PenLine, MapPin, HelpCircle, Tag, Calendar } from 'lucide-react';
+import { FileText, Loader, Sparkles, Save, Globe, Facebook, Instagram, Youtube, MessageCircle, PenLine, MapPin, HelpCircle, Tag, Calendar } from 'lucide-react';
 import { generateSocialContent, generateBlogPost, generateCityPage, generateFAQ, generateOfferPoster, saveContentDraft, fetchContentDrafts, type ContentDraft } from '@/lib/aiContent';
-import { supabase } from '@/lib/supabase';
 
 const SOCIAL_TYPES = [
   { type: 'instagram_reel', label: 'Instagram Reel', icon: Instagram, color: 'bg-pink-100 text-pink-700' },
