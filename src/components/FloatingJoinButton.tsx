@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Briefcase, X } from 'lucide-react';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 
 export default function FloatingJoinButton() {
   const { page, navigate } = useRouter();
