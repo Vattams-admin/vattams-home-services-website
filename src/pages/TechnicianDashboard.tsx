@@ -1928,14 +1928,12 @@ function WalletSection({
                               : 'bg-red-50 text-red-600'
                         }`}
                       >
-                        {positive ? (
-                          <IndianRupee
-                            size={18}
-                          />
+                        {isAdjustment ? (
+                          <Wallet size={18} />
+                        ) : positive ? (
+                          <IndianRupee size={18} />
                         ) : (
-                          <CreditCard
-                            size={18}
-                          />
+                          <CreditCard size={18} />
                         )}
                       </div>
 
