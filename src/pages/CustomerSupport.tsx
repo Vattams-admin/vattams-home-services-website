@@ -7,6 +7,14 @@ import CommunicationCenter, { SUPPORT_PHONE } from '@/components/CommunicationCe
 
 const SUPPORT_EMAIL = 'support@vattams.net';
 
+function containsUnsupportedControlCharacters(value: string, allowMessageWhitespace = false): boolean {
+  return Array.from(value).some((character) => {
+    const code = character.charCodeAt(0);
+    const allowedMessageWhitespace = allowMessageWhitespace && (code === 0x09 || code === 0x0a || code === 0x0d);
+    return (code <= 0x1f && !allowedMessageWhitespace) || code === 0x7f;
+  });
+}
+
 export default function CustomerSupport() {
   const { navigate } = useRouter();
   const [customer, setCustomer] = useState<Customer | null>(null);
@@ -91,8 +99,8 @@ export default function CustomerSupport() {
     }
     // Reject invisible control characters that can corrupt support records,
     // while preserving normal line breaks and tabs in the message body.
-    if (/[\u0000-\u001f\u007f]/.test(cleanSubject)
-      || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(cleanMessage)) {
+    if (containsUnsupportedControlCharacters(cleanSubject)
+      || containsUnsupportedControlCharacters(cleanMessage, true)) {
       showToast('error', 'Please remove unsupported control characters and try again.');
       return;
     }
