@@ -1,5 +1,6 @@
 import { Phone, Mail, MapPin, MessageCircle } from 'lucide-react';
-import { useRouter, Page } from '@/lib/router';
+import { Page } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 import SocialLinks from '@/components/SocialLinks';
 
 export default function Footer() {
