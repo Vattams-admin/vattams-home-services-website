@@ -88,6 +88,8 @@ export default function CustomerDashboard() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [selected, setSelected] = useState<Booking | null>(null);
+  const [confirmingCompletion, setConfirmingCompletion] = useState(false);
+  const [completionFeedback, setCompletionFeedback] = useState('');
   const dialogCloseButtonRef = useRef<HTMLButtonElement | null>(null);
   const requestVersion = useRef(0);
 
@@ -274,6 +276,27 @@ export default function CustomerDashboard() {
       throw new Error('Notifications contained duplicate records. Please retry.');
     }
     return validNotifications;
+  };
+
+  const confirmBookingCompletion = async () => {
+    if (!customer || !selected || selected.status !== 'job_completed' || confirmingCompletion) return;
+    setConfirmingCompletion(true);
+    setCompletionFeedback('');
+    try {
+      const result = await customerData<{ success: boolean; booking: Booking }>('confirm_completion', {
+        booking_id: selected.id,
+      });
+      if (!result?.success || !result.booking || result.booking.id !== selected.id || result.booking.status !== 'completed') {
+        throw new Error('The server did not verify this booking completion. Please refresh and try again.');
+      }
+      setBookings((current) => current.map((booking) => booking.id === result.booking.id ? result.booking : booking));
+      setSelected(result.booking);
+      setCompletionFeedback('Thank you. Your service completion is confirmed.');
+    } catch (error) {
+      setCompletionFeedback(error instanceof Error ? error.message : 'Unable to confirm completion. Please try again.');
+    } finally {
+      setConfirmingCompletion(false);
+    }
   };
 
   if (loading || !customer) {
@@ -583,6 +606,24 @@ export default function CustomerDashboard() {
                 <span className="text-sm text-gray-500">Status:</span>
                 <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize border ${statusColors[selected.status] ?? "bg-gray-100 text-gray-700 border-gray-200"}`}>{statusLabels[selected.status] ?? selected.status.replace(/_/g, ' ')}</span>
               </div>
+
+              {selected.status === 'job_completed' && (
+                <div className="rounded-xl border border-teal-200 bg-teal-50 p-4 space-y-3">
+                  <div>
+                    <p className="font-bold text-teal-900">Please confirm your service completion</p>
+                    <p className="mt-1 text-sm text-teal-800">Your technician has reported the work as complete. Confirm only after you have checked the service.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void confirmBookingCompletion()}
+                    disabled={confirmingCompletion}
+                    className="w-full rounded-xl bg-teal-700 px-4 py-3 text-sm font-bold text-white hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700 focus-visible:ring-offset-2"
+                  >
+                    {confirmingCompletion ? 'Confirming…' : 'Confirm Service Completed'}
+                  </button>
+                  {completionFeedback && <p role="status" aria-live="polite" className="text-sm text-teal-900">{completionFeedback}</p>}
+                </div>
+              )}
 
               {/* VATTAMS Communication Center */}
               <CommunicationCenter

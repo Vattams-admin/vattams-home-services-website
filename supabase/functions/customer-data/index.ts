@@ -41,14 +41,14 @@ Deno.serve(async req=>{
         const {data:customer}=await supabase.from("customers").select("id,full_name,mobile,email,city,address,created_at,updated_at").eq("id",customerId).single();if(!customer)return out({error:"Customer not found"},404);const customerMobile=customer.mobile;
         const [{data:bookings},{data:notifications},{data:reviews}]=await Promise.all([
           supabase.from("bookings").select(CUSTOMER_BOOKING_COLUMNS).eq("customer_id",customerId).order("created_at",{ascending:false}),
-          supabase.from("notifications").select("*").eq("recipient_type","customer").eq("recipient_id",customerMobile).order("created_at",{ascending:false}).limit(20),
-          supabase.from("reviews").select("*").eq("customer_id",customerId).order("created_at",{ascending:false})
+          supabase.from("notifications").select("id,title,message,created_at,is_read").eq("recipient_type","customer").eq("recipient_id",customerMobile).order("created_at",{ascending:false}).limit(20),
+          supabase.from("reviews").select("id,booking_id,rating,review_text,created_at").eq("customer_id",customerId).order("created_at",{ascending:false})
         ]);
         return out({customer,bookings:bookings||[],notifications:notifications||[],reviews:reviews||[]});
       }
       case "payments":{
         const {data:customer}=await supabase.from("customers").select("mobile").eq("id",customerId).single();if(!customer)return out({error:"Customer not found"},404);
-        const {data}=await supabase.from("payments").select("*").eq("payee_type","customer").eq("payee_id",customer.mobile).order("created_at",{ascending:false});
+        const {data}=await supabase.from("payments").select("id,payment_id,amount,purpose,reference_id,utr,upi_id,status,created_at").eq("payee_type","customer").eq("payee_id",customer.mobile).order("created_at",{ascending:false});
         return out({payments:data||[]});
       }
       case "bookings":{
@@ -59,13 +59,30 @@ Deno.serve(async req=>{
         const {data}=await supabase.from("bookings").select("id,service_category,booking_number").eq("customer_id",customerId);
         return out({bookings:data||[]});
       }
+      case "confirm_completion":{
+        const bookingId = typeof body.booking_id === "string" ? body.booking_id.trim() : "";
+        if (!bookingId) return out({error:"Booking ID is required"},400);
+        const {data,error}=await supabase.rpc("confirm_booking_completion_atomic",{
+          p_booking_id:bookingId,
+          p_customer_id:customerId
+        });
+        if(error){
+          const message=String(error.message||"");
+          if(message.includes("BOOKING_NOT_FOUND_OR_NOT_OWNED")) return out({error:"Booking not found or not owned by this customer"},404);
+          if(message.includes("BOOKING_NOT_AWAITING_CUSTOMER_CONFIRMATION") || message.includes("TECHNICIAN_JOB_NOT_AWAITING_CUSTOMER_CONFIRMATION")) return out({error:"This booking is not awaiting customer confirmation"},409);
+          if(message.includes("TECHNICIAN_JOB_NOT_FOUND") || message.includes("COMPLETED_BOOKING_JOB_MISMATCH")) return out({error:"The technician completion record could not be verified"},409);
+          return out({error:"Unable to confirm booking completion"},500);
+        }
+        if(!data?.booking || data.booking.customer_id !== customerId || data.booking.status !== "completed") return out({error:"Completion confirmation could not be verified"},409);
+        return out({success:true,booking:data.booking,already_completed:data.already_completed===true});
+      }
       case "profile":{
         const allowed={full_name:body.full_name,email:body.email||null,city:body.city||null,address:body.address||null,updated_at:new Date().toISOString()};
         const {data,error}=await supabase.from("customers").update(allowed).eq("id",customerId).select("id,full_name,mobile,email,city,address,created_at,updated_at").single();
         if(error) return out({error:"Failed to update profile"},400);
         return out({customer:data});
       }
-      case "reviews":{ return out({reviews:(await supabase.from("reviews").select("*").eq("customer_id",customerId).order("created_at",{ascending:false})).data||[]}); }
+      case "reviews":{ return out({reviews:(await supabase.from("reviews").select("id,booking_id,rating,review_text,created_at").eq("customer_id",customerId).order("created_at",{ascending:false})).data||[]}); }
       case "completed_bookings":{ return out({bookings:(await supabase.from("bookings").select(CUSTOMER_BOOKING_COLUMNS).eq("customer_id",customerId).eq("status","completed").order("created_at",{ascending:false})).data||[]}); }
       case "notification_read":{if(!body.notification_id)return out({error:"Notification ID is required"},400);const {data:customer}=await supabase.from("customers").select("mobile").eq("id",customerId).single();const {error}=await supabase.from("notifications").update({is_read:true,read_at:new Date().toISOString(),status:"read"}).eq("id",body.notification_id).eq("recipient_type","customer").eq("recipient_id",customer?.mobile||"");if(error)return out({error:"Unable to update notification"},400);return out({success:true});}
       case "notifications_read_all":{const {data:customer}=await supabase.from("customers").select("mobile").eq("id",customerId).single();const {error}=await supabase.from("notifications").update({is_read:true,read_at:new Date().toISOString(),status:"read"}).eq("recipient_type","customer").eq("recipient_id",customer?.mobile||"").eq("is_read",false);if(error)return out({error:"Unable to update notifications"},400);return out({success:true});}

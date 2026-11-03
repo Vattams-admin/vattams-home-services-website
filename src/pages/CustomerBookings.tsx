@@ -59,6 +59,8 @@ export default function CustomerBookings() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  const [confirmingBookingId, setConfirmingBookingId] = useState<string | null>(null);
+  const [completionMessages, setCompletionMessages] = useState<Record<string, string>>({});
   const bookingRequestVersion = useRef(0);
 
   useEffect(() => () => {
@@ -142,6 +144,29 @@ export default function CustomerBookings() {
       navigate('customer-login');
     }
   }, [loadBookings, navigate]);
+
+  const confirmBookingCompletion = async (booking: Booking) => {
+    if (booking.status !== 'job_completed' || confirmingBookingId) return;
+    setConfirmingBookingId(booking.id);
+    setCompletionMessages((current) => ({ ...current, [booking.id]: '' }));
+    try {
+      const result = await customerData<{ success: boolean; booking: Booking }>('confirm_completion', {
+        booking_id: booking.id,
+      });
+      if (!result?.success || !result.booking || result.booking.id !== booking.id || result.booking.status !== 'completed') {
+        throw new Error('The server did not verify this booking completion. Please refresh and try again.');
+      }
+      setBookings((current) => current.map((item) => item.id === booking.id ? result.booking : item));
+      setCompletionMessages((current) => ({ ...current, [booking.id]: 'Thank you. Your service completion is confirmed.' }));
+    } catch (confirmationError) {
+      setCompletionMessages((current) => ({
+        ...current,
+        [booking.id]: confirmationError instanceof Error ? confirmationError.message : 'Unable to confirm completion. Please try again.',
+      }));
+    } finally {
+      setConfirmingBookingId(null);
+    }
+  };
 
   const activeBookings = bookings.filter((booking) =>
     ['pending', 'confirmed', 'assigned', 'accepted', 'on_the_way', 'in_progress', 'job_started', 'job_completed'].includes(booking.status)
@@ -295,6 +320,24 @@ export default function CustomerBookings() {
                   {status === 'completed' && (
                     <div className="mt-5 flex items-center gap-2 rounded-xl bg-green-50 p-3 text-sm font-semibold text-green-800">
                       <CheckCircle2 size={17} /> This service is marked completed.
+                    </div>
+                  )}
+                  {status === 'job_completed' && (
+                    <div className="mt-5 space-y-3 rounded-xl border border-teal-200 bg-teal-50 p-4">
+                      <div>
+                        <p className="font-bold text-teal-900">Confirm your service completion</p>
+                        <p className="mt-1 text-sm text-teal-800">The technician has reported the work as complete. Confirm only after you have checked the service.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => void confirmBookingCompletion(booking)}
+                        disabled={confirmingBookingId !== null}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-teal-700 px-4 py-3 text-sm font-bold text-white hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700 focus-visible:ring-offset-2"
+                      >
+                        {confirmingBookingId === booking.id ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+                        {confirmingBookingId === booking.id ? 'Confirming…' : 'Confirm Service Completed'}
+                      </button>
+                      {completionMessages[booking.id] && <p role="status" aria-live="polite" className="text-sm text-teal-900">{completionMessages[booking.id]}</p>}
                     </div>
                   )}
                 </article>

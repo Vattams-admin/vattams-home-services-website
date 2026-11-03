@@ -8,6 +8,13 @@ export type PaymentPurpose = 'booking' | 'registration_fee' | 'wallet_recharge' 
 export type PaymentStatus = 'pending' | 'success' | 'failed';
 export type PayeeType = 'customer' | 'technician';
 
+function containsUnsupportedControlCharacters(value: string): boolean {
+  return Array.from(value).some((character) => {
+    const code = character.charCodeAt(0);
+    return code <= 0x1f || code === 0x7f;
+  });
+}
+
 export interface PaymentRecord {
   id: string;
   payment_id: string;
@@ -145,9 +152,9 @@ export async function updatePaymentStatus(
 ): Promise<PaymentRecord | null> {
   if (typeof paymentId !== 'string' || !paymentId.trim() || paymentId.length > 200
     || !['pending', 'success', 'failed'].includes(status)
-    || (utr !== undefined && (typeof utr !== 'string' || utr.trim().length > 100 || /[\u0000-\u001f\u007f]/.test(utr)))
+    || (utr !== undefined && (typeof utr !== 'string' || utr.trim().length > 100 || containsUnsupportedControlCharacters(utr)))
     || (paymentActionToken !== undefined && (typeof paymentActionToken !== 'string' || !paymentActionToken.trim() || paymentActionToken.length > 1000))
-    || (verifiedBy !== undefined && (typeof verifiedBy !== 'string' || verifiedBy.length > 200 || /[\u0000-\u001f\u007f]/.test(verifiedBy)))
+    || (verifiedBy !== undefined && (typeof verifiedBy !== 'string' || verifiedBy.length > 200 || containsUnsupportedControlCharacters(verifiedBy)))
     || (status === 'pending' && (typeof utr !== 'string' || !utr.trim() || utr.trim().length > 100
       || typeof paymentActionToken !== 'string' || !paymentActionToken.trim()))
     ) {

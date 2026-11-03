@@ -154,7 +154,7 @@ export interface TechnicianJob {
   completed_at: string | null;
 }
 
-export type WalletTxnType = 'registration_fee' | 'deposit_lock' | 'deposit_release' | 'commission_deduction' | 'platform_fee_remittance' | 'gst_remittance' | 'call_rate_fee' | 'recharge_credit' | 'recharge_debit' | 'adjustment';
+export type WalletTxnType = 'registration_fee' | 'deposit_lock' | 'deposit_release' | 'commission_deduction' | 'platform_fee_remittance' | 'gst_remittance' | 'call_rate_fee' | 'recharge_credit' | 'recharge_debit' | 'recharge_dues_settlement' | 'adjustment';
 
 export interface WalletTransaction {
   id: string;
@@ -182,7 +182,7 @@ export interface WalletRecharge {
   approved_by: string | null;
 }
 
-export type NotificationType = 'registration_fee' | 'deposit_released' | 'wallet_low' | 'account_locked' | 'account_unlocked' | 'recharge_approved' | 'commission_deducted';
+export type NotificationType = 'registration_fee' | 'deposit_released' | 'wallet_low' | 'account_locked' | 'account_unlocked' | 'recharge_approved' | 'commission_deducted' | 'call_rate_fee';
 
 export interface TechnicianNotification {
   id: string;

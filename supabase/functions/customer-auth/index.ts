@@ -12,6 +12,14 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+function containsUnsupportedReviewCharacters(value: string): boolean {
+  return Array.from(value).some((character) => {
+    const code = character.charCodeAt(0);
+    return code <= 0x08 || code === 0x0b || code === 0x0c
+      || (code >= 0x0e && code <= 0x1f) || code === 0x7f;
+  });
+}
+
 function generateOTP(): string {
   const bytes = new Uint32Array(1);
   crypto.getRandomValues(bytes);
@@ -306,6 +314,10 @@ Deno.serve(async (req: Request) => {
         if (!customer_id) return errorResponse("Customer ID is required");
         const numericRating = Number(rating);
         if (!Number.isInteger(numericRating) || numericRating < 1 || numericRating > 5) return errorResponse("Rating must be an integer from 1 to 5");
+        if (review_text !== undefined && review_text !== null && typeof review_text !== "string") return errorResponse("Review text must be plain text");
+        const cleanReviewText = typeof review_text === "string" ? review_text.trim() : "";
+        if (cleanReviewText.length > 2000) return errorResponse("Review text must be 2000 characters or fewer");
+        if (containsUnsupportedReviewCharacters(cleanReviewText)) return errorResponse("Review text contains unsupported control characters");
         const { data: existing } = await supabase.from("reviews").select("id").eq("booking_id", booking_id).maybeSingle();
         if (existing) return errorResponse("You have already reviewed this booking");
         const { data: booking } = await supabase.from("bookings").select("id, status, customer_id, assigned_technician_id").eq("id", booking_id).maybeSingle();
@@ -316,8 +328,8 @@ Deno.serve(async (req: Request) => {
         if (technician_id && technician_id !== finalTechId) return errorResponse("Technician does not match the completed booking", 403);
 
         const { data: review, error: reviewError } = await supabase.from("reviews").insert({
-          booking_id, customer_id, customer_name: reviewCustomer.full_name, technician_id: finalTechId || null, rating, review_text: review_text || null,
-        }).select("*").single();
+          booking_id, customer_id, customer_name: reviewCustomer.full_name, technician_id: finalTechId || null, rating: numericRating, review_text: cleanReviewText || null,
+        }).select("id,booking_id,customer_id,technician_id,rating,review_text,created_at").single();
         if (reviewError) {
           if (reviewError.code === "23505") return errorResponse("You have already reviewed this booking", 409);
           return errorResponse("Failed to submit review. Please try again.");

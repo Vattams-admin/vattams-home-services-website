@@ -92,6 +92,14 @@ const statusOptions: BookingStatus[] = [
   'cancelled',
 ];
 
+const cancellableBookingStatuses = new Set<BookingStatus>([
+  'pending',
+  'confirmed',
+  'assigned',
+  'accepted',
+  'on_the_way',
+]);
+
 type Tab =
   | 'overview'
   | 'bookings'
@@ -1511,24 +1519,39 @@ export default function AdminDashboard() {
                 </thead>
 
                 <tbody className="divide-y divide-gray-50">
-                  {walletTxns.map((txn) => (
+                  {walletTxns.map((txn) => {
+                    const isNonCashLedgerEvent = [
+                      'registration_fee',
+                      'deposit_lock',
+                      'adjustment',
+                      'recharge_dues_settlement',
+                      'deposit_release',
+                      'platform_fee_remittance',
+                      'gst_remittance',
+                      'call_rate_fee',
+                    ].includes(txn.type);
+                    // Legacy completion writers store commission_deduction amounts
+                    // as positive magnitudes even though wallet_balance is reduced.
+                    const isDebitLedgerEvent = ['commission_deduction', 'recharge_debit'].includes(txn.type);
+                    return (
                     <tr key={txn.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3 text-sm font-semibold text-gray-800 capitalize">
                         {String(txn.type).replace(/_/g, ' ')}
                       </td>
                       <td
                         className={`px-4 py-3 text-sm font-semibold ${
-                          txn.amount < 0 ? 'text-red-600' : 'text-green-600'
+                          isNonCashLedgerEvent ? 'text-gray-600' : isDebitLedgerEvent || txn.amount < 0 ? 'text-red-600' : 'text-green-600'
                         }`}
                       >
-                        {formatINR(txn.amount)}
+                        {isDebitLedgerEvent && txn.amount > 0 ? '-' : ''}{formatINR(txn.amount)}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-500 hidden md:table-cell">{txn.description ?? '—'}</td>
                       <td className="px-4 py-3 text-xs text-gray-400 hidden lg:table-cell">
                         {new Date(txn.created_at).toLocaleString('en-IN')}
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
 
                   {walletTxns.length === 0 && (
                     <tr>
@@ -1823,25 +1846,22 @@ export default function AdminDashboard() {
 
           <div>
             <div className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1.5">
-              Update Status
+              Booking Actions
             </div>
-            <div className="flex flex-wrap gap-2">
-              {statusOptions.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => updateStatus(selectedBooking.id, s)}
-                  disabled={updating}
-                  className={
-                    'px-3 py-1.5 rounded-lg text-xs font-semibold border capitalize transition-colors disabled:opacity-50 ' +
-                    (selectedBooking.status === s
-                      ? statusColors[s]
-                      : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50')
-                  }
-                >
-                  {s.replace('_', ' ')}
-                </button>
-              ))}
-            </div>
+            {cancellableBookingStatuses.has(selectedBooking.status) ? (
+              <button
+                type="button"
+                onClick={() => updateStatus(selectedBooking.id, 'cancelled')}
+                disabled={updating}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 disabled:opacity-50"
+              >
+                {updating ? 'Cancelling…' : 'Cancel booking'}
+              </button>
+            ) : (
+              <p className="text-xs text-gray-500">
+                Status changes are controlled by the assignment and technician job workflow. Customer proof is required before completion.
+              </p>
+            )}
           </div>
         </div>
       </div>

@@ -2,32 +2,76 @@ import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
-const [paymentAuth, paymentsLib, adminData, customerData, technicianAuth, technicianData, adminDashboard, paymentModal, homeFeatures] = await Promise.all([
+const [paymentAuth, paymentsLib, adminData, customerData, customerAuth, technicianAuth, technicianData, adminDashboard, technicianDashboard, customerDashboard, customerBookings, paymentModal, homeFeatures, bookingLifecycleMigration, completionProofMigration, customerCompletionMigration, staleTransitionMigration, rechargeHardeningMigration, supabaseLib, rechargeLedgerMigration, paymentWriteLockMigration, paymentReadLockMigration] = await Promise.all([
   read('supabase/functions/payment-auth/index.ts'),
   read('src/lib/payments.ts'),
   read('supabase/functions/admin-data/index.ts'),
   read('supabase/functions/customer-data/index.ts'),
+  read('supabase/functions/customer-auth/index.ts'),
   read('supabase/functions/technician-auth/index.ts'),
   read('supabase/functions/technician-data/index.ts'),
   read('src/pages/AdminDashboard.tsx'),
+  read('src/pages/TechnicianDashboard.tsx'),
+  read('src/pages/CustomerDashboard.tsx'),
+  read('src/pages/CustomerBookings.tsx'),
   read('src/components/PaymentModal.tsx'),
   read('src/components/home/Features.tsx'),
+  read('supabase/migrations/20261102193000_booking_job_lock_order.sql'),
+  read('supabase/migrations/20261102200000_require_customer_proof_for_completion.sql'),
+  read('supabase/migrations/20261103130000_customer_confirm_booking_completion.sql'),
+  read('supabase/migrations/20261103140000_reject_stale_technician_job_transitions.sql'),
+  read('supabase/migrations/20261103150000_harden_recharge_approval_bounds.sql'),
+  read('src/lib/supabase.ts'),
+  read('supabase/migrations/20261103120000_reconcile_recharge_ledger_allocations.sql'),
+  read('supabase/migrations/20261005030000_lock_public_payment_writes.sql'),
+  read('supabase/migrations/20261005074000_lock_legacy_public_data_reads.sql'),
 ]);
 
-const controlCharRegex = String.raw`/[\u0000-\u001f\u007f]/`;
+
+const extractLedgerEventTypes = (source, declaration) => {
+  const match = source.match(new RegExp(`const ${declaration} = \\[([\\s\\S]*?)\\]`));
+  assert.ok(match, `Missing ${declaration} ledger classification`);
+  return [...match[1].matchAll(/'([^']+)'/g)].map((entry) => entry[1]).sort();
+};
 
 const checks = [
+  ['admin wallet ledger does not colour assessed dues or non-cash events as cash credits', adminDashboard.includes("const isNonCashLedgerEvent = [") && adminDashboard.includes("'registration_fee',\n                      'deposit_lock',\n                      'adjustment'") && adminDashboard.includes("'recharge_dues_settlement',") && adminDashboard.includes("isNonCashLedgerEvent ? 'text-gray-600'")],
+  ['admin wallet ledger displays positive-magnitude legacy deductions as debits', adminDashboard.includes("const isDebitLedgerEvent = ['commission_deduction', 'recharge_debit'].includes(txn.type);") && adminDashboard.includes("isDebitLedgerEvent || txn.amount < 0 ? 'text-red-600'") && adminDashboard.includes("isDebitLedgerEvent && txn.amount > 0 ? '-' : ''")],
+  ['admin and technician dashboards use identical wallet ledger event classifications', JSON.stringify(extractLedgerEventTypes(adminDashboard, 'isNonCashLedgerEvent')) === JSON.stringify(extractLedgerEventTypes(technicianDashboard, 'isNeutralLedgerEvent'))],
+  ['dues settlement and deposit release are not displayed as cash credits', technicianDashboard.includes("'registration_fee',\n                  'deposit_lock',\n                  'adjustment',\n                  'recharge_dues_settlement',\n                  'deposit_release',\n                  'platform_fee_remittance',\n                  'gst_remittance',\n                  'call_rate_fee'") && technicianDashboard.includes("const positive = transaction.type === 'recharge_credit';")],
+  ['recharge ledger records dues settlement separately from wallet credit', rechargeLedgerMigration.includes("'recharge_dues_settlement', dues_settled") && rechargeLedgerMigration.includes("'recharge_credit', wallet_credit")],
+  ['recharge credit ledger amount equals only the wallet balance increment', rechargeLedgerMigration.includes("wallet_balance = wallet_balance + wallet_credit") && !rechargeLedgerMigration.includes("'recharge_credit', NEW.amount")],
+  ['recharge ledger split preserves total payment allocation', rechargeLedgerMigration.includes("dues_settled := LEAST(c_due, NEW.amount)") && rechargeLedgerMigration.includes("wallet_credit := GREATEST(NEW.amount - c_due, 0)")],
+  ['database enforces recharge amount bounds for new and updated rows', rechargeHardeningMigration.includes('CHECK (amount > 0 AND amount <= 100000) NOT VALID')],
+  ['recharge approval rejects non-pending status transitions', rechargeHardeningMigration.includes("OLD.status IS DISTINCT FROM 'pending'") && rechargeHardeningMigration.includes("MESSAGE = 'RECHARGE_NOT_PENDING'")],
+  ['recharge approval independently validates positive bounded amounts', rechargeHardeningMigration.includes('NEW.amount IS NULL OR NEW.amount <= 0 OR NEW.amount > 100000') && rechargeHardeningMigration.includes("MESSAGE = 'INVALID_RECHARGE_AMOUNT'")],
+  ['recharge approval fails closed when wallet settings are missing', rechargeHardeningMigration.includes('IF NOT FOUND OR settings.lock_threshold IS NULL') && rechargeHardeningMigration.includes("MESSAGE = 'WALLET_SETTINGS_NOT_CONFIGURED'")],
+  ['recharge approval fails closed when technician is missing', rechargeHardeningMigration.includes('IF NOT FOUND THEN') && rechargeHardeningMigration.includes("MESSAGE = 'TECHNICIAN_NOT_FOUND'")],
+  ['recharge allocation settles only actual dues and credits only the remainder', rechargeHardeningMigration.includes('dues_settled := LEAST(c_due, NEW.amount)') && rechargeHardeningMigration.includes('due_after := GREATEST(c_due - dues_settled, 0)') && rechargeHardeningMigration.includes('wallet_credit := NEW.amount - dues_settled')],
+  ['recharge approval serializes same-technician approvals with a row lock', rechargeHardeningMigration.includes('FROM public.technicians') && rechargeHardeningMigration.includes('FOR UPDATE')],
+
+
+  ['payment write lockdown revokes direct browser-role mutation privileges', paymentWriteLockMigration.includes('REVOKE INSERT, UPDATE, DELETE ON TABLE payments FROM anon, authenticated')],
+  ['payment read lockdown removes the original public read policy', paymentReadLockMigration.includes('DROP POLICY IF EXISTS "public_select_payments" ON payments')],
+  ['payment read lockdown installs deny-all RLS for browser roles', paymentReadLockMigration.includes('CREATE POLICY "deny_public_payments" ON payments FOR ALL TO anon, authenticated USING (false) WITH CHECK (false)')],
   ['payment-auth avoids wildcard selects', !paymentAuth.includes('.select("*")')],
   ['payment creation explicitly returns the initial capability', paymentAuth.includes('select("id,payment_id,payment_action_token,')],
   ['UTR submission rotates the capability', paymentAuth.includes('payment_action_token: crypto.randomUUID()')],
   ['UTR response uses a safe explicit field list', paymentAuth.includes('.select("id,payment_id,payee_type')],
   ['payment responses disable caching', paymentAuth.includes('"Cache-Control": "no-store"')],
   ['frontend requires capability only on creation', paymentsLib.includes('parsePaymentRecord(data?.payment, true)') && paymentsLib.includes('const payment = parsePaymentRecord(data?.payment);')],
-  ['payment inputs reject control characters', (paymentsLib.split(controlCharRegex).length - 1) === 2],
+  ['payment inputs reject control characters', paymentsLib.includes('function containsUnsupportedControlCharacters(value: string): boolean') && paymentsLib.includes('code <= 0x1f || code === 0x7f') && paymentsLib.includes('containsUnsupportedControlCharacters(utr)') && paymentsLib.includes('containsUnsupportedControlCharacters(verifiedBy)')],
   ['admin payload sanitizer strips payment capabilities', adminData.includes('"payment_action_token"') && adminData.includes('sanitizeSensitiveFields(data)')],
   ['admin payload sanitizer never returns password hashes', adminData.includes('"password_hash"') && adminData.includes('"password_salt"')],
   ['admin payload sanitizer masks payout account numbers', adminData.includes('key === "bank_account_number"') && adminData.includes('digits.slice(-4)')],
   ['customer payload sanitizer strips payment capabilities', customerData.includes('"payment_action_token"') && customerData.includes('sanitizeSensitiveFields(data)')],
+  ['customer-data uses explicit response fields instead of wildcard selects', !customerData.includes('.select("*")')],
+  ['customer payment response allowlists customer-visible fields', customerData.includes('.select("id,payment_id,amount,purpose,reference_id,utr,upi_id,status,created_at")')],
+  ['customer notification response allowlists display fields', customerData.includes('.select("id,title,message,created_at,is_read")')],
+  ['customer review response allowlists review display fields', customerData.includes('.select("id,booking_id,rating,review_text,created_at")')],
+  ['customer review endpoint validates review text type and length', customerAuth.includes('typeof review_text !== "string"') && customerAuth.includes('cleanReviewText.length > 2000')],
+  ['customer review endpoint rejects control characters', customerAuth.includes('function containsUnsupportedReviewCharacters') && customerAuth.includes('code >= 0x0e && code <= 0x1f') && customerAuth.includes('containsUnsupportedReviewCharacters(cleanReviewText)')],
+  ['customer review insert returns an explicit field allowlist', customerAuth.includes('.select("id,booking_id,customer_id,technician_id,rating,review_text,created_at")')],
   ['KYC upload checks content signatures', technicianAuth.includes('detectKycFile(bytes)')],
   ['KYC upload does not require Content-Length', technicianAuth.includes('if (rawContentLength !== null)')],
   ['KYC multipart body is size-bounded before parsing', technicianAuth.includes('readBoundedUploadBody(req, maxRequestBytes)') && technicianAuth.indexOf('readBoundedUploadBody(req, maxRequestBytes)') < technicianAuth.indexOf('.formData()')],
@@ -40,6 +84,42 @@ const checks = [
   ['payment modal prevents duplicate in-flight payment creation', paymentModal.includes('inFlightPaymentKeyRef') && paymentModal.includes('paymentKeyRef')],
   ['payment modal ignores stale async payment attempts', paymentModal.includes('paymentAttemptVersionRef')],
   ['homepage does not claim OTP verification is available', homeFeatures.includes('OTP verification is not currently available')],
+  ['admin booking cancellation uses the atomic cancellation RPC', adminData.includes('db.rpc("cancel_booking_atomic"')],
+  ['admin direct non-cancellation status writes are rejected', adminData.includes('Direct booking status changes are disabled') && !adminData.includes('db.from("bookings").update({status:b.status')],
+  ['admin dashboard exposes only eligible cancellation action', adminDashboard.includes('cancellableBookingStatuses.has(selectedBooking.status)') && adminDashboard.includes("updateStatus(selectedBooking.id, 'cancelled')") && !adminDashboard.includes('onClick={() => updateStatus(selectedBooking.id, s)}')],
+  ['technician transition locks booking before locking the job', bookingLifecycleMigration.indexOf('FOR UPDATE') > bookingLifecycleMigration.indexOf('FROM public.bookings') && bookingLifecycleMigration.indexOf('FROM public.bookings') < bookingLifecycleMigration.lastIndexOf('FOR UPDATE')],
+  ['technician transition revalidates the locked job parent relationship', bookingLifecycleMigration.includes('AND booking_id = v_booking_id')],
+  ['technician transition retains service-role-only execute grant', bookingLifecycleMigration.includes('REVOKE ALL ON FUNCTION public.transition_technician_job_atomic(uuid, uuid, text) FROM PUBLIC, anon, authenticated') && bookingLifecycleMigration.includes('GRANT EXECUTE ON FUNCTION public.transition_technician_job_atomic(uuid, uuid, text) TO service_role')],
+  ['technician cannot finalize booking without customer proof', completionProofMigration.includes("MESSAGE = 'CUSTOMER_COMPLETION_PROOF_REQUIRED'") && !completionProofMigration.includes("p_requested_status IN ('job_started', 'completed')") && technicianData.includes('CUSTOMER_COMPLETION_PROOF_REQUIRED')],
+  ['technician-reported completion remains a non-final job_completed state', completionProofMigration.includes("p_requested_status = 'job_completed'") && completionProofMigration.includes("WHEN p_requested_status = 'job_completed' THEN now()")],
+  ['customer completion RPC verifies booking ownership and locks the booking before the technician job', customerCompletionMigration.includes('customer_id = p_customer_id') && customerCompletionMigration.indexOf('FROM public.bookings') < customerCompletionMigration.lastIndexOf('FOR UPDATE') && customerCompletionMigration.indexOf('FOR UPDATE') < customerCompletionMigration.lastIndexOf('FROM public.technician_jobs')],
+  ['customer completion RPC requires technician-reported job_completed state', customerCompletionMigration.includes("v_booking.status <> 'job_completed'") && customerCompletionMigration.includes("v_job.status <> 'job_completed'")],
+  ['customer completion RPC records confirmation time and atomically finalizes both records', customerCompletionMigration.includes('customer_confirmed_completed_at') && customerCompletionMigration.includes("SET status = 'completed'") && customerCompletionMigration.includes("SET status = 'completed',")],
+  ['customer completion RPC is service-role-only', customerCompletionMigration.includes('REVOKE ALL ON FUNCTION public.confirm_booking_completion_atomic(uuid, uuid) FROM PUBLIC, anon, authenticated') && customerCompletionMigration.includes('GRANT EXECUTE ON FUNCTION public.confirm_booking_completion_atomic(uuid, uuid) TO service_role')],
+  ['customer-data derives confirmation identity from the authenticated session', customerData.includes('p_customer_id:customerId') && customerData.includes('confirm_booking_completion_atomic') && customerData.includes('case "confirm_completion"')],
+  ['customer dashboard exposes confirmation only for technician-reported completion', customerDashboard.includes("selected.status === 'job_completed'") && customerDashboard.includes('Confirm Service Completed')],
+  ['customer booking history exposes completion confirmation for every eligible booking', customerBookings.includes("status === 'job_completed'") && customerBookings.includes('confirmBookingCompletion(booking)') && customerBookings.includes('Confirm Service Completed')],
+  ['stale technician rejection is blocked when booking assignment has changed', staleTransitionMigration.includes('IF v_booking.assigned_technician_id IS DISTINCT FROM p_technician_id THEN') && !staleTransitionMigration.includes("AND p_requested_status <> 'rejected'")],
+  ['stale technician transition checks booking assignment before any state update', staleTransitionMigration.indexOf('IF v_booking.assigned_technician_id IS DISTINCT FROM p_technician_id THEN') < staleTransitionMigration.indexOf('UPDATE public.technician_jobs')],
+  ['technician transition locks booking before the matching job row', staleTransitionMigration.indexOf('FROM public.bookings') < staleTransitionMigration.indexOf('FOR UPDATE') && staleTransitionMigration.indexOf('FOR UPDATE') < staleTransitionMigration.lastIndexOf('FROM public.technician_jobs')],
+  ['technician transition update rechecks current assignment and fails closed', staleTransitionMigration.includes('AND assigned_technician_id = p_technician_id') && staleTransitionMigration.includes("MESSAGE = 'BOOKING_ASSIGNMENT_CHANGED'")],
+  ['stale transition migration preserves service-role-only RPC execution', staleTransitionMigration.includes('REVOKE ALL ON FUNCTION public.transition_technician_job_atomic(uuid, uuid, text) FROM PUBLIC, anon, authenticated') && staleTransitionMigration.includes('GRANT EXECUTE ON FUNCTION public.transition_technician_job_atomic(uuid, uuid, text) TO service_role')],
+
+
+  ['wallet transaction type includes recharge dues settlement', supabaseLib.includes("'recharge_dues_settlement'")],
+  ['technician dashboard treats recharge dues settlement as a positive payment allocation', technicianDashboard.includes("'recharge_dues_settlement',")],
+  ['frontend notification type includes the call_rate_fee event emitted by completion processing', supabaseLib.includes("'call_rate_fee';") && supabaseLib.includes('export type NotificationType =')],
+  ['technician dashboard does not invent a debit or credit direction for adjustment entries', technicianDashboard.includes('const isNeutralLedgerEvent = [') && technicianDashboard.includes("'adjustment',") && technicianDashboard.includes("isNeutralLedgerEvent\n                            ? 'bg-gray-100 text-gray-600'") && technicianDashboard.includes("const positive = transaction.type === 'recharge_credit';")],
+  ['technician account response includes all wallet fields displayed by dashboard', technicianData.includes('wallet_balance,locked_deposit,available_balance,commission_due,wallet_locked')],
+  ['recharge decisions are conditional on pending state and reject stale repeats', adminData.includes('.eq("id",b.recharge_id).eq("status","pending").select("*").maybeSingle()') && adminData.includes('Recharge is no longer pending; refresh the list before taking another action.')],
+  ['technician-data API rejects technician final completed status before RPC', technicianData.includes('const allowed=["accepted","rejected","on_the_way","in_progress","job_started","job_completed"];') && !technicianData.includes('const allowed=["accepted","rejected","on_the_way","in_progress","job_started","job_completed","completed"];')],
+  ['technician dashboard component callback contracts exclude final completed status', !technicianDashboard.includes("      | 'completed'") && (technicianDashboard.match(/updateJobStatus: \(/g) || []).length === 3],
+  ['technician dashboard status action type cannot request final completed state', technicianDashboard.includes("status: 'accepted'|'rejected'|'on_the_way'|'in_progress'|'job_started'|'job_completed'") && !technicianDashboard.includes("status: 'accepted'|'rejected'|'on_the_way'|'in_progress'|'job_started'|'job_completed'|'completed'")],
+  ['technician dashboard labels job_completed as awaiting customer confirmation, not final completion', technicianDashboard.includes("job_completed: 'Awaiting Customer Confirmation'") && technicianDashboard.includes("job_completed: 'bg-teal-50 text-teal-700 border-teal-100'")],
+  ['technician dashboard excludes job_completed from finalized jobs and earnings', technicianDashboard.includes("jobs.filter((job) => job.status === 'completed')") && !technicianDashboard.includes("'completed',\n          'job_completed'")],
+  ['technician mark-all-read sends one combined backend request', technicianDashboard.includes("await technicianData('notifications_read_all');") && !technicianDashboard.includes("Promise.all([\n          technicianData('notifications_read_all')")],
+  ['technician dashboard labels the in_progress transition as Start Job', technicianDashboard.includes("updateJobStatus(\n                  job,\n                  'job_started'") && technicianDashboard.includes('Start Job')],
+  ['technician dashboard follows in_progress → job_started → job_completed', technicianDashboard.includes("job.status ===\n            'in_progress'") && technicianDashboard.includes("updateJobStatus(\n                  job,\n                  'job_started'") && technicianDashboard.includes("job.status ===\n            'job_started'") && technicianDashboard.includes("updateJobStatus(\n                  job,\n                  'job_completed'")],
 ];
 
 for (const [label, passed] of checks) {

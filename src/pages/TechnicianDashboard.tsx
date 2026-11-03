@@ -66,7 +66,7 @@ const JOB_STATUS_LABELS: Record<string, string> = {
   on_the_way: 'On the Way',
   in_progress: 'In Progress',
   job_started: 'Job Started',
-  job_completed: 'Job Completed',
+  job_completed: 'Awaiting Customer Confirmation',
   completed: 'Completed',
   rejected: 'Rejected',
 };
@@ -77,7 +77,7 @@ const JOB_STATUS_CLASSES: Record<string, string> = {
   on_the_way: 'bg-purple-50 text-purple-700 border-purple-100',
   in_progress: 'bg-[#f8f4e8] text-orange-700 border-[#e7dcc0]',
   job_started: 'bg-[#f8f4e8] text-orange-700 border-[#e7dcc0]',
-  job_completed: 'bg-green-50 text-green-700 border-green-100',
+  job_completed: 'bg-teal-50 text-teal-700 border-teal-100',
   completed: 'bg-green-50 text-green-700 border-green-100',
   rejected: 'bg-red-50 text-red-700 border-red-100',
 };
@@ -263,12 +263,7 @@ export default function TechnicianDashboard() {
 
   const completedJobs = useMemo(
     () =>
-      jobs.filter((job) =>
-        [
-          'completed',
-          'job_completed',
-        ].includes(job.status)
-      ),
+      jobs.filter((job) => job.status === 'completed'),
     [jobs]
   );
 
@@ -316,7 +311,7 @@ export default function TechnicianDashboard() {
     }
   };
 
-  const updateJobStatus = async (job: TechnicianJob, status: 'accepted'|'rejected'|'on_the_way'|'in_progress'|'job_started'|'job_completed'|'completed') => {
+  const updateJobStatus = async (job: TechnicianJob, status: 'accepted'|'rejected'|'on_the_way'|'in_progress'|'job_started'|'job_completed') => {
     if (!technician) return;
     setProcessingJob(job.id); setError('');
     try { await technicianData('job_status', { job_id: job.id, status }); await loadDashboard(false); }
@@ -364,10 +359,7 @@ export default function TechnicianDashboard() {
       if (!technician) return;
 
       try {
-        await Promise.all([
-          technicianData('notifications_read_all'),
-          technicianData('notifications_read_all'),
-        ]);
+        await technicianData('notifications_read_all');
 
         setNotifications((current) =>
           current.map((item) => ({
@@ -954,7 +946,6 @@ function Overview({
       | 'in_progress'
       | 'job_started'
       | 'job_completed'
-      | 'completed'
   ) => Promise<void>;
   processingJob: string | null;
 }) {
@@ -1360,7 +1351,6 @@ function JobsSection({
       | 'in_progress'
       | 'job_started'
       | 'job_completed'
-      | 'completed'
   ) => Promise<void>;
   processingJob: string | null;
 }) {
@@ -1486,7 +1476,6 @@ function JobCard({
       | 'in_progress'
       | 'job_started'
       | 'job_completed'
-      | 'completed'
   ) => Promise<void>;
   processingJob: string | null;
   detailed?: boolean;
@@ -1678,6 +1667,25 @@ function JobCard({
 
           {job.status ===
             'in_progress' && (
+            <button
+              disabled={processing}
+              onClick={() =>
+                updateJobStatus(
+                  job,
+                  'job_started'
+                )
+              }
+              className="flex items-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-xl text-sm font-bold"
+            >
+              <CheckCircle
+                size={16}
+              />
+              Start Job
+            </button>
+          )}
+
+          {job.status ===
+            'job_started' && (
             <button
               disabled={processing}
               onClick={() =>
@@ -1886,13 +1894,17 @@ function WalletSection({
           <div className="bg-white rounded-2xl border border-[#e8e1d2] overflow-hidden">
             {transactions.map(
               (transaction, index) => {
-                const positive = [
-                  'recharge_credit',
-                  'deposit_release',
+                const isNeutralLedgerEvent = [
+                  'registration_fee',
+                  'deposit_lock',
                   'adjustment',
-                ].includes(
-                  transaction.type
-                );
+                  'recharge_dues_settlement',
+                  'deposit_release',
+                  'platform_fee_remittance',
+                  'gst_remittance',
+                  'call_rate_fee',
+                ].includes(transaction.type);
+                const positive = transaction.type === 'recharge_credit';
 
                 return (
                   <div
@@ -1908,19 +1920,19 @@ function WalletSection({
                     <div className="flex items-center gap-3 min-w-0">
                       <div
                         className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                          positive
-                            ? 'bg-green-50 text-green-600'
-                            : 'bg-red-50 text-red-600'
+                          isNeutralLedgerEvent
+                            ? 'bg-gray-100 text-gray-600'
+                            : positive
+                              ? 'bg-green-50 text-green-600'
+                              : 'bg-red-50 text-red-600'
                         }`}
                       >
-                        {positive ? (
-                          <IndianRupee
-                            size={18}
-                          />
+                        {isNeutralLedgerEvent ? (
+                          <Wallet size={18} />
+                        ) : positive ? (
+                          <IndianRupee size={18} />
                         ) : (
-                          <CreditCard
-                            size={18}
-                          />
+                          <CreditCard size={18} />
                         )}
                       </div>
 
@@ -1954,14 +1966,18 @@ function WalletSection({
                     <div className="text-right shrink-0">
                       <p
                         className={`font-extrabold ${
-                          positive
-                            ? 'text-green-600'
-                            : 'text-red-600'
+                          isNeutralLedgerEvent
+                            ? 'text-gray-600'
+                            : positive
+                              ? 'text-green-600'
+                              : 'text-red-600'
                         }`}
                       >
-                        {positive
-                          ? '+'
-                          : '-'}
+                        {isNeutralLedgerEvent
+                          ? ''
+                          : positive
+                            ? '+'
+                            : '-'}
                         {formatMoney(
                           transaction.amount
                         )}

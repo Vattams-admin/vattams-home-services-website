@@ -3,7 +3,24 @@ import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 const corsHeaders={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"POST,OPTIONS","Access-Control-Allow-Headers":"Content-Type,Authorization,X-Client-Info,Apikey"};
 const db=createClient(Deno.env.get("SUPABASE_URL")!,Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 async function admin(token:string,id:string){const {data:s}=await db.from("admin_auth_sessions").select("admin_id,expires_at").eq("token",token).maybeSingle();if(!s||s.admin_id!==id||new Date(s.expires_at)<=new Date())return false;const {data:a}=await db.from("admin_users").select("id,role,is_active").eq("id",id).maybeSingle();return !!a&&a.role==="super_admin"&&a.is_active===true;}
-function out(data:unknown,status=200){return new Response(JSON.stringify(data),{status,headers:{...corsHeaders,"Content-Type":"application/json"}})}
+function sanitizeSensitiveFields(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(sanitizeSensitiveFields);
+  if (!value || typeof value !== "object") return value;
+  const source = value as Record<string, unknown>;
+  const safe: Record<string, unknown> = {};
+  for (const [key, item] of Object.entries(source)) {
+    // Never return authentication material or one-time payment capabilities.
+    if (["payment_action_token", "password_hash", "password_salt", "admin_session_token", "token"].includes(key)) continue;
+    if (key === "bank_account_number") {
+      const digits = String(item ?? "").replace(/\D/g, "");
+      safe[key] = digits.length >= 4 ? `••••${digits.slice(-4)}` : null;
+      continue;
+    }
+    safe[key] = sanitizeSensitiveFields(item);
+  }
+  return safe;
+}
+function out(data:unknown,status=200){return new Response(JSON.stringify(sanitizeSensitiveFields(data)),{status,headers:{...corsHeaders,"Content-Type":"application/json"}})}
 Deno.serve(async req=>{if(req.method==="OPTIONS")return new Response(null,{status:200,headers:corsHeaders});try{const b=await req.json();if(!await admin(String(b.admin_session_token||""),String(b.admin_id||"")))return out({error:"Unauthorized"},401);
 switch(b.action){
 case "analytics_summary":{const [{data:bookings},{data:technicians},{data:customers},{data:reviews}]=await Promise.all([db.from("bookings").select("status,created_at,total_amount,amount,job_completed_at,customer_id,mobile_number"),db.from("technicians").select("status,wallet_locked"),db.from("customers").select("id"),db.from("reviews").select("rating")]);const today=new Date().toISOString().split("T")[0];const bs=bookings||[];const ts=technicians||[];const cs=customers||[];const rs=reviews||[];const todayBs=bs.filter((b:any)=>b.created_at?.startsWith(today));const active=new Set(bs.filter((b:any)=>b.created_at>new Date(Date.now()-30*86400000).toISOString()).map((b:any)=>b.customer_id||b.mobile_number));const avg=rs.length?rs.reduce((n:any,r:any)=>n+Number(r.rating||0),0)/rs.length:0;return out({summary:{todayRevenue:todayBs.filter((b:any)=>b.status==="completed").reduce((n:any,b:any)=>n+Number(b.total_amount??b.amount??0),0),pendingBookings:bs.filter((b:any)=>["pending","assigned","in_progress","job_started"].includes(b.status)).length,cancelledJobs:bs.filter((b:any)=>b.status==="cancelled").length,availableTechnicians:ts.filter((t:any)=>t.status==="active"&&!t.wallet_locked).length,inactiveCustomers:Math.max(0,cs.length-active.size),totalCustomers:cs.length,totalTechnicians:ts.length,newBookingsToday:todayBs.length,completedJobsToday:bs.filter((b:any)=>b.status==="completed"&&b.job_completed_at?.startsWith(today)).length,avgRating:Math.round(avg*10)/10}});}
@@ -14,10 +31,20 @@ case "analytics_technician_performance":{const [{data:techs,error:te},{data:book
 case "bookings":{const {data,error}=await db.from("bookings").select("*").order("created_at",{ascending:false});if(error)return out({error:"Unable to load bookings"},500);return out({bookings:data||[]});}
 case "technicians":{const {data,error}=await db.from("technicians").select("*").order("created_at",{ascending:false});if(error)return out({error:"Unable to load technicians"},500);return out({technicians:data||[]});}
 case "customers":{const {data,error}=await db.from("customers").select("*").order("created_at",{ascending:false});if(error)return out({error:"Unable to load customers"},500);return out({customers:data||[]});}
-case "booking_status":{const allowed=["pending","confirmed","assigned","accepted","on_the_way","in_progress","job_started","job_completed","completed","cancelled"];if(!allowed.includes(String(b.status)))return out({error:"Invalid booking status"},400);const {data,error}=await db.from("bookings").update({status:b.status,updated_at:new Date().toISOString()}).eq("id",b.booking_id).select("*").single();if(error)return out({error:"Unable to update booking"},400);return out({booking:data});}
+case "booking_status":{
+const requested=String(b.status||"");
+const bookingId=String(b.booking_id||"");
+if(!bookingId||!requested)return out({error:"Booking and status are required"},400);
+if(requested==="cancelled"){
+const {data,error}=await db.rpc("cancel_booking_atomic",{p_booking_id:bookingId});
+if(error||!data?.booking)return out({error:"Unable to atomically cancel booking"},409);
+return out({booking:data.booking,cancelled_job_records:data.cancelled_job_records??0});
+}
+return out({error:"Direct booking status changes are disabled. Use the atomic assignment or technician job workflow; completion requires customer proof."},409);
+}
 case "assign":{if(!b.booking_id||!b.technician_id)return out({error:"Booking and technician are required"},400);const {data,error}=await db.rpc("assign_technician_job_atomic",{p_booking_id:b.booking_id,p_technician_id:b.technician_id});if(error||!data?.booking||!data?.job){const message=String(error?.message??"");if(message.includes("BOOKING_NOT_FOUND")||message.includes("TECHNICIAN_NOT_FOUND"))return out({error:"Booking or technician not found"},404);if(message.includes("BOOKING_NOT_ASSIGNABLE"))return out({error:"Booking is already assigned or not assignable"},409);if(message.includes("TECHNICIAN_NOT_ELIGIBLE"))return out({error:"Technician is not eligible for this booking"},409);if(message.includes("TECHNICIAN_ALREADY_BUSY"))return out({error:"Technician already has an active job"},409);return out({error:"Unable to atomically assign technician"},500);}return out({booking:data.booking,job:data.job});}
 case "technician_status":{if(!["active","inactive","rejected","suspended"].includes(String(b.status)))return out({error:"Invalid technician status"},400);const update:any={status:b.status};if(["rejected","inactive"].includes(b.status))update.rejection_reason=b.reason||null;if(b.status==="suspended")update.suspend_reason=b.reason||null;if(b.status==="active"){update.rejection_reason=null;update.suspend_reason=null;const {error:revokeError}=await db.from("technician_auth_sessions").delete().eq("technician_id",b.technician_id);if(revokeError)return out({error:"Unable to revoke old technician sessions; account remains inactive"},500);}const {data,error}=await db.from("technicians").update(update).eq("id",b.technician_id).select("*").single();if(error)return out({error:"Unable to update technician"},400);if(b.status!=="active"){const {error:revokeError}=await db.from("technician_auth_sessions").delete().eq("technician_id",b.technician_id);if(revokeError)return out({error:"Technician status changed but session revocation failed; account access remains blocked"},500);}return out({technician:data});}
-case "recharge_status":{if(!["approved","rejected"].includes(String(b.status)))return out({error:"Invalid recharge status"},400);const update:any={status:b.status,approved_at:new Date().toISOString(),approved_by:String(b.admin_id)};if(b.status==="rejected")update.admin_notes=b.reason||null;const {data,error}=await db.from("wallet_recharges").update(update).eq("id",b.recharge_id).select("*").single();if(error)return out({error:"Unable to update recharge"},400);return out({recharge:data});}
+case "recharge_status":{if(!["approved","rejected"].includes(String(b.status)))return out({error:"Invalid recharge status"},400);const update:any={status:b.status,approved_at:new Date().toISOString(),approved_by:String(b.admin_id)};if(b.status==="rejected")update.admin_notes=b.reason||null;const {data,error}=await db.from("wallet_recharges").update(update).eq("id",b.recharge_id).eq("status","pending").select("*").maybeSingle();if(error)return out({error:"Unable to update recharge"},400);if(!data)return out({error:"Recharge is no longer pending; refresh the list before taking another action."},409);return out({recharge:data});}
 case "wallet_transactions":{const {data,error}=await db.from("wallet_transactions").select("*").order("created_at",{ascending:false}).limit(100);if(error)return out({error:"Unable to load wallet transactions"},500);return out({transactions:data||[]});}
 case "recharges":{const {data,error}=await db.from("wallet_recharges").select("*, technician:technicians(full_name)").order("created_at",{ascending:false}).limit(50);if(error)return out({error:"Unable to load recharge requests"},500);return out({recharges:data||[]});}
 case "payments":{const {data,error}=await db.from("payments").select("*").order("created_at",{ascending:false});if(error)return out({error:"Unable to load payments"},500);return out({payments:data||[]});}
