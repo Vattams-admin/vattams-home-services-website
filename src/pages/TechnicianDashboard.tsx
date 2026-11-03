@@ -1901,6 +1901,9 @@ function WalletSection({
                   'adjustment',
                   'recharge_dues_settlement',
                   'deposit_release',
+                  'platform_fee_remittance',
+                  'gst_remittance',
+                  'call_rate_fee',
                 ].includes(transaction.type);
                 const positive = transaction.type === 'recharge_credit';
 
