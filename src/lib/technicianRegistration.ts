@@ -518,6 +518,7 @@ export function saveRegistrationDraft(
 ): void {
   try {
     const { password: _password, ...rest } = form;
+    void _password;
     const payload: RegistrationDraft = {
       stepIndex,
       form: rest,
@@ -556,7 +557,7 @@ export function clearRegistrationDraft(): void {
 const TECHNICIAN_AUTH_URL = 'https://nfcibyprftnowaiwlxxc.supabase.co/functions/v1/technician-auth';
 const TECHNICIAN_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mY2lieXByZnRub3dhaXdseHhjIiwiaWF0IjoxNzgzODgzMzk4LCJleHAiOjIwOTk0NTkzOTh9.5ZMjWYOuRBKNKG3ZonXXOBAfBapm54naphNXrHxq16k';
 
-async function postTechnicianAuth(action: string, payload: Record<string, unknown>): Promise<any> {
+async function postTechnicianAuth(action: string, payload: Record<string, unknown>): Promise<Record<string, unknown>> {
   let response: Response;
   try {
     response = await fetch(`${TECHNICIAN_AUTH_URL}/${action}`, {
@@ -604,7 +605,7 @@ function technicianRegistrationPayload(form: TechnicianFormData, registrationPay
   };
 }
 
-export async function submitTechnicianApplication(form: TechnicianFormData, registrationPaymentId?: string): Promise<any> {
+export async function submitTechnicianApplication(form: TechnicianFormData, registrationPaymentId?: string): Promise<Record<string, unknown>> {
   const email = typeof form?.email === 'string' ? form.email.trim() : '';
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     throw new Error('A valid email address is required to register as a technician.');
@@ -617,7 +618,7 @@ export async function submitTechnicianApplication(form: TechnicianFormData, regi
   });
 }
 
-export async function verifyTechnicianRegistrationEmail(form: TechnicianFormData, code: string): Promise<any> {
+export async function verifyTechnicianRegistrationEmail(form: TechnicianFormData, code: string): Promise<Record<string, unknown>> {
   const mobile = typeof form?.mobile === 'string' ? form.mobile.trim() : '';
   if (!/^[6-9]\d{9}$/.test(mobile)) {
     throw new Error('Enter a valid 10-digit Indian mobile number before verifying the code.');
@@ -629,7 +630,7 @@ export async function verifyTechnicianRegistrationEmail(form: TechnicianFormData
   return postTechnicianAuth('verify-registration-otp', { mobile, code: normalizedCode });
 }
 
-export async function resendTechnicianRegistrationEmailOtp(form: TechnicianFormData): Promise<any> {
+export async function resendTechnicianRegistrationEmailOtp(form: TechnicianFormData): Promise<Record<string, unknown>> {
   const mobile = typeof form?.mobile === 'string' ? form.mobile.trim() : '';
   if (!/^[6-9]\d{9}$/.test(mobile)) {
     throw new Error('Enter a valid 10-digit Indian mobile number before requesting a new code.');

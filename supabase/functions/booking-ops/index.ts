@@ -6,14 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
-interface SupabaseClient {
-  from: (table: string) => {
-    select: (columns: string) => { eq: (col: string, val: unknown) => { maybeSingle: () => Promise<{ data: unknown; error: unknown }> } };
-    update: (data: Record<string, unknown>) => { eq: (col: string, val: unknown) => Promise<{ error: unknown }> };
-    insert: (data: Record<string, unknown>) => { select: (columns: string) => { single: () => Promise<{ data: unknown; error: unknown }> } };
-  };
-}
-
 function isFeaturedApplianceService(name: unknown): boolean {
   const value = String(name ?? '').trim().toLowerCase();
   return /(^|\W)ac(\W|$)|air\s*condition/.test(value)
@@ -100,7 +92,7 @@ Deno.serve(async (req: Request) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const { action, booking_id, technician_id, otp, purpose, status, booking_action_token, admin_id, admin_session_token, customer_session_token, booking } = requestBody as Record<string, unknown>;
+    const { action, booking_id, technician_id, booking_action_token, admin_id, admin_session_token, customer_session_token, booking } = requestBody as Record<string, unknown>;
 
     if (action === "create_booking") {
       if (!booking || typeof booking !== "object" || Array.isArray(booking)) {
@@ -604,8 +596,7 @@ Deno.serve(async (req: Request) => {
         .select("id, full_name, rating, total_jobs, current_workload, is_online, last_active_at, service_categories")
         .eq("city", booking.city)
         .eq("status", "active")
-        .eq("wallet_locked", false)
-         as { data: { id: string; full_name: string; rating: number; total_jobs: number; current_workload: number; is_online: boolean; last_active_at: string | null; service_categories: string[] | null }[] | null; error: unknown };
+        .eq("wallet_locked", false);
       if (candidateLookupError) {
         console.error("[booking-ops auto_assign] technician candidate lookup failed");
         return new Response(JSON.stringify({ error: "Unable to find eligible technicians right now. Please try again." }), {

@@ -436,14 +436,14 @@ export default function TechnicianRegister() {
           error: '',
         },
       }));
-    } catch (err: any) {
+    } catch (err) {
       setUploadStates((previous) => ({
         ...previous,
         [key]: {
           status: 'error',
           progress: 0,
           fileName: file.name,
-          error: err?.message || 'Upload failed. Please try again.',
+          error: (err instanceof Error ? err.message : undefined) || 'Upload failed. Please try again.',
         },
       }));
     }
@@ -500,12 +500,11 @@ export default function TechnicianRegister() {
         role: 'ai',
         text: `A 6-digit verification code has been sent to ${form.email.trim().toLowerCase()}. Enter that code below to finish technician registration. Your application will not be submitted until the email OTP is verified.`,
       }]);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Registration Error:', err);
 
       setError(
-        err?.message ||
-          JSON.stringify(err) ||
+        (err instanceof Error ? err.message : JSON.stringify(err)) ||
           'Registration failed.'
       );
       submittingRef.current = false;
@@ -524,9 +523,9 @@ export default function TechnicianRegister() {
       await resendTechnicianRegistrationEmailOtp(form);
       setEmailOtp('');
       setEmailOtpResendTimer(60);
-    } catch (err: any) {
-      setError(err?.message || 'Could not resend the email verification code.');
-      if (err?.message?.includes('60 seconds')) setEmailOtpResendTimer(60);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not resend the email verification code.');
+      if ((err instanceof Error && err.message.includes('60 seconds'))) setEmailOtpResendTimer(60);
     } finally {
       submittingRef.current = false;
       setSubmitting(false);
@@ -549,8 +548,8 @@ export default function TechnicianRegister() {
       setEmailOtp('');
       setEmailOtpPending(false);
       setSuccess(true);
-    } catch (err: any) {
-      setError(err?.message || 'Email verification failed. Please try again.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Email verification failed. Please try again.');
     } finally {
       submittingRef.current = false;
       setSubmitting(false);

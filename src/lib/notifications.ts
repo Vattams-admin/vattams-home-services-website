@@ -85,7 +85,7 @@ export async function createNotification(input: CreateNotificationInput): Promis
     });
     const parsed: unknown = await response.json().catch(() => null);
     const data = parsed && typeof parsed === 'object' && !Array.isArray(parsed)
-      ? parsed as Record<string, any>
+      ? parsed as Record<string, unknown>
       : {};
     if (!response.ok || typeof data.error === 'string') {
       console.error('[notifications] gateway error:', data.error ?? `HTTP ${response.status}`);
@@ -95,18 +95,22 @@ export async function createNotification(input: CreateNotificationInput): Promis
     // A 2xx response alone does not prove a notification was persisted.
     // Require the gateway to return a minimally identifiable notification
     // before callers treat this operation as successful.
-    const notification = data?.notification;
-    if (!notification
-      || typeof notification.id !== 'string'
-      || !notification.id.trim()
-      || notification.recipient_type !== input.recipientType
-      || notification.recipient_id !== input.recipientId
-      || notification.title !== input.title
-      || notification.type !== input.type) {
+    const notification = data.notification;
+    if (!notification || typeof notification !== 'object' || Array.isArray(notification)) {
       console.error('[notifications] gateway returned an incomplete notification response');
       return null;
     }
-    return notification as NotificationRow;
+    const notificationRow = notification as Record<string, unknown>;
+    if (typeof notificationRow.id !== 'string'
+      || !notificationRow.id.trim()
+      || notificationRow.recipient_type !== input.recipientType
+      || notificationRow.recipient_id !== input.recipientId
+      || notificationRow.title !== input.title
+      || notificationRow.type !== input.type) {
+      console.error('[notifications] gateway returned an incomplete notification response');
+      return null;
+    }
+    return notificationRow as unknown as NotificationRow;
   } catch (err) {
     console.error('[notifications] gateway error:', err);
     return null;

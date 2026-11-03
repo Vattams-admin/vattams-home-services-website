@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import {
   Phone, MessageCircle, MapPin, Star, ChevronRight, Wrench,
   Wind, Snowflake, WashingMachine,
-  CheckCircle, ArrowRight, Clock, ShieldCheck, Award, ThumbsUp, Briefcase,
+  ArrowRight, Clock, ShieldCheck, Award, ThumbsUp, Briefcase,
 } from 'lucide-react';
 import { CityData, SERVICE_CATEGORIES, cities } from '@/lib/cities';
 import { useRouter } from '@/lib/router';

@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
   Loader, Calendar, User, Phone, MapPin, Wrench, DollarSign, TrendingUp,
-  CheckCircle, Clock, X, ChevronDown, LogOut, LayoutDashboard, Users, Briefcase,
-  Trash2, Eye, XCircle, Star, Award, Wallet, Lock, Unlock, History, ShieldCheck,
+  CheckCircle, Clock, X, LogOut, LayoutDashboard, Users, Briefcase,
+  Eye, XCircle, Star, Award, Wallet, Lock, Unlock, ShieldCheck,
   CreditCard, LucideIcon, Globe, Facebook, Instagram, Twitter, Youtube, MessageCircle, Save,
-  Bell, BellOff, Search, FileText, Tag, Sparkles, Send, BarChart3, Brain,
+  Bell, Search, FileText, Tag, Sparkles, Send, BarChart3, Brain,
   BadgeCheck, Download, Mail, Truck,
   Contact, ExternalLink, ImageOff, CalendarClock, Landmark, Zap,
 } from 'lucide-react';
@@ -25,9 +25,6 @@ import {
   NotificationRow,
 } from '@/lib/notifications';
 import { Customer } from '@/lib/supabase';
-import { fetchAllReminders, type CRMReminder } from '@/lib/crm';
-import { generateSocialContent, generateBlogPost, generateCityPage, generateFAQ, generateOfferPoster, saveContentDraft, fetchContentDrafts, type ContentDraft } from '@/lib/aiContent';
-import { fetchActiveCoupons, validateCoupon, type Coupon } from '@/lib/coupons';
 import AdminAIDashboard from '@/components/admin/AdminAIDashboard';
 import AdminCRM from '@/components/admin/AdminCRM';
 import AdminContent from '@/components/admin/AdminContent';
@@ -148,9 +145,7 @@ export default function AdminDashboard() {
   // are short-lived signed URLs fetched on demand from the technician-auth
   // edge function's `doc-url` action (service_role only — the private
   // technician-docs bucket has no anon SELECT policy).
-  const [docUrls, setDocUrls] = useState<
-    Record<string, string>
-  >({});
+  const [, setDocUrls] = useState<Record<string, string>>({});
   const [docLoading, setDocLoading] = useState<
     Record<string, boolean>
   >({});
@@ -186,8 +181,6 @@ export default function AdminDashboard() {
   const [walletUpdating, setWalletUpdating] =
     useState(false);
 
-  const [selectedWalletTech, setSelectedWalletTech] =
-    useState<Technician | null>(null);
 
   const [payments, setPayments] =
     useState<PaymentRecord[]>([]);
@@ -209,8 +202,7 @@ export default function AdminDashboard() {
   const [paymentUpdating, setPaymentUpdating] =
     useState(false);
 
-  const [siteSettings, setSiteSettings] =
-    useState<SiteSettings | null>(null);
+  const [, setSiteSettings] = useState<SiteSettings | null>(null);
 
   const [socialForm, setSocialForm] =
     useState<SiteSettingsInput>({
