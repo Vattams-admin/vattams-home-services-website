@@ -82,7 +82,7 @@ export default function CustomerProfile() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [navigate]);
 
   useEffect(() => () => {
     bookingCountRequestVersion.current += 1;
