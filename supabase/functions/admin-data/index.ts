@@ -84,7 +84,7 @@ case "marketplace_service_save": {
   if (!["fixed", "starting_at", "quote"].includes(pricingMode) || !["fixed", "per_job", "quote"].includes(payoutMode)) return out({ error: "Invalid pricing configuration" }, 400);
   if (![gst, platformFee].every(Number.isFinite) || gst < 0 || gst > 100 || platformFee < 0 || (price !== null && (!Number.isFinite(price) || price < 0)) || (payout !== null && (!Number.isFinite(payout) || payout < 0))) return out({ error: "Invalid price or payout" }, 400);
   const active = Boolean(input.is_active);
-  if (active && Boolean(input.requires_admin_review) && !Boolean(input.admin_review_confirmed)) return out({ error: "Confirm provider coverage and required review before activating this service" }, 400);
+  if (active && Boolean(input.requires_admin_review) && !input.admin_review_confirmed) return out({ error: "Confirm provider coverage and required review before activating this service" }, 400);
   const payload = { service_key: serviceKey, name, category, description, customer_pricing_mode: pricingMode, customer_base_price: price, gst_rate: gst, customer_platform_fee: platformFee, technician_payout_mode: payoutMode, technician_payout: payout, requires_qualified_provider: Boolean(input.requires_qualified_provider), requires_admin_review: Boolean(input.requires_admin_review ?? true), is_active: active, updated_at: new Date().toISOString() };
   let query = db.from("marketplace_services").upsert(payload, { onConflict: "service_key" });
   if (id) query = db.from("marketplace_services").update(payload).eq("id", id);
