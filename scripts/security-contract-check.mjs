@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
-const [paymentAuth, paymentsLib, adminData, customerData, customerAuth, technicianAuth, technicianData, adminDashboard, technicianDashboard, paymentModal, homeFeatures, bookingLifecycleMigration, completionProofMigration, supabaseLib, rechargeLedgerMigration, paymentWriteLockMigration, paymentReadLockMigration] = await Promise.all([
+const [paymentAuth, paymentsLib, adminData, customerData, customerAuth, technicianAuth, technicianData, adminDashboard, technicianDashboard, customerDashboard, paymentModal, homeFeatures, bookingLifecycleMigration, completionProofMigration, customerCompletionMigration, supabaseLib, rechargeLedgerMigration, paymentWriteLockMigration, paymentReadLockMigration] = await Promise.all([
   read('supabase/functions/payment-auth/index.ts'),
   read('src/lib/payments.ts'),
   read('supabase/functions/admin-data/index.ts'),
@@ -12,10 +12,12 @@ const [paymentAuth, paymentsLib, adminData, customerData, customerAuth, technici
   read('supabase/functions/technician-data/index.ts'),
   read('src/pages/AdminDashboard.tsx'),
   read('src/pages/TechnicianDashboard.tsx'),
+  read('src/pages/CustomerDashboard.tsx'),
   read('src/components/PaymentModal.tsx'),
   read('src/components/home/Features.tsx'),
   read('supabase/migrations/20261102193000_booking_job_lock_order.sql'),
   read('supabase/migrations/20261102200000_require_customer_proof_for_completion.sql'),
+  read('supabase/migrations/20261103130000_customer_confirm_booking_completion.sql'),
   read('src/lib/supabase.ts'),
   read('supabase/migrations/20261103120000_reconcile_recharge_ledger_allocations.sql'),
   read('supabase/migrations/20261005030000_lock_public_payment_writes.sql'),
@@ -80,6 +82,13 @@ const checks = [
   ['technician transition retains service-role-only execute grant', bookingLifecycleMigration.includes('REVOKE ALL ON FUNCTION public.transition_technician_job_atomic(uuid, uuid, text) FROM PUBLIC, anon, authenticated') && bookingLifecycleMigration.includes('GRANT EXECUTE ON FUNCTION public.transition_technician_job_atomic(uuid, uuid, text) TO service_role')],
   ['technician cannot finalize booking without customer proof', completionProofMigration.includes("MESSAGE = 'CUSTOMER_COMPLETION_PROOF_REQUIRED'") && !completionProofMigration.includes("p_requested_status IN ('job_started', 'completed')") && technicianData.includes('CUSTOMER_COMPLETION_PROOF_REQUIRED')],
   ['technician-reported completion remains a non-final job_completed state', completionProofMigration.includes("p_requested_status = 'job_completed'") && completionProofMigration.includes("WHEN p_requested_status = 'job_completed' THEN now()")],
+  ['customer completion RPC verifies booking ownership and locks the booking before the technician job', customerCompletionMigration.includes('customer_id = p_customer_id') && customerCompletionMigration.indexOf('FROM public.bookings') < customerCompletionMigration.lastIndexOf('FOR UPDATE') && customerCompletionMigration.indexOf('FOR UPDATE') < customerCompletionMigration.lastIndexOf('FROM public.technician_jobs')],
+  ['customer completion RPC requires technician-reported job_completed state', customerCompletionMigration.includes("v_booking.status <> 'job_completed'") && customerCompletionMigration.includes("v_job.status <> 'job_completed'")],
+  ['customer completion RPC records confirmation time and atomically finalizes both records', customerCompletionMigration.includes('customer_confirmed_completed_at') && customerCompletionMigration.includes("SET status = 'completed'") && customerCompletionMigration.includes("SET status = 'completed',")],
+  ['customer completion RPC is service-role-only', customerCompletionMigration.includes('REVOKE ALL ON FUNCTION public.confirm_booking_completion_atomic(uuid, uuid) FROM PUBLIC, anon, authenticated') && customerCompletionMigration.includes('GRANT EXECUTE ON FUNCTION public.confirm_booking_completion_atomic(uuid, uuid) TO service_role')],
+  ['customer-data derives confirmation identity from the authenticated session', customerData.includes('p_customer_id:customerId') && customerData.includes('confirm_booking_completion_atomic') && customerData.includes('case "confirm_completion"')],
+  ['customer dashboard exposes confirmation only for technician-reported completion', customerDashboard.includes("selected.status === 'job_completed'") && customerDashboard.includes('Confirm Service Completed')],
+
   ['wallet transaction type includes recharge dues settlement', supabaseLib.includes("'recharge_dues_settlement'")],
   ['technician dashboard treats recharge dues settlement as a positive payment allocation', technicianDashboard.includes("'recharge_dues_settlement',")],
   ['frontend notification type includes the call_rate_fee event emitted by completion processing', supabaseLib.includes("'call_rate_fee';") && supabaseLib.includes('export type NotificationType =')],
