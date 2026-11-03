@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
-const [paymentAuth, paymentsLib, adminData, customerData, customerAuth, technicianAuth, technicianData, adminDashboard, technicianDashboard, customerDashboard, paymentModal, homeFeatures, bookingLifecycleMigration, completionProofMigration, customerCompletionMigration, supabaseLib, rechargeLedgerMigration, paymentWriteLockMigration, paymentReadLockMigration] = await Promise.all([
+const [paymentAuth, paymentsLib, adminData, customerData, customerAuth, technicianAuth, technicianData, adminDashboard, technicianDashboard, customerDashboard, customerBookings, paymentModal, homeFeatures, bookingLifecycleMigration, completionProofMigration, customerCompletionMigration, supabaseLib, rechargeLedgerMigration, paymentWriteLockMigration, paymentReadLockMigration] = await Promise.all([
   read('supabase/functions/payment-auth/index.ts'),
   read('src/lib/payments.ts'),
   read('supabase/functions/admin-data/index.ts'),
@@ -13,6 +13,7 @@ const [paymentAuth, paymentsLib, adminData, customerData, customerAuth, technici
   read('src/pages/AdminDashboard.tsx'),
   read('src/pages/TechnicianDashboard.tsx'),
   read('src/pages/CustomerDashboard.tsx'),
+  read('src/pages/CustomerBookings.tsx'),
   read('src/components/PaymentModal.tsx'),
   read('src/components/home/Features.tsx'),
   read('supabase/migrations/20261102193000_booking_job_lock_order.sql'),
@@ -88,6 +89,7 @@ const checks = [
   ['customer completion RPC is service-role-only', customerCompletionMigration.includes('REVOKE ALL ON FUNCTION public.confirm_booking_completion_atomic(uuid, uuid) FROM PUBLIC, anon, authenticated') && customerCompletionMigration.includes('GRANT EXECUTE ON FUNCTION public.confirm_booking_completion_atomic(uuid, uuid) TO service_role')],
   ['customer-data derives confirmation identity from the authenticated session', customerData.includes('p_customer_id:customerId') && customerData.includes('confirm_booking_completion_atomic') && customerData.includes('case "confirm_completion"')],
   ['customer dashboard exposes confirmation only for technician-reported completion', customerDashboard.includes("selected.status === 'job_completed'") && customerDashboard.includes('Confirm Service Completed')],
+  ['customer booking history exposes completion confirmation for every eligible booking', customerBookings.includes("status === 'job_completed'") && customerBookings.includes('confirmBookingCompletion(booking)') && customerBookings.includes('Confirm Service Completed')],
 
   ['wallet transaction type includes recharge dues settlement', supabaseLib.includes("'recharge_dues_settlement'")],
   ['technician dashboard treats recharge dues settlement as a positive payment allocation', technicianDashboard.includes("'recharge_dues_settlement',")],
