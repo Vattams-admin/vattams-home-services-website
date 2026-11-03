@@ -14,7 +14,7 @@ import {
   Award,
   ShieldCheck,
 } from 'lucide-react';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 import JoinTechnicianButton from '@/components/JoinTechnicianButton';
 import { useSEO } from '@/lib/seo';
 
