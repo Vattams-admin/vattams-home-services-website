@@ -1897,11 +1897,12 @@ function WalletSection({
           <div className="bg-white rounded-2xl border border-[#e8e1d2] overflow-hidden">
             {transactions.map(
               (transaction, index) => {
+                const isAdjustment =
+                  transaction.type === 'adjustment';
                 const positive = [
                   'recharge_credit',
                   'recharge_dues_settlement',
                   'deposit_release',
-                  'adjustment',
                 ].includes(
                   transaction.type
                 );
@@ -1920,9 +1921,11 @@ function WalletSection({
                     <div className="flex items-center gap-3 min-w-0">
                       <div
                         className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                          positive
-                            ? 'bg-green-50 text-green-600'
-                            : 'bg-red-50 text-red-600'
+                          isAdjustment
+                            ? 'bg-gray-100 text-gray-600'
+                            : positive
+                              ? 'bg-green-50 text-green-600'
+                              : 'bg-red-50 text-red-600'
                         }`}
                       >
                         {positive ? (
@@ -1966,14 +1969,18 @@ function WalletSection({
                     <div className="text-right shrink-0">
                       <p
                         className={`font-extrabold ${
-                          positive
-                            ? 'text-green-600'
-                            : 'text-red-600'
+                          isAdjustment
+                            ? 'text-gray-600'
+                            : positive
+                              ? 'text-green-600'
+                              : 'text-red-600'
                         }`}
                       >
-                        {positive
-                          ? '+'
-                          : '-'}
+                        {isAdjustment
+                          ? ''
+                          : positive
+                            ? '+'
+                            : '-'}
                         {formatMoney(
                           transaction.amount
                         )}
