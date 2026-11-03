@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   Briefcase,
@@ -164,7 +164,7 @@ export default function TechnicianDashboard() {
     useState(false);
   const [rechargeMessage, setRechargeMessage] = useState('');
 
-  const loadDashboard = async (showLoader = true) => {
+  const loadDashboard = useCallback(async (showLoader = true) => {
     if (showLoader) setLoading(true); else setRefreshing(true);
     setError('');
     try {
@@ -190,11 +190,11 @@ export default function TechnicianDashboard() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to load technician dashboard.');
     } finally { setLoading(false); setRefreshing(false); }
-  };
+  }, [navigate]);
 
   useEffect(() => {
     loadDashboard(true);
-  }, []);
+  }, [loadDashboard]);
 
   /*
    * Realtime refresh for technician jobs and notifications.
@@ -205,7 +205,7 @@ export default function TechnicianDashboard() {
     if (!technician?.id) return;
     const refresh = window.setInterval(() => { void loadDashboard(false); }, 30000);
     return () => window.clearInterval(refresh);
-  }, [technician?.id]);
+  }, [technician?.id, loadDashboard]);
 
   const mergedNotifications: MergedTechNotification[] = useMemo(
     () =>
