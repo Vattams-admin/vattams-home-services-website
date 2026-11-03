@@ -122,7 +122,9 @@ export async function unregisterFCMToken(token: string): Promise<boolean> {
         admin_id: userType === 'admin' ? session.id : undefined,
       });
       return true;
-    } catch {}
+    } catch {
+      // Best-effort unregister: stale tokens are ignored by the notification gateway.
+    }
   }
   return false;
 }
