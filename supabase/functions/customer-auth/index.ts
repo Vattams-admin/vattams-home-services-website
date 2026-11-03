@@ -309,7 +309,7 @@ Deno.serve(async (req: Request) => {
         if (review_text !== undefined && review_text !== null && typeof review_text !== "string") return errorResponse("Review text must be plain text");
         const cleanReviewText = typeof review_text === "string" ? review_text.trim() : "";
         if (cleanReviewText.length > 2000) return errorResponse("Review text must be 2000 characters or fewer");
-        if (/[\\u0000-\\u0008\\u000b\\u000c\\u000e-\\u001f\\u007f]/.test(cleanReviewText)) return errorResponse("Review text contains unsupported control characters");
+        if (/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(cleanReviewText)) return errorResponse("Review text contains unsupported control characters");
         const { data: existing } = await supabase.from("reviews").select("id").eq("booking_id", booking_id).maybeSingle();
         if (existing) return errorResponse("You have already reviewed this booking");
         const { data: booking } = await supabase.from("bookings").select("id, status, customer_id, assigned_technician_id").eq("id", booking_id).maybeSingle();
