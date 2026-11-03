@@ -1519,14 +1519,23 @@ export default function AdminDashboard() {
                 </thead>
 
                 <tbody className="divide-y divide-gray-50">
-                  {walletTxns.map((txn) => (
+                  {walletTxns.map((txn) => {
+                    const isNonCashLedgerEvent = [
+                      'adjustment',
+                      'recharge_dues_settlement',
+                      'deposit_release',
+                      'platform_fee_remittance',
+                      'gst_remittance',
+                      'call_rate_fee',
+                    ].includes(txn.type);
+                    return (
                     <tr key={txn.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3 text-sm font-semibold text-gray-800 capitalize">
                         {String(txn.type).replace(/_/g, ' ')}
                       </td>
                       <td
                         className={`px-4 py-3 text-sm font-semibold ${
-                          txn.amount < 0 ? 'text-red-600' : 'text-green-600'
+                          isNonCashLedgerEvent ? 'text-gray-600' : txn.amount < 0 ? 'text-red-600' : 'text-green-600'
                         }`}
                       >
                         {formatINR(txn.amount)}
@@ -1536,7 +1545,8 @@ export default function AdminDashboard() {
                         {new Date(txn.created_at).toLocaleString('en-IN')}
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
 
                   {walletTxns.length === 0 && (
                     <tr>
