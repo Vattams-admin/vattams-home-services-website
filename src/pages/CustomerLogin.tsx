@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Loader, Phone, Lock, LogIn, Eye, EyeOff } from 'lucide-react';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase';
 import { initFCM, registerServiceWorker } from '@/lib/fcm';
 export default function CustomerLogin() {
