@@ -54,6 +54,7 @@ const checks = [
   ['technician-reported completion remains a non-final job_completed state', completionProofMigration.includes("p_requested_status = 'job_completed'") && completionProofMigration.includes("WHEN p_requested_status = 'job_completed' THEN now()")],
   ['wallet transaction type includes recharge dues settlement', supabaseLib.includes("'recharge_dues_settlement'")],
   ['technician dashboard treats recharge dues settlement as a positive payment allocation', technicianDashboard.includes("'recharge_dues_settlement',")],
+  ['frontend notification type includes the call_rate_fee event emitted by completion processing', supabaseTypes.includes("'call_rate_fee';") && supabaseTypes.includes('export type NotificationType =')],
   ['technician dashboard does not invent a debit or credit direction for adjustment entries', technicianDashboard.includes('const isAdjustment =') && technicianDashboard.includes("transaction.type === 'adjustment'") && technicianDashboard.includes("? ''") && !technicianDashboard.includes("'adjustment',")],
   ['technician account response includes all wallet fields displayed by dashboard', technicianData.includes('wallet_balance,locked_deposit,available_balance,commission_due,wallet_locked')],
   ['recharge decisions are conditional on pending state and reject stale repeats', adminData.includes('.eq("id",b.recharge_id).eq("status","pending").select("*").maybeSingle()') && adminData.includes('Recharge is no longer pending; refresh the list before taking another action.')],
