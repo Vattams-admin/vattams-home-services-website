@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
-const [paymentAuth, paymentsLib, adminData, customerData, technicianAuth, technicianData, adminDashboard, technicianDashboard, paymentModal, homeFeatures, bookingLifecycleMigration, completionProofMigration, supabaseLib, rechargeLedgerMigration, technicianDashboard] = await Promise.all([
+const [paymentAuth, paymentsLib, adminData, customerData, technicianAuth, technicianData, adminDashboard, technicianDashboard, paymentModal, homeFeatures, bookingLifecycleMigration, completionProofMigration, supabaseLib, rechargeLedgerMigration] = await Promise.all([
   read('supabase/functions/payment-auth/index.ts'),
   read('src/lib/payments.ts'),
   read('supabase/functions/admin-data/index.ts'),
@@ -17,7 +17,6 @@ const [paymentAuth, paymentsLib, adminData, customerData, technicianAuth, techni
   read('supabase/migrations/20261102200000_require_customer_proof_for_completion.sql'),
   read('src/lib/supabase.ts'),
   read('supabase/migrations/20261103120000_reconcile_recharge_ledger_allocations.sql'),
-  read('src/pages/TechnicianDashboard.tsx'),
 ]);
 
 const controlCharRegex = String.raw`/[\u0000-\u001f\u007f]/`;
