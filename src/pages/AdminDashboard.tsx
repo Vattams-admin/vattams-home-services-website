@@ -16,7 +16,7 @@ import { adminData } from '@/lib/adminData';
 import { getPricingFromServicePrice, formatINR, type PricingBreakdown } from '@/lib/pricing';
 import { ServicePrice } from '@/lib/supabase';
 import { validateSettings, SiteSettings, SiteSettingsInput } from '@/lib/siteSettings';
-import { refreshSocialLinksCache } from '@/components/SocialLinks';
+import { refreshSocialLinksCache } from '@/lib/socialLinksCache';
 import NotificationCenter from '@/components/NotificationCenter';
 import PushNotificationSetup from '@/components/PushNotificationSetup';
 import {
