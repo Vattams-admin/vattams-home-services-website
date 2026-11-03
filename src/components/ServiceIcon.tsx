@@ -8,37 +8,6 @@ interface ServiceIconProps {
   className?: string;
 }
 
-// Ordered list of [keyword, icon] pairs — first matching keyword wins.
-// Keeps matching resilient to variations like "AC Repair" vs "Air Conditioner Service".
-const keywordMap: [string, LucideIcon][] = [
-  ['air condition', AirVent],
-  ['ac repair', AirVent],
-  ['ac service', AirVent],
-  [' ac ', AirVent],
-  ['split ac', AirVent],
-  ['window ac', AirVent],
-  ['refrigerator', Refrigerator],
-  ['fridge', Refrigerator],
-  ['washing machine', WashingMachine],
-  ['laundry', WashingMachine],
-  ['water heater', Flame],
-  ['geyser', Flame],
-  ['electric', Zap],
-  ['wiring', Zap],
-  ['cctv', Camera],
-  ['camera', Camera],
-  ['plumb', Wrench],
-  ['water', Droplets],
-  ['leak', Droplets],
-  ['carpentry', Hammer],
-  ['furniture', Hammer],
-  ['paint', Paintbrush],
-  ['fan', Fan],
-  ['cleaning', Sparkles],
-  ['pest', Sparkles],
-  ['cooling', Wind],
-];
-
 /**
  * Maps a service name/category string to a semantically appropriate Lucide
  * icon. Matching is case-insensitive and keyword-based so it tolerates
