@@ -436,14 +436,14 @@ export default function TechnicianRegister() {
           error: '',
         },
       }));
-    } catch (err: any) {
+    } catch (err) {
       setUploadStates((previous) => ({
         ...previous,
         [key]: {
           status: 'error',
           progress: 0,
           fileName: file.name,
-          error: err?.message || 'Upload failed. Please try again.',
+          error: (err instanceof Error ? err.message : undefined) || 'Upload failed. Please try again.',
         },
       }));
     }
@@ -526,7 +526,7 @@ export default function TechnicianRegister() {
       setEmailOtpResendTimer(60);
     } catch (err: any) {
       setError(err?.message || 'Could not resend the email verification code.');
-      if (err?.message?.includes('60 seconds')) setEmailOtpResendTimer(60);
+      if ((err instanceof Error && err.message.includes('60 seconds'))) setEmailOtpResendTimer(60);
     } finally {
       submittingRef.current = false;
       setSubmitting(false);
