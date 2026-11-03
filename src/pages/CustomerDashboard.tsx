@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Loader, Briefcase, Calendar, Clock, MapPin, Wrench, CheckCircle, X, ChevronRight, Bell, TrendingUp, CreditCard, Star, Phone, User } from 'lucide-react';
 import { useRouter } from '@/lib/router';
 import { Booking, Customer } from '@/lib/supabase';
@@ -132,7 +132,7 @@ export default function CustomerDashboard() {
     };
   }, [selected]);
 
-  const refreshDashboard = async (c: Customer) => {
+  const refreshDashboard = useCallback(async (c: Customer) => {
     const version = ++requestVersion.current;
     setLoading(true);
     setLoadError('');
@@ -159,7 +159,53 @@ export default function CustomerDashboard() {
     if (bookingResult.status === 'rejected') setLoadError('Your booking history could not be verified. Please retry.');
     else if (notificationResult.status === 'rejected') setLoadError('Some dashboard information could not be loaded. Please retry.');
     setLoading(false);
-  };
+  }, [loadBookings, loadNotifications]);
+
+  const loadBookings = useCallback(async (c: Customer): Promise<Booking[]> => {
+    const data = await customerData<{ bookings: unknown }>('bookings', { mobile: c.mobile });
+    if (!data || !Array.isArray(data.bookings)) {
+      throw new Error('Booking history response was unavailable or invalid.');
+    }
+    const validBookings = data.bookings.filter((item): item is Booking => {
+      if (!item || typeof item !== 'object') return false;
+      const booking = item as Partial<Booking>;
+      return typeof booking.id === 'string' && booking.id.trim().length > 0 &&
+        typeof booking.status === 'string' && booking.status.trim().length > 0;
+    });
+    if (validBookings.length !== data.bookings.length) {
+      throw new Error('Booking history contained incomplete records. Please retry.');
+    }
+    const bookingIds = validBookings.map((booking) => booking.id.trim());
+    if (new Set(bookingIds).size !== bookingIds.length) {
+      throw new Error('Booking history contained duplicate records. Please retry.');
+    }
+    return validBookings;
+  }, []);
+
+  const loadNotifications = useCallback(async (c: Customer): Promise<{ id: string; title: string; message: string; created_at: string; is_read: boolean }[]> => {
+    const data = await customerData<{ notifications: unknown }>('account', { mobile: c.mobile });
+    if (!data || !Array.isArray(data.notifications)) {
+      throw new Error('Notification response was unavailable or invalid.');
+    }
+    const validNotifications = data.notifications.filter((item): item is { id: string; title: string; message: string; created_at: string; is_read: boolean } => {
+      if (!item || typeof item !== 'object') return false;
+      const notification = item as Record<string, unknown>;
+      return typeof notification.id === 'string' && notification.id.trim().length > 0 &&
+        typeof notification.title === 'string' && notification.title.trim().length > 0 &&
+        typeof notification.message === 'string' &&
+        typeof notification.is_read === 'boolean' &&
+        typeof notification.created_at === 'string' &&
+        Number.isFinite(Date.parse(notification.created_at));
+    });
+    if (validNotifications.length !== data.notifications.length) {
+      throw new Error('Notifications contained incomplete records. Please retry.');
+    }
+    const notificationIds = validNotifications.map((notification) => notification.id.trim());
+    if (new Set(notificationIds).size !== notificationIds.length) {
+      throw new Error('Notifications contained duplicate records. Please retry.');
+    }
+    return validNotifications;
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -230,53 +276,7 @@ export default function CustomerDashboard() {
       // Invalidate in-flight refreshes on unmount so they cannot update stale state.
       requestVersion.current += 1;
     };
-  }, []);
-
-  const loadBookings = async (c: Customer): Promise<Booking[]> => {
-    const data = await customerData<{ bookings: unknown }>('bookings', { mobile: c.mobile });
-    if (!data || !Array.isArray(data.bookings)) {
-      throw new Error('Booking history response was unavailable or invalid.');
-    }
-    const validBookings = data.bookings.filter((item): item is Booking => {
-      if (!item || typeof item !== 'object') return false;
-      const booking = item as Partial<Booking>;
-      return typeof booking.id === 'string' && booking.id.trim().length > 0 &&
-        typeof booking.status === 'string' && booking.status.trim().length > 0;
-    });
-    if (validBookings.length !== data.bookings.length) {
-      throw new Error('Booking history contained incomplete records. Please retry.');
-    }
-    const bookingIds = validBookings.map((booking) => booking.id.trim());
-    if (new Set(bookingIds).size !== bookingIds.length) {
-      throw new Error('Booking history contained duplicate records. Please retry.');
-    }
-    return validBookings;
-  };
-
-  const loadNotifications = async (c: Customer): Promise<{ id: string; title: string; message: string; created_at: string; is_read: boolean }[]> => {
-    const data = await customerData<{ notifications: unknown }>('account', { mobile: c.mobile });
-    if (!data || !Array.isArray(data.notifications)) {
-      throw new Error('Notification response was unavailable or invalid.');
-    }
-    const validNotifications = data.notifications.filter((item): item is { id: string; title: string; message: string; created_at: string; is_read: boolean } => {
-      if (!item || typeof item !== 'object') return false;
-      const notification = item as Record<string, unknown>;
-      return typeof notification.id === 'string' && notification.id.trim().length > 0 &&
-        typeof notification.title === 'string' && notification.title.trim().length > 0 &&
-        typeof notification.message === 'string' &&
-        typeof notification.is_read === 'boolean' &&
-        typeof notification.created_at === 'string' &&
-        Number.isFinite(Date.parse(notification.created_at));
-    });
-    if (validNotifications.length !== data.notifications.length) {
-      throw new Error('Notifications contained incomplete records. Please retry.');
-    }
-    const notificationIds = validNotifications.map((notification) => notification.id.trim());
-    if (new Set(notificationIds).size !== notificationIds.length) {
-      throw new Error('Notifications contained duplicate records. Please retry.');
-    }
-    return validNotifications;
-  };
+  }, [navigate, refreshDashboard]);
 
   const confirmBookingCompletion = async () => {
     if (!customer || !selected || selected.status !== 'job_completed' || confirmingCompletion) return;
