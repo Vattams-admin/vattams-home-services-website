@@ -115,7 +115,6 @@ export default function TechnicianRegister() {
     }
 
     setHydrated(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
