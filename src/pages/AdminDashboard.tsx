@@ -1530,6 +1530,9 @@ export default function AdminDashboard() {
                       'gst_remittance',
                       'call_rate_fee',
                     ].includes(txn.type);
+                    // Legacy completion writers store commission_deduction amounts
+                    // as positive magnitudes even though wallet_balance is reduced.
+                    const isDebitLedgerEvent = ['commission_deduction', 'recharge_debit'].includes(txn.type);
                     return (
                     <tr key={txn.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3 text-sm font-semibold text-gray-800 capitalize">
@@ -1537,10 +1540,10 @@ export default function AdminDashboard() {
                       </td>
                       <td
                         className={`px-4 py-3 text-sm font-semibold ${
-                          isNonCashLedgerEvent ? 'text-gray-600' : txn.amount < 0 ? 'text-red-600' : 'text-green-600'
+                          isNonCashLedgerEvent ? 'text-gray-600' : isDebitLedgerEvent || txn.amount < 0 ? 'text-red-600' : 'text-green-600'
                         }`}
                       >
-                        {formatINR(txn.amount)}
+                        {isDebitLedgerEvent && txn.amount > 0 ? '-' : ''}{formatINR(txn.amount)}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-500 hidden md:table-cell">{txn.description ?? '—'}</td>
                       <td className="px-4 py-3 text-xs text-gray-400 hidden lg:table-cell">
