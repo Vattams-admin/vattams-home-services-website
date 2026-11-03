@@ -18,7 +18,7 @@ import {
   Quote,
   LucideIcon,
 } from 'lucide-react';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 import { useSEO } from '@/lib/seo';
 
 /* ============================================================
