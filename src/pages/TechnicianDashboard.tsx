@@ -66,7 +66,7 @@ const JOB_STATUS_LABELS: Record<string, string> = {
   on_the_way: 'On the Way',
   in_progress: 'In Progress',
   job_started: 'Job Started',
-  job_completed: 'Job Completed',
+  job_completed: 'Awaiting Customer Confirmation',
   completed: 'Completed',
   rejected: 'Rejected',
 };
@@ -77,7 +77,7 @@ const JOB_STATUS_CLASSES: Record<string, string> = {
   on_the_way: 'bg-purple-50 text-purple-700 border-purple-100',
   in_progress: 'bg-[#f8f4e8] text-orange-700 border-[#e7dcc0]',
   job_started: 'bg-[#f8f4e8] text-orange-700 border-[#e7dcc0]',
-  job_completed: 'bg-green-50 text-green-700 border-green-100',
+  job_completed: 'bg-teal-50 text-teal-700 border-teal-100',
   completed: 'bg-green-50 text-green-700 border-green-100',
   rejected: 'bg-red-50 text-red-700 border-red-100',
 };
