@@ -27,7 +27,7 @@ import {
   Download,
 } from 'lucide-react';
 
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 import { downloadOnboardingLetter } from '@/lib/onboardingLetter';
 import { technicianData } from '@/lib/technicianData';
 import PushNotificationSetup from '@/components/PushNotificationSetup';
