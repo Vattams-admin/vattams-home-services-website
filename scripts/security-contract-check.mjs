@@ -71,7 +71,7 @@ const checks = [
   ['customer notification response allowlists display fields', customerData.includes('.select("id,title,message,created_at,is_read")')],
   ['customer review response allowlists review display fields', customerData.includes('.select("id,booking_id,rating,review_text,created_at")')],
   ['customer review endpoint validates review text type and length', customerAuth.includes('typeof review_text !== "string"') && customerAuth.includes('cleanReviewText.length > 2000')],
-  ['customer review endpoint rejects control characters', customerAuth.includes(String.raw`/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/`)],
+  ['customer review endpoint rejects control characters', customerAuth.includes('function containsUnsupportedReviewCharacters') && customerAuth.includes('code >= 0x0e && code <= 0x1f') && customerAuth.includes('containsUnsupportedReviewCharacters(cleanReviewText)')],
   ['customer review insert returns an explicit field allowlist', customerAuth.includes('.select("id,booking_id,customer_id,technician_id,rating,review_text,created_at")')],
   ['KYC upload checks content signatures', technicianAuth.includes('detectKycFile(bytes)')],
   ['KYC upload does not require Content-Length', technicianAuth.includes('if (rawContentLength !== null)')],
