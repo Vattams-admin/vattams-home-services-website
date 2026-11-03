@@ -1,5 +1,5 @@
 import { Briefcase, ArrowRight, TrendingUp, Clock, Wallet, ShieldCheck } from 'lucide-react';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 
 const perks = [
   { icon: TrendingUp, text: 'Eligible customer service leads' },
