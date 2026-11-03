@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState, type ComponentType } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import {
   Briefcase,
   Wallet,
@@ -369,7 +370,7 @@ export default function TechnicianDashboard() {
       setRechargeAmount(''); setPaymentRef('');
       setRechargeMessage('Recharge request submitted successfully. Admin will review it.');
       await loadDashboard(false);
-    } catch (err:any) { setRechargeMessage(err instanceof Error ? err.message : 'Unable to submit recharge request.'); }
+    } catch (err) { setRechargeMessage(err instanceof Error ? err.message : 'Unable to submit recharge request.'); }
     finally { setRechargeSubmitting(false); }
   };
 
@@ -1283,7 +1284,7 @@ function StatCard({
   value,
   subtitle,
 }: {
-  icon: ComponentType<{ size?: number }>;
+  icon: LucideIcon;
   title: string;
   value: string;
   subtitle: string;
@@ -2073,7 +2074,7 @@ function WalletCard({
 }: {
   title: string;
   value: string;
-  icon: any;
+  icon: LucideIcon;
 }) {
   return (
     <div className="bg-white rounded-2xl border border-[#e8e1d2] p-5">
@@ -2092,21 +2093,7 @@ function WalletCard({
   );
 }
 
-function ShieldIcon({
-  size = 20,
-}: {
-  size?: number;
-}) {
-  return (
-    <ShieldIconInner size={size} />
-  );
-}
-
-function ShieldIconInner({
-  size,
-}: {
-  size: number;
-}) {
+function ShieldIcon() {
   return (
     <span className="font-extrabold">
       ₹
