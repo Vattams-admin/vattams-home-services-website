@@ -65,7 +65,7 @@ Deno.serve(async req=>{
         if(error) return out({error:"Failed to update profile"},400);
         return out({customer:data});
       }
-      case "reviews":{ return out({reviews:(await supabase.from("reviews").select("*").eq("customer_id",customerId).order("created_at",{ascending:false})).data||[]}); }
+      case "reviews":{ return out({reviews:(await supabase.from("reviews").select("id,booking_id,rating,review_text,created_at").eq("customer_id",customerId).order("created_at",{ascending:false})).data||[]}); }
       case "completed_bookings":{ return out({bookings:(await supabase.from("bookings").select(CUSTOMER_BOOKING_COLUMNS).eq("customer_id",customerId).eq("status","completed").order("created_at",{ascending:false})).data||[]}); }
       case "notification_read":{if(!body.notification_id)return out({error:"Notification ID is required"},400);const {data:customer}=await supabase.from("customers").select("mobile").eq("id",customerId).single();const {error}=await supabase.from("notifications").update({is_read:true,read_at:new Date().toISOString(),status:"read"}).eq("id",body.notification_id).eq("recipient_type","customer").eq("recipient_id",customer?.mobile||"");if(error)return out({error:"Unable to update notification"},400);return out({success:true});}
       case "notifications_read_all":{const {data:customer}=await supabase.from("customers").select("mobile").eq("id",customerId).single();const {error}=await supabase.from("notifications").update({is_read:true,read_at:new Date().toISOString(),status:"read"}).eq("recipient_type","customer").eq("recipient_id",customer?.mobile||"").eq("is_read",false);if(error)return out({error:"Unable to update notifications"},400);return out({success:true});}
