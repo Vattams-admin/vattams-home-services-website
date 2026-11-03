@@ -946,7 +946,6 @@ function Overview({
       | 'in_progress'
       | 'job_started'
       | 'job_completed'
-      | 'completed'
   ) => Promise<void>;
   processingJob: string | null;
 }) {
@@ -1352,7 +1351,6 @@ function JobsSection({
       | 'in_progress'
       | 'job_started'
       | 'job_completed'
-      | 'completed'
   ) => Promise<void>;
   processingJob: string | null;
 }) {
@@ -1478,7 +1476,6 @@ function JobCard({
       | 'in_progress'
       | 'job_started'
       | 'job_completed'
-      | 'completed'
   ) => Promise<void>;
   processingJob: string | null;
   detailed?: boolean;
