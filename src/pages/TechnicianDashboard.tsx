@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { ComponentType } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import {
   Briefcase,
   Wallet,
@@ -1284,7 +1284,7 @@ function StatCard({
   value,
   subtitle,
 }: {
-  icon: ComponentType<{ size?: number }>;
+  icon: LucideIcon;
   title: string;
   value: string;
   subtitle: string;
@@ -1768,7 +1768,7 @@ function WalletSection({
           value={formatMoney(
             technician.locked_deposit
           )}
-          icon={ShieldIcon}
+          icon={IndianRupee}
         />
 
         <WalletCard
@@ -2090,14 +2090,6 @@ function WalletCard({
         {value}
       </p>
     </div>
-  );
-}
-
-function ShieldIcon() {
-  return (
-    <span className="font-extrabold">
-      ₹
-    </span>
   );
 }
 
