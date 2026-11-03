@@ -311,7 +311,7 @@ export default function TechnicianDashboard() {
     }
   };
 
-  const updateJobStatus = async (job: TechnicianJob, status: 'accepted'|'rejected'|'on_the_way'|'in_progress'|'job_started'|'job_completed'|'completed') => {
+  const updateJobStatus = async (job: TechnicianJob, status: 'accepted'|'rejected'|'on_the_way'|'in_progress'|'job_started'|'job_completed') => {
     if (!technician) return;
     setProcessingJob(job.id); setError('');
     try { await technicianData('job_status', { job_id: job.id, status }); await loadDashboard(false); }
