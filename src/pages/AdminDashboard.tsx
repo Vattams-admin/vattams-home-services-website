@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Loader, Calendar, User, Phone, MapPin, Wrench, DollarSign, TrendingUp,
   CheckCircle, Clock, X, LogOut, LayoutDashboard, Users, Briefcase,
@@ -316,6 +316,81 @@ export default function AdminDashboard() {
       text: string;
     } | null>(null);
 
+  const loadSiteSettings = useCallback(async () => {
+    const { settings } = await adminData<{ settings: SiteSettings | null }>('site_settings');
+    const s = settings ?? {
+      id: 1,
+      google_business_url: null,
+      facebook_url: null,
+      instagram_url: null,
+      twitter_url: null,
+      youtube_url: null,
+      whatsapp_number: null,
+      website_url: null,
+      updated_at: null,
+      updated_by: null,
+    } as SiteSettings;
+    setSiteSettings(s);
+
+    setSocialForm({
+      google_business_url:
+        s.google_business_url ?? '',
+
+      facebook_url:
+        s.facebook_url ?? '',
+
+      instagram_url:
+        s.instagram_url ?? '',
+
+      twitter_url:
+        s.twitter_url ?? '',
+
+      youtube_url:
+        s.youtube_url ?? '',
+
+      whatsapp_number:
+        s.whatsapp_number ?? '',
+
+      website_url:
+        s.website_url ?? '',
+    });
+  }, []);
+
+  const loadData = useCallback(async () => {
+    try {
+      const [bookingData, techData, customerData, walletData, rechargeData, paymentData, notificationData] =
+        await Promise.all([
+          adminData<{ bookings: Booking[] }>('bookings'),
+          adminData<{ technicians: Technician[] }>('technicians'),
+          adminData<{ customers: Customer[] }>('customers'),
+          adminData<{ transactions: WalletTransaction[] }>('wallet_transactions'),
+          adminData<{ recharges: Array<WalletRecharge & { technician?: { full_name?: string } }> }>('recharges'),
+          adminData<{ payments: PaymentRecord[] }>('payments'),
+          adminData<{ notifications: NotificationRow[] }>('notifications', { limit: 100 }),
+        ]);
+
+      setBookings(bookingData.bookings ?? []);
+      setTechnicians(techData.technicians ?? []);
+      setCustomers(customerData.customers ?? []);
+      setWalletTxns(walletData.transactions ?? []);
+      setRecharges((rechargeData.recharges ?? []).map((r) => ({
+        ...r,
+        technician_name: r.technician?.full_name,
+      })));
+      setPayments(paymentData.payments ?? []);
+      setNotifLogs(notificationData.notifications ?? []);
+
+      await loadSiteSettings();
+    } catch (error) {
+      console.error('[AdminDashboard] secure load failed:', error);
+      if (error instanceof Error && /Unauthorized|expired/i.test(error.message)) {
+        navigate('admin-login');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [loadSiteSettings, navigate]);
+
   useEffect(() => {
     let mounted = true;
 
@@ -390,7 +465,7 @@ export default function AdminDashboard() {
     // technicians (and new bookings) appear without a hard refresh.
     const pollInterval = window.setInterval(() => {
       if (mounted) {
-        loadData();
+        void loadData();
       }
     }, 20000);
 
@@ -398,42 +473,7 @@ export default function AdminDashboard() {
       mounted = false;
       window.clearInterval(pollInterval);
     };
-  }, []);
-
-  const loadData = async () => {
-    try {
-      const [bookingData, techData, customerData, walletData, rechargeData, paymentData, notificationData] =
-        await Promise.all([
-          adminData<{ bookings: Booking[] }>('bookings'),
-          adminData<{ technicians: Technician[] }>('technicians'),
-          adminData<{ customers: Customer[] }>('customers'),
-          adminData<{ transactions: WalletTransaction[] }>('wallet_transactions'),
-          adminData<{ recharges: Array<WalletRecharge & { technician?: { full_name?: string } }> }>('recharges'),
-          adminData<{ payments: PaymentRecord[] }>('payments'),
-          adminData<{ notifications: NotificationRow[] }>('notifications', { limit: 100 }),
-        ]);
-
-      setBookings(bookingData.bookings ?? []);
-      setTechnicians(techData.technicians ?? []);
-      setCustomers(customerData.customers ?? []);
-      setWalletTxns(walletData.transactions ?? []);
-      setRecharges((rechargeData.recharges ?? []).map((r) => ({
-        ...r,
-        technician_name: r.technician?.full_name,
-      })));
-      setPayments(paymentData.payments ?? []);
-      setNotifLogs(notificationData.notifications ?? []);
-
-      await loadSiteSettings();
-    } catch (error) {
-      console.error('[AdminDashboard] secure load failed:', error);
-      if (error instanceof Error && /Unauthorized|expired/i.test(error.message)) {
-        navigate('admin-login');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [loadData, navigate]);
 
   const loadServicePrices = async () => {
     const { prices } = await adminData<{ prices: ServicePrice[] }>('service_prices');
@@ -512,46 +552,6 @@ export default function AdminDashboard() {
       void loadNotifLogs();
     }
   }, [tab]);
-
-  const loadSiteSettings = async () => {
-    const { settings } = await adminData<{ settings: SiteSettings | null }>('site_settings');
-    const s = settings ?? {
-      id: 1,
-      google_business_url: null,
-      facebook_url: null,
-      instagram_url: null,
-      twitter_url: null,
-      youtube_url: null,
-      whatsapp_number: null,
-      website_url: null,
-      updated_at: null,
-      updated_by: null,
-    } as SiteSettings;
-    setSiteSettings(s);
-
-    setSocialForm({
-      google_business_url:
-        s.google_business_url ?? '',
-
-      facebook_url:
-        s.facebook_url ?? '',
-
-      instagram_url:
-        s.instagram_url ?? '',
-
-      twitter_url:
-        s.twitter_url ?? '',
-
-      youtube_url:
-        s.youtube_url ?? '',
-
-      whatsapp_number:
-        s.whatsapp_number ?? '',
-
-      website_url:
-        s.website_url ?? '',
-    });
-  };
 
   const handleSocialSave = async () => {
     setSocialSaving(true);
