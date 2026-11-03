@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ComponentType } from 'react';
 import {
   Briefcase,
   Wallet,
@@ -27,7 +27,6 @@ import {
 } from 'lucide-react';
 
 import { useRouter } from '@/lib/router';
-import { SUPABASE_ANON_KEY, SUPABASE_URL } from '@/lib/supabase';
 import { downloadOnboardingLetter } from '@/lib/onboardingLetter';
 import { technicianData } from '@/lib/technicianData';
 import PushNotificationSetup from '@/components/PushNotificationSetup';
@@ -164,24 +163,6 @@ export default function TechnicianDashboard() {
     useState(false);
   const [rechargeMessage, setRechargeMessage] = useState('');
 
-  /*
-   * Find technician.
-   *
-   * Supported sessionStorage keys:
-   * - vattams_technician_id
-   * - technician_id
-   * - vattams_technician_mobile
-   * - technician_mobile
-   *
-   * This also tries Supabase auth if an auth session exists.
-   */
-  const findTechnician = async () => {
-    const session = sessionStorage.getItem('vattams_technician_session');
-    if (!session) return null;
-    const result = await technicianData<{ technician: Technician; notifications?: NotificationRow[] }>('account');
-    return result?.technician ?? null;
-  };
-
   const loadDashboard = async (showLoader = true) => {
     if (showLoader) setLoading(true); else setRefreshing(true);
     setError('');
@@ -205,8 +186,8 @@ export default function TechnicianDashboard() {
       setRecharges(result.recharges ?? []);
       setNotifications(result.notifications ?? []);
       setJobNotifications(result.jobNotifications ?? []);
-    } catch (err: any) {
-      setError(err?.message || 'Unable to load technician dashboard.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to load technician dashboard.');
     } finally { setLoading(false); setRefreshing(false); }
   };
 
@@ -315,7 +296,7 @@ export default function TechnicianDashboard() {
     if (!technician) return;
     setProcessingJob(job.id); setError('');
     try { await technicianData('job_status', { job_id: job.id, status }); await loadDashboard(false); }
-    catch (err:any) { setError(err?.message || 'Unable to update job status.'); }
+    catch (err) { setError(err instanceof Error ? err.message : 'Unable to update job status.'); }
     finally { setProcessingJob(null); }
   };
 
@@ -388,7 +369,7 @@ export default function TechnicianDashboard() {
       setRechargeAmount(''); setPaymentRef('');
       setRechargeMessage('Recharge request submitted successfully. Admin will review it.');
       await loadDashboard(false);
-    } catch (err:any) { setRechargeMessage(err?.message || 'Unable to submit recharge request.'); }
+    } catch (err:any) { setRechargeMessage(err instanceof Error ? err.message : 'Unable to submit recharge request.'); }
     finally { setRechargeSubmitting(false); }
   };
 
@@ -1302,7 +1283,7 @@ function StatCard({
   value,
   subtitle,
 }: {
-  icon: any;
+  icon: ComponentType<{ size?: number }>;
   title: string;
   value: string;
   subtitle: string;
