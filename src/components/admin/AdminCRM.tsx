@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Loader, Send, Bell, CheckCircle, Clock, X } from 'lucide-react';
+import { Calendar, Loader, Send, Bell, CheckCircle, Clock } from 'lucide-react';
 import { fetchAllReminders, markReminderSent, type CRMReminder } from '@/lib/crm';
 
 const REMINDER_TYPES: Record<string, { label: string; color: string }> = {
