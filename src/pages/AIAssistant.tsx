@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { ArrowRight, Send, Sparkles } from 'lucide-react';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 import { getAssistantResponse, type AIAssistantState } from '@/lib/aiAssistant';
 import CommunicationCenter from '@/components/CommunicationCenter';
 
