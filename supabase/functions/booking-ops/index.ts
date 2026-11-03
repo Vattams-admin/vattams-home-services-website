@@ -604,8 +604,7 @@ Deno.serve(async (req: Request) => {
         .select("id, full_name, rating, total_jobs, current_workload, is_online, last_active_at, service_categories")
         .eq("city", booking.city)
         .eq("status", "active")
-        .eq("wallet_locked", false)
-         as { data: { id: string; full_name: string; rating: number; total_jobs: number; current_workload: number; is_online: boolean; last_active_at: string | null; service_categories: string[] | null }[] | null; error: unknown };
+        .eq("wallet_locked", false);
       if (candidateLookupError) {
         console.error("[booking-ops auto_assign] technician candidate lookup failed");
         return new Response(JSON.stringify({ error: "Unable to find eligible technicians right now. Please try again." }), {
