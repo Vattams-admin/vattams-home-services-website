@@ -68,8 +68,8 @@ export default function TechnicianApplicationStatus() {
       }
 
       setTechnician(data as Technician);
-    } catch (err: any) {
-      setError(err?.message || 'Unable to load your application status.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Unable to load your application status.');
     } finally {
       setLoading(false);
       setRefreshing(false);
