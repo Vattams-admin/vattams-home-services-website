@@ -1,19 +1,5 @@
-import {
-  AirVent,
-  Refrigerator,
-  WashingMachine,
-  Droplets,
-  Zap,
-  Wrench,
-  Hammer,
-  Paintbrush,
-  Fan,
-  Flame,
-  Sparkles,
-  Wind,
-  Camera,
-  LucideIcon,
-} from 'lucide-react';
+import { resolveServiceIcon } from '@/lib/serviceIconResolver';
+import type { LucideIcon } from 'lucide-react';
 
 interface ServiceIconProps {
   service: string | null | undefined;
@@ -67,9 +53,3 @@ export default function ServiceIcon({ service, size = 22, strokeWidth = 2, class
   return <Icon size={size} strokeWidth={strokeWidth} className={className} aria-hidden="true" />;
 }
 
-export function resolveServiceIcon(service: string | null | undefined): LucideIcon {
-  if (!service) return Wrench;
-  const name = ` ${service.toLowerCase()} `;
-  const match = keywordMap.find(([keyword]) => name.includes(keyword));
-  return match ? match[1] : Wrench;
-}
