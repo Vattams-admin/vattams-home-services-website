@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 
 export type Page =
   | 'home'
@@ -136,7 +136,7 @@ export function RouterProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const navigate = (page: Page, slug?: string) => {
+  const navigate = useCallback((page: Page, slug?: string) => {
     const normalizedSlug = typeof slug === 'string' ? slug.trim().toLowerCase() : '';
     const route: RouteState = page === 'city-landing'
       ? (/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(normalizedSlug)
@@ -164,7 +164,7 @@ export function RouterProvider({ children }: { children: ReactNode }) {
       }
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, []);
 
   return <RouterContext.Provider value={{ ...route, navigate }}>{children}</RouterContext.Provider>;
 }
