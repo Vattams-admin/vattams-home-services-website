@@ -1,4 +1,4 @@
-import { supabase, Booking, Technician } from './supabase';
+import { Technician } from './supabase';
 import { formatINR } from './pricing';
 
 export interface AnalyticsSummary {
