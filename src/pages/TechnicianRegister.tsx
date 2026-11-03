@@ -132,7 +132,7 @@ export default function TechnicianRegister() {
     messagesEndRef.current?.scrollIntoView({
       behavior: 'smooth',
     });
-  }, [chatHistory, stepIndex, hydrated]);
+  }, [chatHistory, stepIndex, hydrated, currentStep.question]);
 
   // Persist progress on every change so a refresh never loses the
   // technician's place. Profile score / completion is always recalculated
