@@ -90,6 +90,9 @@ async function submitUtr(body: Record<string, unknown>) {
     .eq("status", "pending")
     .select("id,payment_id,payee_type,payee_id,payee_name,upi_id,amount,purpose,reference_id,utr,status,notes,verified_by,created_at,verified_at").single();
 
+  if (error?.code === "23505") {
+    return json({ error: "This UTR has already been submitted for another payment" }, 409);
+  }
   if (error || !data) return json({ error: "Payment is no longer pending or authorization is invalid" }, 409);
   // Rotate the one-time capability on UTR submission; the old token can no
   // longer be replayed and the replacement token is not returned to clients.
