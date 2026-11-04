@@ -1,0 +1,22 @@
+name: Validate recharge ledger allocation
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/**"
+      - "scripts/recharge-ledger-allocation-check.mjs"
+      - ".github/workflows/recharge-ledger-allocation-check.yml"
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/**"
+      - "scripts/recharge-ledger-allocation-check.mjs"
+      - ".github/workflows/recharge-ledger-allocation-check.yml"
+jobs:
+  recharge-ledger-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/recharge-ledger-allocation-check.mjs
