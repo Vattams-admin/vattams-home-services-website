@@ -72,6 +72,7 @@ const checks = [
   ['customer review endpoint validates review text type and length', customerAuth.includes('typeof review_text !== "string"') && customerAuth.includes('cleanReviewText.length > 2000')],
   ['customer review endpoint rejects control characters', customerAuth.includes('function containsUnsupportedReviewCharacters') && customerAuth.includes('code >= 0x0e && code <= 0x1f') && customerAuth.includes('containsUnsupportedReviewCharacters(cleanReviewText)')],
   ['customer review insert returns an explicit field allowlist', customerAuth.includes('.select("id,booking_id,customer_id,technician_id,rating,review_text,created_at")')],
+  ['technician-auth CORS advertises only supported POST and OPTIONS methods', technicianAuth.includes('"Access-Control-Allow-Methods": "POST, OPTIONS"') && !technicianAuth.includes('"Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS"')],
   ['KYC upload checks content signatures', technicianAuth.includes('detectKycFile(bytes)')],
   ['KYC upload does not require Content-Length', technicianAuth.includes('if (rawContentLength !== null)')],
   ['KYC multipart body is size-bounded before parsing', technicianAuth.includes('readBoundedUploadBody(req, maxRequestBytes)') && technicianAuth.indexOf('readBoundedUploadBody(req, maxRequestBytes)') < technicianAuth.indexOf('.formData()')],
