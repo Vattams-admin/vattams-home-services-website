@@ -20,4 +20,5 @@ assert.match(source, /if \(!customer\?\.mobile\) return out\(\{error:"Customer n
 assert.match(source, /if\(bookingsResult\.error \|\| notificationsResult\.error \|\| reviewsResult\.error\)/, "account query failures must not be reported as empty dashboard data");
 assert.match(source, /Unable to load customer account data[\s\S]*?\},500\)/, "account query failures must return a controlled server error");
 assert.match(source, /bookings:bookingsResult\.data\|\|\[\][\s\S]*?notifications:notificationsResult\.data\|\|\[\][\s\S]*?reviews:reviewsResult\.data\|\|\[\]/, "successful empty account query results must remain empty collections");
+assert.match(source, /customerError\.code!=="PGRST116"[\s\S]*?Unable to load customer account[\s\S]*?\},500\)/, "customer lookup database failures must not be reported as missing customers");
 console.log("PASS customer-data input validation contract");
