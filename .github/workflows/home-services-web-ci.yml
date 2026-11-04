@@ -41,5 +41,6 @@ jobs:
       - name: Capture dependency advisory details
         run: npm audit --json || true
       - run: npm run test:security
+      - run: npm run test:migration-history
       - run: npm run typecheck
       - run: npm run build
