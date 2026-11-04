@@ -9,9 +9,6 @@ updates:
       timezone: Asia/Kolkata
     open-pull-requests-limit: 10
     rebase-strategy: auto
-    labels:
-      - dependencies
-      - security
     groups:
       npm-patch-and-minor:
         applies-to: version-updates
