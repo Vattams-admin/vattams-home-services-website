@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { RouterProvider } from '@/lib/router';
 import { useRouter } from '@/lib/routerContext';
 import './styles/PremiumExperience.css';
@@ -8,34 +9,36 @@ import AIChatWidget from '@/components/AIChatWidget';
 import Schema from '@/components/Schema';
 import MarketingAnalytics from '@/components/MarketingAnalytics';
 
-import Home from '@/pages/Home';
-import Services from '@/pages/Services';
-import About from '@/pages/About';
-import Founder from '@/pages/Founder';
-import Contact from '@/pages/Contact';
-import Booking from '@/pages/Booking';
-import AIAssistant from '@/pages/AIAssistant';
-import CityLanding from '@/pages/CityLanding';
-import NotFound from '@/pages/NotFound';
+// Keep route-specific code out of the initial application bundle. In particular,
+// the admin dashboard and its data clients should only load on admin routes.
+const Home = lazy(() => import('@/pages/Home'));
+const Services = lazy(() => import('@/pages/Services'));
+const About = lazy(() => import('@/pages/About'));
+const Founder = lazy(() => import('@/pages/Founder'));
+const Contact = lazy(() => import('@/pages/Contact'));
+const Booking = lazy(() => import('@/pages/Booking'));
+const AIAssistant = lazy(() => import('@/pages/AIAssistant'));
+const CityLanding = lazy(() => import('@/pages/CityLanding'));
+const NotFound = lazy(() => import('@/pages/NotFound'));
 
-import CustomerLogin from '@/pages/CustomerLogin';
-import CustomerRegister from '@/pages/CustomerRegister';
-import CustomerForgot from '@/pages/CustomerForgot';
-import CustomerProfile from '@/pages/CustomerProfile';
-import CustomerBookings from '@/pages/CustomerBookings';
-import CustomerDashboard from '@/pages/CustomerDashboard';
-import CustomerPayments from '@/pages/CustomerPayments';
-import CustomerReviews from '@/pages/CustomerReviews';
-import CustomerSupport from '@/pages/CustomerSupport';
+const CustomerLogin = lazy(() => import('@/pages/CustomerLogin'));
+const CustomerRegister = lazy(() => import('@/pages/CustomerRegister'));
+const CustomerForgot = lazy(() => import('@/pages/CustomerForgot'));
+const CustomerProfile = lazy(() => import('@/pages/CustomerProfile'));
+const CustomerBookings = lazy(() => import('@/pages/CustomerBookings'));
+const CustomerDashboard = lazy(() => import('@/pages/CustomerDashboard'));
+const CustomerPayments = lazy(() => import('@/pages/CustomerPayments'));
+const CustomerReviews = lazy(() => import('@/pages/CustomerReviews'));
+const CustomerSupport = lazy(() => import('@/pages/CustomerSupport'));
 
-import TechnicianRegister from '@/pages/TechnicianRegister';
-import TechnicianLogin from '@/pages/TechnicianLogin';
-import TechnicianApplicationStatus from '@/pages/TechnicianApplicationStatus';
-import TechnicianDashboard from '@/pages/TechnicianDashboard';
-import JoinTechnician from '@/pages/JoinTechnician';
+const TechnicianRegister = lazy(() => import('@/pages/TechnicianRegister'));
+const TechnicianLogin = lazy(() => import('@/pages/TechnicianLogin'));
+const TechnicianApplicationStatus = lazy(() => import('@/pages/TechnicianApplicationStatus'));
+const TechnicianDashboard = lazy(() => import('@/pages/TechnicianDashboard'));
+const JoinTechnician = lazy(() => import('@/pages/JoinTechnician'));
 
-import AdminLogin from '@/pages/AdminLogin';
-import AdminDashboard from '@/pages/AdminDashboard';
+const AdminLogin = lazy(() => import('@/pages/AdminLogin'));
+const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'));
 
 function PageContent() {
   const { page, citySlug } = useRouter();
@@ -57,12 +60,9 @@ function PageContent() {
       return <AIAssistant />;
     case 'city-landing': {
       const city = citySlug ? getCityBySlug(citySlug) : undefined;
-      if (!city) {
-        return <NotFound />;
-      }
+      if (!city) return <NotFound />;
       return <CityLanding city={city} />;
     }
-
     case 'customer-login':
       return <CustomerLogin />;
     case 'customer-register':
@@ -81,7 +81,6 @@ function PageContent() {
       return <CustomerReviews />;
     case 'customer-support':
       return <CustomerSupport />;
-
     case 'technician-register':
       return <TechnicianRegister />;
     case 'technician-login':
@@ -92,12 +91,10 @@ function PageContent() {
       return <TechnicianDashboard />;
     case 'join-technician':
       return <JoinTechnician />;
-
     case 'admin-login':
       return <AdminLogin />;
     case 'admin-dashboard':
       return <AdminDashboard />;
-
     case 'not-found':
       return <NotFound />;
     default:
@@ -115,7 +112,9 @@ function AppShell() {
       <MarketingAnalytics />
       {!isAdminRoute && <Header />}
       <main className={isAdminRoute ? 'flex-1' : 'flex-1 premium-experience'}>
-        <PageContent />
+        <Suspense fallback={<div className="flex min-h-[40vh] items-center justify-center" role="status" aria-live="polite">Loading page…</div>}>
+          <PageContent />
+        </Suspense>
       </main>
       {!isAdminRoute && <Footer />}
       {!isAdminRoute && <AIChatWidget />}
