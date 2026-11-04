@@ -1,0 +1,22 @@
+name: Customer Data Input Validation
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [fix/customer-data-input-validation]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  customer-data-contract:
+    name: Validate customer-data input guards
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check customer-data input contract
+        run: npm run test:customer-data-input-validation
