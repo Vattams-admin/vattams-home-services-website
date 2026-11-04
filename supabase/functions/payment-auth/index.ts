@@ -13,6 +13,55 @@ const supabase = createClient(
 );
 
 type Action = "create" | "submit-utr" | "verify";
+const MAX_REQUEST_BYTES = 16 * 1024;
+
+class RequestBodyTooLargeError extends Error {}
+class InvalidRequestBodyError extends Error {}
+
+async function readBoundedJson(req: Request): Promise<Record<string, unknown>> {
+  const rawLength = req.headers.get("content-length");
+  if (rawLength !== null) {
+    if (!/^\\d+$/.test(rawLength)) throw new InvalidRequestBodyError("Invalid Content-Length");
+    if (Number(rawLength) > MAX_REQUEST_BYTES) throw new RequestBodyTooLargeError();
+  }
+  if (!req.body) throw new InvalidRequestBodyError("Request body is required");
+
+  const reader = req.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      totalBytes += value.byteLength;
+      if (totalBytes > MAX_REQUEST_BYTES) {
+        await reader.cancel();
+        throw new RequestBodyTooLargeError();
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const bytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+  } catch {
+    throw new InvalidRequestBodyError("Request body must be valid JSON");
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new InvalidRequestBodyError("Request body must be a JSON object");
+  }
+  return parsed as Record<string, unknown>;
+}
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: corsHeaders });
@@ -23,8 +72,8 @@ Deno.serve(async (req: Request) => {
     });
   }
   try {
-    const body = await req.json();
-    const action = body?.action as Action;
+    const body = await readBoundedJson(req);
+    const action = body.action as Action;
 
     if (action === "create") return await createPayment(body);
     if (action === "submit-utr") return await submitUtr(body);
@@ -32,7 +81,13 @@ Deno.serve(async (req: Request) => {
 
     return json({ error: "Unknown payment action" }, 400);
   } catch (err) {
-    return json({ error: err instanceof Error ? err.message : "Payment service error" }, 500);
+    if (err instanceof RequestBodyTooLargeError) {
+      return json({ error: "Request body exceeds the 16 KB limit" }, 413);
+    }
+    if (err instanceof InvalidRequestBodyError) {
+      return json({ error: err.message }, 400);
+    }
+    return json({ error: "Payment service error" }, 500);
   }
 });
 
