@@ -1,0 +1,18 @@
+name: Atomic Technician Notification Read-All Contract
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  atomic-notification-contract:
+    name: Validate atomic technician notification read-all
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check atomic notification contract
+        run: node scripts/atomic-technician-notification-read-all-check.mjs
