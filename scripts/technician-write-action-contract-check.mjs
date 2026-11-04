@@ -6,7 +6,7 @@ assert.match(source, /Unable to update online status\. Please try again\."\},503
 assert.match(source, /case "notification_read":[\s\S]*?source!=="wallet"&&source!=="job"/, "notification source must be allow-listed");
 assert.match(source, /select\("id"\)\.maybeSingle\(\)[\s\S]*?if\(!data\)return out\(\{error:"Notification not found"\},404\)/, "notification read must not report success for an unmatched row");
 assert.match(source, /Unable to update notification\. Please try again\."\},503/, "notification database failures must return 503");
-assert.match(source, /if\(a\.error\|\|b\.error\)return out\(\{error:"Unable to update notifications\. Please try again\."\},503\)/, "bulk notification database failures must return 503");
+assert.match(source, /case "notifications_read_all":[\s\S]*?supabase\.rpc\("mark_technician_notifications_read_all",\{p_technician_id:technicianId\}\)[\s\S]*?if\(error\)return out\(\{error:"Unable to update notifications\. Please try again\."\},503\)/, "atomic bulk notification RPC failures must return 503");
 assert.match(source, /Unable to submit recharge\. Please try again\."\},503/, "recharge insert failures must return 503");
 assert.match(source, /typeof body\.job_id!=="string"\|\|!body\.job_id\.trim\(\)/, "job transition requires a non-empty string identifier");
 console.log("PASS technician-data write action validation and error contract");
