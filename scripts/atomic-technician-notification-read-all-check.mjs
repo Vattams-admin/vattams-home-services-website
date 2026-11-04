@@ -1,0 +1,12 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+const migration = await readFile(new URL("../supabase/migrations/20261104150000_atomic_technician_notification_read_all.sql", import.meta.url), "utf8");
+const edge = await readFile(new URL("../supabase/functions/technician-data/index.ts", import.meta.url), "utf8");
+assert.match(migration, /CREATE OR REPLACE FUNCTION public\.mark_technician_notifications_read_all\(p_technician_id uuid\)/, "atomic RPC must exist");
+assert.match(migration, /SECURITY DEFINER[\s\S]*?SET search_path = public/, "RPC must pin its search_path");
+assert.match(migration, /UPDATE public\.technician_notifications[\s\S]*?WHERE technician_id = p_technician_id/, "wallet notifications must be scoped to technician");
+assert.match(migration, /UPDATE public\.notifications[\s\S]*?recipient_type = 'technician'[\s\S]*?recipient_id = p_technician_id::text/, "job notifications must be scoped to technician");
+assert.match(migration, /REVOKE ALL ON FUNCTION[\s\S]*?FROM PUBLIC[\s\S]*?FROM anon, authenticated[\s\S]*?GRANT EXECUTE ON FUNCTION[\s\S]*?TO service_role/, "RPC must be service-role only");
+assert.match(edge, /case "notifications_read_all":\{const \{data,error\}=await supabase\.rpc\("mark_technician_notifications_read_all"/, "Edge Function must call the atomic RPC rather than two separate updates");
+assert.doesNotMatch(edge, /case "notifications_read_all":[\s\S]*?\.from\("technician_notifications"\)\.update\(\{is_read:true\}\)[\s\S]*?\.from\("notifications"\)\.update/, "bulk action must not retain separate non-atomic updates");
+console.log("PASS atomic technician notification read-all contract");
