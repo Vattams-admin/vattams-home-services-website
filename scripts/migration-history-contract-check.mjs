@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-const booking = readFileSync(new URL("../supabase/migrations/20261102154016_idempotent_booking_completion_financial_event.sql", import.meta.url), "utf8");
-const recharge = readFileSync(new URL("../supabase/migrations/20261102154512_idempotent_recharge_allocation_ledger.sql", import.meta.url), "utf8");
+const booking = readFileSync(new URL("../supabase/migrations/20261102180000_idempotent_booking_completion_financial_event.sql", import.meta.url), "utf8");
+const recharge = readFileSync(new URL("../supabase/migrations/20261102190000_idempotent_recharge_allocation_ledger.sql", import.meta.url), "utf8");
 const counterFix = readFileSync(new URL("../supabase/migrations/20261104070000_booking_completion_null_counter_fix.sql", import.meta.url), "utf8");
 
 assert.match(booking, /CREATE TABLE IF NOT EXISTS public\.booking_completion_events/i);
