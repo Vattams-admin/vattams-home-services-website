@@ -88,16 +88,35 @@ Deno.serve(async req=>{
       }
       case "profile":{
         const fullName = typeof body.full_name === "string" ? body.full_name.trim() : "";
-        const email = body.email == null || body.email === "" ? null : (typeof body.email === "string" ? body.email.trim() : "");
-        const city = body.city == null ? null : (typeof body.city === "string" ? body.city.trim() : "");
-        const address = body.address == null ? null : (typeof body.address === "string" ? body.address.trim() : "");
         if (fullName.length < 2 || fullName.length > 100) return out({error:"Full name must be between 2 and 100 characters"},400);
-        if (email !== null && (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) return out({error:"A valid email address is required"},400);
-        if (city !== null && city.length > 100) return out({error:"City must be 100 characters or fewer"},400);
-        if (address !== null && address.length > 500) return out({error:"Address must be 500 characters or fewer"},400);
-        if (typeof body.city !== "undefined" && typeof body.city !== "string") return out({error:"City must be text"},400);
-        if (typeof body.address !== "undefined" && typeof body.address !== "string") return out({error:"Address must be text"},400);
-        const allowed={full_name:fullName,email,city,address,updated_at:new Date().toISOString()};
+        const allowed: Record<string, unknown> = {full_name:fullName,updated_at:new Date().toISOString()};
+        if (Object.prototype.hasOwnProperty.call(body,"email")) {
+          if (body.email == null || body.email === "") allowed.email = null;
+          else if (typeof body.email !== "string") return out({error:"Email must be text"},400);
+          else {
+            const email = body.email.trim();
+            if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return out({error:"A valid email address is required"},400);
+            allowed.email = email;
+          }
+        }
+        if (Object.prototype.hasOwnProperty.call(body,"city")) {
+          if (body.city === null) allowed.city = null;
+          else if (typeof body.city !== "string") return out({error:"City must be text"},400);
+          else {
+            const city = body.city.trim();
+            if (city.length > 100) return out({error:"City must be 100 characters or fewer"},400);
+            allowed.city = city;
+          }
+        }
+        if (Object.prototype.hasOwnProperty.call(body,"address")) {
+          if (body.address === null) allowed.address = null;
+          else if (typeof body.address !== "string") return out({error:"Address must be text"},400);
+          else {
+            const address = body.address.trim();
+            if (address.length > 500) return out({error:"Address must be 500 characters or fewer"},400);
+            allowed.address = address;
+          }
+        }
         const {data,error}=await supabase.from("customers").update(allowed).eq("id",customerId).select("id,full_name,mobile,email,city,address,created_at,updated_at").single();
         if(error) return out({error:"Failed to update profile"},400);
         return out({customer:data});
