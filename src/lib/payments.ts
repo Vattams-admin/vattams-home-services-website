@@ -135,8 +135,23 @@ export async function createPaymentRecord(params: {
   });
 
   if (error) {
+    let message = 'Payment service is temporarily unavailable. Please try again later.';
+    const context = (error as { context?: unknown }).context;
+    if (typeof Response !== 'undefined' && context instanceof Response) {
+      try {
+        const payload: unknown = await context.clone().json();
+        if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+          const serverMessage = (payload as { error?: unknown }).error;
+          if (typeof serverMessage === 'string' && serverMessage.trim() && serverMessage.length <= 240) {
+            message = serverMessage.trim();
+          }
+        }
+      } catch {
+        // Keep the safe fallback when the function response is not readable JSON.
+      }
+    }
     console.error('Failed to create payment record:', error);
-    return null;
+    throw new Error(message);
   }
   const payment = parsePaymentRecord(data?.payment, true);
   if (!payment) console.error('Payment service returned an invalid payment record.');
