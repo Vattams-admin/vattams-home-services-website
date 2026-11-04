@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, CheckCircle2, Loader, Refrigerator, WashingMachine, Wind, type LucideIcon } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatINR } from '@/lib/pricing';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 
 interface CustomerServicePrice {
   service_category: string;
