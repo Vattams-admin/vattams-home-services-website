@@ -42,5 +42,6 @@ jobs:
         run: npm audit --json || true
       - run: npm run test:security
       - run: npm run test:migration-history
+      - run: npm run test:booking-completion-counter
       - run: npm run typecheck
       - run: npm run build
