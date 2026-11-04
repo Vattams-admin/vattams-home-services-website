@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "test:security": "node scripts/security-contract-check.mjs",
-    "test:payment-utr": "node scripts/payment-utr-uniqueness-check.mjs"
+    "test:payment-utr": "node scripts/payment-utr-uniqueness-check.mjs",
+    "test:technician-mobile-guard": "node scripts/technician-mobile-verification-guard-check.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
