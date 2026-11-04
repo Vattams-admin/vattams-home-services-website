@@ -4,7 +4,7 @@ const corsHeaders={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Metho
 const supabase=createClient(Deno.env.get("SUPABASE_URL")!,Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 async function auth(token:string){const {data}=await supabase.from("technician_auth_sessions").select("technician_id,expires_at").eq("token",token).maybeSingle();if(!data||new Date(data.expires_at)<=new Date())return null;return data.technician_id;}
 function out(data:unknown,status=200){return new Response(JSON.stringify(data),{status,headers:{...corsHeaders,"Content-Type":"application/json"}})}
-Deno.serve(async req=>{if(req.method==="OPTIONS")return new Response(null,{status:200,headers:corsHeaders});try{const body=await req.json();const technicianId=await auth(body.session_token||"");if(!technicianId)return out({error:"Unauthorized"},401);
+Deno.serve(async req=>{if(req.method==="OPTIONS")return new Response(null,{status:200,headers:corsHeaders});if(req.method!=="POST")return new Response(JSON.stringify({error:"Method not allowed"}),{status:405,headers:{...corsHeaders,"Content-Type":"application/json","Allow":"POST, OPTIONS"}});try{const body=await req.json();const technicianId=await auth(body.session_token||"");if(!technicianId)return out({error:"Unauthorized"},401);
 const {data:sessionTechnician,error:sessionTechnicianError}=await supabase.from("technicians").select("id,full_name,mobile,email,city,status,created_at").eq("id",technicianId).maybeSingle();
 if(sessionTechnicianError)return out({error:"Unable to verify technician account status"},503);
 if(!sessionTechnician)return out({error:"Technician account not found"},401);
