@@ -6,7 +6,7 @@ const createPayment = paymentAuth.slice(paymentAuth.indexOf('async function crea
 
 assert.match(createPayment, /String\(body\.payee_id \?\? ""\)\.trim\(\)/, 'mobile input must be validated without silently stripping invalid characters');
 assert.match(createPayment, /String\(body\.reference_id \?\? ""\)\.trim\(\)/, 'reference input must preserve malformed characters for rejection');
-assert.match(createPayment, /!\^\\d\{10\}\$/.source, 'expected strict ten-digit mobile validation');
+assert.ok(createPayment.includes('if (!/^\\d{10}$/.test(payeeId)'), 'mobile must be exactly ten digits without silently removing characters');
 assert.match(createPayment, /referenceId !== payeeId/, 'reference must match the validated mobile exactly');
 assert.match(createPayment, /Technician mobile verification is not available yet/, 'registration payment must fail closed without trusted mobile verification');
 assert.match(createPayment, /return json\(\{ error: "Technician mobile verification is not available yet[\s\S]*?\}, 503\);/, 'missing phone verification must return 503');
