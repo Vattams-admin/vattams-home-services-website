@@ -1,0 +1,27 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+
+const base = new URL("../supabase/migrations/20261104190000_preserve_recharge_approval_hardening.sql", import.meta.url);
+const correction = new URL("../supabase/migrations/20261104200000_fix_recharge_event_credit_variable.sql", import.meta.url);
+const schema = new URL("../supabase/migrations/20261102190000_idempotent_recharge_allocation_ledger.sql", import.meta.url);
+const migration = await readFile(base, "utf8");
+const finalFunction = await readFile(correction, "utf8");
+const eventSchema = await readFile(schema, "utf8");
+assert.match(migration, /wallet_recharge_approval_events/, "must use durable approval event table");
+assert.match(migration, /ON CONFLICT \(recharge_id\) DO NOTHING[\s\S]*?RETURNING recharge_id INTO claimed_recharge_id/, "must atomically claim recharge once");
+assert.match(migration, /IF claimed_recharge_id IS NULL THEN\s+RETURN NEW;/, "duplicate approval must not repeat financial effects");
+assert.match(migration, /OLD\.status IS DISTINCT FROM 'pending'/, "must only approve pending recharges");
+assert.match(migration, /NEW\.amount > 100000/, "must preserve the ₹100,000 upper bound");
+assert.match(migration, /IF NOT FOUND OR settings\.lock_threshold IS NULL/, "must fail closed if wallet settings are missing");
+assert.match(migration, /MESSAGE = 'WALLET_SETTINGS_NOT_CONFIGURED'/, "must expose stable settings error");
+assert.match(migration, /MESSAGE = 'TECHNICIAN_NOT_FOUND'/, "must fail closed for missing technician");
+assert.match(migration, /dues_settled := LEAST\(c_due, NEW\.amount\)/, "must settle only actual dues");
+assert.match(finalFunction, /v_wallet_credit := NEW\.amount - dues_settled/, "must calculate only net wallet credit");
+assert.match(finalFunction, /dues_applied, wallet_credit, approved_by\)[\s\S]*?dues_settled, v_wallet_credit/, "must insert complete allocation in the claim statement");
+assert.match(eventSchema, /CHECK \(dues_applied \+ wallet_credit = amount\)/, "event schema enforces complete allocation immediately");
+assert.doesNotMatch(finalFunction, /wallet_credit = wallet_credit/, "must not self-assign event credit column");
+assert.match(migration, /'recharge_dues_settlement'/, "must preserve established dues ledger type");
+assert.match(migration, /'recharge_credit'/, "must retain net wallet credit ledger type");
+assert.match(migration, /FOR UPDATE/, "must serialize same-technician allocation");
+assert.doesNotMatch(migration + finalFunction, /DROP CONSTRAINT|ADD CONSTRAINT/, "must not rewrite ledger type constraints");
+console.log("PASS recharge approval bounds, idempotency, complete event allocation, and ledger contract");
