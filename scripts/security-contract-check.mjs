@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
-const [paymentAuth, paymentsLib, adminData, customerData, customerAuth, technicianAuth, technicianData, adminDashboard, technicianDashboard, customerDashboard, customerBookings, paymentModal, homeFeatures, bookingLifecycleMigration, completionProofMigration, customerCompletionMigration, staleTransitionMigration, rechargeHardeningMigration, supabaseLib, rechargeLedgerMigration, paymentWriteLockMigration, paymentReadLockMigration] = await Promise.all([
+const [paymentAuth, paymentsLib, adminData, customerData, customerAuth, technicianAuth, technicianData, adminAuth, notificationOps, adminDashboard, technicianDashboard, customerDashboard, customerBookings, paymentModal, homeFeatures, bookingLifecycleMigration, completionProofMigration, customerCompletionMigration, staleTransitionMigration, rechargeHardeningMigration, supabaseLib, rechargeLedgerMigration, paymentWriteLockMigration, paymentReadLockMigration] = await Promise.all([
   read('supabase/functions/payment-auth/index.ts'),
   read('src/lib/payments.ts'),
   read('supabase/functions/admin-data/index.ts'),
@@ -10,6 +10,8 @@ const [paymentAuth, paymentsLib, adminData, customerData, customerAuth, technici
   read('supabase/functions/customer-auth/index.ts'),
   read('supabase/functions/technician-auth/index.ts'),
   read('supabase/functions/technician-data/index.ts'),
+  read('supabase/functions/admin-auth/index.ts'),
+  read('supabase/functions/notification-ops/index.ts'),
   read('src/pages/AdminDashboard.tsx'),
   read('src/pages/TechnicianDashboard.tsx'),
   read('src/pages/CustomerDashboard.tsx'),
@@ -35,6 +37,10 @@ const extractLedgerEventTypes = (source, declaration) => {
 };
 
 const checks = [
+  ['admin-auth rejects unsupported methods before parsing JSON', adminAuth.includes('if (req.method !== "POST")') && adminAuth.indexOf('if (req.method !== "POST")') < adminAuth.indexOf('await req.json()') && adminAuth.includes('"Access-Control-Allow-Methods": "POST, OPTIONS"')],
+  ['customer-auth rejects unsupported methods before parsing JSON', customerAuth.includes('if (req.method !== "POST")') && customerAuth.indexOf('if (req.method !== "POST")') < customerAuth.indexOf('await req.json()') && customerAuth.includes('"Access-Control-Allow-Methods": "POST, OPTIONS"')],
+  ['payment-auth rejects unsupported methods before parsing JSON', paymentAuth.includes('if (req.method !== "POST")') && paymentAuth.indexOf('if (req.method !== "POST")') < paymentAuth.indexOf('await req.json()')],
+  ['notification-ops rejects unsupported methods before parsing JSON', notificationOps.includes('if(req.method!=="POST")') && notificationOps.indexOf('if(req.method!=="POST")') < notificationOps.indexOf('await req.json()')],
   ['admin wallet ledger does not colour assessed dues or non-cash events as cash credits', adminDashboard.includes("const isNonCashLedgerEvent = [") && adminDashboard.includes("'registration_fee',\n                      'deposit_lock',\n                      'adjustment'") && adminDashboard.includes("'recharge_dues_settlement',") && adminDashboard.includes("isNonCashLedgerEvent ? 'text-gray-600'")],
   ['admin wallet ledger displays positive-magnitude legacy deductions as debits', adminDashboard.includes("const isDebitLedgerEvent = ['commission_deduction', 'recharge_debit'].includes(txn.type);") && adminDashboard.includes("isDebitLedgerEvent || txn.amount < 0 ? 'text-red-600'") && adminDashboard.includes("isDebitLedgerEvent && txn.amount > 0 ? '-' : ''")],
   ['admin and technician dashboards use identical wallet ledger event classifications', JSON.stringify(extractLedgerEventTypes(adminDashboard, 'isNonCashLedgerEvent')) === JSON.stringify(extractLedgerEventTypes(technicianDashboard, 'isNeutralLedgerEvent'))],

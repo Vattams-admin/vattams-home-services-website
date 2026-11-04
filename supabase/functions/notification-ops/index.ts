@@ -13,6 +13,7 @@ async function session(token:string, table:string){
 
 Deno.serve(async req=>{
   if(req.method==="OPTIONS") return new Response(null,{status:200,headers:corsHeaders});
+  if(req.method!=="POST") return new Response(JSON.stringify({error:"Method not allowed"}),{status:405,headers:{...corsHeaders,"Allow":"POST, OPTIONS"}});
   try{
     const b=await req.json();
     const input=b.input||{};
