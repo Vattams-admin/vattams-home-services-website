@@ -3,11 +3,12 @@ import assert from 'node:assert/strict';
 
 const paymentAuth = await readFile(new URL('../supabase/functions/payment-auth/index.ts', import.meta.url), 'utf8');
 const createPayment = paymentAuth.slice(paymentAuth.indexOf('async function createPayment'), paymentAuth.indexOf('async function submitUtr'));
-const guard = createPayment.indexOf('Technician mobile verification is not available yet');
-const insert = createPayment.indexOf('.from("payments").insert');
 
-assert.notEqual(guard, -1, 'registration payment must fail closed without trusted mobile verification');
-assert.notEqual(insert, -1, 'payment creation path must remain covered');
-assert.ok(guard < insert, 'mobile ownership guard must execute before any payment insert');
-assert.match(createPayment, /email OTP and the KYC upload capability do not prove control of this mobile/i);
-process.stdout.write('PASS technician registration payment fails closed before database insert without phone ownership proof\n');
+assert.match(createPayment, /String\(body\.payee_id \?\? ""\)\.trim\(\)/, 'mobile input must be validated without silently stripping invalid characters');
+assert.match(createPayment, /String\(body\.reference_id \?\? ""\)\.trim\(\)/, 'reference input must preserve malformed characters for rejection');
+assert.match(createPayment, /!\^\\d\{10\}\$/.source, 'expected strict ten-digit mobile validation');
+assert.match(createPayment, /referenceId !== payeeId/, 'reference must match the validated mobile exactly');
+assert.match(createPayment, /Technician mobile verification is not available yet/, 'registration payment must fail closed without trusted mobile verification');
+assert.match(createPayment, /return json\(\{ error: "Technician mobile verification is not available yet[\s\S]*?\}, 503\);/, 'missing phone verification must return 503');
+assert.doesNotMatch(createPayment, /\.from\(["']payments["']\)\.insert/, 'registration payment path must not contain a dormant insert while verification is unavailable');
+process.stdout.write('PASS strict mobile input validation and fail-closed payment creation\n');
