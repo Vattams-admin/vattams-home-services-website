@@ -126,20 +126,35 @@ async function submitUtr(body: Record<string, unknown>) {
     return json({ error: "Invalid UTR format" }, 400);
   }
 
+  const safePaymentFields = "id,payment_id,payee_type,payee_id,payee_name,upi_id,amount,purpose,reference_id,utr,status,notes,verified_by,created_at,verified_at";
   const { data, error } = await supabase.from("payments")
-    .update({ utr, status: "pending", payment_action_token: crypto.randomUUID() })
+    .update({ utr, status: "pending" })
     .eq("payment_id", paymentId)
     .eq("payment_action_token", actionToken)
     .eq("status", "pending")
-    .select("id,payment_id,payee_type,payee_id,payee_name,upi_id,amount,purpose,reference_id,utr,status,notes,verified_by,created_at,verified_at").single();
+    .is("utr", null)
+    .select(safePaymentFields)
+    .maybeSingle();
 
   if (error?.code === "23505") {
-    return json({ error: "This UTR has already been submitted for another payment" },  409);
+    return json({ error: "This UTR has already been submitted for another payment" }, 409);
   }
-  if (error || !data) return json({ error: "Payment is no longer pending or authorization is invalid" }, 409);
-  // Rotate the one-time capability on UTR submission; the old token can no
-  // longer be replayed and the replacement token is not returned to clients.
-  return json({ payment: data });
+  if (data) return json({ payment: data });
+
+  // The update may have committed even if its HTTP response was lost. Accept
+  // only an exact replay of the already-stored UTR under the same capability.
+  // A different UTR cannot replace the first claim, and a payment_id alone
+  // never authorizes this read.
+  const { data: existing, error: retryError } = await supabase.from("payments")
+    .select(safePaymentFields)
+    .eq("payment_id", paymentId)
+    .eq("payment_action_token", actionToken)
+    .eq("status", "pending")
+    .eq("utr", utr)
+    .maybeSingle();
+
+  if (!retryError && existing) return json({ payment: existing });
+  return json({ error: "Payment is no longer pending or authorization is invalid" }, 409);
 }
 
 async function verifyPayment(body: Record<string, unknown>) {
