@@ -90,6 +90,10 @@ Deno.serve(async req=>{
       case "confirm_completion":{
         const bookingId = typeof body.booking_id === "string" ? body.booking_id.trim() : "";
         if (!bookingId) return out({error:"Booking ID is required"},400);
+        // Reject malformed UUIDs at the API boundary instead of surfacing a Postgres cast error as HTTP 500.
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(bookingId)) {
+          return out({error:"A valid booking ID is required"},400);
+        }
         const {data,error}=await supabase.rpc("confirm_booking_completion_atomic",{
           p_booking_id:bookingId,
           p_customer_id:customerId
@@ -99,6 +103,7 @@ Deno.serve(async req=>{
           if(message.includes("BOOKING_NOT_FOUND_OR_NOT_OWNED")) return out({error:"Booking not found or not owned by this customer"},404);
           if(message.includes("BOOKING_NOT_AWAITING_CUSTOMER_CONFIRMATION") || message.includes("TECHNICIAN_JOB_NOT_AWAITING_CUSTOMER_CONFIRMATION")) return out({error:"This booking is not awaiting customer confirmation"},409);
           if(message.includes("TECHNICIAN_JOB_NOT_FOUND") || message.includes("COMPLETED_BOOKING_JOB_MISMATCH")) return out({error:"The technician completion record could not be verified"},409);
+          if(message.includes("BOOKING_HAS_NO_ASSIGNED_TECHNICIAN") || message.includes("BOOKING_COMPLETION_STATE_CHANGED")) return out({error:"This booking cannot be confirmed in its current state"},409);
           return out({error:"Unable to confirm booking completion"},500);
         }
         if(!data?.booking || data.booking.customer_id !== customerId || data.booking.status !== "completed") return out({error:"Completion confirmation could not be verified"},409);
