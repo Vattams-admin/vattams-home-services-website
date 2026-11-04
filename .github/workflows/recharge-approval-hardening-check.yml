@@ -1,0 +1,22 @@
+name: Validate recharge approval hardening and idempotency
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/**"
+      - "scripts/recharge-approval-hardening-check.mjs"
+      - ".github/workflows/recharge-approval-hardening-check.yml"
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/**"
+      - "scripts/recharge-approval-hardening-check.mjs"
+      - ".github/workflows/recharge-approval-hardening-check.yml"
+jobs:
+  recharge-approval-hardening:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/recharge-approval-hardening-check.mjs
