@@ -5,6 +5,7 @@ const corsHeaders={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Metho
 const supabase=createClient(Deno.env.get("SUPABASE_URL")!,Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
 async function auth(token:string){
+  if (typeof token !== "string" || token.length < 16 || token.length > 512) return null;
   const {data}=await supabase.from("customer_auth_sessions").select("customer_id,expires_at").eq("token",token).maybeSingle();
   if(!data || new Date(data.expires_at)<=new Date()) return null;
   return data.customer_id;
@@ -35,7 +36,10 @@ Deno.serve(async req=>{
   if(req.method==="OPTIONS") return new Response(null,{status:200,headers:corsHeaders});
   if(req.method!=="POST") return new Response(JSON.stringify({error:"Method not allowed"}),{status:405,headers:{...corsHeaders,"Content-Type":"application/json","Allow":"POST, OPTIONS"}});
   try{
-    const body=await req.json(); const customerId=await auth(body.session_token||"");
+    const parsed: unknown = await req.json();
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return out({error:"Invalid request body"},400);
+    const body = parsed as Record<string, unknown>;
+    const customerId=await auth(typeof body.session_token === "string" ? body.session_token : "");
     if(!customerId) return out({error:"Unauthorized"},401);
     switch(body.action){
       case "account":{
@@ -78,7 +82,17 @@ Deno.serve(async req=>{
         return out({success:true,booking:data.booking,already_completed:data.already_completed===true});
       }
       case "profile":{
-        const allowed={full_name:body.full_name,email:body.email||null,city:body.city||null,address:body.address||null,updated_at:new Date().toISOString()};
+        const fullName = typeof body.full_name === "string" ? body.full_name.trim() : "";
+        const email = body.email == null || body.email === "" ? null : (typeof body.email === "string" ? body.email.trim() : "");
+        const city = body.city == null ? null : (typeof body.city === "string" ? body.city.trim() : "");
+        const address = body.address == null ? null : (typeof body.address === "string" ? body.address.trim() : "");
+        if (fullName.length < 2 || fullName.length > 100) return out({error:"Full name must be between 2 and 100 characters"},400);
+        if (email !== null && (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) return out({error:"A valid email address is required"},400);
+        if (city !== null && city.length > 100) return out({error:"City must be 100 characters or fewer"},400);
+        if (address !== null && address.length > 500) return out({error:"Address must be 500 characters or fewer"},400);
+        if (typeof body.city !== "undefined" && typeof body.city !== "string") return out({error:"City must be text"},400);
+        if (typeof body.address !== "undefined" && typeof body.address !== "string") return out({error:"Address must be text"},400);
+        const allowed={full_name:fullName,email,city,address,updated_at:new Date().toISOString()};
         const {data,error}=await supabase.from("customers").update(allowed).eq("id",customerId).select("id,full_name,mobile,email,city,address,created_at,updated_at").single();
         if(error) return out({error:"Failed to update profile"},400);
         return out({customer:data});
@@ -88,8 +102,13 @@ Deno.serve(async req=>{
       case "notification_read":{if(!body.notification_id)return out({error:"Notification ID is required"},400);const {data:customer}=await supabase.from("customers").select("mobile").eq("id",customerId).single();const {error}=await supabase.from("notifications").update({is_read:true,read_at:new Date().toISOString(),status:"read"}).eq("id",body.notification_id).eq("recipient_type","customer").eq("recipient_id",customer?.mobile||"");if(error)return out({error:"Unable to update notification"},400);return out({success:true});}
       case "notifications_read_all":{const {data:customer}=await supabase.from("customers").select("mobile").eq("id",customerId).single();const {error}=await supabase.from("notifications").update({is_read:true,read_at:new Date().toISOString(),status:"read"}).eq("recipient_type","customer").eq("recipient_id",customer?.mobile||"").eq("is_read",false);if(error)return out({error:"Unable to update notifications"},400);return out({success:true});}
       case "support":{
+        const subject = typeof body.subject === "string" ? body.subject.trim() : "";
+        const message = typeof body.message === "string" ? body.message.trim() : "";
+        if (subject.length < 3 || subject.length > 120) return out({error:"Subject must be between 3 and 120 characters"},400);
+        if (message.length < 10 || message.length > 5000) return out({error:"Message must be between 10 and 5000 characters"},400);
         const {data:customer}=await supabase.from("customers").select("full_name,mobile").eq("id",customerId).single();
-        const {error}=await supabase.from("support_messages").insert({customer_id:customerId,customer_name:customer?.full_name,customer_mobile:customer?.mobile,subject:String(body.subject||"").trim(),message:String(body.message||"").trim(),status:"open"});
+        if (!customer) return out({error:"Customer not found"},404);
+        const {error}=await supabase.from("support_messages").insert({customer_id:customerId,customer_name:customer.full_name,customer_mobile:customer.mobile,subject,message,status:"open"});
         if(error) return out({error:"Failed to send support message"},400);
         return out({success:true});
       }
