@@ -95,6 +95,7 @@ const checks = [
   ['technician job transitions use the atomic RPC', technicianData.includes('transition_technician_job_atomic')],
   ['admin dashboard consumes redacted KYC presence flags', ['has_aadhaar', 'has_pan', 'has_dl'].every((field) => adminDashboard.includes(field)) && !adminDashboard.includes('selectedTech.aadhaar_url')],
   ['admin assignment reports notification delivery failures', adminDashboard.includes('Promise.allSettled') && adminDashboard.includes('assignment saved but notification delivery failed')],
+  ['payment modal UTR input matches the server 6–32 alphanumeric contract', paymentModal.includes('6–32 character alphanumeric UTR') && paymentModal.includes('pattern="[A-Za-z0-9]{6,32}"') && paymentModal.includes('maxLength={32}') && paymentAuth.includes('/^[A-Za-z0-9]{6,32}$/')],
   ['payment modal prevents duplicate in-flight payment creation', paymentModal.includes('inFlightPaymentKeyRef') && paymentModal.includes('paymentKeyRef')],
   ['payment modal ignores stale async payment attempts', paymentModal.includes('paymentAttemptVersionRef')],
   ['homepage does not claim OTP verification is available', homeFeatures.includes('OTP verification is not currently available')],
