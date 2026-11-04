@@ -1,3 +1,7 @@
+CREATE TRIGGER trg_process_recharge_approval
+AFTER UPDATE ON public.wallet_recharges
+FOR EACH ROW EXECUTE FUNCTION public.process_recharge_approval();
+
 DO $$
 DECLARE
   v_event public.wallet_recharge_approval_events%ROWTYPE;
@@ -115,4 +119,17 @@ BEGIN
   END IF;
 
   RAISE NOTICE 'PASS: mixed, dues-only, full-credit, retry-idempotency, missing-settings rollback and pending-only approval';
+END $$;
+
+DO $$
+BEGIN
+  BEGIN
+    INSERT INTO public.wallet_recharges(id, technician_id, amount, status, approved_by)
+    VALUES ('10000000-0000-0000-0000-000000000099',
+            '00000000-0000-0000-0000-000000000001', 100001, 'pending', 'admin');
+    RAISE EXCEPTION 'expected amount ceiling constraint to reject over-limit recharge';
+  EXCEPTION WHEN check_violation THEN
+    NULL;
+  END;
+  RAISE NOTICE 'PASS: over-limit recharge rejected by database constraint';
 END $$;
