@@ -69,7 +69,7 @@ const checks = [
   ['payment read lockdown installs deny-all RLS for browser roles', paymentReadLockMigration.includes('CREATE POLICY "deny_public_payments" ON payments FOR ALL TO anon, authenticated USING (false) WITH CHECK (false)')],
   ['payment-auth avoids wildcard selects', !paymentAuth.includes('.select("*")')],
   ['technician registration payment stays fail-closed without an unused payment capability', paymentAuth.includes('Technician mobile verification is not available yet') && !paymentAuth.slice(paymentAuth.indexOf('async function createPayment'), paymentAuth.indexOf('async function submitUtr')).includes('.from("payments").insert')],
-  ['UTR submission rotates the capability', paymentAuth.includes('payment_action_token: crypto.randomUUID()')],
+  ['UTR submission atomically claims an empty UTR and supports exact authorized retries after a lost response', paymentAuth.includes('.is("utr", null)') && paymentAuth.includes('.eq("payment_action_token", actionToken)') && paymentAuth.includes('.eq("utr", utr)') && paymentAuth.includes('A different UTR cannot replace the first claim') && !paymentAuth.includes('payment_action_token: crypto.randomUUID()')],
   ['UTR response uses a safe explicit field list', paymentAuth.includes('.select("id,payment_id,payee_type')],
   ['payment responses disable caching', paymentAuth.includes('"Cache-Control": "no-store"')],
   ['frontend requires capability only on creation', paymentsLib.includes('parsePaymentRecord(data?.payment, true)') && paymentsLib.includes('const payment = parsePaymentRecord(data?.payment);')],
