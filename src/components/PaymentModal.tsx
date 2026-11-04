@@ -66,8 +66,11 @@ export default function PaymentModal({
         reference_id: referenceId,
         notes: note,
       });
-    } catch {
+    } catch (error) {
       record = null;
+      setErrorMsg(error instanceof Error && error.message.trim()
+        ? error.message
+        : 'Could not create payment record. Please try again.');
     } finally {
       if (inFlightPaymentKeyRef.current === paymentKey) inFlightPaymentKeyRef.current = '';
     }
@@ -75,7 +78,7 @@ export default function PaymentModal({
     if (attemptVersion !== paymentAttemptVersionRef.current) return;
 
     if (!record) {
-      setErrorMsg('Could not create payment record. Please try again.');
+      setErrorMsg((current) => current || 'Could not create payment record. Please try again.');
       setStep('error');
       setLoadingQr(false);
       return;
