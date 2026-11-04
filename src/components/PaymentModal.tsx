@@ -257,7 +257,7 @@ export default function PaymentModal({
               <div>
                 <h3 className="font-bold text-gray-900 mb-1">Enter Transaction Reference (UTR)</h3>
                 <p className="text-sm text-gray-500 mb-4">
-                  After making the payment, enter the 12-digit UTR / Reference number from your UPI app.
+                  After making the payment, enter the 6–32 character alphanumeric UTR / reference number from your UPI app.
                   Your payment will be verified by our team.
                 </p>
                 <input
@@ -268,6 +268,9 @@ export default function PaymentModal({
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
                   placeholder="e.g. 123456789012"
                   minLength={6}
+                  maxLength={32}
+                  pattern="[A-Za-z0-9]{6,32}"
+                  title="Enter 6–32 letters or numbers only."
                 />
               </div>
 
