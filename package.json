@@ -13,7 +13,8 @@
     "test:payment-utr": "node scripts/payment-utr-uniqueness-check.mjs",
     "test:technician-mobile-guard": "node scripts/technician-mobile-verification-guard-check.mjs",
     "test:booking-completion-counter": "node scripts/booking-completion-counter-check.mjs",
-    "test:migration-history": "node scripts/migration-history-contract-check.mjs"
+    "test:migration-history": "node scripts/migration-history-contract-check.mjs",
+    "test:registration-payment-activation": "node scripts/registration-payment-activation-migration-check.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
