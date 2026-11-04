@@ -104,8 +104,22 @@ Deno.serve(async req=>{
       }
       case "reviews":{ return out({reviews:(await supabase.from("reviews").select("id,booking_id,rating,review_text,created_at").eq("customer_id",customerId).order("created_at",{ascending:false})).data||[]}); }
       case "completed_bookings":{ return out({bookings:(await supabase.from("bookings").select(CUSTOMER_BOOKING_COLUMNS).eq("customer_id",customerId).eq("status","completed").order("created_at",{ascending:false})).data||[]}); }
-      case "notification_read":{if(!body.notification_id)return out({error:"Notification ID is required"},400);const {data:customer}=await supabase.from("customers").select("mobile").eq("id",customerId).single();const {error}=await supabase.from("notifications").update({is_read:true,read_at:new Date().toISOString(),status:"read"}).eq("id",body.notification_id).eq("recipient_type","customer").eq("recipient_id",customer?.mobile||"");if(error)return out({error:"Unable to update notification"},400);return out({success:true});}
-      case "notifications_read_all":{const {data:customer}=await supabase.from("customers").select("mobile").eq("id",customerId).single();const {error}=await supabase.from("notifications").update({is_read:true,read_at:new Date().toISOString(),status:"read"}).eq("recipient_type","customer").eq("recipient_id",customer?.mobile||"").eq("is_read",false);if(error)return out({error:"Unable to update notifications"},400);return out({success:true});}
+      case "notification_read":{
+        const notificationId = typeof body.notification_id === "string" ? body.notification_id.trim() : "";
+        if (!notificationId || notificationId.length > 128) return out({error:"A valid notification ID is required"},400);
+        const {data:customer}=await supabase.from("customers").select("mobile").eq("id",customerId).single();
+        if (!customer?.mobile) return out({error:"Customer not found"},404);
+        const {error}=await supabase.from("notifications").update({is_read:true,read_at:new Date().toISOString(),status:"read"}).eq("id",notificationId).eq("recipient_type","customer").eq("recipient_id",customer.mobile);
+        if(error)return out({error:"Unable to update notification"},400);
+        return out({success:true});
+      }
+      case "notifications_read_all":{
+        const {data:customer}=await supabase.from("customers").select("mobile").eq("id",customerId).single();
+        if (!customer?.mobile) return out({error:"Customer not found"},404);
+        const {error}=await supabase.from("notifications").update({is_read:true,read_at:new Date().toISOString(),status:"read"}).eq("recipient_type","customer").eq("recipient_id",customer.mobile).eq("is_read",false);
+        if(error)return out({error:"Unable to update notifications"},400);
+        return out({success:true});
+      }
       case "support":{
         const subject = typeof body.subject === "string" ? body.subject.trim() : "";
         const message = typeof body.message === "string" ? body.message.trim() : "";
