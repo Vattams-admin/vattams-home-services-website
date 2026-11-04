@@ -1,0 +1,22 @@
+name: Validate recharge approval idempotency guard
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/**"
+      - "scripts/recharge-approval-idempotency-check.mjs"
+      - ".github/workflows/recharge-approval-idempotency-check.yml"
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/**"
+      - "scripts/recharge-approval-idempotency-check.mjs"
+      - ".github/workflows/recharge-approval-idempotency-check.yml"
+jobs:
+  recharge-approval-idempotency:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/recharge-approval-idempotency-check.mjs
