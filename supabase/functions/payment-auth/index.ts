@@ -42,8 +42,6 @@ async function createPayment(body: Record<string, unknown>) {
   // such as "abc1234567890" into an apparently valid mobile number.
   const payeeId = String(body.payee_id ?? "").trim();
   const referenceId = String(body.reference_id ?? "").trim();
-  const payeeName = body.payee_name ? String(body.payee_name).trim().slice(0, 120) : null;
-  const notes = body.notes ? String(body.notes).trim().slice(0, 300) : null;
 
   // This endpoint is currently exposed only for the technician ₹49 joining flow.
   // Do not allow the browser to mint arbitrary booking/wallet/commission payments.
