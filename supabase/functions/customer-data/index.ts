@@ -95,7 +95,7 @@ Deno.serve(async req=>{
           else if (typeof body.email !== "string") return out({error:"Email must be text"},400);
           else {
             const email = body.email.trim();
-            if (email.length > 254 || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) return out({error:"A valid email address is required"},400);
+            if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return out({error:"A valid email address is required"},400);
             allowed.email = email;
           }
         }
