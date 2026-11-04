@@ -9,6 +9,9 @@ assert.match(source, /fullName\.length < 2 \|\| fullName\.length > 100/, "profil
 assert.match(source, /email\.length > 254 \|\| !\/\^\[\^\\s@\]\+@\[\^\\s@\]\+\\\.\[\^\\s@\]\+\$\//, "profile email must be validated");
 assert.match(source, /city\.length > 100/, "city length must be bounded");
 assert.match(source, /address\.length > 500/, "address length must be bounded");
+assert.match(source, /hasOwnProperty\.call\(body,"email"\)/, "omitted email must not be overwritten during partial profile updates");
+assert.match(source, /hasOwnProperty\.call\(body,"city"\)/, "omitted city must not be overwritten during partial profile updates");
+assert.match(source, /hasOwnProperty\.call\(body,"address"\)/, "omitted address must not be overwritten during partial profile updates");
 assert.match(source, /subject\.length < 3 \|\| subject\.length > 120/, "support subject length must be validated");
 assert.match(source, /message\.length < 10 \|\| message\.length > 5000/, "support message length must be validated");
 assert.match(source, /if \(!customer\) return out\(\{error:"Customer not found"\},404\);[\s\S]*?subject,message,status:"open"/, "support message must require an existing customer and use validated values");
