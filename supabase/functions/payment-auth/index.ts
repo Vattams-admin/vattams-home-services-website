@@ -38,8 +38,10 @@ Deno.serve(async (req: Request) => {
 
 async function createPayment(body: Record<string, unknown>) {
   const payeeType = body.payee_type;
-  const payeeId = String(body.payee_id ?? "").replace(/\D/g, "");
-  const referenceId = String(body.reference_id ?? "").replace(/\D/g, "");
+  // Validate the original input; stripping non-digits would turn malformed values
+  // such as "abc1234567890" into an apparently valid mobile number.
+  const payeeId = String(body.payee_id ?? "").trim();
+  const referenceId = String(body.reference_id ?? "").trim();
   const payeeName = body.payee_name ? String(body.payee_name).trim().slice(0, 120) : null;
   const notes = body.notes ? String(body.notes).trim().slice(0, 300) : null;
 
@@ -57,23 +59,6 @@ async function createPayment(body: Record<string, unknown>) {
   // Email OTP and the KYC upload capability do not prove control of this mobile.
   // Never create a payable registration row from a caller-supplied phone number.
   return json({ error: "Technician mobile verification is not available yet. Registration payment is temporarily disabled until phone ownership can be verified." }, 503);
-
-  const { data, error } = await supabase.from("payments").insert({
-    payee_type: "technician",
-    payee_id: payeeId,
-    payee_name: payeeName,
-    upi_id: "venkatesan04051985-7@okhdfcbank",
-    amount: 49,
-    purpose: "registration_fee",
-    reference_id: payeeId,
-    status: "pending",
-    notes,
-  }).select("id,payment_id,payment_action_token,payee_type,payee_id,payee_name,upi_id,amount,purpose,reference_id,utr,status,notes,verified_by,created_at,verified_at").single();
-
-  if (error || !data) return json({ error: error?.message || "Unable to create payment record" }, 500);
-  // The action capability is issued once to the initiating browser so it can
-  // submit the UTR. It is never repeated in subsequent payment responses.
-  return json({ payment: data });
 }
 
 async function submitUtr(body: Record<string, unknown>) {
@@ -96,7 +81,7 @@ async function submitUtr(body: Record<string, unknown>) {
     .select("id,payment_id,payee_type,payee_id,payee_name,upi_id,amount,purpose,reference_id,utr,status,notes,verified_by,created_at,verified_at").single();
 
   if (error?.code === "23505") {
-    return json({ error: "This UTR has already been submitted for another payment" }, 409);
+    return json({ error: "This UTR has already been submitted for another payment" },  409);
   }
   if (error || !data) return json({ error: "Payment is no longer pending or authorization is invalid" }, 409);
   // Rotate the one-time capability on UTR submission; the old token can no
