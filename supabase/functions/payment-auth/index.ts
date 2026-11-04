@@ -53,6 +53,11 @@ async function createPayment(body: Record<string, unknown>) {
     return json({ error: "A valid technician mobile number is required" }, 400);
   }
 
+  // Fail closed until a trusted SMS/phone-ownership challenge is implemented.
+  // Email OTP and the KYC upload capability do not prove control of this mobile.
+  // Never create a payable registration row from a caller-supplied phone number.
+  return json({ error: "Technician mobile verification is not available yet. Registration payment is temporarily disabled until phone ownership can be verified." }, 503);
+
   const { data, error } = await supabase.from("payments").insert({
     payee_type: "technician",
     payee_id: payeeId,
