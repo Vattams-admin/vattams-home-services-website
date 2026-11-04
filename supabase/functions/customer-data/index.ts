@@ -36,7 +36,12 @@ Deno.serve(async req=>{
   if(req.method==="OPTIONS") return new Response(null,{status:200,headers:corsHeaders});
   if(req.method!=="POST") return new Response(JSON.stringify({error:"Method not allowed"}),{status:405,headers:{...corsHeaders,"Content-Type":"application/json","Allow":"POST, OPTIONS"}});
   try{
-    const parsed: unknown = await req.json();
+    let parsed: unknown;
+    try {
+      parsed = await req.json();
+    } catch {
+      return out({error:"Invalid JSON request body"},400);
+    }
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return out({error:"Invalid request body"},400);
     const body = parsed as Record<string, unknown>;
     const customerId=await auth(typeof body.session_token === "string" ? body.session_token : "");
