@@ -428,20 +428,53 @@ Deno.serve(async (req: Request) => {
     return new Response(null, { status: 200, headers: corsHeaders });
   }
 
+  // Every action in this function is a POST operation. Reject other methods
+  // before reading a body so GET/HEAD probes cannot become JSON parse 500s.
+  if (req.method !== "POST") {
+    return new Response(
+      JSON.stringify({ error: "Method not allowed" }),
+      { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json", "Allow": "POST, OPTIONS" } },
+    );
+  }
+
+  const url = new URL(req.url);
+  const action = url.pathname.split("/").pop();
+  const supportedActions = new Set([
+    "upload-kyc-document",
+    "start-kyc-upload-session",
+    "register",
+    "send-registration-otp",
+    "verify-registration-otp",
+    "resend-registration-otp",
+    "login",
+    "doc-url",
+  ]);
+  if (!action || !supportedActions.has(action)) {
+    return new Response(
+      JSON.stringify({ error: "Unknown action" }),
+      { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+
   try {
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const url = new URL(req.url);
-    const action = url.pathname.split("/").pop();
-
     if (action === "upload-kyc-document") {
       return await uploadKycDocument(supabase, req);
     }
 
-    const body = await req.json();
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return otpJson({ error: "Request body must be valid JSON." }, 400);
+    }
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return otpJson({ error: "Request body must be a JSON object." }, 400);
+    }
 
     if (action === "start-kyc-upload-session") {
       return await startKycUploadSession(supabase, body as Record<string, unknown>);
