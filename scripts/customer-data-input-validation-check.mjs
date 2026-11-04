@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 
 const source = await readFile(new URL("../supabase/functions/customer-data/index.ts", import.meta.url), "utf8");
 
-assert.match(source, /const parsed: unknown = await req\.json\(\);[\s\S]*?Array\.isArray\(parsed\)/, "request body must be a JSON object");
+assert.match(source, /try \{[\s\S]*?parsed = await req\.json\(\);[\s\S]*?Invalid JSON request body[\s\S]*?Array\.isArray\(parsed\)/, "malformed JSON must return HTTP 400 and request body must be an object");
 assert.match(source, /typeof token !== "string" \|\| token\.length < 16 \|\| token\.length > 512/, "session token must be bounded string");
 assert.match(source, /fullName\.length < 2 \|\| fullName\.length > 100/, "profile name length must be validated");
 assert.match(source, /email\.length > 254 \|\| !\/\^\[\^\\s@\]\+@\[\^\\s@\]\+\\\.\[\^\\s@\]\+\$\//, "profile email must be validated");
