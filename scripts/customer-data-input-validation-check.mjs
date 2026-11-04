@@ -26,4 +26,10 @@ assert.match(source, /if\(error\) return out\(\{error:"Unable to load customer b
 assert.match(source, /if\(error\) return out\(\{error:"Unable to load customer booking references"\},500\)/, "booking reference query failures must return a server error");
 assert.match(source, /if\(error\) return out\(\{error:"Unable to load customer reviews"\},500\)/, "review query failures must return a server error");
 assert.match(source, /if\(error\) return out\(\{error:"Unable to load completed bookings"\},500\)/, "completed booking query failures must return a server error");
+assert.match(source, /if\(error\) throw error/, "session-store database failures must not be misreported as invalid sessions");
+assert.match(source, /customerError\.code!=="PGRST116"[\s\S]*?Unable to load customer account[\s\S]*?\},500\)/, "notification and support customer lookups must distinguish database failures from missing customers");
+assert.match(source, /Unable to update notification"\},500\)/, "notification update database failures must return a server error");
+assert.match(source, /Unable to update notifications"\},500\)/, "bulk notification update failures must return a server error");
+assert.match(source, /Failed to update profile"\},500\)/, "profile persistence failures must return a server error");
+assert.match(source, /Failed to send support message"\},500\)/, "support persistence failures must return a server error");
 console.log("PASS customer-data input validation contract");
