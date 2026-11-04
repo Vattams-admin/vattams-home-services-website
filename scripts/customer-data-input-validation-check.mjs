@@ -12,4 +12,6 @@ assert.match(source, /address\.length > 500/, "address length must be bounded");
 assert.match(source, /subject\.length < 3 \|\| subject\.length > 120/, "support subject length must be validated");
 assert.match(source, /message\.length < 10 \|\| message\.length > 5000/, "support message length must be validated");
 assert.match(source, /if \(!customer\) return out\(\{error:"Customer not found"\},404\);[\s\S]*?subject,message,status:"open"/, "support message must require an existing customer and use validated values");
+assert.match(source, /typeof body\.notification_id === "string"[\s\S]*?notificationId\.length > 128/, "notification ID must be a bounded string");
+assert.match(source, /if \(!customer\?\.mobile\) return out\(\{error:"Customer not found"\},404\);[\s\S]*?recipient_id",customer\.mobile/, "notification updates must require a customer and scope to their mobile");
 console.log("PASS customer-data input validation contract");
