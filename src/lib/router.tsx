@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, ReactNode } from 'react';
 import { RouterContext } from './routerContext';
+import type { RouteState } from './routerContext';
 
 export type Page =
   | 'home'
