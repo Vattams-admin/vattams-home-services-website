@@ -5,20 +5,24 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_technicians_registration_payment_id
   ON public.technicians(registration_payment_id)
   WHERE registration_payment_id IS NOT NULL AND btrim(registration_payment_id) <> '';
 
--- Correct activation guard to validate qualifying payment on active INSERTs too.
+-- Validate qualifying payment on active INSERTs and every change to activation
+-- identity/payment linkage, so an active account cannot be detached from its proof.
 CREATE OR REPLACE FUNCTION public.enforce_technician_registration_fee()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $
+AS $$
 DECLARE
   payment_status text;
   payment_verified_by text;
   payment_verified_at timestamptz;
 BEGIN
   IF (TG_OP = 'INSERT' AND NEW.status = 'active')
-     OR (TG_OP = 'UPDATE' AND NEW.status = 'active' AND OLD.status IS DISTINCT FROM NEW.status) THEN
+     OR (TG_OP = 'UPDATE' AND NEW.status = 'active'
+         AND (OLD.status IS DISTINCT FROM NEW.status
+              OR OLD.registration_payment_id IS DISTINCT FROM NEW.registration_payment_id
+              OR OLD.mobile IS DISTINCT FROM NEW.mobile)) THEN
     IF NEW.registration_payment_id IS NULL OR btrim(NEW.registration_payment_id) = '' THEN
       RAISE EXCEPTION 'Technician cannot be activated without a verified ₹49 registration payment';
     END IF;
@@ -42,10 +46,10 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$;
+$$;
 
 DROP TRIGGER IF EXISTS trg_enforce_technician_registration_fee ON public.technicians;
 CREATE TRIGGER trg_enforce_technician_registration_fee
-BEFORE INSERT OR UPDATE OF status ON public.technicians
+BEFORE INSERT OR UPDATE OF status, registration_payment_id, mobile ON public.technicians
 FOR EACH ROW
 EXECUTE FUNCTION public.enforce_technician_registration_fee();
