@@ -1,3 +1,18 @@
+> **Current-state addendum — 2026-11-04 (supersedes conflicting implementation statements below where noted)**  
+> This report was originally written on 2026-10-31 and its original findings describe the source state reviewed at that time. The original text is retained as an audit-history record; it must not be read as a description of the current `main` implementation without this addendum.
+>
+> **Verified current payment-auth state on `main` (source SHA `a434dec889b5d52f1e7cfe31102348f5dcfe968f`):**
+> - `action=create` is fail-closed: after validating the technician registration request, the Edge Function returns HTTP 503 stating that technician mobile verification is unavailable. It does **not** insert a payment row or return a payment capability token. This supersedes the historical claim in original Finding 1 that unauthenticated callers can currently create pending rows and receive a token.
+> - `submit-utr` still requires `payment_id`, `payment_action_token`, a pending payment, and a 6–32 character alphanumeric UTR. Its update rotates the capability token and returns an explicit field list that excludes `payment_action_token`. This supersedes the historical statements in Findings 2 and 4 that the submit response returns the full row/token. The token remains a bearer capability before submission; ownership binding, expiry, and retry-after-lost-response semantics still require a dedicated review.
+> - `verify` still requires a valid unexpired admin session and an active `super_admin`; successful verification requires a non-null UTR. A UTR is not independent bank settlement evidence.
+> - A valid normalized unique index `payments_utr_normalized_unique` was confirmed in the read-only production inspection recorded in Investigation 151: zero populated UTR rows and zero normalized duplicate groups at that check. This is a point-in-time check, not proof of bank reconciliation or future uniqueness across all payment scopes.
+>
+> **Still-open controls / evidence gaps:** trusted SMS/phone-ownership challenge issuance and verification; safe idempotent retry when the UTR update commits but the response is lost; expiry/revocation and registration-session binding for payment capabilities; production effective RLS/grant verification for wallet/payment tables; and concurrency/idempotency tests for recharge approval and wallet ledger writes. The technician registration payment remains disabled until trusted phone ownership verification is implemented and tested.
+>
+> **Validation boundary:** This addendum is a source-code and previously recorded read-only evidence correction. It does not claim a fresh production database audit, does not apply migrations, does not alter payment or wallet data, and does not enable payment creation. Re-run environment-specific checks before release.
+>
+> ---
+>
 # Security Audit 29 — Payment capability, UTR submission, recharge and wallet ledger
 
 **Date:** 2026-10-31  
