@@ -1,0 +1,20 @@
+name: Technician Data Query Error Contract
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  technician-data-contract:
+    name: Validate technician-data query error handling
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check technician-data query error contract
+        run: npm run test:technician-data-query-errors
