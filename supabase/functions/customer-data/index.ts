@@ -69,16 +69,21 @@ Deno.serve(async req=>{
         });
       }
       case "payments":{
-        const {data:customer}=await supabase.from("customers").select("mobile").eq("id",customerId).single();if(!customer)return out({error:"Customer not found"},404);
-        const {data}=await supabase.from("payments").select("id,payment_id,amount,purpose,reference_id,utr,upi_id,status,created_at").eq("payee_type","customer").eq("payee_id",customer.mobile).order("created_at",{ascending:false});
+        const {data:customer,error:customerError}=await supabase.from("customers").select("mobile").eq("id",customerId).single();
+        if(customerError && customerError.code!=="PGRST116") return out({error:"Unable to load customer account"},500);
+        if(!customer) return out({error:"Customer not found"},404);
+        const {data,error}=await supabase.from("payments").select("id,payment_id,amount,purpose,reference_id,utr,upi_id,status,created_at").eq("payee_type","customer").eq("payee_id",customer.mobile).order("created_at",{ascending:false});
+        if(error) return out({error:"Unable to load customer payments"},500);
         return out({payments:data||[]});
       }
       case "bookings":{
-        const {data}=await supabase.from("bookings").select(CUSTOMER_BOOKING_COLUMNS).eq("customer_id",customerId).order("created_at",{ascending:false});
+        const {data,error}=await supabase.from("bookings").select(CUSTOMER_BOOKING_COLUMNS).eq("customer_id",customerId).order("created_at",{ascending:false});
+        if(error) return out({error:"Unable to load customer bookings"},500);
         return out({bookings:data||[]});
       }
       case "booking_refs":{
-        const {data}=await supabase.from("bookings").select("id,service_category,booking_number").eq("customer_id",customerId);
+        const {data,error}=await supabase.from("bookings").select("id,service_category,booking_number").eq("customer_id",customerId);
+        if(error) return out({error:"Unable to load customer booking references"},500);
         return out({bookings:data||[]});
       }
       case "confirm_completion":{
@@ -133,8 +138,16 @@ Deno.serve(async req=>{
         if(error) return out({error:"Failed to update profile"},400);
         return out({customer:data});
       }
-      case "reviews":{ return out({reviews:(await supabase.from("reviews").select("id,booking_id,rating,review_text,created_at").eq("customer_id",customerId).order("created_at",{ascending:false})).data||[]}); }
-      case "completed_bookings":{ return out({bookings:(await supabase.from("bookings").select(CUSTOMER_BOOKING_COLUMNS).eq("customer_id",customerId).eq("status","completed").order("created_at",{ascending:false})).data||[]}); }
+      case "reviews":{
+        const {data,error}=await supabase.from("reviews").select("id,booking_id,rating,review_text,created_at").eq("customer_id",customerId).order("created_at",{ascending:false});
+        if(error) return out({error:"Unable to load customer reviews"},500);
+        return out({reviews:data||[]});
+      }
+      case "completed_bookings":{
+        const {data,error}=await supabase.from("bookings").select(CUSTOMER_BOOKING_COLUMNS).eq("customer_id",customerId).eq("status","completed").order("created_at",{ascending:false});
+        if(error) return out({error:"Unable to load completed bookings"},500);
+        return out({bookings:data||[]});
+      }
       case "notification_read":{
         const notificationId = typeof body.notification_id === "string" ? body.notification_id.trim() : "";
         if (!notificationId || notificationId.length > 128) return out({error:"A valid notification ID is required"},400);
