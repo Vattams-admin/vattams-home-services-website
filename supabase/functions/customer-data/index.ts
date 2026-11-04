@@ -6,7 +6,8 @@ const supabase=createClient(Deno.env.get("SUPABASE_URL")!,Deno.env.get("SUPABASE
 
 async function auth(token:string){
   if (typeof token !== "string" || token.length < 16 || token.length > 512) return null;
-  const {data}=await supabase.from("customer_auth_sessions").select("customer_id,expires_at").eq("token",token).maybeSingle();
+  const {data,error}=await supabase.from("customer_auth_sessions").select("customer_id,expires_at").eq("token",token).maybeSingle();
+  if(error) throw error;
   if(!data || new Date(data.expires_at)<=new Date()) return null;
   return data.customer_id;
 }
@@ -48,25 +49,42 @@ Deno.serve(async req=>{
     if(!customerId) return out({error:"Unauthorized"},401);
     switch(body.action){
       case "account":{
-        const {data:customer}=await supabase.from("customers").select("id,full_name,mobile,email,city,address,created_at,updated_at").eq("id",customerId).single();if(!customer)return out({error:"Customer not found"},404);const customerMobile=customer.mobile;
-        const [{data:bookings},{data:notifications},{data:reviews}]=await Promise.all([
+        const {data:customer,error:customerError}=await supabase.from("customers").select("id,full_name,mobile,email,city,address,created_at,updated_at").eq("id",customerId).single();
+        if(customerError && customerError.code!=="PGRST116") return out({error:"Unable to load customer account"},500);
+        if(!customer) return out({error:"Customer not found"},404);
+        const customerMobile=customer.mobile;
+        const [bookingsResult,notificationsResult,reviewsResult]=await Promise.all([
           supabase.from("bookings").select(CUSTOMER_BOOKING_COLUMNS).eq("customer_id",customerId).order("created_at",{ascending:false}),
           supabase.from("notifications").select("id,title,message,created_at,is_read").eq("recipient_type","customer").eq("recipient_id",customerMobile).order("created_at",{ascending:false}).limit(20),
           supabase.from("reviews").select("id,booking_id,rating,review_text,created_at").eq("customer_id",customerId).order("created_at",{ascending:false})
         ]);
-        return out({customer,bookings:bookings||[],notifications:notifications||[],reviews:reviews||[]});
+        // Do not disguise database/query failures as a valid empty customer dashboard.
+        if(bookingsResult.error || notificationsResult.error || reviewsResult.error) {
+          return out({error:"Unable to load customer account data"},500);
+        }
+        return out({
+          customer,
+          bookings:bookingsResult.data||[],
+          notifications:notificationsResult.data||[],
+          reviews:reviewsResult.data||[]
+        });
       }
       case "payments":{
-        const {data:customer}=await supabase.from("customers").select("mobile").eq("id",customerId).single();if(!customer)return out({error:"Customer not found"},404);
-        const {data}=await supabase.from("payments").select("id,payment_id,amount,purpose,reference_id,utr,upi_id,status,created_at").eq("payee_type","customer").eq("payee_id",customer.mobile).order("created_at",{ascending:false});
+        const {data:customer,error:customerError}=await supabase.from("customers").select("mobile").eq("id",customerId).single();
+        if(customerError && customerError.code!=="PGRST116") return out({error:"Unable to load customer account"},500);
+        if(!customer) return out({error:"Customer not found"},404);
+        const {data,error}=await supabase.from("payments").select("id,payment_id,amount,purpose,reference_id,utr,upi_id,status,created_at").eq("payee_type","customer").eq("payee_id",customer.mobile).order("created_at",{ascending:false});
+        if(error) return out({error:"Unable to load customer payments"},500);
         return out({payments:data||[]});
       }
       case "bookings":{
-        const {data}=await supabase.from("bookings").select(CUSTOMER_BOOKING_COLUMNS).eq("customer_id",customerId).order("created_at",{ascending:false});
+        const {data,error}=await supabase.from("bookings").select(CUSTOMER_BOOKING_COLUMNS).eq("customer_id",customerId).order("created_at",{ascending:false});
+        if(error) return out({error:"Unable to load customer bookings"},500);
         return out({bookings:data||[]});
       }
       case "booking_refs":{
-        const {data}=await supabase.from("bookings").select("id,service_category,booking_number").eq("customer_id",customerId);
+        const {data,error}=await supabase.from("bookings").select("id,service_category,booking_number").eq("customer_id",customerId);
+        if(error) return out({error:"Unable to load customer booking references"},500);
         return out({bookings:data||[]});
       }
       case "confirm_completion":{
@@ -118,25 +136,35 @@ Deno.serve(async req=>{
           }
         }
         const {data,error}=await supabase.from("customers").update(allowed).eq("id",customerId).select("id,full_name,mobile,email,city,address,created_at,updated_at").single();
-        if(error) return out({error:"Failed to update profile"},400);
+        if(error) return out({error:"Failed to update profile"},500);
         return out({customer:data});
       }
-      case "reviews":{ return out({reviews:(await supabase.from("reviews").select("id,booking_id,rating,review_text,created_at").eq("customer_id",customerId).order("created_at",{ascending:false})).data||[]}); }
-      case "completed_bookings":{ return out({bookings:(await supabase.from("bookings").select(CUSTOMER_BOOKING_COLUMNS).eq("customer_id",customerId).eq("status","completed").order("created_at",{ascending:false})).data||[]}); }
+      case "reviews":{
+        const {data,error}=await supabase.from("reviews").select("id,booking_id,rating,review_text,created_at").eq("customer_id",customerId).order("created_at",{ascending:false});
+        if(error) return out({error:"Unable to load customer reviews"},500);
+        return out({reviews:data||[]});
+      }
+      case "completed_bookings":{
+        const {data,error}=await supabase.from("bookings").select(CUSTOMER_BOOKING_COLUMNS).eq("customer_id",customerId).eq("status","completed").order("created_at",{ascending:false});
+        if(error) return out({error:"Unable to load completed bookings"},500);
+        return out({bookings:data||[]});
+      }
       case "notification_read":{
         const notificationId = typeof body.notification_id === "string" ? body.notification_id.trim() : "";
         if (!notificationId || notificationId.length > 128) return out({error:"A valid notification ID is required"},400);
-        const {data:customer}=await supabase.from("customers").select("mobile").eq("id",customerId).single();
+        const {data:customer,error:customerError}=await supabase.from("customers").select("mobile").eq("id",customerId).single();
+        if(customerError && customerError.code!=="PGRST116") return out({error:"Unable to load customer account"},500);
         if (!customer?.mobile) return out({error:"Customer not found"},404);
         const {error}=await supabase.from("notifications").update({is_read:true,read_at:new Date().toISOString(),status:"read"}).eq("id",notificationId).eq("recipient_type","customer").eq("recipient_id",customer.mobile);
-        if(error)return out({error:"Unable to update notification"},400);
+        if(error)return out({error:"Unable to update notification"},500);
         return out({success:true});
       }
       case "notifications_read_all":{
-        const {data:customer}=await supabase.from("customers").select("mobile").eq("id",customerId).single();
+        const {data:customer,error:customerError}=await supabase.from("customers").select("mobile").eq("id",customerId).single();
+        if(customerError && customerError.code!=="PGRST116") return out({error:"Unable to load customer account"},500);
         if (!customer?.mobile) return out({error:"Customer not found"},404);
         const {error}=await supabase.from("notifications").update({is_read:true,read_at:new Date().toISOString(),status:"read"}).eq("recipient_type","customer").eq("recipient_id",customer.mobile).eq("is_read",false);
-        if(error)return out({error:"Unable to update notifications"},400);
+        if(error)return out({error:"Unable to update notifications"},500);
         return out({success:true});
       }
       case "support":{
@@ -144,10 +172,11 @@ Deno.serve(async req=>{
         const message = typeof body.message === "string" ? body.message.trim() : "";
         if (subject.length < 3 || subject.length > 120) return out({error:"Subject must be between 3 and 120 characters"},400);
         if (message.length < 10 || message.length > 5000) return out({error:"Message must be between 10 and 5000 characters"},400);
-        const {data:customer}=await supabase.from("customers").select("full_name,mobile").eq("id",customerId).single();
+        const {data:customer,error:customerError}=await supabase.from("customers").select("full_name,mobile").eq("id",customerId).single();
+        if(customerError && customerError.code!=="PGRST116") return out({error:"Unable to load customer account"},500);
         if (!customer) return out({error:"Customer not found"},404);
         const {error}=await supabase.from("support_messages").insert({customer_id:customerId,customer_name:customer.full_name,customer_mobile:customer.mobile,subject,message,status:"open"});
-        if(error) return out({error:"Failed to send support message"},400);
+        if(error) return out({error:"Failed to send support message"},500);
         return out({success:true});
       }
       default:return out({error:"Invalid action"},400);
