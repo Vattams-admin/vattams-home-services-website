@@ -9,12 +9,14 @@ on:
       - 'index.html'
       - 'package.json'
       - 'package-lock.json'
+      - '.npmrc'
       - 'vite.config.*'
       - 'tsconfig*.json'
       - 'supabase/functions/**'
       - 'scripts/**'
       - 'docs/**'
       - '.github/workflows/home-services-web-ci.yml'
+      - '.github/workflows/eslint-ci.yml'
       - '.github/workflows/deploy-supabase-production.yml'
   pull_request:
     branches: [main]
