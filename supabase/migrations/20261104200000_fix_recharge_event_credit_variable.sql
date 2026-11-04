@@ -1,6 +1,8 @@
--- Resolve PL/pgSQL column/variable ambiguity in the event allocation write.
--- Use a distinct local variable name so the event row stores the calculated
--- net wallet credit rather than accidentally self-assigning the column.
+-- Resolve PL/pgSQL name ambiguity and satisfy the approval-event
+-- allocation CHECK constraint on the initial insert. The event row must be
+-- claimed with a complete allocation (dues + wallet credit = recharge amount)
+-- in one statement; inserting zero defaults then updating cannot pass the
+-- table's immediate CHECK constraint.
 CREATE OR REPLACE FUNCTION public.process_recharge_approval()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -46,20 +48,18 @@ BEGIN
     due_after := GREATEST(c_due - dues_settled, 0);
     v_wallet_credit := NEW.amount - dues_settled;
 
+    -- Claim and persist the complete allocation atomically. The table enforces
+    -- dues_applied + wallet_credit = amount at statement time.
     INSERT INTO public.wallet_recharge_approval_events
-      (recharge_id, technician_id, amount, approved_by)
-    VALUES (NEW.id, NEW.technician_id, NEW.amount, NEW.approved_by)
+      (recharge_id, technician_id, amount, dues_applied, wallet_credit, approved_by)
+    VALUES
+      (NEW.id, NEW.technician_id, NEW.amount, dues_settled, v_wallet_credit, NEW.approved_by)
     ON CONFLICT (recharge_id) DO NOTHING
     RETURNING recharge_id INTO claimed_recharge_id;
 
     IF claimed_recharge_id IS NULL THEN
       RETURN NEW;
     END IF;
-
-    UPDATE public.wallet_recharge_approval_events AS approval_event
-    SET dues_applied = dues_settled,
-        wallet_credit = v_wallet_credit
-    WHERE approval_event.recharge_id = NEW.id;
 
     UPDATE public.technicians
     SET commission_due = due_after,
