@@ -17,4 +17,7 @@ assert.match(source, /message\.length < 10 \|\| message\.length > 5000/, "suppor
 assert.match(source, /if \(!customer\) return out\(\{error:"Customer not found"\},404\);[\s\S]*?subject,message,status:"open"/, "support message must require an existing customer and use validated values");
 assert.match(source, /typeof body\.notification_id === "string"[\s\S]*?notificationId\.length > 128/, "notification ID must be a bounded string");
 assert.match(source, /if \(!customer\?\.mobile\) return out\(\{error:"Customer not found"\},404\);[\s\S]*?recipient_id",customer\.mobile/, "notification updates must require a customer and scope to their mobile");
+assert.match(source, /if\(bookingsResult\.error \|\| notificationsResult\.error \|\| reviewsResult\.error\)/, "account query failures must not be reported as empty dashboard data");
+assert.match(source, /Unable to load customer account data[\s\S]*?\},500\)/, "account query failures must return a controlled server error");
+assert.match(source, /bookings:bookingsResult\.data\|\|\[\][\s\S]*?notifications:notificationsResult\.data\|\|\[\][\s\S]*?reviews:reviewsResult\.data\|\|\[\]/, "successful empty account query results must remain empty collections");
 console.log("PASS customer-data input validation contract");
