@@ -21,7 +21,7 @@ class InvalidRequestBodyError extends Error {}
 async function readBoundedJson(req: Request): Promise<Record<string, unknown>> {
   const rawLength = req.headers.get("content-length");
   if (rawLength !== null) {
-    if (!/^\\d+$/.test(rawLength)) throw new InvalidRequestBodyError("Invalid Content-Length");
+    if (!/^\d+$/.test(rawLength)) throw new InvalidRequestBodyError("Invalid Content-Length");
     if (Number(rawLength) > MAX_REQUEST_BYTES) throw new RequestBodyTooLargeError();
   }
   if (!req.body) throw new InvalidRequestBodyError("Request body is required");
