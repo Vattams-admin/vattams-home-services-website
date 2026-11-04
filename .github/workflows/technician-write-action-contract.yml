@@ -1,0 +1,18 @@
+name: Technician Write Action Contract
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  technician-write-contract:
+    name: Validate technician write actions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check technician write action contract
+        run: node scripts/technician-write-action-contract-check.mjs
