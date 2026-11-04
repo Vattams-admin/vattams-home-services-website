@@ -1,0 +1,12 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+const migration = await readFile(new URL("../supabase/migrations/20261104150000_atomic_technician_notification_read_all.sql", import.meta.url), "utf8");
+const edge = await readFile(new URL("../supabase/functions/technician-data/index.ts", import.meta.url), "utf8");
+assert.match(migration, /CREATE OR REPLACE FUNCTION public\.mark_technician_notifications_read_all\(p_technician_id uuid\)/);
+assert.match(migration, /SECURITY DEFINER[\s\S]*?SET search_path = public/);
+assert.match(migration, /UPDATE public\.technician_notifications[\s\S]*?WHERE technician_id = p_technician_id/);
+assert.match(migration, /UPDATE public\.notifications[\s\S]*?recipient_type = 'technician'[\s\S]*?recipient_id = p_technician_id::text/);
+assert.match(migration, /REVOKE ALL ON FUNCTION[\s\S]*?FROM PUBLIC[\s\S]*?FROM anon, authenticated[\s\S]*?GRANT EXECUTE ON FUNCTION[\s\S]*?TO service_role/);
+assert.match(edge, /case "notifications_read_all":\{const \{data,error\}=await supabase\.rpc\("mark_technician_notifications_read_all"/);
+assert.doesNotMatch(edge, /case "notifications_read_all":[\s\S]*?\.from\("technician_notifications"\)\.update\(\{is_read:true\}\)[\s\S]*?\.from\("notifications"\)\.update/);
+console.log("PASS atomic technician notification read-all contract");
