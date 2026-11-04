@@ -39,7 +39,15 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Capture dependency advisory details
-        run: npm audit --json || true
+        run: npm audit --json > npm-audit-report.json || true
+      - name: Upload dependency advisory report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-report
+          path: npm-audit-report.json
+          if-no-files-found: warn
+          retention-days: 14
       - run: npm run test:security
       - run: npm run test:migration-history
       - run: npm run test:booking-completion-counter
