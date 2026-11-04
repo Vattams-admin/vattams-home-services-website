@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Facebook, Instagram, Twitter, Youtube, MessageCircle, Globe, Map, LucideIcon } from 'lucide-react';
-import { fetchSiteSettings, SiteSettings } from '@/lib/siteSettings';
+import { SiteSettings } from '@/lib/siteSettings';
+import { getSocialLinksSettings } from '@/lib/socialLinksCache';
 
 type Variant = 'footer' | 'hero' | 'contact' | 'mobile';
 
@@ -25,32 +26,15 @@ const SOCIAL_ITEMS: SocialItem[] = [
   { key: 'website_url', icon: Globe, label: 'Website', bgClass: 'bg-gray-700', hoverClass: 'hover:bg-gray-600' },
 ];
 
-let cachedSettings: SiteSettings | null = null;
-let fetchPromise: Promise<SiteSettings> | null = null;
-
-async function getSettings(): Promise<SiteSettings> {
-  if (cachedSettings) return cachedSettings;
-  if (!fetchPromise) {
-    fetchPromise = fetchSiteSettings().then((s) => {
-      cachedSettings = s;
-      fetchPromise = null;
-      return s;
-    });
-  }
-  return fetchPromise;
-}
-
-export function refreshSocialLinksCache() {
-  cachedSettings = null;
-  fetchPromise = null;
-}
-
 export default function SocialLinks({ variant = 'footer' }: SocialLinksProps) {
-  const [settings, setSettings] = useState<SiteSettings | null>(cachedSettings);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
 
   useEffect(() => {
-    if (cachedSettings) return;
-    getSettings().then(setSettings);
+    let active = true;
+    getSocialLinksSettings().then((value) => { if (active) setSettings(value); }).catch((error: unknown) => {
+      console.error('[SocialLinks] Unable to load social settings:', error);
+    });
+    return () => { active = false; };
   }, []);
 
   if (!settings) return null;

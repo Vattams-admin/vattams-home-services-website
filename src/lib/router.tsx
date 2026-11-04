@@ -1,4 +1,6 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { useEffect, useState, useCallback, ReactNode } from 'react';
+import { RouterContext } from './routerContext';
+import type { RouteState } from './routerContext';
 
 export type Page =
   | 'home'
@@ -46,14 +48,6 @@ const CUSTOMER_PROTECTED_PAGES = new Set<Page>([
 const TECHNICIAN_PROTECTED_PAGES = new Set<Page>(['technician-dashboard']);
 const ADMIN_PROTECTED_PAGES = new Set<Page>(['admin-dashboard']);
 
-interface RouteState {
-  page: Page;
-  citySlug?: string;
-}
-interface RouterContextValue extends RouteState {
-  navigate: (page: Page, slug?: string) => void;
-}
-const RouterContext = createContext<RouterContextValue | undefined>(undefined);
 
 function hasSession(key: string): boolean {
   if (typeof window === 'undefined') return false;
@@ -136,7 +130,7 @@ export function RouterProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const navigate = (page: Page, slug?: string) => {
+  const navigate = useCallback((page: Page, slug?: string) => {
     const normalizedSlug = typeof slug === 'string' ? slug.trim().toLowerCase() : '';
     const route: RouteState = page === 'city-landing'
       ? (/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(normalizedSlug)
@@ -164,13 +158,8 @@ export function RouterProvider({ children }: { children: ReactNode }) {
       }
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, []);
 
   return <RouterContext.Provider value={{ ...route, navigate }}>{children}</RouterContext.Provider>;
 }
 
-export function useRouter(): RouterContextValue {
-  const ctx = useContext(RouterContext);
-  if (!ctx) throw new Error('useRouter must be used within a RouterProvider');
-  return ctx;
-}

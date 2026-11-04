@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Loader, User, Phone, Mail, MapPin, Home, Save, LogOut, Calendar, Briefcase, CheckCircle, Lock, Key } from 'lucide-react';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 import { Customer, SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase';
 import { customerData } from '@/lib/customerData';
 
@@ -82,7 +82,7 @@ export default function CustomerProfile() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [navigate]);
 
   useEffect(() => () => {
     bookingCountRequestVersion.current += 1;

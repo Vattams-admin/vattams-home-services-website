@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Loader, CheckCircle, XCircle, Calendar, User, Phone, MapPin, Wrench, FileText, Clock, ArrowRight, LogIn, Receipt, LucideIcon, Tag, Briefcase, Sparkles } from 'lucide-react';
 import { supabase, ServiceCategory, Customer, ServicePrice } from '@/lib/supabase';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 import { trackMarketingEvent } from '@/lib/marketingAnalytics';
 import { notifyCustomer } from '@/lib/notifications';
 import { calculatePricing, formatINR, type PricingBreakdown } from '@/lib/pricing';

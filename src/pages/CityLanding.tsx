@@ -5,7 +5,7 @@ import {
   ArrowRight, Clock, ShieldCheck, Award, ThumbsUp, Briefcase,
 } from 'lucide-react';
 import { CityData, SERVICE_CATEGORIES, cities } from '@/lib/cities';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 import { useSEO } from '@/lib/seo';
 
 const serviceIcons: Record<string, typeof Wrench> = {

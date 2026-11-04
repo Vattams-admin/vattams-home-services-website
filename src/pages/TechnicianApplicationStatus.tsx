@@ -10,7 +10,7 @@ import {
   LogOut,
   ArrowRight,
 } from 'lucide-react';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 import { Technician } from '@/lib/supabase';
 import { technicianData } from '@/lib/technicianData';
 

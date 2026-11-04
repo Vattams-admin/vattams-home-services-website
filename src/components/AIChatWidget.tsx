@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageSquareText, X, Send, Sparkles } from 'lucide-react';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 import { supabase } from '@/lib/supabase';
 import { formatINR } from '@/lib/pricing';
 import { cities } from '@/lib/cities';

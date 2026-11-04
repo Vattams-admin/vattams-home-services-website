@@ -1,5 +1,5 @@
 import { ArrowRight, Calendar, Phone, Home, Wind, Refrigerator, WashingMachine, Search, ShieldCheck, MapPin, Sparkles } from 'lucide-react';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 import SocialLinks from '@/components/SocialLinks';
 import SafeImage from '@/components/SafeImage';
 

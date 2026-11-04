@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Check, Briefcase, ChevronDown } from 'lucide-react';
 import CustomerServicePriceCards from '@/components/CustomerServicePriceCards';
 import ServicesExpansionGrid from '@/components/home/ServicesExpansionGrid';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 import { useSEO } from '@/lib/seo';
 
 const SERVICE_FAQS = [

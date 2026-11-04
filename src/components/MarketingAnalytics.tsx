@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 import { trackMarketingEvent, trackMarketingPageView } from '@/lib/marketingAnalytics';
 
 const PUBLIC_PAGE_PATHS: Record<string, string> = {

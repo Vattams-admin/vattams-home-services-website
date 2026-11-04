@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Loader, CreditCard, Download, CheckCircle, Clock, XCircle, FileText } from 'lucide-react';
-import { useRouter } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 import { Customer } from '@/lib/supabase';
 import { customerData } from '@/lib/customerData';
 import { PaymentRecord } from '@/lib/payments';

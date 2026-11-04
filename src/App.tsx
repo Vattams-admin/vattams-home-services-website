@@ -1,4 +1,5 @@
-import { RouterProvider, useRouter } from '@/lib/router';
+import { RouterProvider } from '@/lib/router';
+import { useRouter } from '@/lib/routerContext';
 import './styles/PremiumExperience.css';
 import { getCityBySlug } from '@/lib/cities';
 import Header from '@/components/layout/Header';
