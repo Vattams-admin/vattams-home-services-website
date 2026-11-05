@@ -408,7 +408,8 @@ async function startTechnicianRegistrationOtp(supabase: ReturnType<typeof create
     return otpJson({ error: "Could not start registration. Please try again." }, 500);
   }
   if (!await sendEmailOtp(email, otp)) {
-    await supabase.from("otp_codes").delete().eq("id", row.id);
+    const { error: cleanupError } = await supabase.from("otp_codes").delete().eq("id", row.id);
+    if (cleanupError) console.error("Could not remove undelivered technician registration OTP:", cleanupError.message);
     await releaseOtpCooldown(supabase, mobile, reservationToken);
     return otpJson({ error: "We could not send the verification email. Registration cannot continue until email delivery is available." }, 503);
   }
@@ -460,7 +461,8 @@ async function resendTechnicianRegistrationOtp(supabase: ReturnType<typeof creat
     return otpJson({ error: "Could not resend the code. Please try again." }, 500);
   }
   if (!await sendEmailOtp(email, otp)) {
-    await supabase.from("otp_codes").delete().eq("id", row.id);
+    const { error: cleanupError } = await supabase.from("otp_codes").delete().eq("id", row.id);
+    if (cleanupError) console.error("Could not remove undelivered technician resend OTP:", cleanupError.message);
     await releaseOtpCooldown(supabase, mobile, reservationToken);
     return otpJson({ error: "We could not send the verification email. Please try again later." }, 503);
   }
