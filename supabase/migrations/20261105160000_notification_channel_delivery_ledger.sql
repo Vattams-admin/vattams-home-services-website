@@ -49,8 +49,8 @@ DECLARE
   v_notification public.notifications;
 BEGIN
   IF p_channels IS NULL OR cardinality(p_channels) = 0 OR cardinality(p_channels) > 2
-     OR EXISTS (SELECT 1 FROM unnest(p_channels) AS channel WHERE channel NOT IN ('in_app', 'push'))
-     OR cardinality(p_channels) <> (SELECT count(DISTINCT channel) FROM unnest(p_channels) AS channel) THEN
+     OR EXISTS (SELECT 1 FROM unnest(p_channels) AS c(channel) WHERE c.channel NOT IN ('in_app', 'push'))
+     OR cardinality(p_channels) <> (SELECT count(DISTINCT c.channel) FROM unnest(p_channels) AS c(channel)) THEN
     RAISE EXCEPTION 'INVALID_NOTIFICATION_CHANNELS';
   END IF;
 
@@ -63,9 +63,9 @@ BEGIN
   ) RETURNING * INTO v_notification;
 
   INSERT INTO public.notification_channel_deliveries (notification_id, channel, status)
-  SELECT v_notification.id, channel,
-         CASE WHEN channel = 'in_app' THEN 'succeeded' ELSE 'pending' END
-  FROM unnest(p_channels) AS channel;
+  SELECT v_notification.id, c.channel,
+         CASE WHEN c.channel = 'in_app' THEN 'succeeded' ELSE 'pending' END
+  FROM unnest(p_channels) AS c(channel);
 
   RETURN to_jsonb(v_notification);
 END;
