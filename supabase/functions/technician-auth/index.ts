@@ -54,9 +54,14 @@ interface DocUrlBody {
 }
 
 function generateEmailOtp(): string {
+  // Rejection sampling avoids modulo bias across the 900,000 six-digit codes.
+  const range = 900_000;
+  const limit = Math.floor(0x1_0000_0000 / range) * range;
   const bytes = new Uint32Array(1);
-  crypto.getRandomValues(bytes);
-  return String(100000 + (bytes[0] % 900000));
+  while (true) {
+    crypto.getRandomValues(bytes);
+    if (bytes[0] < limit) return String(100_000 + (bytes[0] % range));
+  }
 }
 async function hashEmailOtp(otp: string): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(otp));
