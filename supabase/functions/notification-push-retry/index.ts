@@ -106,11 +106,15 @@ Deno.serve(async (req: Request) => {
         const providerFailures = Number.isInteger(payload?.failed) && payload.failed >= 0
           ? payload.failed
           : 1;
+        const trackingFailures = Number.isInteger(payload?.trackingFailures) && payload.trackingFailures >= 0
+          ? payload.trackingFailures
+          : 0;
         return {
           deliveryId: claim.delivery_id,
           trackedBySender: true,
           senderAccepted: response.ok,
           providerFailures,
+          trackingFailures,
           status: response.status,
           deferSucceeded: null,
         };
@@ -130,15 +134,17 @@ Deno.serve(async (req: Request) => {
     const deferFailures = results.filter((item) => item.deferSucceeded === false).length;
     const senderFailures = results.filter((item) => item.trackedBySender && !item.senderAccepted).length;
     const providerFailures = results.reduce((total, item) => total + (item.providerFailures || 0), 0);
+    const trackingFailures = results.reduce((total, item) => total + (item.trackingFailures || 0), 0);
     return out({
       claimed: (claims || []).length,
       tracked: results.filter((item) => item.trackedBySender).length,
       senderFailures,
       providerFailures,
+      trackingFailures,
       deferred: results.filter((item) => item.deferSucceeded === true).length,
       deferFailures,
       results,
-    }, deferFailures > 0 ? 500 : providerFailures > 0 || senderFailures > 0 ? 502 : 200);
+    }, deferFailures > 0 ? 500 : providerFailures > 0 || trackingFailures > 0 || senderFailures > 0 ? 502 : 200);
   } catch (error) {
     console.error("[notification-push-retry] unexpected failure", error instanceof Error ? error.message : "unknown");
     return out({ error: "Unexpected retry worker failure" }, 500);
