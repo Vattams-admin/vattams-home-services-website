@@ -232,7 +232,7 @@ Deno.serve(async (req: Request) => {
         if (String(otpRecord.code) !== submittedHash) {
           const { data: attempts, error: attemptError } = await supabase.rpc("increment_otp_attempt_count", { p_otp_id: otpRecord.id });
           if (attemptError || attempts == null) {
-            console.error("Could not atomically increment customer OTP attempts:", attemptError?.message);
+            console.error("Could not atomically increment customer OTP attempts:", attemptError?.message || "RPC returned no attempt count");
             return errorResponse("Could not verify OTP right now. Please try again.", 500);
           }
           const nextAttempts = Number(attempts);
