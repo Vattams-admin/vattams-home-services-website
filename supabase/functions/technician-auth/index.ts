@@ -323,14 +323,21 @@ async function resolveKycPaths(
     .eq("code", await sha256Hex(uploadToken)).eq("verified", false)
     .gt("expires_at", new Date().toISOString())
     .order("created_at", { ascending: false }).limit(1).maybeSingle();
-  if (error || !session?.registration_data?.draft_id ||
+  if (error) {
+    console.error("Technician KYC path session lookup failed:", error.message);
+    throw new Error("KYC_PATH_SESSION_LOOKUP_FAILED");
+  }
+  if (!session?.registration_data?.draft_id ||
       String(session.registration_data.email || "").toLowerCase() !== email) return null;
 
   const draftId = String(session.registration_data.draft_id);
   if (!/^[0-9a-f-]{36}$/i.test(draftId)) return null;
   const { data: files, error: listError } = await supabase.storage.from("technician-docs")
     .list(draftId, { limit: 20, offset: 0 });
-  if (listError || !files) return null;
+  if (listError || !files) {
+    console.error("Technician KYC Storage listing failed:", listError?.message || "No file listing returned.");
+    throw new Error("KYC_STORAGE_LIST_FAILED");
+  }
 
   const findPath = (type: string) => {
     const matches = files.filter((item) => item.name.toLowerCase() === type.toLowerCase());
@@ -363,7 +370,13 @@ async function startTechnicianRegistrationOtp(supabase: ReturnType<typeof create
   }
   if (existingEmail) return otpJson({ error: "This email address is already registered." }, 409);
   const uploadToken = String((body as RegisterBody & { kyc_upload_token?: string }).kyc_upload_token || "");
-  const kycPaths = await resolveKycPaths(supabase, mobile, email, uploadToken);
+  let kycPaths: Awaited<ReturnType<typeof resolveKycPaths>>;
+  try {
+    kycPaths = await resolveKycPaths(supabase, mobile, email, uploadToken);
+  } catch (error) {
+    console.error("Technician registration KYC validation failed:", error instanceof Error ? error.message : String(error));
+    return otpJson({ error: "Unable to validate uploaded KYC documents. Please try again." }, 503);
+  }
   if (!kycPaths) return otpJson({ error: "Upload your Aadhaar and PAN documents through the secure registration upload flow before requesting email verification." }, 400);
 
   // Complete fallible cryptographic/password preparation before reserving the cooldown.
