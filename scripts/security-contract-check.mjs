@@ -33,6 +33,7 @@ const [otpReservationMigration, paymentAuth, paymentsLib, adminData, customerDat
 ]);
 
 const notificationWorker = await read('public/firebase-messaging-sw.js');
+const viteConfig = await read('vite.config.ts');
 
 const extractLedgerEventTypes = (source, declaration) => {
   const match = source.match(new RegExp(`const ${declaration} = \\[([\\s\\S]*?)\\]`));
@@ -41,6 +42,7 @@ const extractLedgerEventTypes = (source, declaration) => {
 };
 
 const checks = [
+  ['Vite dev and preview servers bind to loopback unless explicitly overridden', viteConfig.includes("env.VITE_DEV_HOST || '127.0.0.1'") && viteConfig.includes("env.VITE_PREVIEW_HOST || '127.0.0.1'") && viteConfig.includes('host: devHost') && viteConfig.includes('host: previewHost') && !viteConfig.includes("host: '0.0.0.0'")],
   ['notification clicks reject external and malformed payload destinations', notificationWorker.includes('candidateUrl.origin === self.location.origin') && notificationWorker.includes('let targetUrl = `${self.location.origin}/`') && notificationWorker.includes('catch {') && !notificationWorker.includes('const targetUrl = new URL(requestedUrl, self.location.origin).href')],
   ['admin-auth rejects unsupported methods before parsing JSON', adminAuth.includes('if (req.method !== "POST")') && adminAuth.indexOf('if (req.method !== "POST")') < adminAuth.indexOf('await req.json()') && adminAuth.includes('"Access-Control-Allow-Methods": "POST, OPTIONS"')],
   ['customer-auth rejects unsupported methods before parsing JSON', customerAuth.includes('if (req.method !== "POST")') && customerAuth.indexOf('if (req.method !== "POST")') < customerAuth.indexOf('await req.json()') && customerAuth.includes('"Access-Control-Allow-Methods": "POST, OPTIONS"')],
