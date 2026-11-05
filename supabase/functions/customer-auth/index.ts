@@ -191,13 +191,15 @@ Deno.serve(async (req: Request) => {
         if (pendingError || !pendingRow) {
           if (pendingError) console.error("Customer pending registration update failed:", pendingError.message);
           else console.error("Customer pending registration update matched no OTP row.");
-          await supabase.from("otp_codes").delete().eq("id", otpRow.id);
+          const { error: cleanupError } = await supabase.from("otp_codes").delete().eq("id", otpRow.id);
+          if (cleanupError) console.error("Could not remove unusable customer registration OTP:", cleanupError.message);
           await releaseOtpCooldown(supabase, mobile, "registration", reservationToken);
           return errorResponse("Failed to prepare registration. Please try again.", 500);
         }
         const delivered = await sendEmailOtp(normalizedEmail, otp, "registration");
         if (!delivered) {
-          await supabase.from("otp_codes").delete().eq("id", otpRow.id);
+          const { error: cleanupError } = await supabase.from("otp_codes").delete().eq("id", otpRow.id);
+          if (cleanupError) console.error("Could not remove undelivered customer OTP:", cleanupError.message);
           await releaseOtpCooldown(supabase, mobile, "registration", reservationToken);
           return errorResponse("We could not send the verification email. Registration is paused until email delivery is available. Please try again later.", 503);
         }
@@ -356,7 +358,8 @@ Deno.serve(async (req: Request) => {
           return errorResponse("Failed to generate OTP. Please try again.");
         }
         if (!await sendEmailOtp(destinationEmail, otp, "forgot_password")) {
-          await supabase.from("otp_codes").delete().eq("id", otpRow.id);
+          const { error: cleanupError } = await supabase.from("otp_codes").delete().eq("id", otpRow.id);
+          if (cleanupError) console.error("Could not remove undelivered customer password-reset OTP:", cleanupError.message);
           await releaseOtpCooldown(supabase, mobile, "forgot_password", reservationToken);
           return errorResponse("We could not send the verification email. Please try again later.", 503);
         }
@@ -552,7 +555,8 @@ Deno.serve(async (req: Request) => {
           return errorResponse("Failed to generate OTP. Please try again.");
         }
         if (!await sendEmailOtp(destinationEmail, otp, purpose)) {
-          await supabase.from("otp_codes").delete().eq("id", newRow.id);
+          const { error: cleanupError } = await supabase.from("otp_codes").delete().eq("id", newRow.id);
+          if (cleanupError) console.error("Could not remove undelivered customer resend OTP:", cleanupError.message);
           await releaseOtpCooldown(supabase, mobile, String(purpose), reservationToken);
           return errorResponse("We could not send the verification email. Please try again later.", 503);
         }
