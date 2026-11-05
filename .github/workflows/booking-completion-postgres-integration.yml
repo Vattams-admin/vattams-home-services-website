@@ -1,0 +1,63 @@
+name: PostgreSQL booking completion integration
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/20261102180000_idempotent_booking_completion_financial_event.sql"
+      - "supabase/migrations/20261104070000_booking_completion_null_counter_fix.sql"
+      - "supabase/tests/booking-completion/**"
+      - ".github/workflows/booking-completion-postgres-integration.yml"
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/20261102180000_idempotent_booking_completion_financial_event.sql"
+      - "supabase/migrations/20261104070000_booking_completion_null_counter_fix.sql"
+      - "supabase/tests/booking-completion/**"
+      - ".github/workflows/booking-completion-postgres-integration.yml"
+
+jobs:
+  booking-completion-postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: booking_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d booking_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create minimal production-shaped fixture
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/booking-completion/fixture.sql
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/booking_test
+      - name: Apply booking completion migrations in production order
+        run: |
+          set -euo pipefail
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261102180000_idempotent_booking_completion_financial_event.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261104070000_booking_completion_null_counter_fix.sql
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/booking_test
+      - name: Exercise completion, replay, rollback and retry
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/booking-completion/booking-completion.integration.sql
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/booking_test
+      - name: Race two independent completion transactions
+        run: |
+          set -euo pipefail
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "BEGIN; UPDATE public.bookings SET status='completed' WHERE id='30000000-0000-0000-0000-000000000003'; SELECT pg_sleep(2); COMMIT" &
+          first=$!
+          sleep 0.2
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "UPDATE public.bookings SET status='completed' WHERE id='30000000-0000-0000-0000-000000000003'" &
+          second=$!
+          wait "$first"
+          wait "$second"
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/booking-completion/concurrency-assert.sql
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/booking_test
