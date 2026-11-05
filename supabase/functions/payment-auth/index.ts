@@ -139,6 +139,10 @@ async function submitUtr(body: Record<string, unknown>) {
   if (error?.code === "23505") {
     return json({ error: "This UTR has already been submitted for another payment" }, 409);
   }
+  if (error) {
+    console.error("[payment-auth submit-utr] payment update failed", { code: error.code ?? null });
+    return json({ error: "Payment service is temporarily unavailable. Please try again." }, 503);
+  }
   if (data) return json({ payment: data });
 
   // The update may have committed even if its HTTP response was lost. Accept
@@ -153,7 +157,11 @@ async function submitUtr(body: Record<string, unknown>) {
     .eq("utr", utr)
     .maybeSingle();
 
-  if (!retryError && existing) return json({ payment: existing });
+  if (retryError) {
+    console.error("[payment-auth submit-utr] exact-retry lookup failed", { code: retryError.code ?? null });
+    return json({ error: "Payment service is temporarily unavailable. Please try again." }, 503);
+  }
+  if (existing) return json({ payment: existing });
   return json({ error: "Payment is no longer pending or authorization is invalid" }, 409);
 }
 
@@ -173,14 +181,22 @@ async function verifyPayment(body: Record<string, unknown>) {
     .eq("token", adminSessionToken)
     .maybeSingle();
 
-  if (sessionError || !session || session.admin_id !== adminId || new Date(session.expires_at).getTime() <= Date.now()) {
+  if (sessionError) {
+    console.error("[payment-auth verify] admin session lookup failed", { code: sessionError.code ?? null });
+    return json({ error: "Payment service is temporarily unavailable. Please try again." }, 503);
+  }
+  if (!session || session.admin_id !== adminId || new Date(session.expires_at).getTime() <= Date.now()) {
     return json({ error: "Not authorized" }, 401);
   }
 
   const { data: admin, error: adminError } = await supabase
     .from("admin_users").select("id,role,is_active").eq("id", adminId).maybeSingle();
 
-  if (adminError || !admin || admin.role !== "super_admin" || admin.is_active !== true) {
+  if (adminError) {
+    console.error("[payment-auth verify] admin account lookup failed", { code: adminError.code ?? null });
+    return json({ error: "Payment service is temporarily unavailable. Please try again." }, 503);
+  }
+  if (!admin || admin.role !== "super_admin" || admin.is_active !== true) {
     return json({ error: "Not authorized" }, 401);
   }
 
@@ -200,7 +216,11 @@ async function verifyPayment(body: Record<string, unknown>) {
 
   const { data, error } = await verificationQuery.select("id,payment_id,payee_type,payee_id,payee_name,upi_id,amount,purpose,reference_id,utr,status,notes,verified_by,created_at,verified_at").single();
 
-  if (error || !data) return json({ error: error?.message || "Payment is no longer pending or could not be updated" }, 409);
+  if (error) {
+    console.error("[payment-auth verify] payment update failed", { code: error.code ?? null });
+    return json({ error: "Payment service is temporarily unavailable. Please try again." }, 503);
+  }
+  if (!data) return json({ error: "Payment is no longer pending or could not be updated" }, 409);
   return json({ payment: data });
 }
 
