@@ -51,6 +51,13 @@ BEGIN
     RAISE EXCEPTION 'INVALID_RETRY_CLAIM_PARAMETERS';
   END IF;
 
+  UPDATE public.notification_push_token_deliveries d
+     SET status = 'terminal', lease_until = NULL,
+         last_error_code = COALESCE(last_error_code, 'MAX_ATTEMPTS_EXCEEDED'),
+         updated_at = now()
+   WHERE d.status IN ('pending', 'retryable')
+     AND d.attempt_count >= p_max_attempts;
+
   RETURN QUERY
   WITH due AS (
     SELECT d.id
