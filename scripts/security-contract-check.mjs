@@ -123,6 +123,7 @@ const checks = [
   ['KYC upload does not require Content-Length', technicianAuth.includes('if (rawContentLength !== null)')],
   ['KYC multipart body is size-bounded before parsing', technicianAuth.includes('readBoundedUploadBody(req, maxRequestBytes)') && technicianAuth.indexOf('readBoundedUploadBody(req, maxRequestBytes)') < technicianAuth.indexOf('.formData()')],
   ['KYC upload stores into the private technician-docs bucket', technicianAuth.includes('storage.from("technician-docs")')],
+  ['KYC upload session cap is reserved atomically and failed inserts release their own reservation', technicianAuth.includes('reserve_technician_kyc_upload_session') && technicianAuth.includes('release_technician_kyc_upload_session') && !technicianAuth.includes('const recentCutoff = new Date(Date.now() - 60 * 60 * 1000)')],
   ['registration derives KYC paths from the upload session', technicianAuth.includes('resolveKycPaths(') && technicianAuth.includes('kyc_upload_token')],
   ['technician-data blocks protected actions for inactive accounts', technicianData.includes('sessionTechnician.status!=="active"') && technicianData.includes('Protected actions are unavailable')],
   ['technician job transitions use the atomic RPC', technicianData.includes('transition_technician_job_atomic')],
