@@ -1,4 +1,4 @@
-import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase';
+// Registration uploads are routed through the technician-auth Edge Function.
 
 export const TECHNICIAN_SERVICES = [
   // Keep registration values identical to customer booking categories so
@@ -350,19 +350,15 @@ export type DocType = 'aadhaar' | 'pan' | 'dl' | 'profile_photo';
 
 const PRIVATE_DOC_TYPES: DocType[] = ['aadhaar', 'pan', 'dl'];
 
-function bucketForDocType(docType: DocType): string {
-  return docType === 'profile_photo' ? 'technician-photos' : 'technician-docs';
-}
-
 /**
- * Uploads KYC documents through the technician-auth Edge Function. The
+ * Uploads KYC documents and profile photos through technician-auth. The
  * browser receives only a short-lived registration-scoped capability; the
  * capability is stored server-side as a SHA-256 hash. The service-role key
- * never leaves the Edge Function. Profile photos remain in their separate
- * public bucket and use the existing public upload path.
+ * never leaves the Edge Function. KYC files remain private; profile photos
+ * are written server-side to the public-read photo bucket.
  *
- * Returns the private Storage object path for KYC documents or the public
- * URL for a profile photo.
+ * Returns private Storage object paths for KYC documents and a public URL
+ * for the profile photo.
  */
 const KYC_UPLOAD_SESSION_KEY = 'vattams_technician_kyc_upload_session_v1';
 
@@ -431,33 +427,27 @@ export function uploadDocumentWithProgress(
     }
 
     const isPrivateKyc = PRIVATE_DOC_TYPES.includes(docType);
-    const bucket = bucketForDocType(docType);
-    const ext = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
-    const path = `${mobile}/${docType}.${ext}`;
+    if (docType === 'profile_photo' && !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      reject(new Error('Profile photos must be JPG, PNG, or WebP images.'));
+      return;
+    }
 
     const sendRequest = async () => {
-      let uploadUrl: string;
-      let formData: FormData | null = null;
-      if (isPrivateKyc) {
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(technicianEmail.trim())) {
-          throw new Error('Enter your email address before uploading identity documents.');
-        }
-        const session = await getKycUploadSession(mobile, technicianEmail.trim().toLowerCase());
-        uploadUrl = `${TECHNICIAN_AUTH_URL}/upload-kyc-document`;
-        formData = new FormData();
-        formData.append('mobile', mobile);
-        formData.append('upload_token', session.upload_token);
-        formData.append('doc_type', docType);
-        formData.append('file', file, file.name);
-      } else {
-        uploadUrl = `${SUPABASE_URL}/storage/v1/object/${bucket}/${encodeURIComponent(path).replace(/%2F/g, '/')}`;
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(technicianEmail.trim())) {
+        throw new Error('Enter your email address before uploading registration documents.');
       }
+      const session = await getKycUploadSession(mobile, technicianEmail.trim().toLowerCase());
+      const uploadUrl = `${TECHNICIAN_AUTH_URL}/upload-kyc-document`;
+      const formData = new FormData();
+      formData.append('mobile', mobile);
+      formData.append('upload_token', session.upload_token);
+      formData.append('doc_type', docType);
+      formData.append('file', file, file.name);
 
       const xhr = new XMLHttpRequest();
       xhr.open('POST', uploadUrl);
-      xhr.setRequestHeader('Authorization', `Bearer ${isPrivateKyc ? TECHNICIAN_ANON_KEY : SUPABASE_ANON_KEY}`);
-      xhr.setRequestHeader('apikey', isPrivateKyc ? TECHNICIAN_ANON_KEY : SUPABASE_ANON_KEY);
-      if (!isPrivateKyc) xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+      xhr.setRequestHeader('Authorization', `Bearer ${TECHNICIAN_ANON_KEY}`);
+      xhr.setRequestHeader('apikey', TECHNICIAN_ANON_KEY);
 
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable && onProgress) onProgress(Math.round((event.loaded / event.total) * 100));
@@ -473,9 +463,10 @@ export function uploadDocumentWithProgress(
               return;
             }
             resolve(result.path);
+          } else if (typeof result.public_url === 'string' && result.public_url) {
+            resolve(result.public_url);
           } else {
-            const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-            resolve(data.publicUrl);
+            reject(new Error('Secure upload service returned an invalid profile photo URL.'));
           }
         } else {
           let message = `Upload failed (${xhr.status}). Please try again.`;

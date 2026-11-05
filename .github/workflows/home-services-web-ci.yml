@@ -58,5 +58,6 @@ jobs:
       - run: npm run test:registration-payment-activation
       - run: npm run test:customer-data-input-validation
       - run: npm run test:technician-data-query-errors
+      - run: npm run test:technician-photo-upload
       - run: npm run typecheck
       - run: npm run build
