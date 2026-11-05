@@ -61,5 +61,6 @@ jobs:
       - run: npm run test:technician-photo-upload
       - run: npm run test:notification-push-retry-worker
       - run: npm run test:push-delivery-ledger
+      - run: npm run test:atomic-push-dispatch-claim
       - run: npm run typecheck
       - run: npm run build
