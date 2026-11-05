@@ -2,6 +2,45 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 const corsHeaders={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"POST,OPTIONS","Access-Control-Allow-Headers":"Content-Type,Authorization,X-Client-Info,Apikey"};
 const db=createClient(Deno.env.get("SUPABASE_URL")!,Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+const MAX_ADMIN_REQUEST_BYTES = 16 * 1024;
+class AdminRequestTooLargeError extends Error {}
+class InvalidAdminRequestError extends Error {}
+async function readBoundedAdminJson(req: Request): Promise<Record<string, unknown>> {
+  const rawLength = req.headers.get("content-length");
+  if (rawLength !== null) {
+    if (!/^\\d+$/.test(rawLength)) throw new InvalidAdminRequestError("Invalid Content-Length");
+    if (Number(rawLength) > MAX_ADMIN_REQUEST_BYTES) throw new AdminRequestTooLargeError();
+  }
+  if (!req.body) throw new InvalidAdminRequestError("Request body is required");
+  const reader = req.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      totalBytes += value.byteLength;
+      if (totalBytes > MAX_ADMIN_REQUEST_BYTES) {
+        await reader.cancel();
+        throw new AdminRequestTooLargeError();
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const bytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  let parsed: unknown;
+  try { parsed = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)); }
+  catch { throw new InvalidAdminRequestError("Request body must be valid JSON"); }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new InvalidAdminRequestError("Request body must be a JSON object");
+  }
+  return parsed as Record<string, unknown>;
+}
 async function admin(token:string,id:string){const {data:s}=await db.from("admin_auth_sessions").select("admin_id,expires_at").eq("token",token).maybeSingle();if(!s||s.admin_id!==id||new Date(s.expires_at)<=new Date())return false;const {data:a}=await db.from("admin_users").select("id,role,is_active").eq("id",id).maybeSingle();return !!a&&a.role==="super_admin"&&a.is_active===true;}
 function sanitizeSensitiveFields(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(sanitizeSensitiveFields);
@@ -21,7 +60,7 @@ function sanitizeSensitiveFields(value: unknown): unknown {
   return safe;
 }
 function out(data:unknown,status=200){return new Response(JSON.stringify(sanitizeSensitiveFields(data)),{status,headers:{...corsHeaders,"Content-Type":"application/json"}})}
-Deno.serve(async req=>{if(req.method==="OPTIONS")return new Response(null,{status:200,headers:corsHeaders});if(req.method!=="POST")return new Response(JSON.stringify({error:"Method not allowed"}),{status:405,headers:{...corsHeaders,"Content-Type":"application/json","Allow":"POST, OPTIONS"}});try{const b=await req.json();if(!await admin(String(b.admin_session_token||""),String(b.admin_id||"")))return out({error:"Unauthorized"},401);
+Deno.serve(async req=>{if(req.method==="OPTIONS")return new Response(null,{status:200,headers:corsHeaders});if(req.method!=="POST")return new Response(JSON.stringify({error:"Method not allowed"}),{status:405,headers:{...corsHeaders,"Content-Type":"application/json","Allow":"POST, OPTIONS"}});try{const b=await readBoundedAdminJson(req);if(!await admin(String(b.admin_session_token||""),String(b.admin_id||"")))return out({error:"Unauthorized"},401);
 switch(b.action){
 case "analytics_summary":{const [{data:bookings},{data:technicians},{data:customers},{data:reviews}]=await Promise.all([db.from("bookings").select("status,created_at,total_amount,amount,job_completed_at,customer_id,mobile_number"),db.from("technicians").select("status,wallet_locked"),db.from("customers").select("id"),db.from("reviews").select("rating")]);const today=new Date().toISOString().split("T")[0];const bs=bookings||[];const ts=technicians||[];const cs=customers||[];const rs=reviews||[];const todayBs=bs.filter((b: Record<string, unknown>)=>b.created_at?.startsWith(today));const active=new Set(bs.filter((b: Record<string, unknown>)=>b.created_at>new Date(Date.now()-30*86400000).toISOString()).map((b: Record<string, unknown>)=>b.customer_id||b.mobile_number));const avg=rs.length?rs.reduce((n: Record<string, unknown>,r: Record<string, unknown>)=>n+Number(r.rating||0),0)/rs.length:0;return out({summary:{todayRevenue:todayBs.filter((b: Record<string, unknown>)=>b.status==="completed").reduce((n: Record<string, unknown>,b: Record<string, unknown>)=>n+Number(b.total_amount??b.amount??0),0),pendingBookings:bs.filter((b: Record<string, unknown>)=>["pending","assigned","in_progress","job_started"].includes(b.status)).length,cancelledJobs:bs.filter((b: Record<string, unknown>)=>b.status==="cancelled").length,availableTechnicians:ts.filter((t: Record<string, unknown>)=>t.status==="active"&&!t.wallet_locked).length,inactiveCustomers:Math.max(0,cs.length-active.size),totalCustomers:cs.length,totalTechnicians:ts.length,newBookingsToday:todayBs.length,completedJobsToday:bs.filter((b: Record<string, unknown>)=>b.status==="completed"&&b.job_completed_at?.startsWith(today)).length,avgRating:Math.round(avg*10)/10}});}
 case "analytics_revenue":{const days=Math.min(90,Math.max(1,Number(b.days)||30));const {data:bookings,error}=await db.from("bookings").select("total_amount,amount,status,created_at").order("created_at",{ascending:true}).limit(2000);if(error)return out({error:"Unable to load analytics"},500);const cutoff=Date.now()-days*86400000;const map=new Map<string,{revenue:number;bookings:number}>();for(const x of (bookings||[]) as Array<Record<string, unknown>>){if(new Date(x.created_at).getTime()<cutoff)continue;const date=x.created_at.split("T")[0];const v=map.get(date)||{revenue:0,bookings:0};v.bookings++;if(x.status==="completed")v.revenue+=Number(x.total_amount??x.amount??0);map.set(date,v)}return out({revenueData:Array.from(map.entries()).map(([date,v])=>({date,...v}))});}
@@ -113,4 +152,4 @@ case "marketplace_city_availability_save": {
   return out({ availability: data });
 }
 
-default:return out({error:"Invalid action"},400)}}catch{return out({error:"Unexpected server error"},500)}});
+default:return out({error:"Invalid action"},400)}}catch(err){if(err instanceof AdminRequestTooLargeError)return out({error:"Request body exceeds the 16 KB limit"},413);if(err instanceof InvalidAdminRequestError)return out({error:err.message},400);return out({error:"Unexpected server error"},500)}});
