@@ -19,7 +19,7 @@ Deno.serve(async req=>{
     const b=await req.json();
     const input=b.input||{};
     if(!input.recipientType||!input.recipientId||!input.title||!input.message||!input.type) return out({error:"Notification fields are required"},400);
-    if(input.channels!==undefined && (!Array.isArray(input.channels) || input.channels.length>2
+    if(input.channels!==undefined && (!Array.isArray(input.channels) || input.channels.length===0 || input.channels.length>2
       || new Set(input.channels).size!==input.channels.length
       || input.channels.some((channel:unknown)=>typeof channel!=="string" || !["in_app","push"].includes(channel)))){
       return out({error:"Unsupported notification channel. Only in_app and push are currently available."},400);
@@ -85,9 +85,13 @@ Deno.serve(async req=>{
     if(!authorized) return out({error:"Unauthorized"},401);
 
     const row={recipient_type:input.recipientType,recipient_id:String(input.recipientId),title:String(input.title).slice(0,200),message:String(input.message).slice(0,2000),type:String(input.type).slice(0,100),reference_type:input.referenceType?String(input.referenceType).slice(0,100):null,reference_id:input.referenceId?String(input.referenceId):null,channels:Array.isArray(input.channels)?input.channels:["in_app","push"],status:"sent",is_read:false};
-    const {data,error}=await db.from("notifications").insert(row).select("*").single();
-    if(error){
-      console.error("[notification-ops] notification insert failed",{code:error.code??null});
+    const {data,error}=await db.rpc("create_notification_with_channel_deliveries",{
+      p_recipient_type:row.recipient_type,p_recipient_id:row.recipient_id,p_title:row.title,
+      p_message:row.message,p_type:row.type,p_reference_type:row.reference_type,
+      p_reference_id:row.reference_id,p_channels:row.channels,
+    });
+    if(error || !data){
+      console.error("[notification-ops] notification and channel ledger creation failed",{code:error?.code??null});
       return out({error:"Unable to create notification. Please try again."},500);
     }
 
@@ -127,6 +131,53 @@ Deno.serve(async req=>{
       }
     }
 
-    return out({ notification: data, pushDelivery });
+    let deliveryTrackingError = false;
+    if (row.channels.includes("push")) {
+      const result = pushDelivery && typeof pushDelivery === "object"
+        ? pushDelivery as Record<string, unknown>
+        : {};
+      const sent = Number.isInteger(result.sent) ? Number(result.sent) : 0;
+      const failed = Number.isInteger(result.failed) ? Number(result.failed) : 0;
+      const hasCounts = Number.isInteger(result.sent) && Number.isInteger(result.failed) && Number.isInteger(result.total);
+      const total = hasCounts ? Number(result.total) : 0;
+      const deliveryStatus = hasCounts && total === 0
+        ? "skipped"
+        : !hasCounts
+          ? "failed"
+        : sent > 0 && failed > 0
+          ? "partial"
+          : failed > 0
+            ? "failed"
+            : sent > 0
+              ? "succeeded"
+              : "failed";
+      const errorCode = hasCounts && total === 0
+        ? "NO_ACTIVE_TOKENS"
+        : !hasCounts
+          ? "PUSH_RESPONSE_MISSING_COUNTS"
+        : deliveryStatus === "failed" || deliveryStatus === "partial"
+          ? "PUSH_DELIVERY_INCOMPLETE"
+          : null;
+      const { error: deliveryUpdateError } = await db
+        .from("notification_channel_deliveries")
+        .update({
+          status: deliveryStatus,
+          attempt_count: 1,
+          delivered_count: sent,
+          failed_count: failed,
+          error_code: errorCode,
+          provider_accepted_at: sent > 0 ? new Date().toISOString() : null,
+          last_attempt_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("notification_id", data.id)
+        .eq("channel", "push");
+      if (deliveryUpdateError) {
+        deliveryTrackingError = true;
+        console.error("[notification-ops] push delivery outcome persistence failed", { code: deliveryUpdateError.code ?? null });
+      }
+    }
+
+    return out({ notification: data, pushDelivery, deliveryTracking: "per_channel", deliveryTrackingError });
   }catch{return out({error:"Unexpected server error"},500)}
 });
