@@ -421,9 +421,6 @@ Deno.serve(async (req: Request) => {
           if (!account) return errorResponse("No account found with this mobile number");
         }
 
-        const recentCutoff = new Date(Date.now() - 60 * 1000).toISOString();
-        const { data: recentOtp } = await supabase.from("otp_codes").select("id").eq("mobile", mobile).eq("purpose", purpose).gte("created_at", recentCutoff).limit(1).maybeSingle();
-        if (recentOtp) return errorResponse("Please wait 60 seconds before requesting another OTP.", 429);
         let pendingRegistration: Record<string, unknown> | null = null;
         let destinationEmail = "";
         if (purpose === "registration") {
@@ -436,14 +433,25 @@ Deno.serve(async (req: Request) => {
           destinationEmail = String(account?.email || "").trim().toLowerCase();
           if (!destinationEmail) return errorResponse("This account does not have a verified email address.");
         }
+        let reservationToken: string | null;
+        try {
+          reservationToken = await reserveOtpCooldown(supabase, mobile, String(purpose));
+        } catch {
+          return errorResponse("OTP requests are temporarily unavailable. Please try again later.", 503);
+        }
+        if (!reservationToken) return errorResponse("Please wait 60 seconds before requesting another OTP.", 429);
         const otp = generateOTP();
         const otpId = crypto.randomUUID();
         const otpHash = await hashOTP(otp, mobile, purpose, otpId);
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
         const { data: newRow, error: otpError } = await supabase.from("otp_codes").insert({ id: otpId, mobile, code: otpHash, purpose, expires_at: expiresAt, ...(pendingRegistration ? { registration_data: pendingRegistration } : {}) }).select("id").single();
-        if (otpError || !newRow) return errorResponse("Failed to generate OTP. Please try again.");
+        if (otpError || !newRow) {
+          await releaseOtpCooldown(supabase, mobile, String(purpose), reservationToken);
+          return errorResponse("Failed to generate OTP. Please try again.");
+        }
         if (!await sendEmailOtp(destinationEmail, otp, purpose)) {
           await supabase.from("otp_codes").delete().eq("id", newRow.id);
+          await releaseOtpCooldown(supabase, mobile, String(purpose), reservationToken);
           return errorResponse("We could not send the verification email. Please try again later.", 503);
         }
         // Preserve the previous OTP if delivery fails; replace older rows only
