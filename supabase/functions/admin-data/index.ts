@@ -9,8 +9,8 @@ class InvalidAdminRequestError extends Error {}
 async function readBoundedAdminJson(req: Request): Promise<Record<string, unknown>> {
   const rawLength = req.headers.get("content-length");
   if (rawLength !== null) {
-    if (!/^\\d+$/.test(rawLength)) throw new InvalidAdminRequestError("Invalid Content-Length");
-    if (Number(rawLength) > MAX_ADMIN_REQUEST_BYTES) throw new AdminRequestTooLargeError();
+    if (!/^\d+$/.test(rawLength)) throw new InvalidAdminRequestError("Invalid Content-Length");
+    if (Number(rawLength) > MAX_ADMIN_REQUEST_BYTES) throw new AdminRequestTooLargeError("Request body exceeds the 16 KB limit");
   }
   if (!req.body) throw new InvalidAdminRequestError("Request body is required");
   const reader = req.body.getReader();
