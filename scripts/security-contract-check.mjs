@@ -35,6 +35,7 @@ const [otpReservationMigration, paymentAuth, paymentsLib, adminData, customerDat
 const notificationDeliveryMigration = await read('supabase/migrations/20261105160000_notification_channel_delivery_ledger.sql');
 const pushRetryMigration = await read('supabase/migrations/20261105180000_notification_push_token_retry_ledger.sql');
 const pushSender = await read('supabase/functions/send-push-notification/index.ts');
+const pushRetryWorker = await read('supabase/functions/notification-push-retry/index.ts');
 const notificationsLib = await read('src/lib/notifications.ts');
 const notificationWorker = await read('public/firebase-messaging-sw.js');
 const viteConfig = await read('vite.config.ts');
@@ -230,6 +231,8 @@ const checks = [
   ['per-device push retries are bounded and use exponential backoff', pushSender.includes('attempts >= 5') && pushSender.includes('30 * (2 ** Math.min(attempts - 1, 7))') && pushSender.includes('status: ok ? "succeeded" : terminal || attempts >= 5 ? "terminal" : "retryable"')],
   ['retry sender can target selected device IDs and preserves successful outcomes', pushSender.includes('fcmTokenIds?: string[]') && pushSender.includes('tokenQuery.in("id", fcmTokenIds)') && pushSender.includes('.neq("status", "succeeded")')],
   ['retry claims use SKIP LOCKED leases and restrict execution to service_role', pushRetryMigration.includes('FOR UPDATE SKIP LOCKED') && pushRetryMigration.includes('lease_until') && pushRetryMigration.includes("status = 'terminal'") && pushRetryMigration.includes('TO service_role') && pushRetryMigration.includes('FROM PUBLIC, anon, authenticated')],
+  ['retry worker requires service-role authorization and atomically claims bounded work', pushRetryWorker.includes('req.headers.get("authorization") !== `Bearer ${serviceRoleKey}`') && pushRetryWorker.includes('claim_notification_push_retries') && pushRetryWorker.includes('p_max_attempts: 5')],
+  ['retry dispatch failure releases leases with bounded backoff', pushRetryWorker.includes('defer_notification_push_retry') && pushRetryMigration.includes('30 * (2 ^ LEAST(attempt_count, 7))') && pushRetryMigration.includes('status = CASE WHEN attempt_count + 1 >= 5 THEN \'terminal\' ELSE \'retryable\' END')],
   ['payment UTR update and exact-retry database failures return service unavailable, not payment conflict', paymentAuth.includes('[payment-auth submit-utr] payment update failed') && paymentAuth.includes('[payment-auth submit-utr] exact-retry lookup failed') && paymentAuth.includes('Payment service is temporarily unavailable. Please try again.', 503) && paymentAuth.includes('if (retryError)') && paymentAuth.includes('if (error) {')],
   ['payment verification distinguishes admin lookup infrastructure errors from invalid authorization', paymentAuth.includes('[payment-auth verify] admin session lookup failed') && paymentAuth.includes('[payment-auth verify] admin account lookup failed') && paymentAuth.includes('if (sessionError)') && paymentAuth.includes('if (adminError)')],
   ['payment verification distinguishes database update failures from stale payment conflicts', paymentAuth.includes('[payment-auth verify] payment update failed') && paymentAuth.includes('if (error) {') && paymentAuth.includes('if (!data) return json({ error: "Payment is no longer pending or could not be updated" }, 409)')],
