@@ -199,6 +199,7 @@ const checks = [
   ['customer review session and account lookups fail closed', customerAuth.includes('error: reviewSessionLookupError') && customerAuth.includes('error: reviewCustomerLookupError') && customerAuth.includes('Customer review session lookup failed:') && customerAuth.includes('Customer review account lookup failed:')],
   ['customer review duplicate and booking lookups fail closed', customerAuth.includes('error: existingReviewLookupError') && customerAuth.includes('error: bookingLookupError') && customerAuth.includes('Existing customer review lookup failed:') && customerAuth.includes('Customer review booking lookup failed:')],
   ['technician rating refresh query and update failures are logged', customerAuth.includes('error: avgLookupError') && customerAuth.includes('Technician review aggregate lookup failed:') && customerAuth.includes('Technician rating refresh failed:')],
+  ['customer resend-registration lookup fails closed on database errors', customerAuth.includes('error: pendingRegistrationLookupError') && customerAuth.includes('Customer resend-OTP pending-registration lookup failed:') && customerAuth.includes('Unable to process the OTP request. Please try again.', 500)],
 ];
 
 for (const [label, passed] of checks) {
