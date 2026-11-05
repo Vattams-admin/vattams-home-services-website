@@ -149,6 +149,14 @@ Deno.serve(async (req: Request) => {
           if (existingEmail) return errorResponse("An account with this email already exists");
         }
 
+        // Complete fallible cryptographic/password preparation before reserving the cooldown.
+        // A missing HMAC secret or crypto failure must not strand a 60-second reservation.
+        const otp = generateOTP();
+        const otpId = crypto.randomUUID();
+        const otpHash = await hashOTP(otp, mobile, "registration", otpId);
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+        const passwordHash = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
+
         let reservationToken: string | null;
         try {
           reservationToken = await reserveOtpCooldown(supabase, mobile, "registration");
@@ -156,11 +164,6 @@ Deno.serve(async (req: Request) => {
           return errorResponse("OTP requests are temporarily unavailable. Please try again later.", 503);
         }
         if (!reservationToken) return errorResponse("Please wait 60 seconds before requesting another OTP.", 429);
-
-        const otp = generateOTP();
-        const otpId = crypto.randomUUID();
-        const otpHash = await hashOTP(otp, mobile, "registration", otpId);
-        const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
         // Keep the previous pending OTP until the replacement email is accepted.
         const { data: otpRow, error: otpError } = await supabase.from("otp_codes").insert({
           id: otpId, mobile, code: otpHash, purpose: "registration", expires_at: expiresAt,
@@ -170,7 +173,6 @@ Deno.serve(async (req: Request) => {
           return errorResponse("Failed to generate OTP. Please try again.");
         }
 
-        const passwordHash = bcrypt.hashSync(password, bcrypt.genSaltSync(10));
         const { error: pendingError } = await supabase.from("otp_codes").update({
           registration_data: { full_name: String(full_name).trim(), mobile, password_hash: passwordHash, email: normalizedEmail, city: city || null, address: address || null },
         }).eq("id", otpRow.id).eq("code", otpHash);
