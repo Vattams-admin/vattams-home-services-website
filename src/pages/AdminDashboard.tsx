@@ -1036,6 +1036,23 @@ export default function AdminDashboard() {
     }
   };
 
+  const reviewTechnicianKyc = async (technicianId: string, documentType: 'aadhaar' | 'pan', decision: 'approved' | 'rejected') => {
+    setTechUpdating(true);
+    try {
+      await adminData('technician_kyc_review', {
+        technician_id: technicianId,
+        document_type: documentType,
+        decision,
+        reason: decision === 'rejected' ? window.prompt('Reason for rejecting this document (optional):') || '' : '',
+      });
+      alert(`${documentType.toUpperCase()} review recorded as ${decision}. Replaced documents require a new review.`);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Unable to record KYC review.');
+    } finally {
+      setTechUpdating(false);
+    }
+  };
+
   const approveRecharge = async (rechargeId: string) => {
     setWalletUpdating(true);
     try {
@@ -2062,18 +2079,22 @@ export default function AdminDashboard() {
                     )}
                   </div>
                   {hasDoc ? (
-                    <button
-                      onClick={() => viewTechnicianDoc(selectedTech.id, docType)}
-                      disabled={docLoading[docType]}
-                      className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 disabled:opacity-50 shrink-0"
-                    >
-                      {docLoading[docType] ? (
-                        <Loader size={12} className="animate-spin" />
-                      ) : (
-                        <ExternalLink size={12} />
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => viewTechnicianDoc(selectedTech.id, docType)}
+                        disabled={docLoading[docType]}
+                        className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 disabled:opacity-50"
+                      >
+                        {docLoading[docType] ? <Loader size={12} className="animate-spin" /> : <ExternalLink size={12} />}
+                        View
+                      </button>
+                      {(docType === 'aadhaar' || docType === 'pan') && (
+                        <>
+                          <button onClick={() => reviewTechnicianKyc(selectedTech.id, docType, 'approved')} disabled={techUpdating} className="text-xs font-bold text-green-700 disabled:opacity-50">Approve</button>
+                          <button onClick={() => reviewTechnicianKyc(selectedTech.id, docType, 'rejected')} disabled={techUpdating} className="text-xs font-bold text-red-600 disabled:opacity-50">Reject</button>
+                        </>
                       )}
-                      View
-                    </button>
+                    </div>
                   ) : (
                     <span className="text-xs text-gray-300 font-semibold shrink-0">
                       Not uploaded
