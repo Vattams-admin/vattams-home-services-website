@@ -201,6 +201,7 @@ const checks = [
   ['technician rating refresh query and update failures are logged', customerAuth.includes('error: avgLookupError') && customerAuth.includes('Technician review aggregate lookup failed:') && customerAuth.includes('Technician rating refresh failed:')],
   ['customer resend-registration lookup fails closed on database errors', customerAuth.includes('error: pendingRegistrationLookupError') && customerAuth.includes('Customer resend-OTP pending-registration lookup failed:') && customerAuth.includes('Unable to process the OTP request. Please try again.', 500)],
   ['customer login account lookup fails closed on database errors', customerAuth.includes('error: customerLookupError') && customerAuth.includes('Customer login account lookup failed:') && customerAuth.includes('Unable to process login. Please try again.', 500)],
+  ['customer OTP consumption database errors return 500 separately from stale OTP conflicts', customerAuth.includes('Customer OTP consumption failed:') && customerAuth.includes('Unable to verify OTP right now. Please try again.', 500) && customerAuth.includes('if (!consumedOtp) return errorResponse("OTP is no longer valid. Please request a new OTP.", 409);')],
 ];
 
 for (const [label, passed] of checks) {
