@@ -55,5 +55,8 @@ jobs:
       - run: npm run test:booking-completion-counter
       - run: npm run test:payment-utr
       - run: npm run test:technician-mobile-guard
+      - run: npm run test:registration-payment-activation
+      - run: npm run test:customer-data-input-validation
+      - run: npm run test:technician-data-query-errors
       - run: npm run typecheck
       - run: npm run build
