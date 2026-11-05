@@ -290,9 +290,13 @@ Deno.serve(async (req: Request) => {
         const mobileErr = validateMobile(mobile);
         if (mobileErr) return errorResponse(mobileErr);
 
-        const { data: customer, error } = await supabase.from("customers")
+        const { data: customer, error: customerLookupError } = await supabase.from("customers")
           .select("id, full_name, mobile, email, city, address, password_hash, created_at").eq("mobile", mobile).maybeSingle();
-        if (error || !customer) return errorResponse("Invalid mobile number or password");
+        if (customerLookupError) {
+          console.error("Customer login account lookup failed:", customerLookupError.message);
+          return errorResponse("Unable to process login. Please try again.", 500);
+        }
+        if (!customer) return errorResponse("Invalid mobile number or password");
         if (!bcrypt.compareSync(password, customer.password_hash)) return errorResponse("Invalid mobile number or password");
 
         const sessionToken = crypto.randomUUID() + crypto.randomUUID();
