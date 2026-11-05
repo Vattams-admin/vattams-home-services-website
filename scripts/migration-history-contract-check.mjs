@@ -25,7 +25,7 @@ console.log("PASS applied migration-history mirror and forward-fix separation");
 const migrationDir = new URL("../supabase/migrations/", import.meta.url);
 const migrationFiles = readdirSync(migrationDir).filter((file) => file.endsWith(".sql"));
 const migrationVersions = migrationFiles.map((file) => {
-  const match = file.match(/^(\\d{14})_.+\\.sql$/);
+  const match = file.match(/^(\d{14})_.+\.sql$/);
   assert.ok(match, `migration filename must start with a 14-digit version: ${file}`);
   return { version: match[1], file };
 });
