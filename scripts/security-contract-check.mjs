@@ -123,6 +123,10 @@ const checks = [
   ['KYC upload does not require Content-Length', technicianAuth.includes('if (rawContentLength !== null)')],
   ['KYC multipart body is size-bounded before parsing', technicianAuth.includes('readBoundedUploadBody(req, maxRequestBytes)') && technicianAuth.indexOf('readBoundedUploadBody(req, maxRequestBytes)') < technicianAuth.indexOf('.formData()')],
   ['KYC upload stores into the private technician-docs bucket', technicianAuth.includes('storage.from("technician-docs")')],
+  ['customer auth account lookup failures fail closed across registration and OTP flows', [
+    'existingMobileError', 'existingEmailError', 'customerLookupError',
+    'accountLookupError', 'accountEmailLookupError',
+  ].every((name) => customerAuth.includes(name))],
   ['customer password change revokes other sessions before updating credentials', customerAuth.includes('.delete().eq("customer_id", customer.id).neq("token", String(session_token))') && customerAuth.includes('if (revokeOtherSessionsError) {') && customerAuth.indexOf('if (revokeOtherSessionsError)') < customerAuth.indexOf('customers").update({ password_hash: passwordHash')],
   ['customer login fails closed when previous session revocation fails', customerAuth.includes('const { error: revokePreviousSessionsError } = await supabase.from("customer_auth_sessions").delete().eq("customer_id", customer.id);') && customerAuth.includes('if (revokePreviousSessionsError) {') && customerAuth.indexOf('if (revokePreviousSessionsError)') < customerAuth.indexOf('customer_auth_sessions").insert({ customer_id: customer.id')],
   ['customer logout fails closed when session revocation fails', customerAuth.includes('const { error: logoutError } = await supabase.from("customer_auth_sessions").delete().eq("token", session_token);') && customerAuth.includes('if (logoutError) {') && customerAuth.includes('Unable to end the secure session. Please try again.')],
