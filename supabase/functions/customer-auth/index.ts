@@ -363,9 +363,13 @@ Deno.serve(async (req: Request) => {
         const passErr = validatePassword(new_password);
         if (passErr) return errorResponse(passErr);
 
-        const { data: otpRecord } = await supabase.from("otp_codes")
+        const { data: otpRecord, error: resetOtpLookupError } = await supabase.from("otp_codes")
           .select("id,mobile,created_at,expires_at,verified").eq("mobile", mobile).eq("purpose", "forgot_password")
           .eq("verified", true).order("created_at", { ascending: false }).limit(1).maybeSingle();
+        if (resetOtpLookupError) {
+          console.error("Customer password-reset OTP lookup failed:", resetOtpLookupError.message);
+          return errorResponse("Unable to validate password-reset verification. Please try again.", 500);
+        }
         if (!otpRecord) return errorResponse("Please verify your OTP first");
         if (!otpRecord.expires_at || new Date(otpRecord.expires_at).getTime() <= Date.now()) {
           return errorResponse("Verification expired. Please request a new OTP.");
@@ -390,9 +394,17 @@ Deno.serve(async (req: Request) => {
       case "change-password": {
         const { current_password, new_password, session_token } = body;
         if (!session_token) return errorResponse("Secure login session is required", 401);
-        const { data: session } = await supabase.from("customer_auth_sessions").select("customer_id,expires_at").eq("token", session_token).maybeSingle();
+        const { data: session, error: sessionLookupError } = await supabase.from("customer_auth_sessions").select("customer_id,expires_at").eq("token", session_token).maybeSingle();
+        if (sessionLookupError) {
+          console.error("Customer password-change session lookup failed:", sessionLookupError.message);
+          return errorResponse("Unable to validate your session. Please try again.", 500);
+        }
         if (!session || new Date(session.expires_at) <= new Date()) return errorResponse("Session expired. Please log in again.", 401);
-        const { data: customer } = await supabase.from("customers").select("id,mobile,password_hash").eq("id", session.customer_id).maybeSingle();
+        const { data: customer, error: customerLookupError } = await supabase.from("customers").select("id,mobile,password_hash").eq("id", session.customer_id).maybeSingle();
+        if (customerLookupError) {
+          console.error("Customer password-change account lookup failed:", customerLookupError.message);
+          return errorResponse("Unable to load your account. Please try again.", 500);
+        }
         if (!customer) return errorResponse("Account not found", 404);
         if (!current_password?.trim()) return errorResponse("Current password is required");
         if (!new_password?.trim()) return errorResponse("New password is required");
@@ -415,9 +427,17 @@ Deno.serve(async (req: Request) => {
 
       case "submit-review": {
         const { booking_id, customer_id, technician_id, rating, review_text, session_token } = body;
-        const { data: session } = await supabase.from("customer_auth_sessions").select("customer_id,expires_at").eq("token", session_token || "").maybeSingle();
+        const { data: session, error: reviewSessionLookupError } = await supabase.from("customer_auth_sessions").select("customer_id,expires_at").eq("token", session_token || "").maybeSingle();
+        if (reviewSessionLookupError) {
+          console.error("Customer review session lookup failed:", reviewSessionLookupError.message);
+          return errorResponse("Unable to validate your session. Please try again.", 500);
+        }
         if (!session || new Date(session.expires_at) <= new Date() || session.customer_id !== customer_id) return errorResponse("Unauthorized", 401);
-        const { data: reviewCustomer } = await supabase.from("customers").select("id,full_name").eq("id", session.customer_id).maybeSingle();
+        const { data: reviewCustomer, error: reviewCustomerLookupError } = await supabase.from("customers").select("id,full_name").eq("id", session.customer_id).maybeSingle();
+        if (reviewCustomerLookupError) {
+          console.error("Customer review account lookup failed:", reviewCustomerLookupError.message);
+          return errorResponse("Unable to load your account. Please try again.", 500);
+        }
         if (!reviewCustomer) return errorResponse("Customer account not found", 404);
         if (!booking_id) return errorResponse("Booking ID is required");
         if (!customer_id) return errorResponse("Customer ID is required");
@@ -427,9 +447,17 @@ Deno.serve(async (req: Request) => {
         const cleanReviewText = typeof review_text === "string" ? review_text.trim() : "";
         if (cleanReviewText.length > 2000) return errorResponse("Review text must be 2000 characters or fewer");
         if (containsUnsupportedReviewCharacters(cleanReviewText)) return errorResponse("Review text contains unsupported control characters");
-        const { data: existing } = await supabase.from("reviews").select("id").eq("booking_id", booking_id).maybeSingle();
+        const { data: existing, error: existingReviewLookupError } = await supabase.from("reviews").select("id").eq("booking_id", booking_id).maybeSingle();
+        if (existingReviewLookupError) {
+          console.error("Existing customer review lookup failed:", existingReviewLookupError.message);
+          return errorResponse("Unable to validate this review. Please try again.", 500);
+        }
         if (existing) return errorResponse("You have already reviewed this booking");
-        const { data: booking } = await supabase.from("bookings").select("id, status, customer_id, assigned_technician_id").eq("id", booking_id).maybeSingle();
+        const { data: booking, error: bookingLookupError } = await supabase.from("bookings").select("id, status, customer_id, assigned_technician_id").eq("id", booking_id).maybeSingle();
+        if (bookingLookupError) {
+          console.error("Customer review booking lookup failed:", bookingLookupError.message);
+          return errorResponse("Unable to validate this booking. Please try again.", 500);
+        }
         if (!booking) return errorResponse("Booking not found");
         if (booking.customer_id !== customer_id) return errorResponse("You are not authorized to review this booking", 403);
         if (booking.status !== "completed") return errorResponse("You can only review completed bookings");
@@ -445,10 +473,13 @@ Deno.serve(async (req: Request) => {
         }
 
         if (finalTechId) {
-          const { data: avgData } = await supabase.from("reviews").select("rating").eq("technician_id", finalTechId);
-          if (avgData && avgData.length > 0) {
+          const { data: avgData, error: avgLookupError } = await supabase.from("reviews").select("rating").eq("technician_id", finalTechId);
+          if (avgLookupError) {
+            console.error("Technician review aggregate lookup failed:", avgLookupError.message);
+          } else if (avgData && avgData.length > 0) {
             const avgRating = avgData.reduce((sum, r) => sum + r.rating, 0) / avgData.length;
-            await supabase.from("technicians").update({ rating: Math.round(avgRating * 100) / 100 }).eq("id", finalTechId);
+            const { error: ratingUpdateError } = await supabase.from("technicians").update({ rating: Math.round(avgRating * 100) / 100 }).eq("id", finalTechId);
+            if (ratingUpdateError) console.error("Technician rating refresh failed:", ratingUpdateError.message);
           }
         }
         return jsonResponse({ success: true, message: "Review submitted successfully", review });
