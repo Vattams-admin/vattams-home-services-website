@@ -119,6 +119,7 @@ const checks = [
   ['admin analytics summary fails closed when any source query errors', adminData.includes('error:bookingError') && adminData.includes('error:technicianError') && adminData.includes('error:customerError') && adminData.includes('error:reviewError') && adminData.includes('if(bookingError||technicianError||customerError||reviewError)return out({error:"Unable to load complete analytics summary"},500)')],
   ['technician-data rejects non-POST methods before JSON parsing', technicianData.includes('if(req.method!=="POST")') && technicianData.indexOf('if(req.method!=="POST")') < technicianData.indexOf('await req.json()')],
   ['KYC upload checks content signatures', technicianAuth.includes('detectKycFile(bytes)')],
+  ['KYC upload accepts only decimal-digit Content-Length values', technicianAuth.includes('if (!/^\\\\d+$/.test(rawContentLength))') && technicianAuth.includes('Number.isSafeInteger(contentLength)')],
   ['KYC upload does not require Content-Length', technicianAuth.includes('if (rawContentLength !== null)')],
   ['KYC multipart body is size-bounded before parsing', technicianAuth.includes('readBoundedUploadBody(req, maxRequestBytes)') && technicianAuth.indexOf('readBoundedUploadBody(req, maxRequestBytes)') < technicianAuth.indexOf('.formData()')],
   ['KYC upload stores into the private technician-docs bucket', technicianAuth.includes('storage.from("technician-docs")')],
