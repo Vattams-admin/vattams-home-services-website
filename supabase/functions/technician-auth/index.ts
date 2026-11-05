@@ -75,6 +75,27 @@ async function hashEmailOtp(otp: string, mobile: string, otpId: string): Promise
   const signature = await crypto.subtle.sign("HMAC", key, message);
   return Array.from(new Uint8Array(signature)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
+async function reserveOtpCooldown(
+  client: ReturnType<typeof createClient>, mobile: string,
+): Promise<string | null> {
+  const token = crypto.randomUUID();
+  const { data, error } = await client.rpc("reserve_otp_resend", {
+    p_mobile: mobile, p_purpose: "technician_registration", p_reservation_token: token,
+  });
+  if (error) {
+    console.error("Atomic technician OTP cooldown reservation failed:", error.message);
+    throw new Error("OTP requests are temporarily unavailable.");
+  }
+  return data === true ? token : null;
+}
+async function releaseOtpCooldown(
+  client: ReturnType<typeof createClient>, mobile: string, token: string,
+): Promise<void> {
+  const { error } = await client.rpc("release_otp_resend", {
+    p_mobile: mobile, p_purpose: "technician_registration", p_reservation_token: token,
+  });
+  if (error) console.error("Could not release technician OTP cooldown reservation:", error.message);
+}
 async function sendEmailOtp(to: string, otp: string): Promise<boolean> {
   const apiKey = Deno.env.get("RESEND_API_KEY");
   const from = Deno.env.get("EMAIL_FROM");
@@ -315,12 +336,17 @@ async function startTechnicianRegistrationOtp(supabase: ReturnType<typeof create
   if (existingMobile) return otpJson({ error: "This mobile number is already registered." }, 409);
   const { data: existingEmail } = await supabase.from("technicians").select("id").eq("email", email).maybeSingle();
   if (existingEmail) return otpJson({ error: "This email address is already registered." }, 409);
-  const recentCutoff = new Date(Date.now() - 60 * 1000).toISOString();
-  const { data: recent } = await supabase.from("otp_codes").select("id").eq("mobile", mobile).eq("purpose", "technician_registration").gte("created_at", recentCutoff).limit(1).maybeSingle();
-  if (recent) return otpJson({ error: "Please wait 60 seconds before requesting another code." }, 429);
   const uploadToken = String((body as RegisterBody & { kyc_upload_token?: string }).kyc_upload_token || "");
   const kycPaths = await resolveKycPaths(supabase, mobile, email, uploadToken);
   if (!kycPaths) return otpJson({ error: "Upload your Aadhaar and PAN documents through the secure registration upload flow before requesting email verification." }, 400);
+
+  let reservationToken: string | null;
+  try {
+    reservationToken = await reserveOtpCooldown(supabase, mobile);
+  } catch {
+    return otpJson({ error: "OTP requests are temporarily unavailable. Please try again later." }, 503);
+  }
+  if (!reservationToken) return otpJson({ error: "Please wait 60 seconds before requesting another code." }, 429);
 
   const otp = generateEmailOtp();
   const otpId = crypto.randomUUID();
@@ -333,9 +359,13 @@ async function startTechnicianRegistrationOtp(supabase: ReturnType<typeof create
     id: otpId, mobile, code: otpHash, purpose: "technician_registration", expires_at: expiresAt,
     registration_data: { ...safeBody, ...kycPaths, mobile, email, password: undefined, password_hash: passwordHash },
   }).select("id").single();
-  if (error || !row) return otpJson({ error: "Could not start registration. Please try again." }, 500);
+  if (error || !row) {
+    await releaseOtpCooldown(supabase, mobile, reservationToken);
+    return otpJson({ error: "Could not start registration. Please try again." }, 500);
+  }
   if (!await sendEmailOtp(email, otp)) {
     await supabase.from("otp_codes").delete().eq("id", row.id);
+    await releaseOtpCooldown(supabase, mobile, reservationToken);
     return otpJson({ error: "We could not send the verification email. Registration cannot continue until email delivery is available." }, 503);
   }
   // Remove superseded pending registration payloads only after the new email is accepted.
@@ -362,9 +392,13 @@ async function resendTechnicianRegistrationOtp(supabase: ReturnType<typeof creat
   const pending = pendingRow.registration_data as RegisterBody & { password_hash?: string };
   const email = String(pending.email || "").trim().toLowerCase();
   if (!email || !pending.password_hash) return otpJson({ error: "Registration details expired. Please restart registration." }, 400);
-  if (Date.now() - new Date(pendingRow.created_at).getTime() < 60 * 1000) {
-    return otpJson({ error: "Please wait 60 seconds before requesting another code." }, 429);
+  let reservationToken: string | null;
+  try {
+    reservationToken = await reserveOtpCooldown(supabase, mobile);
+  } catch {
+    return otpJson({ error: "OTP requests are temporarily unavailable. Please try again later." }, 503);
   }
+  if (!reservationToken) return otpJson({ error: "Please wait 60 seconds before requesting another code." }, 429);
   const otp = generateEmailOtp();
   const otpId = crypto.randomUUID();
   const otpHash = await hashEmailOtp(otp, mobile, otpId);
@@ -373,9 +407,13 @@ async function resendTechnicianRegistrationOtp(supabase: ReturnType<typeof creat
     expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
     registration_data: pending,
   }).select("id").single();
-  if (error || !row) return otpJson({ error: "Could not resend the code. Please try again." }, 500);
+  if (error || !row) {
+    await releaseOtpCooldown(supabase, mobile, reservationToken);
+    return otpJson({ error: "Could not resend the code. Please try again." }, 500);
+  }
   if (!await sendEmailOtp(email, otp)) {
     await supabase.from("otp_codes").delete().eq("id", row.id);
+    await releaseOtpCooldown(supabase, mobile, reservationToken);
     return otpJson({ error: "We could not send the verification email. Please try again later." }, 503);
   }
   // Only after delivery succeeds, remove older pending OTP rows so they do not
