@@ -555,8 +555,7 @@ Deno.serve(async (req: Request) => {
           return errorResponse("Failed to generate OTP. Please try again.");
         }
         if (!await sendEmailOtp(destinationEmail, otp, purpose)) {
-          const { error: cleanupError } = const { error: cleanupError } = supabase.from("otp_codes").delete().eq("id", newRow.id);
-          if (cleanupError) console.error("Could not remove undelivered customer resend OTP:", cleanupError.message);
+          const { error: cleanupError } = await supabase.from("otp_codes").delete().eq("id", newRow.id);
           if (cleanupError) console.error("Could not remove undelivered customer resend OTP:", cleanupError.message);
           await releaseOtpCooldown(supabase, mobile, String(purpose), reservationToken);
           return errorResponse("We could not send the verification email. Please try again later.", 503);
