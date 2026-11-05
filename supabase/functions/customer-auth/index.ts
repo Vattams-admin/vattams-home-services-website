@@ -146,10 +146,18 @@ Deno.serve(async (req: Request) => {
         const passErr = validatePassword(password);
         if (passErr) return errorResponse(passErr);
 
-        const { data: existing } = await supabase.from("customers").select("id").eq("mobile", mobile).maybeSingle();
+        const { data: existing, error: existingMobileError } = await supabase.from("customers").select("id").eq("mobile", mobile).maybeSingle();
+        if (existingMobileError) {
+          console.error("Customer registration mobile lookup failed:", existingMobileError.message);
+          return errorResponse("Unable to validate registration details. Please try again.", 500);
+        }
         if (existing) return errorResponse("An account with this mobile number already exists");
         if (email) {
-          const { data: existingEmail } = await supabase.from("customers").select("id").eq("email", normalizedEmail).maybeSingle();
+          const { data: existingEmail, error: existingEmailError } = await supabase.from("customers").select("id").eq("email", normalizedEmail).maybeSingle();
+          if (existingEmailError) {
+            console.error("Customer registration email lookup failed:", existingEmailError.message);
+            return errorResponse("Unable to validate registration details. Please try again.", 500);
+          }
           if (existingEmail) return errorResponse("An account with this email already exists");
         }
 
@@ -298,7 +306,11 @@ Deno.serve(async (req: Request) => {
         if (!mobile?.trim()) return errorResponse("Mobile number is required");
         const mobileErr = validateMobile(mobile);
         if (mobileErr) return errorResponse(mobileErr);
-        const { data: customer } = await supabase.from("customers").select("id,email").eq("mobile", mobile).maybeSingle();
+        const { data: customer, error: customerLookupError } = await supabase.from("customers").select("id,email").eq("mobile", mobile).maybeSingle();
+        if (customerLookupError) {
+          console.error("Customer password-reset account lookup failed:", customerLookupError.message);
+          return errorResponse("Unable to process the password-reset request. Please try again.", 500);
+        }
         if (!customer) return errorResponse("No account found with this mobile number");
         const destinationEmail = String(customer.email || "").trim().toLowerCase();
         if (!destinationEmail) return errorResponse("This account does not have a verified email address.");
@@ -442,7 +454,11 @@ Deno.serve(async (req: Request) => {
         if (mobileErr) return errorResponse(mobileErr);
 
         if (purpose === "forgot_password") {
-          const { data: account } = await supabase.from("customers").select("id").eq("mobile", mobile).maybeSingle();
+          const { data: account, error: accountLookupError } = await supabase.from("customers").select("id").eq("mobile", mobile).maybeSingle();
+          if (accountLookupError) {
+            console.error("Customer resend-OTP account lookup failed:", accountLookupError.message);
+            return errorResponse("Unable to process the OTP request. Please try again.", 500);
+          }
           if (!account) return errorResponse("No account found with this mobile number");
         }
 
@@ -454,7 +470,11 @@ Deno.serve(async (req: Request) => {
           destinationEmail = String(pendingRegistration?.email || "").trim().toLowerCase();
           if (!pendingRegistration || !destinationEmail) return errorResponse("Please restart registration and provide a valid email address.");
         } else {
-          const { data: account } = await supabase.from("customers").select("email").eq("mobile", mobile).maybeSingle();
+          const { data: account, error: accountEmailLookupError } = await supabase.from("customers").select("email").eq("mobile", mobile).maybeSingle();
+          if (accountEmailLookupError) {
+            console.error("Customer resend-OTP email lookup failed:", accountEmailLookupError.message);
+            return errorResponse("Unable to process the OTP request. Please try again.", 500);
+          }
           destinationEmail = String(account?.email || "").trim().toLowerCase();
           if (!destinationEmail) return errorResponse("This account does not have a verified email address.");
         }
