@@ -90,7 +90,7 @@ const checks = [
   ['customer-data rejects non-POST methods before JSON parsing', customerData.includes('if(req.method!=="POST")') && customerData.indexOf('if(req.method!=="POST")') < customerData.indexOf('await req.json()')],
   ['admin-data enforces a 16 KB streamed JSON request limit', adminData.includes('const MAX_ADMIN_REQUEST_BYTES = 16 * 1024') && adminData.includes('Number(rawLength) > MAX_ADMIN_REQUEST_BYTES') && adminData.includes('totalBytes > MAX_ADMIN_REQUEST_BYTES') && adminData.includes('await reader.cancel()') && adminData.includes('Request body exceeds the 16 KB limit')],
   ['admin-data rejects malformed and non-object JSON with client errors', adminData.includes('InvalidAdminRequestError("Request body must be valid JSON")') && adminData.includes('Array.isArray(parsed)') && adminData.includes('InvalidAdminRequestError)') && adminData.includes('AdminRequestTooLargeError)')],
-  ['admin-data rejects non-POST methods before JSON parsing', adminData.includes('if(req.method!=="POST")') && adminData.indexOf('if(req.method!=="POST")') < adminData.indexOf('await req.json()')],
+  ['admin-data rejects non-POST methods before reading the bounded JSON body', adminData.includes('if(req.method!=="POST")') && adminData.indexOf('if(req.method!=="POST")') < adminData.indexOf('await readBoundedAdminJson(req)')],
   ['technician-data rejects non-POST methods before JSON parsing', technicianData.includes('if(req.method!=="POST")') && technicianData.indexOf('if(req.method!=="POST")') < technicianData.indexOf('await req.json()')],
   ['KYC upload checks content signatures', technicianAuth.includes('detectKycFile(bytes)')],
   ['KYC upload does not require Content-Length', technicianAuth.includes('if (rawContentLength !== null)')],
