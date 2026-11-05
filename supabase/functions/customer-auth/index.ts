@@ -334,8 +334,9 @@ Deno.serve(async (req: Request) => {
           .select("id,mobile,created_at,expires_at,verified").eq("mobile", mobile).eq("purpose", "forgot_password")
           .eq("verified", true).order("created_at", { ascending: false }).limit(1).maybeSingle();
         if (!otpRecord) return errorResponse("Please verify your OTP first");
-        const otpAge = Date.now() - new Date(otpRecord.created_at).getTime();
-        if (otpAge > 30 * 60 * 1000) return errorResponse("Verification expired. Please request a new OTP.");
+        if (!otpRecord.expires_at || new Date(otpRecord.expires_at).getTime() <= Date.now()) {
+          return errorResponse("Verification expired. Please request a new OTP.");
+        }
 
         const { data: resetCustomer } = await supabase.from("customers").select("id").eq("mobile", mobile).maybeSingle();
         if (!resetCustomer) return errorResponse("No account found with this mobile number");
