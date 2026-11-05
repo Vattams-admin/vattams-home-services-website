@@ -18,7 +18,8 @@
     "test:customer-data-input-validation": "node scripts/customer-data-input-validation-check.mjs",
     "test:technician-data-query-errors": "node scripts/technician-data-query-error-check.mjs",
     "test:technician-photo-upload": "node scripts/technician-photo-upload-security-check.mjs",
-    "test:notification-push-retry-worker": "node scripts/notification-push-retry-worker-contract-check.mjs"
+    "test:notification-push-retry-worker": "node scripts/notification-push-retry-worker-contract-check.mjs",
+    "test:push-delivery-ledger": "node scripts/push-delivery-ledger-persistence-check.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
