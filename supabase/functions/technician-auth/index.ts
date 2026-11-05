@@ -158,12 +158,16 @@ async function startKycUploadSession(
     return otpJson({ error: "A valid mobile number and email are required before KYC upload." }, 400);
   }
 
-  const recentCutoff = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-  const { data: recentSessions, error: rateLimitError } = await supabase.from("otp_codes")
-    .select("id").eq("mobile", mobile).eq("purpose", "technician_kyc_upload")
-    .gte("created_at", recentCutoff).limit(3);
-  if (rateLimitError) return otpJson({ error: "Could not start secure document upload. Please try again." }, 500);
-  if ((recentSessions || []).length >= 3) {
+  const reservationToken = crypto.randomUUID();
+  const { data: reserved, error: rateLimitError } = await supabase.rpc("reserve_technician_kyc_upload_session", {
+    p_mobile: mobile,
+    p_reservation_token: reservationToken,
+  });
+  if (rateLimitError) {
+    console.error("Atomic technician KYC upload reservation failed:", rateLimitError.message);
+    return otpJson({ error: "Could not start secure document upload. Please try again." }, 503);
+  }
+  if (reserved !== true) {
     return otpJson({ error: "Too many document upload sessions. Please wait before restarting registration." }, 429);
   }
 
@@ -181,6 +185,11 @@ async function startKycUploadSession(
     registration_data: { draft_id: draftId, email },
   });
   if (error) {
+    const { error: releaseError } = await supabase.rpc("release_technician_kyc_upload_session", {
+      p_mobile: mobile,
+      p_reservation_token: reservationToken,
+    });
+    if (releaseError) console.error("Could not release failed technician KYC upload reservation:", releaseError.message);
     console.error("Could not create technician KYC upload session:", error.message);
     return otpJson({ error: "Could not start secure document upload. Please try again." }, 500);
   }
