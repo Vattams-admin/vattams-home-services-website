@@ -281,7 +281,11 @@ Deno.serve(async (req: Request) => {
 
         const sessionToken = crypto.randomUUID() + crypto.randomUUID();
         const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-        await supabase.from("customer_auth_sessions").delete().eq("customer_id", customer.id);
+        const { error: revokePreviousSessionsError } = await supabase.from("customer_auth_sessions").delete().eq("customer_id", customer.id);
+        if (revokePreviousSessionsError) {
+          console.error("Could not revoke previous customer sessions before login:", revokePreviousSessionsError.message);
+          return errorResponse("Unable to establish a secure login session. Please try again.", 500);
+        }
         const { error: sessionError } = await supabase.from("customer_auth_sessions").insert({ customer_id: customer.id, token: sessionToken, expires_at: expiresAt });
         if (sessionError) return errorResponse("Unable to create secure login session. Please try again.", 500);
         const { password_hash, ...customerData } = customer;
