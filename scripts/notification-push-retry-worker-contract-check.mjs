@@ -9,7 +9,7 @@ assert.ok(worker.includes("const providerFailures = Number.isInteger(payload?.fa
   "retry worker must retain provider failures from partial HTTP-200 sender responses");
 assert.ok(worker.includes("const providerFailures = results.reduce((total, item) => total + (item.providerFailures || 0), 0)"),
   "retry worker must aggregate per-device provider failures");
-assert.ok(worker.includes("providerFailures > 0 || senderFailures > 0 ? 502 : 200"),
+assert.ok(worker.includes("providerFailures > 0 || trackingFailures > 0 || senderFailures > 0 ? 502 : 200"),
   "retry worker must return a non-2xx status when any provider delivery failed");
 assert.ok(worker.includes("deferFailures > 0 ? 500"),
   "retry worker must continue to prioritize failed lease deferrals");
