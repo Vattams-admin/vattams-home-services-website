@@ -21,3 +21,12 @@ END $$;
 CREATE TRIGGER trg_test_delay_concurrent_recharge_update
 BEFORE UPDATE ON public.wallet_recharges
 FOR EACH ROW EXECUTE FUNCTION public.test_delay_concurrent_recharge_update();
+
+-- Two distinct recharge requests for the same technician. Each is 80 while
+-- the technician owes 100. Row locking must serialize the allocation.
+INSERT INTO public.technicians(id, commission_due, wallet_balance)
+VALUES ('00000000-0000-0000-0000-000000000007', 100, 10);
+INSERT INTO public.wallet_recharges(id, technician_id, amount, status, approved_by)
+VALUES
+ ('10000000-0000-0000-0000-000000000007','00000000-0000-0000-0000-000000000007',80,'pending','concurrency-test'),
+ ('10000000-0000-0000-0000-000000000008','00000000-0000-0000-0000-000000000007',80,'pending','concurrency-test');
