@@ -95,6 +95,7 @@ Deno.serve(async (req: Request) => {
             deliveryId: claim.delivery_id,
             trackedBySender: false,
             senderAccepted: false,
+            providerFailures: 0,
             status: response.status,
             deferSucceeded,
           };
@@ -119,6 +120,7 @@ Deno.serve(async (req: Request) => {
           deliveryId: claim.delivery_id,
           trackedBySender: false,
           senderAccepted: false,
+          providerFailures: 0,
           status: 0,
           deferSucceeded,
         };
