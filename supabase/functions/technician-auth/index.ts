@@ -474,7 +474,11 @@ async function verifyTechnicianRegistrationOtp(supabase: ReturnType<typeof creat
   const mobile = String(body.mobile || "").replace(/\D/g, "");
   const code = String(body.code || "").trim();
   if (!mobile || !/^\d{6}$/.test(code)) return otpJson({ error: "Mobile number and 6-digit email OTP are required." }, 400);
-  const { data: row } = await supabase.from("otp_codes").select("id,mobile,code,expires_at,attempt_count,registration_data,verified").eq("mobile", mobile).eq("purpose", "technician_registration").eq("verified", false).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  const { data: row, error: lookupError } = await supabase.from("otp_codes").select("id,mobile,code,expires_at,attempt_count,registration_data,verified").eq("mobile", mobile).eq("purpose", "technician_registration").eq("verified", false).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  if (lookupError) {
+    console.error("Technician registration OTP lookup failed:", lookupError.message);
+    return otpJson({ error: "Unable to verify the registration code right now. Please try again." }, 503);
+  }
   if (!row) return otpJson({ error: "No active email verification found. Please request a new code." }, 400);
   if (Number(row.attempt_count || 0) >= 5) return otpJson({ error: "Too many incorrect attempts. Request a new email OTP." }, 429);
   if (new Date(row.expires_at) <= new Date()) return otpJson({ error: "Email OTP expired. Request a new code." }, 400);
@@ -488,7 +492,11 @@ async function verifyTechnicianRegistrationOtp(supabase: ReturnType<typeof creat
     return otpJson({ error: nextAttempts >= 5 ? "Too many incorrect attempts. Request a new email OTP." : "Incorrect email OTP." }, nextAttempts >= 5 ? 429 : 400);
   }
   const { data: consumed, error: consumeError } = await supabase.from("otp_codes").update({ verified: true, verified_at: new Date().toISOString() }).eq("id", row.id).eq("verified", false).select("id").maybeSingle();
-  if (consumeError || !consumed) return otpJson({ error: "Email OTP has already been used. Request a new code." }, 409);
+  if (consumeError) {
+    console.error("Technician registration OTP consumption failed:", consumeError.message);
+    return otpJson({ error: "Unable to verify the registration code right now. Please try again." }, 503);
+  }
+  if (!consumed) return otpJson({ error: "Email OTP has already been used. Request a new code." }, 409);
   const pending = row.registration_data as RegisterBody & { password_hash?: string } | null;
   if (!pending || String(pending.mobile || "").replace(/\D/g, "") !== mobile || !pending.email || !pending.password_hash) {
     return otpJson({ error: "Registration details expired. Please restart registration." }, 400);
