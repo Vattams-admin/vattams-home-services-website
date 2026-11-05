@@ -98,8 +98,7 @@ jobs:
               RAISE EXCEPTION 'Succeeded token was reclaimed';
             END IF;
           END;
-          $;
-
+          $$;
           -- Exercise the worker's dispatch-failure release path and verify its
           -- first retry is delayed by 30 seconds rather than immediately reclaimable.
           INSERT INTO public.notification_push_token_deliveries(
@@ -116,7 +115,7 @@ jobs:
             FROM public.notification_push_token_deliveries
            WHERE fcm_token_id='20000000-0000-4000-8000-000000000001';
 
-          DO $
+          DO $$
           DECLARE v_attempts integer; v_status text; v_delay interval;
           BEGIN
             SELECT attempt_count,status,next_attempt_at-now()
@@ -134,7 +133,7 @@ jobs:
               RAISE EXCEPTION 'Dispatch defer did not release the lease';
             END IF;
           END;
-          $;
+          $$;
           RESET ROLE;
           DO $$
           BEGIN
