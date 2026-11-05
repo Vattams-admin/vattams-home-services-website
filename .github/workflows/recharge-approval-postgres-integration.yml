@@ -66,6 +66,19 @@ jobs:
           second=$!
           wait "$first"
           wait "$second"
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/recharge_test
+
+      - name: Race distinct recharge approvals for one technician
+        run: |
+          set -euo pipefail
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "BEGIN; UPDATE public.wallet_recharges SET status='approved' WHERE id='10000000-0000-0000-0000-000000000007'; SELECT pg_sleep(2); COMMIT" &
+          first=$!
+          sleep 0.2
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "UPDATE public.wallet_recharges SET status='approved' WHERE id='10000000-0000-0000-0000-000000000008'" &
+          second=$!
+          wait "$first"
+          wait "$second"
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/recharge-approval/concurrency-assert.sql
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/recharge_test
