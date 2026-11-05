@@ -340,6 +340,14 @@ async function startTechnicianRegistrationOtp(supabase: ReturnType<typeof create
   const kycPaths = await resolveKycPaths(supabase, mobile, email, uploadToken);
   if (!kycPaths) return otpJson({ error: "Upload your Aadhaar and PAN documents through the secure registration upload flow before requesting email verification." }, 400);
 
+  // Complete fallible cryptographic/password preparation before reserving the cooldown.
+  // A missing HMAC secret or crypto failure must not strand a 60-second reservation.
+  const otp = generateEmailOtp();
+  const otpId = crypto.randomUUID();
+  const otpHash = await hashEmailOtp(otp, mobile, otpId);
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+  const passwordHash = await bcrypt.hash(body.password, await bcrypt.genSalt(10));
+
   let reservationToken: string | null;
   try {
     reservationToken = await reserveOtpCooldown(supabase, mobile);
@@ -347,12 +355,6 @@ async function startTechnicianRegistrationOtp(supabase: ReturnType<typeof create
     return otpJson({ error: "OTP requests are temporarily unavailable. Please try again later." }, 503);
   }
   if (!reservationToken) return otpJson({ error: "Please wait 60 seconds before requesting another code." }, 429);
-
-  const otp = generateEmailOtp();
-  const otpId = crypto.randomUUID();
-  const otpHash = await hashEmailOtp(otp, mobile, otpId);
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-  const passwordHash = await bcrypt.hash(body.password, await bcrypt.genSalt(10));
   const safeBody = { ...body } as RegisterBody;
   delete (safeBody as RegisterBody & { kyc_upload_token?: string }).kyc_upload_token;
   const { data: row, error } = await supabase.from("otp_codes").insert({
