@@ -16,6 +16,8 @@ interface PushRequest {
   title: string;
   body: string;
   data?: Record<string, string>;
+  notificationId?: string;
+  fcmTokenIds?: string[];
 }
 
 interface ServiceAccount {
@@ -86,9 +88,11 @@ Deno.serve(async (req: Request) => {
     } catch {
       return json({ error: "Invalid JSON body" }, 400);
     }
-    const { userType, userId, title, body, data = {} } = input;
+    const { userType, userId, title, body, data = {}, notificationId, fcmTokenIds } = input;
     if (!["customer", "technician", "admin"].includes(userType) ||
-        !userId || !title?.trim() || !body?.trim()) {
+        !userId || !title?.trim() || !body?.trim() ||
+        (notificationId !== undefined && !/^[0-9a-f-]{36}$/i.test(notificationId)) ||
+        (fcmTokenIds !== undefined && (!Array.isArray(fcmTokenIds) || fcmTokenIds.length === 0 || fcmTokenIds.length > 500 || fcmTokenIds.some((id) => !/^[0-9a-f-]{36}$/i.test(id))))) {
       return json({ error: "Missing or invalid required fields" }, 400);
     }
 
@@ -124,6 +128,7 @@ Deno.serve(async (req: Request) => {
     if (userType !== "admin" || userId !== "admin") {
       tokenQuery = tokenQuery.eq("user_id", userId);
     }
+    if (fcmTokenIds) tokenQuery = tokenQuery.in("id", fcmTokenIds);
     const { data: tokens, error } = await tokenQuery;
 
     if (error) {
@@ -131,6 +136,18 @@ Deno.serve(async (req: Request) => {
       return json({ error: "Unable to load active device tokens" }, 500);
     }
     if (!tokens?.length) return json({ success: true, sent: 0, failed: 0, total: 0, message: "No active tokens" });
+
+    if (notificationId) {
+      const seedRows = tokens.map((tokenRow: { id: string }) => ({
+        notification_id: notificationId, fcm_token_id: tokenRow.id, status: "pending",
+      }));
+      const { error: seedError } = await supabase.from("notification_push_token_deliveries")
+        .upsert(seedRows, { onConflict: "notification_id,fcm_token_id", ignoreDuplicates: true });
+      if (seedError) {
+        console.error("[push] per-device delivery ledger initialization failed", seedError.code);
+        return json({ error: "Unable to initialize per-device delivery tracking" }, 500);
+      }
+    }
 
     const accessToken = await getFcmAccessToken(account);
     const outcomes = await Promise.all(tokens.map(async (tokenRow: { id: string; token: string }) => {
@@ -173,15 +190,38 @@ Deno.serve(async (req: Request) => {
           .update({ is_active: false, updated_at: new Date().toISOString() })
           .eq("id", tokenRow.id);
       }
-      if (!response.ok) {
-        console.error("[push] FCM delivery failed", { status: response.status, code: errorCode ?? "UNKNOWN" });
+      const ok = response.ok;
+      const attemptAt = new Date();
+      if (notificationId) {
+        const { data: prior } = await supabase.from("notification_push_token_deliveries")
+          .select("attempt_count,status").eq("notification_id", notificationId)
+          .eq("fcm_token_id", tokenRow.id).maybeSingle();
+        if (prior?.status !== "succeeded") {
+          const attempts = Number(prior?.attempt_count ?? 0) + 1;
+          const terminal = !ok && ["UNREGISTERED", "NOT_FOUND", "INVALID_ARGUMENT", "SENDER_ID_MISMATCH"].includes(String(errorCode));
+          const delaySeconds = Math.min(3600, 30 * (2 ** Math.min(attempts - 1, 7)));
+          const { error: outcomeError } = await supabase.from("notification_push_token_deliveries")
+            .update({
+              status: ok ? "succeeded" : terminal || attempts >= 5 ? "terminal" : "retryable",
+              attempt_count: attempts,
+              next_attempt_at: new Date(attemptAt.getTime() + delaySeconds * 1000).toISOString(),
+              lease_until: null,
+              last_error_code: ok ? null : String(errorCode ?? "FCM_REQUEST_FAILED").slice(0, 120),
+              provider_accepted_at: ok ? attemptAt.toISOString() : null,
+              last_attempt_at: attemptAt.toISOString(), updated_at: attemptAt.toISOString(),
+            })
+            .eq("notification_id", notificationId).eq("fcm_token_id", tokenRow.id)
+            .neq("status", "succeeded");
+          if (outcomeError) console.error("[push] per-device outcome persistence failed", outcomeError.code);
+        }
       }
-      return { ok: response.ok };
+      if (!ok) console.error("[push] FCM delivery failed", { status: response.status, code: errorCode ?? "UNKNOWN" });
+      return { ok };
     }));
 
     const sent = outcomes.filter((outcome) => outcome.ok).length;
     const failed = outcomes.length - sent;
-    return json({ success: failed === 0, sent, failed, total: outcomes.length }, failed === outcomes.length ? 502 : 200);
+    return json({ success: failed === 0, sent, failed, total: outcomes.length, perDeviceTracking: Boolean(notificationId) }, failed === outcomes.length ? 502 : 200);
   } catch (error) {
     console.error("[push] unexpected delivery error", error instanceof Error ? error.message : "unknown");
     return json({ error: "Push delivery failed" }, 500);
