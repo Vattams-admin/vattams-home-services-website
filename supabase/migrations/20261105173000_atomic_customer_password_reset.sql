@@ -41,6 +41,13 @@ BEGIN
     RAISE EXCEPTION 'Expected exactly one customer for verified mobile number';
   END IF;
 
+  -- A password reset is a credential-compromise recovery flow: revoke every
+  -- existing device session in the same transaction as the password/OTP change.
+  DELETE FROM public.customer_auth_sessions
+   WHERE customer_id = (
+     SELECT id FROM public.customers WHERE mobile = p_mobile
+   );
+
   DELETE FROM public.otp_codes
    WHERE id = p_otp_id
      AND mobile = p_mobile
