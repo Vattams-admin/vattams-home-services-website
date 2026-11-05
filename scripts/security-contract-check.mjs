@@ -32,6 +32,7 @@ const [otpReservationMigration, paymentAuth, paymentsLib, adminData, customerDat
   read('supabase/migrations/20261005074000_lock_legacy_public_data_reads.sql'),
 ]);
 
+const notificationWorker = await read('public/firebase-messaging-sw.js');
 
 const extractLedgerEventTypes = (source, declaration) => {
   const match = source.match(new RegExp(`const ${declaration} = \\[([\\s\\S]*?)\\]`));
@@ -40,6 +41,7 @@ const extractLedgerEventTypes = (source, declaration) => {
 };
 
 const checks = [
+  ['notification clicks reject external and malformed payload destinations', notificationWorker.includes('candidateUrl.origin === self.location.origin') && notificationWorker.includes('let targetUrl = `${self.location.origin}/`') && notificationWorker.includes('catch {') && !notificationWorker.includes('const targetUrl = new URL(requestedUrl, self.location.origin).href')],
   ['admin-auth rejects unsupported methods before parsing JSON', adminAuth.includes('if (req.method !== "POST")') && adminAuth.indexOf('if (req.method !== "POST")') < adminAuth.indexOf('await req.json()') && adminAuth.includes('"Access-Control-Allow-Methods": "POST, OPTIONS"')],
   ['customer-auth rejects unsupported methods before parsing JSON', customerAuth.includes('if (req.method !== "POST")') && customerAuth.indexOf('if (req.method !== "POST")') < customerAuth.indexOf('await req.json()') && customerAuth.includes('"Access-Control-Allow-Methods": "POST, OPTIONS"')],
   ['payment-auth rejects unsupported methods before parsing JSON', paymentAuth.includes('if (req.method !== "POST")') && paymentAuth.indexOf('if (req.method !== "POST")') < paymentAuth.indexOf('readBoundedJson(req)')],

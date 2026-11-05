@@ -1,7 +1,14 @@
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const requestedUrl = (event.notification.data && event.notification.data.url) || '/';
-  const targetUrl = new URL(requestedUrl, self.location.origin).href;
+  let targetUrl = `${self.location.origin}/`;
+  try {
+    const candidateUrl = new URL(requestedUrl, self.location.origin);
+    // Push payloads must never turn a notification click into an external redirect.
+    if (candidateUrl.origin === self.location.origin) targetUrl = candidateUrl.href;
+  } catch {
+    // Keep the safe same-origin home URL for malformed notification destinations.
+  }
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async (clientList) => {
       for (const client of clientList) {
