@@ -46,8 +46,11 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  IF p_limit < 1 OR p_limit > 500 OR p_lease_seconds < 15 OR p_lease_seconds > 900
-     OR p_max_attempts < 1 OR p_max_attempts > 10 THEN
+  -- Explicit NULL checks are required: SQL comparisons with NULL evaluate to
+  -- UNKNOWN, which would otherwise allow an unbounded claim or a NULL lease.
+  IF p_limit IS NULL OR p_limit < 1 OR p_limit > 500
+     OR p_lease_seconds IS NULL OR p_lease_seconds < 15 OR p_lease_seconds > 900
+     OR p_max_attempts IS NULL OR p_max_attempts < 1 OR p_max_attempts > 10 THEN
     RAISE EXCEPTION 'INVALID_RETRY_CLAIM_PARAMETERS';
   END IF;
 
