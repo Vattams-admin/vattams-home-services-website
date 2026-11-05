@@ -346,9 +346,17 @@ async function startTechnicianRegistrationOtp(supabase: ReturnType<typeof create
     return otpJson({ error: "Valid name, mobile, city and password are required." }, 400);
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return otpJson({ error: "A valid email address is required for technician registration." }, 400);
-  const { data: existingMobile } = await supabase.from("technicians").select("id").eq("mobile", mobile).maybeSingle();
+  const { data: existingMobile, error: existingMobileError } = await supabase.from("technicians").select("id").eq("mobile", mobile).maybeSingle();
+  if (existingMobileError) {
+    console.error("Technician registration mobile lookup failed:", existingMobileError.message);
+    return otpJson({ error: "Unable to validate registration details. Please try again." }, 500);
+  }
   if (existingMobile) return otpJson({ error: "This mobile number is already registered." }, 409);
-  const { data: existingEmail } = await supabase.from("technicians").select("id").eq("email", email).maybeSingle();
+  const { data: existingEmail, error: existingEmailError } = await supabase.from("technicians").select("id").eq("email", email).maybeSingle();
+  if (existingEmailError) {
+    console.error("Technician registration email lookup failed:", existingEmailError.message);
+    return otpJson({ error: "Unable to validate registration details. Please try again." }, 500);
+  }
   if (existingEmail) return otpJson({ error: "This email address is already registered." }, 409);
   const uploadToken = String((body as RegisterBody & { kyc_upload_token?: string }).kyc_upload_token || "");
   const kycPaths = await resolveKycPaths(supabase, mobile, email, uploadToken);
