@@ -206,6 +206,9 @@ function prerenderSeoPages() {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   return {
+  const devHost = env.VITE_DEV_HOST || '127.0.0.1';
+  const previewHost = env.VITE_PREVIEW_HOST || '127.0.0.1';
+  return {
   plugins: [react(), configureFcmServiceWorker(env), prerenderSeoPages()],
   resolve: {
     alias: {
@@ -213,12 +216,12 @@ export default defineConfig(({ mode }) => {
     },
   },
   server: {
-    host: '0.0.0.0',
+    host: devHost,
     port: 5173,
     strictPort: false,
   },
   preview: {
-    host: '0.0.0.0',
+    host: previewHost,
     port: 4173,
     strictPort: false,
   },
