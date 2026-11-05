@@ -192,12 +192,16 @@ Deno.serve(async (req: Request) => {
       }
       const ok = response.ok;
       const attemptAt = new Date();
+      let trackingFailed = false;
       if (notificationId) {
-        const { data: prior } = await supabase.from("notification_push_token_deliveries")
+        const { data: prior, error: priorError } = await supabase.from("notification_push_token_deliveries")
           .select("attempt_count,status").eq("notification_id", notificationId)
           .eq("fcm_token_id", tokenRow.id).maybeSingle();
-        if (prior?.status !== "succeeded") {
-          const attempts = Number(prior?.attempt_count ?? 0) + 1;
+        if (priorError || !prior) {
+          trackingFailed = true;
+          console.error("[push] per-device prior outcome lookup failed", priorError?.code || "ROW_NOT_FOUND");
+        } else if (prior.status !== "succeeded") {
+          const attempts = Number(prior.attempt_count ?? 0) + 1;
           const terminal = !ok && ["UNREGISTERED", "NOT_FOUND", "INVALID_ARGUMENT", "SENDER_ID_MISMATCH"].includes(String(errorCode));
           const delaySeconds = Math.min(3600, 30 * (2 ** Math.min(attempts - 1, 7)));
           const { error: outcomeError } = await supabase.from("notification_push_token_deliveries")
@@ -212,16 +216,27 @@ Deno.serve(async (req: Request) => {
             })
             .eq("notification_id", notificationId).eq("fcm_token_id", tokenRow.id)
             .neq("status", "succeeded");
-          if (outcomeError) console.error("[push] per-device outcome persistence failed", outcomeError.code);
+          if (outcomeError) {
+            trackingFailed = true;
+            console.error("[push] per-device outcome persistence failed", outcomeError.code);
+          }
         }
       }
       if (!ok) console.error("[push] FCM delivery failed", { status: response.status, code: errorCode ?? "UNKNOWN" });
-      return { ok };
+      return { ok, trackingFailed };
     }));
 
     const sent = outcomes.filter((outcome) => outcome.ok).length;
-    const failed = outcomes.length - sent;
-    return json({ success: failed === 0, sent, failed, total: outcomes.length, perDeviceTracking: Boolean(notificationId) }, failed === outcomes.length ? 502 : 200);
+    const failed = outcomes.filter((outcome) => !outcome.ok).length;
+    const trackingFailures = outcomes.filter((outcome) => outcome.trackingFailed).length;
+    return json({
+      success: failed === 0 && trackingFailures === 0,
+      sent,
+      failed,
+      trackingFailures,
+      total: outcomes.length,
+      perDeviceTracking: Boolean(notificationId),
+    }, trackingFailures > 0 ? 503 : failed === outcomes.length ? 502 : 200);
   } catch (error) {
     console.error("[push] unexpected delivery error", error instanceof Error ? error.message : "unknown");
     return json({ error: "Push delivery failed" }, 500);
