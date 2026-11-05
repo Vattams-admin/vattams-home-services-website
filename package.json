@@ -16,7 +16,8 @@
     "test:migration-history": "node scripts/migration-history-contract-check.mjs",
     "test:registration-payment-activation": "node scripts/registration-payment-activation-migration-check.mjs",
     "test:customer-data-input-validation": "node scripts/customer-data-input-validation-check.mjs",
-    "test:technician-data-query-errors": "node scripts/technician-data-query-error-check.mjs"
+    "test:technician-data-query-errors": "node scripts/technician-data-query-error-check.mjs",
+    "test:technician-photo-upload": "node scripts/technician-photo-upload-security-check.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
