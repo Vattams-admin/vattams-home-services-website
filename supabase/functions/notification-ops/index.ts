@@ -19,7 +19,7 @@ Deno.serve(async req=>{
     const b=await req.json();
     const input=b.input||{};
     if(!input.recipientType||!input.recipientId||!input.title||!input.message||!input.type) return out({error:"Notification fields are required"},400);
-    if(input.channels!==undefined && (!Array.isArray(input.channels) || input.channels.length>2
+    if(input.channels!==undefined && (!Array.isArray(input.channels) || input.channels.length===0 || input.channels.length>2
       || new Set(input.channels).size!==input.channels.length
       || input.channels.some((channel:unknown)=>typeof channel!=="string" || !["in_app","push"].includes(channel)))){
       return out({error:"Unsupported notification channel. Only in_app and push are currently available."},400);
@@ -138,9 +138,12 @@ Deno.serve(async req=>{
         : {};
       const sent = Number.isInteger(result.sent) ? Number(result.sent) : 0;
       const failed = Number.isInteger(result.failed) ? Number(result.failed) : 0;
-      const total = Number.isInteger(result.total) ? Number(result.total) : 0;
-      const deliveryStatus = total === 0
+      const hasCounts = Number.isInteger(result.sent) && Number.isInteger(result.failed) && Number.isInteger(result.total);
+      const total = hasCounts ? Number(result.total) : 0;
+      const deliveryStatus = hasCounts && total === 0
         ? "skipped"
+        : !hasCounts
+          ? "failed"
         : sent > 0 && failed > 0
           ? "partial"
           : failed > 0
@@ -148,8 +151,10 @@ Deno.serve(async req=>{
             : sent > 0
               ? "succeeded"
               : "failed";
-      const errorCode = total === 0
+      const errorCode = hasCounts && total === 0
         ? "NO_ACTIVE_TOKENS"
+        : !hasCounts
+          ? "PUSH_RESPONSE_MISSING_COUNTS"
         : deliveryStatus === "failed" || deliveryStatus === "partial"
           ? "PUSH_DELIVERY_INCOMPLETE"
           : null;
