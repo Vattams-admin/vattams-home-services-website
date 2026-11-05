@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS public.technician_kyc_reviews (
   document_type text NOT NULL CHECK (document_type IN ('aadhaar','pan')),
   document_path text NOT NULL,
   decision text NOT NULL CHECK (decision IN ('approved','rejected')),
-  reviewer_admin_id uuid NOT NULL REFERENCES public.admin_users(id),
+  reviewer_admin_id uuid NOT NULL,
   review_reason text,
   reviewed_at timestamptz NOT NULL DEFAULT now()
 );
