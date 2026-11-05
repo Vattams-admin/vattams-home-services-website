@@ -442,6 +442,14 @@ Deno.serve(async (req: Request) => {
           destinationEmail = String(account?.email || "").trim().toLowerCase();
           if (!destinationEmail) return errorResponse("This account does not have a verified email address.");
         }
+        // Prepare all cryptographic material before consuming the resend cooldown.
+        // If OTP_HMAC_SECRET is misconfigured or WebCrypto fails, the user must
+        // remain able to retry immediately rather than being rate-limited.
+        const otp = generateOTP();
+        const otpId = crypto.randomUUID();
+        const otpHash = await hashOTP(otp, mobile, purpose, otpId);
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
         let reservationToken: string | null;
         try {
           reservationToken = await reserveOtpCooldown(supabase, mobile, String(purpose));
@@ -449,10 +457,6 @@ Deno.serve(async (req: Request) => {
           return errorResponse("OTP requests are temporarily unavailable. Please try again later.", 503);
         }
         if (!reservationToken) return errorResponse("Please wait 60 seconds before requesting another OTP.", 429);
-        const otp = generateOTP();
-        const otpId = crypto.randomUUID();
-        const otpHash = await hashOTP(otp, mobile, purpose, otpId);
-        const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
         const { data: newRow, error: otpError } = await supabase.from("otp_codes").insert({ id: otpId, mobile, code: otpHash, purpose, expires_at: expiresAt, ...(pendingRegistration ? { registration_data: pendingRegistration } : {}) }).select("id").single();
         if (otpError || !newRow) {
           await releaseOtpCooldown(supabase, mobile, String(purpose), reservationToken);
