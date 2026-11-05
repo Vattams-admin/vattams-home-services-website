@@ -173,6 +173,30 @@ Deno.serve(async (req: Request) => {
       const succeededIds = new Set((succeededRows || []).map((row: { fcm_token_id: string }) => row.fcm_token_id));
       eligibleTokens = tokens.filter((tokenRow: { id: string }) => !succeededIds.has(tokenRow.id));
     }
+    // Atomically reserve each notification/device pair before contacting FCM.
+    // Concurrent invocations can only send after one invocation wins this DB claim.
+    if (notificationId) {
+      const claimResults = await Promise.all(eligibleTokens.map(async (tokenRow: { id: string; token: string }) => {
+        const { data: claimed, error: claimError } = await supabase.rpc("claim_notification_push_dispatch", {
+          p_notification_id: notificationId,
+          p_fcm_token_id: tokenRow.id,
+          p_lease_seconds: 180,
+        });
+        if (claimError) {
+          console.error("[push] atomic dispatch claim failed", claimError.code);
+          return { tokenRow, error: true, claimed: false };
+        }
+        return { tokenRow, error: false, claimed: claimed === true };
+      }));
+      const claimErrors = claimResults.filter((result) => result.error).length;
+      if (claimErrors > 0) {
+        return json({
+          success: false, sent: 0, failed: 0, trackingFailures: claimErrors,
+          total: eligibleTokens.length, error: "Unable to acquire atomic push dispatch claims",
+        }, 503);
+      }
+      eligibleTokens = claimResults.filter((result) => result.claimed).map((result) => result.tokenRow);
+    }
     if (eligibleTokens.length === 0) {
       return json({
         success: true,
@@ -246,6 +270,7 @@ Deno.serve(async (req: Request) => {
               attempt_count: attempts,
               next_attempt_at: new Date(attemptAt.getTime() + delaySeconds * 1000).toISOString(),
               lease_until: null,
+              dispatch_lease_until: null,
               last_error_code: ok ? null : String(errorCode ?? "FCM_REQUEST_FAILED").slice(0, 120),
               provider_accepted_at: ok ? attemptAt.toISOString() : null,
               last_attempt_at: attemptAt.toISOString(), updated_at: attemptAt.toISOString(),
