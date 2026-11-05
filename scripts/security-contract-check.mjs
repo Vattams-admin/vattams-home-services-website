@@ -202,6 +202,7 @@ const checks = [
   ['customer resend-registration lookup fails closed on database errors', customerAuth.includes('error: pendingRegistrationLookupError') && customerAuth.includes('Customer resend-OTP pending-registration lookup failed:') && customerAuth.includes('Unable to process the OTP request. Please try again.', 500)],
   ['customer login account lookup fails closed on database errors', customerAuth.includes('error: customerLookupError') && customerAuth.includes('Customer login account lookup failed:') && customerAuth.includes('Unable to process login. Please try again.', 500)],
   ['customer OTP consumption database errors return 500 separately from stale OTP conflicts', customerAuth.includes('Customer OTP consumption failed:') && customerAuth.includes('Unable to verify OTP right now. Please try again.', 500) && customerAuth.includes('if (!consumedOtp) return errorResponse("OTP is no longer valid. Please request a new OTP.", 409);')],
+  ['customer registration OTP delivery requires the pending registration update to affect exactly one row', customerAuth.includes('error: pendingError') && customerAuth.includes('.select("id").maybeSingle()') && customerAuth.includes('Customer pending registration update matched no OTP row.') && customerAuth.includes('if (pendingError || !pendingRow)')],
   ['customer OTP attempt counter failure logs missing RPC result explicitly', customerAuth.includes('RPC returned no attempt count') && customerAuth.includes('Could not atomically increment customer OTP attempts:')],
 ];
 

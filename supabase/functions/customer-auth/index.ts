@@ -185,10 +185,12 @@ Deno.serve(async (req: Request) => {
           return errorResponse("Failed to generate OTP. Please try again.");
         }
 
-        const { error: pendingError } = await supabase.from("otp_codes").update({
+        const { data: pendingRow, error: pendingError } = await supabase.from("otp_codes").update({
           registration_data: { full_name: String(full_name).trim(), mobile, password_hash: passwordHash, email: normalizedEmail, city: city || null, address: address || null },
-        }).eq("id", otpRow.id).eq("code", otpHash);
-        if (pendingError) {
+        }).eq("id", otpRow.id).eq("code", otpHash).select("id").maybeSingle();
+        if (pendingError || !pendingRow) {
+          if (pendingError) console.error("Customer pending registration update failed:", pendingError.message);
+          else console.error("Customer pending registration update matched no OTP row.");
           await supabase.from("otp_codes").delete().eq("id", otpRow.id);
           await releaseOtpCooldown(supabase, mobile, "registration", reservationToken);
           return errorResponse("Failed to prepare registration. Please try again.", 500);
