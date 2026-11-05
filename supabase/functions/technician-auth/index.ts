@@ -222,7 +222,7 @@ async function uploadKycDocument(supabase: ReturnType<typeof createClient>, req:
   if (rawContentLength !== null) {
     // HTTP Content-Length is a decimal digit sequence; Number() alone also
     // accepts exponent notation and surrounding whitespace.
-    if (!/^\\d+$/.test(rawContentLength)) {
+    if (!/^\d+$/.test(rawContentLength)) {
       return otpJson({ error: "Invalid upload content length." }, 400);
     }
     const contentLength = Number(rawContentLength);
