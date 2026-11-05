@@ -74,9 +74,13 @@ Deno.serve(async (req: Request) => {
             },
           }),
         });
+        const payload = await response.json().catch(() => ({}));
+        if (payload?.perDeviceTracking !== true) {
+          await supabase.rpc("defer_notification_push_retry", { p_delivery_id: claim.delivery_id });
+        }
         return { deliveryId: claim.delivery_id, acceptedByWorker: response.ok, status: response.status };
       } catch {
-        // The lease expires automatically; no successful device is resent.
+        await supabase.rpc("defer_notification_push_retry", { p_delivery_id: claim.delivery_id });
         return { deliveryId: claim.delivery_id, acceptedByWorker: false, status: 0 };
       }
     }));
