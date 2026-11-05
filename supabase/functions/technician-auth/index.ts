@@ -741,7 +741,14 @@ async function handleLogin(supabase: ReturnType<typeof createClient>, body: Logi
     .eq(column, identifier)
     .maybeSingle();
 
-  if (error || !technician) {
+  if (error) {
+    console.error("Technician login account lookup failed:", error.message);
+    return new Response(
+      JSON.stringify({ error: "Unable to verify login details right now. Please try again." }),
+      { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" } },
+    );
+  }
+  if (!technician) {
     return new Response(
       JSON.stringify({ error: "No account found with this " + (isEmail ? "email" : "mobile number") }),
       { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" } },
