@@ -126,6 +126,8 @@ const checks = [
   ['registration derives KYC paths from the upload session', technicianAuth.includes('resolveKycPaths(') && technicianAuth.includes('kyc_upload_token')],
   ['technician-data blocks protected actions for inactive accounts', technicianData.includes('sessionTechnician.status!=="active"') && technicianData.includes('Protected actions are unavailable')],
   ['technician job transitions use the atomic RPC', technicianData.includes('transition_technician_job_atomic')],
+  ['technician activation requires Aadhaar and PAN paths from the same draft', adminData.includes('aadhaarPath.match(') && adminData.includes('panPath.match(') && adminData.includes('aadhaarMatch[1].toLowerCase()!==panMatch[1].toLowerCase()')],
+  ['technician activation verifies both KYC objects exist in private storage', adminData.includes('storage.from("technician-docs").list(aadhaarMatch[1]') && adminData.includes('uploadedNames.has("aadhaar")||!uploadedNames.has("pan")')],
   ['admin dashboard consumes redacted KYC presence flags', ['has_aadhaar', 'has_pan', 'has_dl'].every((field) => adminDashboard.includes(field)) && !adminDashboard.includes('selectedTech.aadhaar_url')],
   ['admin assignment reports notification delivery failures', adminDashboard.includes('Promise.allSettled') && adminDashboard.includes('assignment saved but notification delivery failed')],
   ['payment modal UTR input matches the server 6–32 alphanumeric contract', paymentModal.includes('6–32 character alphanumeric UTR') && paymentModal.includes('pattern="[A-Za-z0-9]{6,32}"') && paymentModal.includes('maxLength={32}') && paymentAuth.includes('/^[A-Za-z0-9]{6,32}$/')],
