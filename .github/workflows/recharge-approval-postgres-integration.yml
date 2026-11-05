@@ -1,0 +1,53 @@
+name: PostgreSQL recharge approval integration
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/**"
+      - "supabase/tests/recharge-approval/**"
+      - ".github/workflows/recharge-approval-postgres-integration.yml"
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/**"
+      - "supabase/tests/recharge-approval/**"
+      - ".github/workflows/recharge-approval-postgres-integration.yml"
+jobs:
+  recharge-approval-postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: recharge_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d recharge_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create minimal production-shaped fixture
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/recharge-approval/fixture.sql
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/recharge_test
+      - name: Apply recharge migrations in production order
+        run: |
+          for migration in \
+            supabase/migrations/20261102190000_idempotent_recharge_allocation_ledger.sql \
+            supabase/migrations/20261103150000_harden_recharge_approval_bounds.sql \
+            supabase/migrations/20261104180000_restore_recharge_approval_event_guard.sql \
+            supabase/migrations/20261104190000_preserve_recharge_approval_hardening.sql \
+            supabase/migrations/20261104200000_fix_recharge_event_credit_variable.sql
+          do
+            psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$migration"
+          done
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/recharge_test
+      - name: Exercise financial allocation and rollback behaviour
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/recharge-approval/recharge-approval.integration.sql
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/recharge_test
