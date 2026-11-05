@@ -278,7 +278,11 @@ async function uploadKycDocument(supabase: ReturnType<typeof createClient>, req:
     .gt("expires_at", new Date().toISOString())
     .order("created_at", { ascending: false }).limit(1).maybeSingle();
 
-  if (sessionError || !session?.registration_data?.draft_id) {
+  if (sessionError) {
+    console.error("Technician KYC upload session lookup failed:", sessionError.message);
+    return otpJson({ error: "Unable to validate the secure upload session. Please try again." }, 503);
+  }
+  if (!session?.registration_data?.draft_id) {
     return otpJson({ error: "KYC upload session is invalid or expired. Restart document upload." }, 401);
   }
 
