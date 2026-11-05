@@ -1,0 +1,58 @@
+name: Atomic OTP resend PostgreSQL integration
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/20261105120000_atomic_otp_resend_reservations.sql"
+      - "supabase/tests/otp-resend/**"
+      - ".github/workflows/otp-resend-postgres-integration.yml"
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/20261105120000_atomic_otp_resend_reservations.sql"
+      - "supabase/tests/otp-resend/**"
+      - ".github/workflows/otp-resend-postgres-integration.yml"
+jobs:
+  otp-resend-postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: otp_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d otp_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create required Supabase roles
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/otp-resend/roles.sql
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/otp_test
+      - name: Apply atomic reservation migration
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261105120000_atomic_otp_resend_reservations.sql
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/otp_test
+      - name: Verify cooldown, token ownership and release behavior
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/otp-resend/assertions.sql
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/otp_test
+      - name: Race two independent reservations for the same mobile and purpose
+        run: |
+          set -euo pipefail
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "BEGIN; SELECT public.reserve_otp_resend('9876543210','registration','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'); SELECT pg_sleep(2); COMMIT" > /tmp/otp-reserve-a.log &
+          first=$!
+          sleep 0.2
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "SELECT public.reserve_otp_resend('9876543210','registration','bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb')" > /tmp/otp-reserve-b.log &
+          second=$!
+          wait "$first"
+          wait "$second"
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/otp-resend/concurrency-assert.sql
+          cat /tmp/otp-reserve-a.log /tmp/otp-reserve-b.log
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/otp_test
