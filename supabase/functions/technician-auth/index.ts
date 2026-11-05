@@ -262,12 +262,14 @@ async function uploadKycDocument(supabase: ReturnType<typeof createClient>, req:
   const docType = String(form.get("doc_type") || "");
   const file = form.get("file");
 
+  const allowedDocTypes = ["aadhaar", "pan", "dl", "profile_photo"];
+  const isProfilePhoto = docType === "profile_photo";
   if (!/^[6-9]\d{9}$/.test(mobile) || !/^[a-f0-9]{64}$/.test(token) ||
-      !["aadhaar", "pan", "dl"].includes(docType) || !(file instanceof File)) {
-    return otpJson({ error: "Invalid KYC upload request." }, 400);
+      !allowedDocTypes.includes(docType) || !(file instanceof File)) {
+    return otpJson({ error: "Invalid registration upload request." }, 400);
   }
   if (file.size <= 0 || file.size > 5 * 1024 * 1024) {
-    return otpJson({ error: "KYC files must be between 1 byte and 5 MB." }, 413);
+    return otpJson({ error: "Registration uploads must be between 1 byte and 5 MB." }, 413);
   }
 
   const tokenHash = await sha256Hex(token);
@@ -288,18 +290,24 @@ async function uploadKycDocument(supabase: ReturnType<typeof createClient>, req:
 
   const bytes = new Uint8Array(await file.arrayBuffer());
   const detected = detectKycFile(bytes);
-  if (!detected || (file.type && file.type !== detected.mime)) {
-    return otpJson({ error: "File content does not match an allowed JPG, PNG, WebP, or PDF document." }, 415);
+  if (!detected || (isProfilePhoto && detected.mime === "application/pdf") ||
+      (file.type && file.type !== detected.mime)) {
+    return otpJson({
+      error: isProfilePhoto
+        ? "Profile photos must be valid JPG, PNG, or WebP images."
+        : "File content does not match an allowed JPG, PNG, WebP, or PDF document.",
+    }, 415);
   }
 
   const draftId = String(session.registration_data.draft_id);
   if (!/^[0-9a-f-]{36}$/i.test(draftId)) return otpJson({ error: "Invalid upload session." }, 401);
   const objectPath = draftId + "/" + docType;
+  const bucket = isProfilePhoto ? "technician-photos" : "technician-docs";
 
-  const { data, error } = await supabase.storage.from("technician-docs").upload(objectPath, bytes, {
+  const { data, error } = await supabase.storage.from(bucket).upload(objectPath, bytes, {
     contentType: detected.mime,
     cacheControl: "3600",
-    upsert: false,
+    upsert: isProfilePhoto,
   });
   if (error || !data) {
     const message = error?.message || "Storage upload failed.";
@@ -310,6 +318,10 @@ async function uploadKycDocument(supabase: ReturnType<typeof createClient>, req:
     return otpJson({ error: "Secure document storage is temporarily unavailable. Please try again." }, 503);
   }
 
+  if (isProfilePhoto) {
+    const { data: publicData } = supabase.storage.from("technician-photos").getPublicUrl(data.path);
+    return otpJson({ success: true, path: data.path, public_url: publicData.publicUrl, doc_type: docType });
+  }
   return otpJson({ success: true, path: data.path, doc_type: docType });
 }
 
@@ -350,7 +362,24 @@ async function resolveKycPaths(
   const pan = findPath("pan");
   if (!aadhaar || !pan) return null;
 
-  return { sessionId: session.id, aadhaar_url: aadhaar, pan_url: pan, dl_url: findPath("dl") };
+  const { data: photoFiles, error: photoListError } = await supabase.storage.from("technician-photos")
+    .list(draftId, { limit: 10, offset: 0 });
+  if (photoListError || !photoFiles) {
+    console.error("Technician profile photo Storage listing failed:", photoListError?.message || "No file listing returned.");
+    throw new Error("KYC_PROFILE_PHOTO_STORAGE_LIST_FAILED");
+  }
+  const photoMatches = photoFiles.filter((item) => item.name.toLowerCase() === "profile_photo");
+  if (photoMatches.length !== 1) return null;
+  const photoPath = draftId + "/" + photoMatches[0].name;
+  const { data: publicPhoto } = supabase.storage.from("technician-photos").getPublicUrl(photoPath);
+
+  return {
+    sessionId: session.id,
+    aadhaar_url: aadhaar,
+    pan_url: pan,
+    dl_url: findPath("dl"),
+    profile_photo_url: publicPhoto.publicUrl,
+  };
 }
 
 async function startTechnicianRegistrationOtp(supabase: ReturnType<typeof createClient>, body: RegisterBody) {
