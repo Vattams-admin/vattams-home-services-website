@@ -31,9 +31,17 @@ function generateOTP(): string {
   }
 }
 
-async function hashOTP(otp: string): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(otp));
-  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
+async function hashOTP(otp: string, mobile: string, purpose: string, otpId: string): Promise<string> {
+  const secret = Deno.env.get("OTP_HMAC_SECRET");
+  if (!secret || new TextEncoder().encode(secret).length < 32) {
+    throw new Error("OTP_HMAC_SECRET must be configured with at least 32 bytes.");
+  }
+  const key = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+  );
+  const message = new TextEncoder().encode([purpose, mobile, otpId, otp].join("\\n"));
+  const signature = await crypto.subtle.sign("HMAC", key, message);
+  return Array.from(new Uint8Array(signature)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 function validateMobile(mobile: string): string | null {
@@ -124,11 +132,12 @@ Deno.serve(async (req: Request) => {
         if (recentOtp) return errorResponse("Please wait 60 seconds before requesting another OTP.", 429);
 
         const otp = generateOTP();
-        const otpHash = await hashOTP(otp);
+        const otpId = crypto.randomUUID();
+        const otpHash = await hashOTP(otp, mobile, "registration", otpId);
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
         // Keep the previous pending OTP until the replacement email is accepted.
         const { data: otpRow, error: otpError } = await supabase.from("otp_codes").insert({
-          mobile, code: otpHash, purpose: "registration", expires_at: expiresAt,
+          id: otpId, mobile, code: otpHash, purpose: "registration", expires_at: expiresAt,
         }).select("id").single();
         if (otpError || !otpRow) return errorResponse("Failed to generate OTP. Please try again.");
 
@@ -167,7 +176,7 @@ Deno.serve(async (req: Request) => {
         if (Number(otpRecord.attempt_count || 0) >= 5) return errorResponse("Too many incorrect OTP attempts. Please request a new OTP.", 429);
         if (new Date(otpRecord.expires_at) < new Date()) return errorResponse("OTP has expired. Please request a new one.");
 
-        const submittedHash = await hashOTP(String(code));
+        const submittedHash = await hashOTP(String(code), String(otpRecord.mobile), String(otpRecord.purpose), String(otpRecord.id));
         if (String(otpRecord.code) !== submittedHash) {
           const { data: attempts, error: attemptError } = await supabase.rpc("increment_otp_attempt_count", { p_otp_id: otpRecord.id });
           if (attemptError || attempts == null) {
@@ -255,10 +264,11 @@ Deno.serve(async (req: Request) => {
         if (recentOtp) return errorResponse("Please wait 60 seconds before requesting another OTP.", 429);
 
         const otp = generateOTP();
-        const otpHash = await hashOTP(otp);
+        const otpId = crypto.randomUUID();
+        const otpHash = await hashOTP(otp, mobile, "forgot_password", otpId);
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
         const { data: otpRow, error: otpError } = await supabase.from("otp_codes")
-          .insert({ mobile, code: otpHash, purpose: "forgot_password", expires_at: expiresAt })
+          .insert({ id: otpId, mobile, code: otpHash, purpose: "forgot_password", expires_at: expiresAt })
           .select("id").single();
         if (otpError || !otpRow) return errorResponse("Failed to generate OTP. Please try again.");
         if (!await sendEmailOtp(destinationEmail, otp, "forgot_password")) {
@@ -385,9 +395,10 @@ Deno.serve(async (req: Request) => {
           if (!destinationEmail) return errorResponse("This account does not have a verified email address.");
         }
         const otp = generateOTP();
-        const otpHash = await hashOTP(otp);
+        const otpId = crypto.randomUUID();
+        const otpHash = await hashOTP(otp, mobile, purpose, otpId);
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-        const { data: newRow, error: otpError } = await supabase.from("otp_codes").insert({ mobile, code: otpHash, purpose, expires_at: expiresAt, ...(pendingRegistration ? { registration_data: pendingRegistration } : {}) }).select("id").single();
+        const { data: newRow, error: otpError } = await supabase.from("otp_codes").insert({ id: otpId, mobile, code: otpHash, purpose, expires_at: expiresAt, ...(pendingRegistration ? { registration_data: pendingRegistration } : {}) }).select("id").single();
         if (otpError || !newRow) return errorResponse("Failed to generate OTP. Please try again.");
         if (!await sendEmailOtp(destinationEmail, otp, purpose)) {
           await supabase.from("otp_codes").delete().eq("id", newRow.id);
