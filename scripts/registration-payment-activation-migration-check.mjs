@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 
-const migration = await readFile(new URL('../supabase/migrations/20261104150000_enforce_technician_registration_payment_activation.sql', import.meta.url), 'utf8');
+const migration = await readFile(new URL('../supabase/migrations/20261105190000_enforce_technician_registration_payment_activation.sql', import.meta.url), 'utf8');
 
 assert.equal((migration.match(/\$\$/g) || []).length, 2, 'function body must have exactly one paired dollar-quote delimiter');
 assert.match(migration, /AS \$\$[\s\S]*?\n\$\$;/, 'function body must use paired dollar quoting');
