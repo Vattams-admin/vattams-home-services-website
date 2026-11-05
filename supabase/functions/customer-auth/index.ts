@@ -379,6 +379,14 @@ Deno.serve(async (req: Request) => {
         const passErr = validatePassword(new_password);
         if (passErr) return errorResponse(passErr);
         if (!bcrypt.compareSync(current_password, customer.password_hash)) return errorResponse("Current password is incorrect");
+        // Revoke other devices before changing the password. Keep this verified
+        // session active so the customer is not unexpectedly logged out here.
+        const { error: revokeOtherSessionsError } = await supabase.from("customer_auth_sessions")
+          .delete().eq("customer_id", customer.id).neq("token", String(session_token));
+        if (revokeOtherSessionsError) {
+          console.error("Could not revoke other customer sessions during password change:", revokeOtherSessionsError.message);
+          return errorResponse("Unable to secure other sessions. Please try again.", 500);
+        }
         const passwordHash = bcrypt.hashSync(new_password, bcrypt.genSaltSync(10));
         const { error: updateError } = await supabase.from("customers").update({ password_hash: passwordHash, updated_at: new Date().toISOString() }).eq("id", customer.id);
         if (updateError) return errorResponse("Failed to change password. Please try again.");
