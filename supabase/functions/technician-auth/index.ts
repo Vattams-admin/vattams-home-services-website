@@ -303,8 +303,11 @@ async function uploadKycDocument(supabase: ReturnType<typeof createClient>, req:
   });
   if (error || !data) {
     const message = error?.message || "Storage upload failed.";
-    const status = /already exists|duplicate/i.test(message) ? 409 : 400;
-    return otpJson({ error: status === 409 ? "This document is already uploaded for this registration draft." : "Secure document upload failed." }, status);
+    if (/already exists|duplicate/i.test(message)) {
+      return otpJson({ error: "This document is already uploaded for this registration draft." }, 409);
+    }
+    console.error("Technician KYC Storage upload failed:", message);
+    return otpJson({ error: "Secure document storage is temporarily unavailable. Please try again." }, 503);
   }
 
   return otpJson({ success: true, path: data.path, doc_type: docType });
