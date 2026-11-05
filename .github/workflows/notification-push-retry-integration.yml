@@ -80,6 +80,28 @@ jobs:
             ('10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000004','retryable',5,now()-interval '1 minute');
 
           DO $$
+          BEGIN
+            BEGIN
+              PERFORM * FROM public.claim_notification_push_retries(NULL,120,5);
+              RAISE EXCEPTION 'NULL claim limit was accepted';
+            EXCEPTION WHEN raise_exception THEN
+              IF SQLERRM <> 'INVALID_RETRY_CLAIM_PARAMETERS' THEN RAISE; END IF;
+            END;
+            BEGIN
+              PERFORM * FROM public.claim_notification_push_retries(20,NULL,5);
+              RAISE EXCEPTION 'NULL lease duration was accepted';
+            EXCEPTION WHEN raise_exception THEN
+              IF SQLERRM <> 'INVALID_RETRY_CLAIM_PARAMETERS' THEN RAISE; END IF;
+            END;
+            BEGIN
+              PERFORM * FROM public.claim_notification_push_retries(20,120,NULL);
+              RAISE EXCEPTION 'NULL maximum attempts was accepted';
+            EXCEPTION WHEN raise_exception THEN
+              IF SQLERRM <> 'INVALID_RETRY_CLAIM_PARAMETERS' THEN RAISE; END IF;
+            END;
+          END;
+          $$;
+          DO $$
           DECLARE v_first integer; v_second integer; v_status text;
           BEGIN
             SELECT count(*) INTO v_first FROM public.claim_notification_push_retries(20,120,5);
