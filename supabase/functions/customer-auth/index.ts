@@ -295,6 +295,14 @@ Deno.serve(async (req: Request) => {
         const destinationEmail = String(customer.email || "").trim().toLowerCase();
         if (!destinationEmail) return errorResponse("This account does not have a verified email address.");
 
+        // Complete cryptographic preparation before reserving the cooldown.
+        // A missing/invalid OTP_HMAC_SECRET or crypto failure must not strand a
+        // 60-second reservation and block a later valid password-reset request.
+        const otp = generateOTP();
+        const otpId = crypto.randomUUID();
+        const otpHash = await hashOTP(otp, mobile, "forgot_password", otpId);
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
         let reservationToken: string | null;
         try {
           reservationToken = await reserveOtpCooldown(supabase, mobile, "forgot_password");
@@ -302,11 +310,6 @@ Deno.serve(async (req: Request) => {
           return errorResponse("OTP requests are temporarily unavailable. Please try again later.", 503);
         }
         if (!reservationToken) return errorResponse("Please wait 60 seconds before requesting another OTP.", 429);
-
-        const otp = generateOTP();
-        const otpId = crypto.randomUUID();
-        const otpHash = await hashOTP(otp, mobile, "forgot_password", otpId);
-        const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
         const { data: otpRow, error: otpError } = await supabase.from("otp_codes")
           .insert({ id: otpId, mobile, code: otpHash, purpose: "forgot_password", expires_at: expiresAt })
           .select("id").single();
