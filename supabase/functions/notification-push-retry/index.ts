@@ -46,6 +46,20 @@ Deno.serve(async (req: Request) => {
       return out({ error: "Unable to claim push retries" }, 500);
     }
 
+    const deferClaim = async (deliveryId: string): Promise<boolean> => {
+      const { error: deferError } = await supabase.rpc("defer_notification_push_retry", {
+        p_delivery_id: deliveryId,
+      });
+      if (deferError) {
+        console.error("[notification-push-retry] unable to release deferred claim", {
+          deliveryId,
+          code: deferError.code,
+        });
+        return false;
+      }
+      return true;
+    };
+
     const results = await Promise.all((claims || []).map(async (claim: RetryClaim) => {
       const destination = claim.recipient_type === "admin"
         ? "/#/admin-dashboard"
@@ -76,21 +90,43 @@ Deno.serve(async (req: Request) => {
         });
         const payload = await response.json().catch(() => ({}));
         if (payload?.perDeviceTracking !== true) {
-          await supabase.rpc("defer_notification_push_retry", { p_delivery_id: claim.delivery_id });
+          const deferSucceeded = await deferClaim(claim.delivery_id);
+          return {
+            deliveryId: claim.delivery_id,
+            trackedBySender: false,
+            senderAccepted: false,
+            status: response.status,
+            deferSucceeded,
+          };
         }
-        return { deliveryId: claim.delivery_id, acceptedByWorker: response.ok, status: response.status };
+        return {
+          deliveryId: claim.delivery_id,
+          trackedBySender: true,
+          senderAccepted: response.ok,
+          status: response.status,
+          deferSucceeded: null,
+        };
       } catch {
-        await supabase.rpc("defer_notification_push_retry", { p_delivery_id: claim.delivery_id });
-        return { deliveryId: claim.delivery_id, acceptedByWorker: false, status: 0 };
+        const deferSucceeded = await deferClaim(claim.delivery_id);
+        return {
+          deliveryId: claim.delivery_id,
+          trackedBySender: false,
+          senderAccepted: false,
+          status: 0,
+          deferSucceeded,
+        };
       }
     }));
 
+    const deferFailures = results.filter((item) => item.deferSucceeded === false).length;
     return out({
       claimed: (claims || []).length,
-      dispatched: results.filter((item) => item.acceptedByWorker).length,
-      deferred: results.filter((item) => !item.acceptedByWorker).length,
+      tracked: results.filter((item) => item.trackedBySender).length,
+      senderFailures: results.filter((item) => item.trackedBySender && !item.senderAccepted).length,
+      deferred: results.filter((item) => item.deferSucceeded === true).length,
+      deferFailures,
       results,
-    });
+    }, deferFailures > 0 ? 500 : 200);
   } catch (error) {
     console.error("[notification-push-retry] unexpected failure", error instanceof Error ? error.message : "unknown");
     return out({ error: "Unexpected retry worker failure" }, 500);
