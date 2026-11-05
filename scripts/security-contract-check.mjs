@@ -32,6 +32,7 @@ const [otpReservationMigration, paymentAuth, paymentsLib, adminData, customerDat
   read('supabase/migrations/20261005074000_lock_legacy_public_data_reads.sql'),
 ]);
 
+const notificationsLib = await read('src/lib/notifications.ts');
 const notificationWorker = await read('public/firebase-messaging-sw.js');
 const viteConfig = await read('vite.config.ts');
 const firebasePackage = JSON.parse(await read('package.json'));
