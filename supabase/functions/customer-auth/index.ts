@@ -240,7 +240,11 @@ Deno.serve(async (req: Request) => {
         }
 
         const { data: consumedOtp, error: consumeError } = await supabase.from("otp_codes").update({ verified: true, verified_at: new Date().toISOString() }).eq("id", otpRecord.id).eq("verified", false).select("id").maybeSingle();
-        if (consumeError || !consumedOtp) return errorResponse("OTP is no longer valid. Please request a new OTP.", 409);
+        if (consumeError) {
+          console.error("Customer OTP consumption failed:", consumeError.message);
+          return errorResponse("Unable to verify OTP right now. Please try again.", 500);
+        }
+        if (!consumedOtp) return errorResponse("OTP is no longer valid. Please request a new OTP.", 409);
 
         if (purpose === "registration") {
           const pending = otpRecord.registration_data as Record<string, unknown> | null;
