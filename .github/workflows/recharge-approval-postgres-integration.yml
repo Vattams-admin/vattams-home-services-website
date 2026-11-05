@@ -4,12 +4,14 @@ on:
     paths:
       - "supabase/migrations/**"
       - "supabase/tests/recharge-approval/**"
+      - "supabase/functions/technician-data/**"
       - ".github/workflows/recharge-approval-postgres-integration.yml"
   push:
     branches: [main]
     paths:
       - "supabase/migrations/**"
       - "supabase/tests/recharge-approval/**"
+      - "supabase/functions/technician-data/**"
       - ".github/workflows/recharge-approval-postgres-integration.yml"
 jobs:
   recharge-approval-postgres:
