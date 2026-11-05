@@ -19,6 +19,11 @@ Deno.serve(async req=>{
     const b=await req.json();
     const input=b.input||{};
     if(!input.recipientType||!input.recipientId||!input.title||!input.message||!input.type) return out({error:"Notification fields are required"},400);
+    if(input.channels!==undefined && (!Array.isArray(input.channels) || input.channels.length>2
+      || new Set(input.channels).size!==input.channels.length
+      || input.channels.some((channel:unknown)=>typeof channel!=="string" || !["in_app","push"].includes(channel)))){
+      return out({error:"Unsupported notification channel. Only in_app and push are currently available."},400);
+    }
 
     let authorized=false;
     if(b.admin_session_token){
