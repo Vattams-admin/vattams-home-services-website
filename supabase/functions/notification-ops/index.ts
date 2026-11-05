@@ -85,9 +85,13 @@ Deno.serve(async req=>{
     if(!authorized) return out({error:"Unauthorized"},401);
 
     const row={recipient_type:input.recipientType,recipient_id:String(input.recipientId),title:String(input.title).slice(0,200),message:String(input.message).slice(0,2000),type:String(input.type).slice(0,100),reference_type:input.referenceType?String(input.referenceType).slice(0,100):null,reference_id:input.referenceId?String(input.referenceId):null,channels:Array.isArray(input.channels)?input.channels:["in_app","push"],status:"sent",is_read:false};
-    const {data,error}=await db.from("notifications").insert(row).select("*").single();
-    if(error){
-      console.error("[notification-ops] notification insert failed",{code:error.code??null});
+    const {data,error}=await db.rpc("create_notification_with_channel_deliveries",{
+      p_recipient_type:row.recipient_type,p_recipient_id:row.recipient_id,p_title:row.title,
+      p_message:row.message,p_type:row.type,p_reference_type:row.reference_type,
+      p_reference_id:row.reference_id,p_channels:row.channels,
+    });
+    if(error || !data){
+      console.error("[notification-ops] notification and channel ledger creation failed",{code:error?.code??null});
       return out({error:"Unable to create notification. Please try again."},500);
     }
 
@@ -127,6 +131,6 @@ Deno.serve(async req=>{
       }
     }
 
-    return out({ notification: data, pushDelivery });
+    return out({ notification: data, pushDelivery, deliveryTracking: "per_channel" });
   }catch{return out({error:"Unexpected server error"},500)}
 });
