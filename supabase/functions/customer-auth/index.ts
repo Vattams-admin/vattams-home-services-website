@@ -340,16 +340,19 @@ Deno.serve(async (req: Request) => {
           return errorResponse("Verification expired. Please request a new OTP.");
         }
 
-        const { data: resetCustomer } = await supabase.from("customers").select("id").eq("mobile", mobile).maybeSingle();
-        if (!resetCustomer) return errorResponse("No account found with this mobile number");
-
-        const { data: consumedReset, error: consumeResetError } = await supabase.from("otp_codes").delete()
-          .eq("id", otpRecord.id).eq("verified", true).select("id").maybeSingle();
-        if (consumeResetError || !consumedReset) return errorResponse("Verification has already been used. Please request a new OTP.", 409);
-
+        // Hash before the transaction; the RPC locks and consumes the verified OTP
+        // in the same transaction as the password update so failures remain retryable.
         const passwordHash = bcrypt.hashSync(new_password, bcrypt.genSaltSync(10));
-        const { error: updateError } = await supabase.from("customers").update({ password_hash: passwordHash, updated_at: new Date().toISOString() }).eq("id", resetCustomer.id);
-        if (updateError) return errorResponse("Failed to reset password. Please request a new OTP and try again.");
+        const { data: resetSucceeded, error: resetError } = await supabase.rpc("reset_customer_password_with_verified_otp", {
+          p_otp_id: otpRecord.id,
+          p_mobile: mobile,
+          p_password_hash: passwordHash,
+        });
+        if (resetError) {
+          console.error("Atomic customer password reset failed:", resetError.message);
+          return errorResponse("Failed to reset password. Please try again.", 500);
+        }
+        if (resetSucceeded !== true) return errorResponse("Verification has expired or has already been used. Please request a new OTP.", 409);
         return jsonResponse({ success: true, message: "Password reset successfully" });
       }
 
