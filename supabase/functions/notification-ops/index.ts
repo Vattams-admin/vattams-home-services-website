@@ -131,6 +131,48 @@ Deno.serve(async req=>{
       }
     }
 
-    return out({ notification: data, pushDelivery, deliveryTracking: "per_channel" });
+    let deliveryTrackingError = false;
+    if (row.channels.includes("push")) {
+      const result = pushDelivery && typeof pushDelivery === "object"
+        ? pushDelivery as Record<string, unknown>
+        : {};
+      const sent = Number.isInteger(result.sent) ? Number(result.sent) : 0;
+      const failed = Number.isInteger(result.failed) ? Number(result.failed) : 0;
+      const total = Number.isInteger(result.total) ? Number(result.total) : 0;
+      const deliveryStatus = total === 0
+        ? "skipped"
+        : sent > 0 && failed > 0
+          ? "partial"
+          : failed > 0
+            ? "failed"
+            : sent > 0
+              ? "succeeded"
+              : "failed";
+      const errorCode = total === 0
+        ? "NO_ACTIVE_TOKENS"
+        : deliveryStatus === "failed" || deliveryStatus === "partial"
+          ? "PUSH_DELIVERY_INCOMPLETE"
+          : null;
+      const { error: deliveryUpdateError } = await db
+        .from("notification_channel_deliveries")
+        .update({
+          status: deliveryStatus,
+          attempt_count: 1,
+          delivered_count: sent,
+          failed_count: failed,
+          error_code: errorCode,
+          provider_accepted_at: sent > 0 ? new Date().toISOString() : null,
+          last_attempt_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("notification_id", data.id)
+        .eq("channel", "push");
+      if (deliveryUpdateError) {
+        deliveryTrackingError = true;
+        console.error("[notification-ops] push delivery outcome persistence failed", { code: deliveryUpdateError.code ?? null });
+      }
+    }
+
+    return out({ notification: data, pushDelivery, deliveryTracking: "per_channel", deliveryTrackingError });
   }catch{return out({error:"Unexpected server error"},500)}
 });
