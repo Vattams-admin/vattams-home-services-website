@@ -840,7 +840,11 @@ async function requireActiveAdmin(
     .eq("token", sessionToken)
     .maybeSingle();
 
-  if (sessionError || !session || session.admin_id !== adminId || new Date(session.expires_at).getTime() <= Date.now()) return null;
+  if (sessionError) {
+    console.error("Technician KYC admin session lookup failed:", sessionError.message);
+    throw new Error("KYC_ADMIN_SESSION_LOOKUP_FAILED");
+  }
+  if (!session || session.admin_id !== adminId || new Date(session.expires_at).getTime() <= Date.now()) return null;
 
   const { data, error } = await supabase
     .from("admin_users")
@@ -848,7 +852,11 @@ async function requireActiveAdmin(
     .eq("id", adminId)
     .maybeSingle();
 
-  if (error || !data) return null;
+  if (error) {
+    console.error("Technician KYC admin account lookup failed:", error.message);
+    throw new Error("KYC_ADMIN_ACCOUNT_LOOKUP_FAILED");
+  }
+  if (!data) return null;
   if (data.role !== "super_admin" || data.is_active !== true) return null;
 
   return data;
@@ -863,7 +871,16 @@ const DOC_COLUMN: Record<DocUrlBody["doc_type"], string> = {
 async function handleDocUrl(supabase: ReturnType<typeof createClient>, body: DocUrlBody) {
   const { admin_id, admin_session_token, technician_id, doc_type } = body;
 
-  const admin = await requireActiveAdmin(supabase, admin_id, admin_session_token);
+  let admin: Awaited<ReturnType<typeof requireActiveAdmin>>;
+  try {
+    admin = await requireActiveAdmin(supabase, admin_id, admin_session_token);
+  } catch (error) {
+    console.error("Technician KYC admin authorization lookup failed:", error instanceof Error ? error.message : String(error));
+    return new Response(
+      JSON.stringify({ error: "Unable to validate administrator access right now. Please try again." }),
+      { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" } },
+    );
+  }
   if (!admin) {
     return new Response(
       JSON.stringify({ error: "Not authorized" }),
