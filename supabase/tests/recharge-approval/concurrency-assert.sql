@@ -17,7 +17,6 @@ BEGIN
   RAISE NOTICE 'PASS: two concurrent sessions produced one event, one credit and one wallet increment';
 END $$;
 
-DROP FUNCTION public.test_delay_concurrent_recharge_update();
 
 DO $$
 DECLARE
@@ -49,3 +48,4 @@ BEGIN
   RAISE NOTICE 'PASS: distinct concurrent recharges serialized on technician row without over-settlement';
 END $$;
 DROP TRIGGER trg_test_delay_concurrent_recharge_update ON public.wallet_recharges;
+DROP FUNCTION public.test_delay_concurrent_recharge_update();
