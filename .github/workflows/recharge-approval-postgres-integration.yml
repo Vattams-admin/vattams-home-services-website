@@ -39,6 +39,7 @@ jobs:
           for migration in \
             supabase/migrations/20261102190000_idempotent_recharge_allocation_ledger.sql \
             supabase/migrations/20261103150000_harden_recharge_approval_bounds.sql \
+            supabase/migrations/20261105100000_bound_recharge_payment_reference.sql \
             supabase/migrations/20261104180000_restore_recharge_approval_event_guard.sql \
             supabase/migrations/20261104190000_preserve_recharge_approval_hardening.sql \
             supabase/migrations/20261104200000_fix_recharge_event_credit_variable.sql

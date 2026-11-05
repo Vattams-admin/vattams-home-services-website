@@ -21,7 +21,8 @@ CREATE TABLE public.wallet_recharges (
   technician_id uuid NOT NULL REFERENCES public.technicians(id),
   amount numeric(12,2) NOT NULL,
   status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','approved','rejected')),
-  approved_by text
+  approved_by text,
+  payment_ref text
 );
 CREATE TABLE public.wallet_transactions (
   id bigserial PRIMARY KEY,
