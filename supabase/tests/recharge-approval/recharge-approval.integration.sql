@@ -133,3 +133,19 @@ BEGIN
   END;
   RAISE NOTICE 'PASS: over-limit recharge rejected by database constraint';
 END $$;
+
+DO $$
+BEGIN
+  BEGIN
+    INSERT INTO public.wallet_recharges(id, technician_id, amount, status, approved_by, payment_ref)
+    VALUES ('10000000-0000-0000-0000-000000000098',
+            '00000000-0000-0000-0000-000000000001', 10, 'pending', 'admin', repeat('x', 256));
+    RAISE EXCEPTION 'expected oversized payment reference to be rejected';
+  EXCEPTION WHEN check_violation THEN
+    NULL;
+  END;
+  INSERT INTO public.wallet_recharges(id, technician_id, amount, status, approved_by, payment_ref)
+  VALUES ('10000000-0000-0000-0000-000000000097',
+          '00000000-0000-0000-0000-000000000001', 10, 'pending', 'admin', repeat('x', 255));
+  RAISE NOTICE 'PASS: payment references capped at 255 characters';
+END $$;
