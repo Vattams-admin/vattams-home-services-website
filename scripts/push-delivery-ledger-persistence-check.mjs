@@ -12,6 +12,22 @@ assert.ok(sender.includes("const trackingFailures = outcomes.filter((outcome) =>
   "sender must aggregate per-device ledger persistence failures");
 assert.ok(sender.includes("trackingFailures > 0 ? 503"),
   "sender must return service-unavailable when it cannot persist delivery outcomes");
+const succeededGuardStart = sender.indexOf("let eligibleTokens = tokens;");
+const succeededGuardEnd = sender.indexOf("const accessToken = await getFcmAccessToken(account);");
+assert.ok(succeededGuardStart >= 0 && succeededGuardEnd > succeededGuardStart,
+  "sender must check the delivery ledger before requesting an FCM access token");
+const succeededGuard = sender.slice(succeededGuardStart, succeededGuardEnd);
+assert.ok(succeededGuard.includes('.eq("status", "succeeded")') &&
+  succeededGuard.includes("eligibleTokens = tokens.filter") &&
+  succeededGuard.includes("succeededIds.has(tokenRow.id)"),
+  "sender must exclude devices already recorded as successfully delivered");
+assert.ok(succeededGuard.includes("if (succeededLookupError)") &&
+  succeededGuard.includes("}, 503)"),
+  "sender must fail closed when it cannot verify whether a device already received the notification");
+assert.ok(succeededGuard.includes("eligibleTokens.length === 0") &&
+  succeededGuard.includes("skippedAlreadySucceeded"),
+  "sender must safely return when every selected device was already delivered");
+
 assert.ok(worker.includes("payload?.trackingFailures") && worker.includes("const trackingFailures = results.reduce"),
   "retry worker must aggregate sender ledger persistence failures");
 assert.ok(worker.includes("providerFailures > 0 || trackingFailures > 0 || senderFailures > 0 ? 502 : 200"),

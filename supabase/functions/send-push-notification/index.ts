@@ -149,8 +149,44 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    // A previously accepted device must never receive this notification again.
+    // This also protects retries after the sender's earlier provider acceptance.
+    let eligibleTokens = tokens;
+    if (notificationId) {
+      const { data: succeededRows, error: succeededLookupError } = await supabase
+        .from("notification_push_token_deliveries")
+        .select("fcm_token_id")
+        .eq("notification_id", notificationId)
+        .eq("status", "succeeded");
+      if (succeededLookupError) {
+        console.error("[push] succeeded-device guard lookup failed", succeededLookupError.code);
+        return json({
+          success: false,
+          sent: 0,
+          failed: 0,
+          trackingFailures: tokens.length,
+          total: tokens.length,
+          perDeviceTracking: true,
+          error: "Unable to verify prior push delivery state",
+        }, 503);
+      }
+      const succeededIds = new Set((succeededRows || []).map((row: { fcm_token_id: string }) => row.fcm_token_id));
+      eligibleTokens = tokens.filter((tokenRow: { id: string }) => !succeededIds.has(tokenRow.id));
+    }
+    if (eligibleTokens.length === 0) {
+      return json({
+        success: true,
+        sent: 0,
+        failed: 0,
+        trackingFailures: 0,
+        total: 0,
+        skippedAlreadySucceeded: tokens.length,
+        perDeviceTracking: Boolean(notificationId),
+      });
+    }
+
     const accessToken = await getFcmAccessToken(account);
-    const outcomes = await Promise.all(tokens.map(async (tokenRow: { id: string; token: string }) => {
+    const outcomes = await Promise.all(eligibleTokens.map(async (tokenRow: { id: string; token: string }) => {
       const messageData = Object.fromEntries(
         Object.entries(data).map(([key, value]) => [key, String(value)]),
       );
