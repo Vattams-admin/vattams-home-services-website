@@ -1,0 +1,116 @@
+name: Per-device Push Retry PostgreSQL Integration
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/20261105180000_notification_push_token_retry_ledger.sql"
+      - "supabase/functions/send-push-notification/index.ts"
+      - "supabase/functions/notification-ops/index.ts"
+      - ".github/workflows/notification-push-retry-integration.yml"
+
+jobs:
+  push-retry-postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: home_services_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d home_services_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: home_services_test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create minimal production-shaped notification and token tables
+        run: |
+          psql -v ON_ERROR_STOP=1 <<'SQL'
+          CREATE ROLE anon NOLOGIN;
+          CREATE ROLE authenticated NOLOGIN;
+          CREATE ROLE service_role NOLOGIN BYPASSRLS;
+          CREATE TABLE public.notifications (
+            id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+            recipient_type text NOT NULL,
+            recipient_id text NOT NULL,
+            title text NOT NULL,
+            message text NOT NULL,
+            type text NOT NULL,
+            reference_type text,
+            reference_id text
+          );
+          CREATE TABLE public.fcm_tokens (
+            id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+            user_type text NOT NULL,
+            user_id text NOT NULL,
+            token text NOT NULL,
+            is_active boolean NOT NULL DEFAULT true
+          );
+          INSERT INTO public.notifications(id,recipient_type,recipient_id,title,message,type)
+          VALUES ('10000000-0000-4000-8000-000000000001','customer','customer-1','Retry test','Body','test');
+          INSERT INTO public.fcm_tokens(id,user_type,user_id,token)
+          VALUES
+            ('20000000-0000-4000-8000-000000000001','customer','customer-1','token-1'),
+            ('20000000-0000-4000-8000-000000000002','customer','customer-1','token-2'),
+            ('20000000-0000-4000-8000-000000000003','customer','customer-1','token-3'),
+            ('20000000-0000-4000-8000-000000000004','customer','customer-1','token-4');
+          SQL
+      - name: Apply per-device retry ledger migration
+        run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261105180000_notification_push_token_retry_ledger.sql
+      - name: Verify due claims, leases, backoff eligibility, terminal rows, and access
+        run: |
+          psql -v ON_ERROR_STOP=1 <<'SQL'
+          BEGIN;
+          SET LOCAL ROLE service_role;
+          INSERT INTO public.notification_push_token_deliveries(notification_id,fcm_token_id,status,attempt_count,next_attempt_at)
+          VALUES
+            ('10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','retryable',1,now()-interval '1 minute'),
+            ('10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000002','retryable',1,now()+interval '1 hour'),
+            ('10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000003','succeeded',1,now()-interval '1 minute'),
+            ('10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000004','retryable',5,now()-interval '1 minute');
+
+          DO $$
+          DECLARE v_first integer; v_second integer; v_status text;
+          BEGIN
+            SELECT count(*) INTO v_first FROM public.claim_notification_push_retries(20,120,5);
+            IF v_first <> 1 THEN RAISE EXCEPTION 'Expected only one due eligible token claim, got %',v_first; END IF;
+            SELECT count(*) INTO v_second FROM public.claim_notification_push_retries(20,120,5);
+            IF v_second <> 0 THEN RAISE EXCEPTION 'Leased row was claimed twice'; END IF;
+            SELECT status INTO v_status FROM public.notification_push_token_deliveries
+             WHERE fcm_token_id='20000000-0000-4000-8000-000000000004';
+            IF v_status <> 'terminal' THEN RAISE EXCEPTION 'Exhausted retry was not terminalized'; END IF;
+            IF EXISTS (SELECT 1 FROM public.notification_push_token_deliveries
+              WHERE fcm_token_id='20000000-0000-4000-8000-000000000002' AND lease_until IS NOT NULL) THEN
+              RAISE EXCEPTION 'Future retry was claimed early';
+            END IF;
+            IF EXISTS (SELECT 1 FROM public.notification_push_token_deliveries
+              WHERE fcm_token_id='20000000-0000-4000-8000-000000000003' AND lease_until IS NOT NULL) THEN
+              RAISE EXCEPTION 'Succeeded token was reclaimed';
+            END IF;
+          END;
+          $$;
+          RESET ROLE;
+          DO $$
+          BEGIN
+            IF has_table_privilege('anon','public.notification_push_token_deliveries','SELECT') THEN
+              RAISE EXCEPTION 'anon unexpectedly has per-device ledger access';
+            END IF;
+            IF has_function_privilege('authenticated','public.claim_notification_push_retries(integer,integer,integer)','EXECUTE') THEN
+              RAISE EXCEPTION 'authenticated unexpectedly can claim retries';
+            END IF;
+            IF NOT has_function_privilege('service_role','public.claim_notification_push_retries(integer,integer,integer)','EXECUTE') THEN
+              RAISE EXCEPTION 'service_role cannot claim retries';
+            END IF;
+          END;
+          $$;
+          ROLLBACK;
+          SQL

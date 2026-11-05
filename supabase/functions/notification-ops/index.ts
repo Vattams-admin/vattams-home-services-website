@@ -113,6 +113,7 @@ Deno.serve(async req=>{
           body: JSON.stringify({
             userType: input.recipientType,
             userId: input.recipientType === "admin" ? "admin" : String(input.recipientId),
+            notificationId: String(data.id),
             title: String(input.title).slice(0, 200),
             body: String(input.message).slice(0, 2000),
             data: {
