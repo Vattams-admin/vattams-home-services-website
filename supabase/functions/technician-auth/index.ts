@@ -63,9 +63,17 @@ function generateEmailOtp(): string {
     if (bytes[0] < limit) return String(100_000 + (bytes[0] % range));
   }
 }
-async function hashEmailOtp(otp: string): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(otp));
-  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
+async function hashEmailOtp(otp: string, mobile: string, otpId: string): Promise<string> {
+  const secret = Deno.env.get("OTP_HMAC_SECRET");
+  if (!secret || new TextEncoder().encode(secret).length < 32) {
+    throw new Error("OTP_HMAC_SECRET must be configured with at least 32 bytes.");
+  }
+  const key = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+  );
+  const message = new TextEncoder().encode(["technician_registration", mobile, otpId, otp].join("\\n"));
+  const signature = await crypto.subtle.sign("HMAC", key, message);
+  return Array.from(new Uint8Array(signature)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 async function sendEmailOtp(to: string, otp: string): Promise<boolean> {
   const apiKey = Deno.env.get("RESEND_API_KEY");
@@ -315,13 +323,14 @@ async function startTechnicianRegistrationOtp(supabase: ReturnType<typeof create
   if (!kycPaths) return otpJson({ error: "Upload your Aadhaar and PAN documents through the secure registration upload flow before requesting email verification." }, 400);
 
   const otp = generateEmailOtp();
-  const otpHash = await hashEmailOtp(otp);
+  const otpId = crypto.randomUUID();
+  const otpHash = await hashEmailOtp(otp, mobile, otpId);
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
   const passwordHash = await bcrypt.hash(body.password, await bcrypt.genSalt(10));
   const safeBody = { ...body } as RegisterBody;
   delete (safeBody as RegisterBody & { kyc_upload_token?: string }).kyc_upload_token;
   const { data: row, error } = await supabase.from("otp_codes").insert({
-    mobile, code: otpHash, purpose: "technician_registration", expires_at: expiresAt,
+    id: otpId, mobile, code: otpHash, purpose: "technician_registration", expires_at: expiresAt,
     registration_data: { ...safeBody, ...kycPaths, mobile, email, password: undefined, password_hash: passwordHash },
   }).select("id").single();
   if (error || !row) return otpJson({ error: "Could not start registration. Please try again." }, 500);
@@ -357,8 +366,10 @@ async function resendTechnicianRegistrationOtp(supabase: ReturnType<typeof creat
     return otpJson({ error: "Please wait 60 seconds before requesting another code." }, 429);
   }
   const otp = generateEmailOtp();
+  const otpId = crypto.randomUUID();
+  const otpHash = await hashEmailOtp(otp, mobile, otpId);
   const { data: row, error } = await supabase.from("otp_codes").insert({
-    mobile, code: await hashEmailOtp(otp), purpose: "technician_registration",
+    id: otpId, mobile, code: otpHash, purpose: "technician_registration",
     expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
     registration_data: pending,
   }).select("id").single();
@@ -388,7 +399,7 @@ async function verifyTechnicianRegistrationOtp(supabase: ReturnType<typeof creat
   if (!row) return otpJson({ error: "No active email verification found. Please request a new code." }, 400);
   if (Number(row.attempt_count || 0) >= 5) return otpJson({ error: "Too many incorrect attempts. Request a new email OTP." }, 429);
   if (new Date(row.expires_at) <= new Date()) return otpJson({ error: "Email OTP expired. Request a new code." }, 400);
-  if (await hashEmailOtp(code) !== String(row.code)) {
+  if (await hashEmailOtp(code, mobile, String(row.id)) !== String(row.code)) {
     const { data: attempts, error: attemptError } = await supabase.rpc("increment_otp_attempt_count", { p_otp_id: row.id });
     if (attemptError || attempts == null) {
       console.error("Could not atomically increment technician OTP attempts:", attemptError?.message);
