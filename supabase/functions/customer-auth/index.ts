@@ -125,7 +125,11 @@ Deno.serve(async (req: Request) => {
       case "logout": {
         const { session_token } = body;
         if (!session_token) return errorResponse("Secure login session is required", 401);
-        await supabase.from("customer_auth_sessions").delete().eq("token", session_token);
+        const { error: logoutError } = await supabase.from("customer_auth_sessions").delete().eq("token", session_token);
+        if (logoutError) {
+          console.error("Customer logout session revocation failed:", logoutError.message);
+          return errorResponse("Unable to end the secure session. Please try again.", 500);
+        }
         return jsonResponse({ success: true, message: "Logged out successfully" });
       }
 
