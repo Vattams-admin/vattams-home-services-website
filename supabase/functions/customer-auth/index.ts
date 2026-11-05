@@ -215,11 +215,15 @@ Deno.serve(async (req: Request) => {
         if (!mobile || !code) return errorResponse("Mobile and OTP code are required");
         if (!purpose || !["registration", "forgot_password"].includes(String(purpose))) return errorResponse("Invalid OTP purpose");
 
-        const { data: otpRecord } = await supabase.from("otp_codes")
+        const { data: otpRecord, error: otpLookupError } = await supabase.from("otp_codes")
           .select("id,mobile,code,purpose,expires_at,verified,attempt_count,registration_data,created_at")
           .eq("mobile", mobile).eq("purpose", purpose).eq("verified", false)
           .order("created_at", { ascending: false }).limit(1).maybeSingle();
 
+        if (otpLookupError) {
+          console.error("Customer OTP lookup failed:", otpLookupError.message);
+          return errorResponse("Unable to verify OTP right now. Please try again.", 500);
+        }
         if (!otpRecord) return errorResponse("Invalid OTP code");
         if (Number(otpRecord.attempt_count || 0) >= 5) return errorResponse("Too many incorrect OTP attempts. Please request a new OTP.", 429);
         if (new Date(otpRecord.expires_at) < new Date()) return errorResponse("OTP has expired. Please request a new one.");
@@ -245,7 +249,11 @@ Deno.serve(async (req: Request) => {
           if (String(regMobile).replace(/\D/g, "") !== String(mobile).replace(/\D/g, "")) return errorResponse("Registration mobile does not match the verified OTP");
           if (!String(full_name || "").trim() || !String(password_hash || "").trim() || !String(email || "").trim()) return errorResponse("Valid registration details and verified email are required");
 
-          const { data: existing } = await supabase.from("customers").select("id").eq("mobile", regMobile).maybeSingle();
+          const { data: existing, error: existingCustomerError } = await supabase.from("customers").select("id").eq("mobile", regMobile).maybeSingle();
+          if (existingCustomerError) {
+            console.error("Customer registration verification lookup failed:", existingCustomerError.message);
+            return errorResponse("Unable to validate registration. Please try again.", 500);
+          }
           if (existing) return errorResponse("Account already exists with this mobile number");
 
           const { data: customer, error: insertError } = await supabase.from("customers").insert({
