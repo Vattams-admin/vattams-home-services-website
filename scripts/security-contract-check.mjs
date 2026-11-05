@@ -192,6 +192,8 @@ const checks = [
   ['technician mark-all-read sends one combined backend request', technicianDashboard.includes("await technicianData('notifications_read_all');") && !technicianDashboard.includes("Promise.all([\n          technicianData('notifications_read_all')")],
   ['technician dashboard labels the in_progress transition as Start Job', technicianDashboard.includes("updateJobStatus(\n                  job,\n                  'job_started'") && technicianDashboard.includes('Start Job')],
   ['technician dashboard follows in_progress → job_started → job_completed', technicianDashboard.includes("job.status ===\n            'in_progress'") && technicianDashboard.includes("updateJobStatus(\n                  job,\n                  'job_started'") && technicianDashboard.includes("job.status ===\n            'job_started'") && technicianDashboard.includes("updateJobStatus(\n                  job,\n                  'job_completed'")],
+  ['customer OTP verification distinguishes database lookup failures from invalid codes', customerAuth.includes('error: otpLookupError') && customerAuth.includes('Customer OTP lookup failed:') && customerAuth.includes('Unable to verify OTP right now. Please try again.', 500)],
+  ['customer registration verification fails closed when duplicate-account lookup fails', customerAuth.includes('error: existingCustomerError') && customerAuth.includes('Customer registration verification lookup failed:') && customerAuth.includes('Unable to validate registration. Please try again.', 500)],
 ];
 
 for (const [label, passed] of checks) {
