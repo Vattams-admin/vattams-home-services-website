@@ -428,10 +428,14 @@ async function startTechnicianRegistrationOtp(supabase: ReturnType<typeof create
 async function resendTechnicianRegistrationOtp(supabase: ReturnType<typeof createClient>, body: Record<string, unknown>) {
   const mobile = String(body.mobile || "").replace(/\D/g, "");
   if (!/^[6-9]\d{9}$/.test(mobile)) return otpJson({ error: "A valid mobile number is required to resend the email OTP." }, 400);
-  const { data: pendingRow } = await supabase.from("otp_codes")
+  const { data: pendingRow, error: pendingLookupError } = await supabase.from("otp_codes")
     .select("mobile,registration_data,created_at,verified")
     .eq("mobile", mobile).eq("purpose", "technician_registration")
     .eq("verified", false).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  if (pendingLookupError) {
+    console.error("Technician resend pending registration lookup failed:", pendingLookupError.message);
+    return otpJson({ error: "Unable to validate the pending registration. Please try again." }, 503);
+  }
   if (!pendingRow || !pendingRow.registration_data) return otpJson({ error: "No pending technician registration found. Please restart registration." }, 400);
   const pending = pendingRow.registration_data as RegisterBody & { password_hash?: string };
   const email = String(pending.email || "").trim().toLowerCase();
