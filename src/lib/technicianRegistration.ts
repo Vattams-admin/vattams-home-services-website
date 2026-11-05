@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+// Registration uploads are routed through the technician-auth Edge Function.
 
 export const TECHNICIAN_SERVICES = [
   // Keep registration values identical to customer booking categories so
