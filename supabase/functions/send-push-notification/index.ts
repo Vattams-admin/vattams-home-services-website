@@ -209,7 +209,36 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const accessToken = await getFcmAccessToken(account);
+    let accessToken: string;
+    try {
+      accessToken = await getFcmAccessToken(account);
+    } catch (error) {
+      // No FCM request was made, so release only the dispatch reservations.
+      // The retry worker owns attempt counting/backoff when it handles this 503.
+      let releaseFailed = false;
+      if (notificationId) {
+        const { error: releaseError } = await supabase
+          .from("notification_push_token_deliveries")
+          .update({ dispatch_lease_until: null, updated_at: new Date().toISOString() })
+          .eq("notification_id", notificationId)
+          .in("fcm_token_id", eligibleTokens.map((tokenRow: { id: string }) => tokenRow.id))
+          .in("status", ["pending", "retryable"]);
+        if (releaseError) {
+          releaseFailed = true;
+          console.error("[push] unable to release dispatch claims after FCM auth failure", releaseError.code);
+        }
+      }
+      console.error("[push] FCM access token acquisition failed", error instanceof Error ? error.message : "unknown");
+      return json({
+        success: false,
+        sent: 0,
+        failed: 0,
+        trackingFailures: releaseFailed ? eligibleTokens.length : 0,
+        total: eligibleTokens.length,
+        perDeviceTracking: false,
+        error: "Unable to initialize FCM delivery",
+      }, 503);
+    }
     const outcomes = await Promise.all(eligibleTokens.map(async (tokenRow: { id: string; token: string }) => {
       const messageData = Object.fromEntries(
         Object.entries(data).map(([key, value]) => [key, String(value)]),
