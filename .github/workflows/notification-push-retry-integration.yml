@@ -5,6 +5,7 @@ on:
     paths:
       - "supabase/migrations/20261105180000_notification_push_token_retry_ledger.sql"
       - "supabase/migrations/20261105210000_atomic_notification_push_dispatch_claims.sql"
+      - "supabase/migrations/20261106220000_release_dispatch_lease_on_retry_defer.sql"
       - "scripts/atomic-push-dispatch-concurrency-integration.sh"
       - "supabase/functions/send-push-notification/index.ts"
       - "supabase/functions/notification-push-retry/index.ts"
@@ -71,6 +72,8 @@ jobs:
         run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261105180000_notification_push_token_retry_ledger.sql
       - name: Apply atomic per-device dispatch claim migration
         run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261105210000_atomic_notification_push_dispatch_claims.sql
+      - name: Apply retry defer dispatch-lease release migration
+        run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261106220000_release_dispatch_lease_on_retry_defer.sql
       - name: Verify due claims, leases, backoff eligibility, terminal rows, and access
         run: |
           psql -v ON_ERROR_STOP=1 <<'SQL'
@@ -128,14 +131,14 @@ jobs:
           -- Exercise the worker's dispatch-failure release path and verify its
           -- first retry is delayed by 30 seconds rather than immediately reclaimable.
           INSERT INTO public.notification_push_token_deliveries(
-            notification_id,fcm_token_id,status,attempt_count,next_attempt_at,lease_until
+            notification_id,fcm_token_id,status,attempt_count,next_attempt_at,lease_until,dispatch_lease_until
           ) VALUES (
             '10000000-0000-4000-8000-000000000001',
             '20000000-0000-4000-8000-000000000001',
             'pending',0,now(),now()+interval '2 minutes'
           )
           ON CONFLICT (notification_id,fcm_token_id) DO UPDATE
-            SET status='pending',attempt_count=0,next_attempt_at=now(),lease_until=now()+interval '2 minutes';
+            SET status='pending',attempt_count=0,next_attempt_at=now(),lease_until=now()+interval '2 minutes',dispatch_lease_until=now()+interval '3 minutes';
 
           SELECT public.defer_notification_push_retry(id)
             FROM public.notification_push_token_deliveries
