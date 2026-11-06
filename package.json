@@ -23,7 +23,8 @@
     "test:atomic-push-dispatch-claim": "node scripts/atomic-push-dispatch-claim-check.mjs",
     "test:push-request-validation": "node scripts/push-request-runtime-validation-check.mjs",
     "test:inactive-push-retry": "node scripts/inactive-push-retry-terminalization-check.mjs",
-    "test:terminalized-retry-summary": "node scripts/terminalized-retry-summary-check.mjs"
+    "test:terminalized-retry-summary": "node scripts/terminalized-retry-summary-check.mjs",
+    "test:stale-retry-lease-fencing": "node scripts/stale-retry-lease-fencing-check.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
