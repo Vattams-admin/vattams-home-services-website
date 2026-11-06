@@ -12,6 +12,14 @@ assert.ok(sender.includes("const trackingFailures = outcomes.filter((outcome) =>
   "sender must aggregate per-device ledger persistence failures");
 assert.ok(sender.includes("trackingFailures > 0 ? 503"),
   "sender must return service-unavailable when it cannot persist delivery outcomes");
+
+assert.ok(sender.includes("let response: Response | null = null") &&
+  sender.includes("catch (error)") &&
+  sender.includes("FCM_NETWORK_ERROR"),
+  "sender must isolate FCM transport exceptions and classify them per device");
+assert.ok(sender.includes("const ok = response?.ok === true") &&
+  sender.includes("status: ok ? \"succeeded\" : terminal || attempts >= 5 ? \"terminal\" : \"retryable\""),
+  "sender must persist transport exceptions as retryable per-device outcomes");
 const succeededGuardStart = sender.indexOf("let eligibleTokens = tokens;");
 const succeededGuardEnd = sender.indexOf("let accessToken: string;");
 assert.ok(succeededGuardStart >= 0 && succeededGuardEnd > succeededGuardStart,
