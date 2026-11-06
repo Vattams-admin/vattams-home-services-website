@@ -15,5 +15,12 @@ assert.ok(sender.includes(".eq(\"dispatch_lease_token\", claimedRow.dispatchLeas
 assert.ok(sender.includes("prior.dispatch_lease_token === tokenRow.dispatchLeaseToken"), "sender must verify ownership before calculating and persisting an outcome");
 assert.ok(sender.includes("!persistedOutcome?.length"), "sender must surface a stale or superseded outcome write");
 assert.ok(sender.includes("dispatch_lease_token: null"), "successful sender outcome must clear its own lease token");
+assert.ok(sender.includes("dispatch_lease_until") && sender.includes("prior.dispatch_lease_until && Date.parse(prior.dispatch_lease_until) > attemptAt.getTime()"),
+  "sender must reject outcomes when its matching lease token has expired");
+assert.ok(sender.includes('.gt("dispatch_lease_until", attemptAt.toISOString())'),
+  "outcome update must atomically require the dispatch lease to remain unexpired");
+assert.ok((sender.match(/\.gt\("dispatch_lease_until", new Date\(\)\.toISOString\(\)\)/g) || []).length >= 2,
+  "claim cleanup paths must not release or mutate a lease after it expires");
+
 
 console.log("PASS sender outcomes and cleanup are fenced to the exact dispatch lease token");
