@@ -95,6 +95,11 @@ Deno.serve(async (req: Request) => {
         (fcmTokenIds !== undefined && (!Array.isArray(fcmTokenIds) || fcmTokenIds.length === 0 || fcmTokenIds.length > 500 || fcmTokenIds.some((id) => !/^[0-9a-f-]{36}$/i.test(id))))) {
       return json({ error: "Missing or invalid required fields" }, 400);
     }
+    // Validate optional payload shape before token lookup or dispatch-lease claims.
+    // JSON null/arrays/primitives otherwise reach Object.entries(data) after claims.
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+      return json({ error: "Notification data must be a JSON object" }, 400);
+    }
 
     const serviceAccountJson = Deno.env.get("FCM_SERVICE_ACCOUNT_JSON");
     if (!serviceAccountJson) {
