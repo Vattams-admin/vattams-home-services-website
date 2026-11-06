@@ -13,6 +13,12 @@ assert.ok(sender.includes("const trackingFailures = outcomes.filter((outcome) =>
 assert.ok(sender.includes("trackingFailures > 0 ? 503"),
   "sender must return service-unavailable when it cannot persist delivery outcomes");
 
+const dataValidationIndex = sender.indexOf("Notification data must be a JSON object");
+const tokenLookupIndex = sender.indexOf('const { data: tokens, error } = await tokenQuery;');
+const dispatchClaimIndex = sender.indexOf('"claim_notification_push_dispatch"');
+assert.ok(dataValidationIndex >= 0 && tokenLookupIndex > dataValidationIndex && dispatchClaimIndex > dataValidationIndex,
+  "sender must reject null, array, and primitive data payloads before token lookup and dispatch-lease claims");
+
 assert.ok(sender.includes("let response: Response | null = null") &&
   sender.includes("catch (error)") &&
   sender.includes("FCM_NETWORK_ERROR"),
