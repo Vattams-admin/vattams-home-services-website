@@ -89,6 +89,30 @@ Deno.serve(async (req: Request) => {
           }),
         });
         const payload = await response.json().catch(() => ({}));
+        // An inactive/deleted FCM token is not a transient dispatch failure.
+        // The sender returns this success response when the requested token is
+        // no longer active; terminalize the ledger row instead of retrying it.
+        if (response.ok && payload?.message === "No active tokens") {
+          const { error: terminalizeError } = await supabase.rpc("terminalize_notification_push_retry", {
+            p_delivery_id: claim.delivery_id,
+          });
+          const terminalized = !terminalizeError;
+          if (terminalizeError) {
+            console.error("[notification-push-retry] unable to terminalize inactive token", {
+              deliveryId: claim.delivery_id,
+              code: terminalizeError.code,
+            });
+          }
+          return {
+            deliveryId: claim.delivery_id,
+            trackedBySender: false,
+            senderAccepted: true,
+            providerFailures: 0,
+            status: response.status,
+            terminalized,
+            deferSucceeded: terminalizeError ? false : null,
+          };
+        }
         if (payload?.perDeviceTracking !== true) {
           const deferSucceeded = await deferClaim(claim.delivery_id);
           return {
