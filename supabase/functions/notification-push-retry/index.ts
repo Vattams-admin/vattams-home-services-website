@@ -11,6 +11,7 @@ const out = (data: unknown, status = 200) =>
 
 interface RetryClaim {
   delivery_id: string;
+  lease_until: string;
   notification_id: string;
   fcm_token_id: string;
   recipient_type: "customer" | "technician" | "admin";
@@ -46,9 +47,10 @@ Deno.serve(async (req: Request) => {
       return out({ error: "Unable to claim push retries" }, 500);
     }
 
-    const deferClaim = async (deliveryId: string): Promise<boolean> => {
+    const deferClaim = async (deliveryId: string, leaseUntil: string): Promise<boolean> => {
       const { error: deferError } = await supabase.rpc("defer_notification_push_retry", {
         p_delivery_id: deliveryId,
+        p_expected_lease_until: leaseUntil,
       });
       if (deferError) {
         console.error("[notification-push-retry] unable to release deferred claim", {
@@ -95,6 +97,7 @@ Deno.serve(async (req: Request) => {
         if (response.ok && payload?.message === "No active tokens") {
           const { error: terminalizeError } = await supabase.rpc("terminalize_notification_push_retry", {
             p_delivery_id: claim.delivery_id,
+            p_expected_lease_until: claim.lease_until,
           });
           const terminalized = !terminalizeError;
           if (terminalizeError) {
@@ -114,7 +117,7 @@ Deno.serve(async (req: Request) => {
           };
         }
         if (payload?.perDeviceTracking !== true) {
-          const deferSucceeded = await deferClaim(claim.delivery_id);
+          const deferSucceeded = await deferClaim(claim.delivery_id, claim.lease_until);
           return {
             deliveryId: claim.delivery_id,
             trackedBySender: false,
@@ -143,7 +146,7 @@ Deno.serve(async (req: Request) => {
           deferSucceeded: null,
         };
       } catch {
-        const deferSucceeded = await deferClaim(claim.delivery_id);
+        const deferSucceeded = await deferClaim(claim.delivery_id, claim.lease_until);
         return {
           deliveryId: claim.delivery_id,
           trackedBySender: false,
