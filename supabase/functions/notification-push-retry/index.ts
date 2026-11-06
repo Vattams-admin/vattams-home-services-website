@@ -48,7 +48,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const deferClaim = async (deliveryId: string, leaseUntil: string): Promise<boolean> => {
-      const { error: deferError } = await supabase.rpc("defer_notification_push_retry", {
+      const { data: deferred, error: deferError } = await supabase.rpc("defer_notification_push_retry", {
         p_delivery_id: deliveryId,
         p_expected_lease_until: leaseUntil,
       });
@@ -59,7 +59,7 @@ Deno.serve(async (req: Request) => {
         });
         return false;
       }
-      return true;
+      return deferred === true;
     };
 
     const results = await Promise.all((claims || []).map(async (claim: RetryClaim) => {
@@ -95,15 +95,15 @@ Deno.serve(async (req: Request) => {
         // The sender returns this success response when the requested token is
         // no longer active; terminalize the ledger row instead of retrying it.
         if (response.ok && payload?.message === "No active tokens") {
-          const { error: terminalizeError } = await supabase.rpc("terminalize_notification_push_retry", {
+          const { data: terminalizeResult, error: terminalizeError } = await supabase.rpc("terminalize_notification_push_retry", {
             p_delivery_id: claim.delivery_id,
             p_expected_lease_until: claim.lease_until,
           });
-          const terminalized = !terminalizeError;
-          if (terminalizeError) {
+          const terminalized = !terminalizeError && terminalizeResult === true;
+          if (!terminalized) {
             console.error("[notification-push-retry] unable to terminalize inactive token", {
               deliveryId: claim.delivery_id,
-              code: terminalizeError.code,
+              code: terminalizeError?.code || "CLAIM_LEASE_NOT_CURRENT",
             });
           }
           return {
