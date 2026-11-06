@@ -21,7 +21,8 @@
     "test:notification-push-retry-worker": "node scripts/notification-push-retry-worker-contract-check.mjs",
     "test:push-delivery-ledger": "node scripts/push-delivery-ledger-persistence-check.mjs",
     "test:atomic-push-dispatch-claim": "node scripts/atomic-push-dispatch-claim-check.mjs",
-    "test:push-request-validation": "node scripts/push-request-runtime-validation-check.mjs"
+    "test:push-request-validation": "node scripts/push-request-runtime-validation-check.mjs",
+    "test:inactive-push-retry": "node scripts/inactive-push-retry-terminalization-check.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
