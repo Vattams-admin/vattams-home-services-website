@@ -13,7 +13,7 @@ assert.ok(sender.includes("const trackingFailures = outcomes.filter((outcome) =>
 assert.ok(sender.includes("trackingFailures > 0 ? 503"),
   "sender must return service-unavailable when it cannot persist delivery outcomes");
 const succeededGuardStart = sender.indexOf("let eligibleTokens = tokens;");
-const succeededGuardEnd = sender.indexOf("const accessToken = await getFcmAccessToken(account);");
+const succeededGuardEnd = sender.indexOf("let accessToken: string;");
 assert.ok(succeededGuardStart >= 0 && succeededGuardEnd > succeededGuardStart,
   "sender must check the delivery ledger before requesting an FCM access token");
 const succeededGuard = sender.slice(succeededGuardStart, succeededGuardEnd);
