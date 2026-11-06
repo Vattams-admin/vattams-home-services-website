@@ -7,6 +7,7 @@ on:
       - "supabase/migrations/20261105210000_atomic_notification_push_dispatch_claims.sql"
       - "supabase/migrations/20261106220000_release_dispatch_lease_on_retry_defer.sql"
       - "scripts/atomic-push-dispatch-concurrency-integration.sh"
+      - "scripts/fcm-auth-dispatch-lease-check.mjs"
       - "supabase/functions/send-push-notification/index.ts"
       - "supabase/functions/notification-push-retry/index.ts"
       - "supabase/functions/notification-ops/index.ts"
