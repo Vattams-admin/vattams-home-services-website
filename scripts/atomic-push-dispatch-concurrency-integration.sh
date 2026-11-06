@@ -2,7 +2,7 @@
 set -euo pipefail
 
 notification_id="10000000-0000-4000-8000-000000000001"
-token_id="20000000-0000-4000-8000-000000000099"
+token_id="20000000-0000-4000-8000-000000000004"
 
 psql -v ON_ERROR_STOP=1 -c "INSERT INTO public.notification_push_token_deliveries(notification_id,fcm_token_id,status) VALUES ('$notification_id','$token_id','pending') ON CONFLICT (notification_id,fcm_token_id) DO UPDATE SET status='pending',dispatch_lease_until=NULL,lease_until=NULL;"
 
