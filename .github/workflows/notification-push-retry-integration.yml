@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - "supabase/migrations/20261105180000_notification_push_token_retry_ledger.sql"
+      - "supabase/migrations/20261105210000_atomic_notification_push_dispatch_claims.sql"
+      - "scripts/atomic-push-dispatch-concurrency-integration.sh"
       - "supabase/functions/send-push-notification/index.ts"
       - "supabase/functions/notification-push-retry/index.ts"
       - "supabase/functions/notification-ops/index.ts"
@@ -67,6 +69,8 @@ jobs:
           SQL
       - name: Apply per-device retry ledger migration
         run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261105180000_notification_push_token_retry_ledger.sql
+      - name: Apply atomic per-device dispatch claim migration
+        run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261105210000_atomic_notification_push_dispatch_claims.sql
       - name: Verify due claims, leases, backoff eligibility, terminal rows, and access
         run: |
           psql -v ON_ERROR_STOP=1 <<'SQL'
@@ -172,3 +176,6 @@ jobs:
           $$;
           ROLLBACK;
           SQL
+
+      - name: Verify simultaneous dispatch claims have one winner
+        run: bash scripts/atomic-push-dispatch-concurrency-integration.sh
