@@ -12,8 +12,8 @@ assert.ok(worker.includes("const providerFailures = results.reduce((total, item)
   "retry worker must aggregate per-device provider failures");
 assert.ok(worker.includes("providerFailures > 0 || trackingFailures > 0 || senderFailures > 0 ? 502 : 200"),
   "retry worker must return a non-2xx status when any provider delivery failed");
-assert.ok(worker.includes("deferFailures > 0 ? 500"),
-  "retry worker must continue to prioritize failed lease deferrals");
+assert.ok(worker.includes("deferFailures > 0 || terminalizationFailures > 0 || inFlight > 0 ? 500"),
+  "retry worker must return a non-2xx status for failed deferrals, terminalization, or in-flight conflicts");
 
 console.log("PASS retry worker surfaces partial FCM failures to scheduler monitoring");
 
