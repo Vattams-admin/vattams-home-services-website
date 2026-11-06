@@ -8,6 +8,8 @@ assert.ok(worker.includes('const terminalizationFailures = results.filter((item)
   "worker summary must separately count terminalization failures");
 assert.ok(worker.includes("      terminalized,\n      terminalizationFailures,"),
   "worker response must expose both terminalization counters");
+assert.ok(worker.includes("deferFailures > 0 || terminalizationFailures > 0 ? 500"),
+  "a rejected or failed terminalization must make the retry batch non-successful for the scheduler");
 assert.ok(worker.includes('terminalized: terminalized,') || worker.includes('terminalized,'),
   "per-delivery terminalization outcome must remain represented");
 console.log("PASS retry worker response reports terminalized deliveries and terminalization failures");
