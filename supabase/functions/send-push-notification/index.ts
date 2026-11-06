@@ -388,6 +388,9 @@ Deno.serve(async (req: Request) => {
             trackingFailed = true;
             console.error("[push] per-device outcome persistence failed or dispatch lease was superseded", outcomeError?.code || "STALE_DISPATCH_LEASE");
           }
+        } else if (prior.status !== "succeeded") {
+          trackingFailed = true;
+          console.error("[push] refusing to persist outcome after dispatch lease ownership changed");
         }
       }
       if (!ok) console.error("[push] FCM delivery failed", { status: response?.status ?? 0, code: errorCode ?? (networkError ? "FCM_NETWORK_ERROR" : "UNKNOWN") });
