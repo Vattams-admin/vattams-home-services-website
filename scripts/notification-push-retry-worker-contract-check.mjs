@@ -15,3 +15,12 @@ assert.ok(worker.includes("deferFailures > 0 ? 500"),
   "retry worker must continue to prioritize failed lease deferrals");
 
 console.log("PASS retry worker surfaces partial FCM failures to scheduler monitoring");
+
+assert.ok(worker.includes('if (payload?.inFlight === true)'),
+  "retry worker must recognize a sender blocked by another active dispatch lease");
+assert.ok(worker.includes('const inFlight = results.filter((item) => item.inFlight === true).length;'),
+  "retry worker must aggregate in-flight dispatch conflicts");
+assert.ok(worker.includes('terminalizationFailures > 0 || inFlight > 0 ? 500'),
+  "in-flight retries must not be reported as successful scheduler batches");
+assert.ok(worker.includes('// clearing that lease could permit a duplicate FCM send.'),
+  "in-flight retry handling must preserve the other sender's dispatch lease");
