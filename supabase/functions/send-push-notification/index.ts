@@ -208,7 +208,7 @@ Deno.serve(async (req: Request) => {
             .update({ dispatch_lease_token: null, dispatch_lease_until: null, updated_at: new Date().toISOString() })
             .eq("notification_id", notificationId)
             .eq("fcm_token_id", claimedRow.tokenRow.id)
-                        .eq("dispatch_lease_token", claimedRow.dispatchLeaseToken)
+            .eq("dispatch_lease_token", claimedRow.dispatchLeaseToken)
             .gt("dispatch_lease_until", new Date().toISOString())
             .in("status", ["pending", "retryable"]);
           if (releaseError) {
@@ -285,7 +285,7 @@ Deno.serve(async (req: Request) => {
             .update({ dispatch_lease_token: null, dispatch_lease_until: null, updated_at: new Date().toISOString() })
             .eq("notification_id", notificationId)
             .eq("fcm_token_id", tokenRow.id)
-                        .eq("dispatch_lease_token", tokenRow.dispatchLeaseToken)
+            .eq("dispatch_lease_token", tokenRow.dispatchLeaseToken)
             .gt("dispatch_lease_until", new Date().toISOString())
             .in("status", ["pending", "retryable"]);
           if (releaseError) {
@@ -384,7 +384,7 @@ Deno.serve(async (req: Request) => {
               last_attempt_at: attemptAt.toISOString(), updated_at: attemptAt.toISOString(),
             })
             .eq("notification_id", notificationId).eq("fcm_token_id", tokenRow.id)
-                        .eq("dispatch_lease_token", tokenRow.dispatchLeaseToken)
+            .eq("dispatch_lease_token", tokenRow.dispatchLeaseToken)
             .gt("dispatch_lease_until", attemptAt.toISOString())
             .neq("status", "succeeded")
             .select("id");
