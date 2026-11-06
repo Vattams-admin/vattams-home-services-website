@@ -22,3 +22,8 @@ A worker could pause beyond its 120-second lease. A second worker could then rec
 ## Validation boundary
 
 This is Supabase Edge Function and SQL migration source. No production Supabase migration or function deployment was performed. Cloudflare Pages is used for the website preview and does not deploy Supabase backend code. PR merge is gated on successful Cloudflare Pages preview and code validation.
+
+
+## Preview revision
+
+Cloudflare Pages preview must correspond to the final PR head commit, not an earlier commit in the same branch. The earlier successful preview for commit `10459d7` predates the final worker and regression-check refinements; wait for Cloudflare's success report on the current head before merging.
