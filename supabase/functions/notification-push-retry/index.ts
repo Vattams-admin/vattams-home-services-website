@@ -116,6 +116,19 @@ Deno.serve(async (req: Request) => {
             deferSucceeded: terminalizeError ? false : null,
           };
         }
+        // A different sender still owns the device dispatch lease. Do not
+        // defer this retry: clearing that lease could permit a duplicate FCM send.
+        if (payload?.inFlight === true) {
+          return {
+            deliveryId: claim.delivery_id,
+            trackedBySender: false,
+            senderAccepted: false,
+            providerFailures: 0,
+            inFlight: true,
+            status: response.status,
+            deferSucceeded: null,
+          };
+        }
         if (payload?.perDeviceTracking !== true) {
           const deferSucceeded = await deferClaim(claim.delivery_id, claim.lease_until);
           return {
@@ -159,6 +172,7 @@ Deno.serve(async (req: Request) => {
     }));
 
     const deferFailures = results.filter((item) => item.deferSucceeded === false).length;
+    const inFlight = results.filter((item) => item.inFlight === true).length;
     const terminalized = results.filter((item) => item.terminalized === true).length;
     const terminalizationFailures = results.filter((item) => item.terminalized === false).length;
     const senderFailures = results.filter((item) => item.trackedBySender && !item.senderAccepted).length;
@@ -174,8 +188,9 @@ Deno.serve(async (req: Request) => {
       terminalized,
       terminalizationFailures,
       deferFailures,
+      inFlight,
       results,
-    }, deferFailures > 0 || terminalizationFailures > 0 ? 500 : providerFailures > 0 || trackingFailures > 0 || senderFailures > 0 ? 502 : 200);
+    }, deferFailures > 0 || terminalizationFailures > 0 || inFlight > 0 ? 500 : providerFailures > 0 || trackingFailures > 0 || senderFailures > 0 ? 502 : 200);
   } catch (error) {
     console.error("[notification-push-retry] unexpected failure", error instanceof Error ? error.message : "unknown");
     return out({ error: "Unexpected retry worker failure" }, 500);
