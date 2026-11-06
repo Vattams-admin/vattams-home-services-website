@@ -226,15 +226,49 @@ Deno.serve(async (req: Request) => {
       eligibleTokens = claimResults.filter((result) => result.claimed).map((result) => result.tokenRow);
     }
     if (eligibleTokens.length === 0) {
+      // A failed atomic claim can mean another sender still owns the device's
+      // dispatch lease. Do not label every skipped token as already delivered.
+      let skippedAlreadySucceeded = 0;
+      let skippedInFlight = 0;
+      if (notificationId && tokens.length > 0) {
+        const { data: states, error: stateError } = await supabase
+          .from("notification_push_token_deliveries")
+          .select("fcm_token_id,status,dispatch_lease_until")
+          .eq("notification_id", notificationId)
+          .in("fcm_token_id", tokens.map((tokenRow: { id: string }) => tokenRow.id));
+        if (stateError) {
+          console.error("[push] unable to classify skipped device claims", stateError.code);
+          return json({
+            success: false,
+            sent: 0,
+            failed: 0,
+            trackingFailures: tokens.length,
+            total: tokens.length,
+            perDeviceTracking: true,
+            error: "Unable to classify skipped push deliveries",
+          }, 503);
+        }
+        const now = Date.now();
+        for (const state of states || []) {
+          if (state.status === "succeeded") skippedAlreadySucceeded += 1;
+          else if (
+            ["pending", "retryable"].includes(state.status) &&
+            state.dispatch_lease_until &&
+            Date.parse(state.dispatch_lease_until) > now
+          ) skippedInFlight += 1;
+        }
+      }
       return json({
-        success: true,
+        success: skippedInFlight === 0,
         sent: 0,
         failed: 0,
         trackingFailures: 0,
         total: 0,
-        skippedAlreadySucceeded: tokens.length,
+        skippedAlreadySucceeded,
+        skippedInFlight,
+        inFlight: skippedInFlight > 0,
         perDeviceTracking: Boolean(notificationId),
-      });
+      }, skippedInFlight > 0 ? 409 : 200);
     }
 
     let accessToken: string;
