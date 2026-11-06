@@ -90,9 +90,11 @@ Deno.serve(async (req: Request) => {
     }
     const { userType, userId, title, body, data = {}, notificationId, fcmTokenIds } = input;
     if (!["customer", "technician", "admin"].includes(userType) ||
-        !userId || !title?.trim() || !body?.trim() ||
-        (notificationId !== undefined && !/^[0-9a-f-]{36}$/i.test(notificationId)) ||
-        (fcmTokenIds !== undefined && (!Array.isArray(fcmTokenIds) || fcmTokenIds.length === 0 || fcmTokenIds.length > 500 || fcmTokenIds.some((id) => !/^[0-9a-f-]{36}$/i.test(id))))) {
+        typeof userId !== "string" || !userId.trim() ||
+        typeof title !== "string" || !title.trim() ||
+        typeof body !== "string" || !body.trim() ||
+        (notificationId !== undefined && (typeof notificationId !== "string" || !/^[0-9a-f-]{36}$/i.test(notificationId))) ||
+        (fcmTokenIds !== undefined && (!Array.isArray(fcmTokenIds) || fcmTokenIds.length === 0 || fcmTokenIds.length > 500 || fcmTokenIds.some((id) => typeof id !== "string" || !/^[0-9a-f-]{36}$/i.test(id))))) {
       return json({ error: "Missing or invalid required fields" }, 400);
     }
     // Validate optional payload shape before token lookup or dispatch-lease claims.
