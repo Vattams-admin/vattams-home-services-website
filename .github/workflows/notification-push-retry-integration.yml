@@ -135,7 +135,7 @@ jobs:
           ) VALUES (
             '10000000-0000-4000-8000-000000000001',
             '20000000-0000-4000-8000-000000000001',
-            'pending',0,now(),now()+interval '2 minutes'
+            'pending',0,now(),now()+interval '2 minutes',now()+interval '3 minutes'
           )
           ON CONFLICT (notification_id,fcm_token_id) DO UPDATE
             SET status='pending',attempt_count=0,next_attempt_at=now(),lease_until=now()+interval '2 minutes',dispatch_lease_until=now()+interval '3 minutes';
@@ -159,7 +159,11 @@ jobs:
             END IF;
             IF (SELECT lease_until FROM public.notification_push_token_deliveries
                 WHERE fcm_token_id='20000000-0000-4000-8000-000000000001') IS NOT NULL THEN
-              RAISE EXCEPTION 'Dispatch defer did not release the lease';
+              RAISE EXCEPTION 'Dispatch defer did not release the retry worker lease';
+            END IF;
+            IF (SELECT dispatch_lease_until FROM public.notification_push_token_deliveries
+                WHERE fcm_token_id='20000000-0000-4000-8000-000000000001') IS NOT NULL THEN
+              RAISE EXCEPTION 'Dispatch defer did not release the sender dispatch lease';
             END IF;
           END;
           $$;
