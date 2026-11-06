@@ -208,7 +208,8 @@ Deno.serve(async (req: Request) => {
             .update({ dispatch_lease_token: null, dispatch_lease_until: null, updated_at: new Date().toISOString() })
             .eq("notification_id", notificationId)
             .eq("fcm_token_id", claimedRow.tokenRow.id)
-            .eq("dispatch_lease_token", claimedRow.dispatchLeaseToken)
+                        .eq("dispatch_lease_token", claimedRow.dispatchLeaseToken)
+            .gt("dispatch_lease_until", new Date().toISOString())
             .in("status", ["pending", "retryable"]);
           if (releaseError) {
             releaseFailed = true;
@@ -284,7 +285,8 @@ Deno.serve(async (req: Request) => {
             .update({ dispatch_lease_token: null, dispatch_lease_until: null, updated_at: new Date().toISOString() })
             .eq("notification_id", notificationId)
             .eq("fcm_token_id", tokenRow.id)
-            .eq("dispatch_lease_token", tokenRow.dispatchLeaseToken)
+                        .eq("dispatch_lease_token", tokenRow.dispatchLeaseToken)
+            .gt("dispatch_lease_until", new Date().toISOString())
             .in("status", ["pending", "retryable"]);
           if (releaseError) {
             releaseFailed = true;
@@ -359,12 +361,13 @@ Deno.serve(async (req: Request) => {
       let trackingFailed = false;
       if (notificationId) {
         const { data: prior, error: priorError } = await supabase.from("notification_push_token_deliveries")
-          .select("attempt_count,status,dispatch_lease_token").eq("notification_id", notificationId)
+          .select("attempt_count,status,dispatch_lease_token,dispatch_lease_until").eq("notification_id", notificationId)
           .eq("fcm_token_id", tokenRow.id).maybeSingle();
         if (priorError || !prior) {
           trackingFailed = true;
           console.error("[push] per-device prior outcome lookup failed", priorError?.code || "ROW_NOT_FOUND");
-        } else if (prior.status !== "succeeded" && prior.dispatch_lease_token === tokenRow.dispatchLeaseToken) {
+        } else if (prior.status !== "succeeded" && prior.dispatch_lease_token === tokenRow.dispatchLeaseToken &&
+          prior.dispatch_lease_until && Date.parse(prior.dispatch_lease_until) > attemptAt.getTime()) {
           const attempts = Number(prior.attempt_count ?? 0) + 1;
           const terminal = !ok && ["UNREGISTERED", "NOT_FOUND", "INVALID_ARGUMENT", "SENDER_ID_MISMATCH"].includes(String(errorCode));
           const delaySeconds = Math.min(3600, 30 * (2 ** Math.min(attempts - 1, 7)));
@@ -381,7 +384,8 @@ Deno.serve(async (req: Request) => {
               last_attempt_at: attemptAt.toISOString(), updated_at: attemptAt.toISOString(),
             })
             .eq("notification_id", notificationId).eq("fcm_token_id", tokenRow.id)
-            .eq("dispatch_lease_token", tokenRow.dispatchLeaseToken)
+                        .eq("dispatch_lease_token", tokenRow.dispatchLeaseToken)
+            .gt("dispatch_lease_until", attemptAt.toISOString())
             .neq("status", "succeeded")
             .select("id");
           if (outcomeError || !persistedOutcome?.length) {
@@ -390,7 +394,7 @@ Deno.serve(async (req: Request) => {
           }
         } else if (prior.status !== "succeeded") {
           trackingFailed = true;
-          console.error("[push] refusing to persist outcome after dispatch lease ownership changed");
+          console.error("[push] refusing to persist outcome after dispatch lease ownership changed or expired");
         }
       }
       if (!ok) console.error("[push] FCM delivery failed", { status: response?.status ?? 0, code: errorCode ?? (networkError ? "FCM_NETWORK_ERROR" : "UNKNOWN") });
