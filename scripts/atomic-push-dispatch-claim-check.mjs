@@ -22,4 +22,16 @@ assert.ok(sender.includes("eligibleTokens = claimResults.filter((result) => resu
   sender.includes("dispatch_lease_until: null"),
   "sender must send only claimed tokens and clear dispatch lease after outcome persistence");
 
+
+const claimErrorStart = sender.indexOf("const claimErrors = claimResults.filter");
+const claimErrorEnd = sender.indexOf("eligibleTokens = claimResults.filter", claimErrorStart);
+assert.ok(claimErrorStart >= 0 && claimErrorEnd > claimErrorStart,
+  "sender must handle partial atomic claim failures before continuing");
+const claimErrorBlock = sender.slice(claimErrorStart, claimErrorEnd);
+assert.ok(claimErrorBlock.includes(".filter((result) => result.claimed)") &&
+  claimErrorBlock.includes(".in(\"fcm_token_id\", claimedIds)") &&
+  claimErrorBlock.includes(".in(\"status\", [\"pending\", \"retryable\"])") &&
+  claimErrorBlock.includes("dispatch_lease_until: null"),
+  "sender must release only successfully claimed pending/retryable devices when any parallel claim fails");
+
 console.log("PASS atomic per-device push dispatch claim contract");

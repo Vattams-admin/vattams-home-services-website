@@ -190,9 +190,30 @@ Deno.serve(async (req: Request) => {
       }));
       const claimErrors = claimResults.filter((result) => result.error).length;
       if (claimErrors > 0) {
+        // Some parallel claims may already have succeeded. Release those exact
+        // reservations before returning, otherwise a partial RPC outage blocks
+        // those devices until the dispatch lease expires.
+        const claimedIds = claimResults
+          .filter((result) => result.claimed)
+          .map((result) => result.tokenRow.id);
+        let releaseFailed = false;
+        if (claimedIds.length > 0) {
+          const { error: releaseError } = await supabase
+            .from("notification_push_token_deliveries")
+            .update({ dispatch_lease_until: null, updated_at: new Date().toISOString() })
+            .eq("notification_id", notificationId)
+            .in("fcm_token_id", claimedIds)
+            .in("status", ["pending", "retryable"]);
+          if (releaseError) {
+            releaseFailed = true;
+            console.error("[push] unable to release partial atomic dispatch claims", releaseError.code);
+          }
+        }
         return json({
-          success: false, sent: 0, failed: 0, trackingFailures: claimErrors,
-          total: eligibleTokens.length, error: "Unable to acquire atomic push dispatch claims",
+          success: false, sent: 0, failed: 0,
+          trackingFailures: claimErrors + (releaseFailed ? claimedIds.length : 0),
+          total: eligibleTokens.length,
+          error: "Unable to acquire atomic push dispatch claims",
         }, 503);
       }
       eligibleTokens = claimResults.filter((result) => result.claimed).map((result) => result.tokenRow);
