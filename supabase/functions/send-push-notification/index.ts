@@ -264,43 +264,54 @@ Deno.serve(async (req: Request) => {
       const messageData = Object.fromEntries(
         Object.entries(data).map(([key, value]) => [key, String(value)]),
       );
-      const response = await fetch(
-        `https://fcm.googleapis.com/v1/projects/${encodeURIComponent(account.project_id)}/messages:send`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            message: {
-              token: tokenRow.token,
-              notification: { title: title.slice(0, 200), body: body.slice(0, 2000) },
-              data: messageData,
-              webpush: {
-                notification: {
-                  title: title.slice(0, 200),
-                  body: body.slice(0, 2000),
-                  icon: "/logo.svg",
-                  badge: "/favicon.svg",
-                  requireInteraction: true,
-                },
-                fcm_options: { link: new URL(messageData.url || "/", Deno.env.get("PUBLIC_APP_URL") || "https://vattams.net").toString() },
-              },
+      let response: Response | null = null;
+      let networkError: unknown = null;
+      try {
+        response = await fetch(
+          `https://fcm.googleapis.com/v1/projects/${encodeURIComponent(account.project_id)}/messages:send`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
             },
-          }),
-        },
-      );
-      const result = await response.json().catch(() => ({}));
-      const errorCode = result?.error?.details?.find?.(
-        (detail: { errorCode?: string }) => detail?.errorCode,
-      )?.errorCode ?? result?.error?.status;
-      if (!response.ok && ["UNREGISTERED", "NOT_FOUND"].includes(String(errorCode))) {
+            body: JSON.stringify({
+              message: {
+                token: tokenRow.token,
+                notification: { title: title.slice(0, 200), body: body.slice(0, 2000) },
+                data: messageData,
+                webpush: {
+                  notification: {
+                    title: title.slice(0, 200),
+                    body: body.slice(0, 2000),
+                    icon: "/logo.svg",
+                    badge: "/favicon.svg",
+                    requireInteraction: true,
+                  },
+                  fcm_options: { link: new URL(messageData.url || "/", Deno.env.get("PUBLIC_APP_URL") || "https://vattams.net").toString() },
+                },
+              },
+            }),
+          },
+        );
+      } catch (error) {
+        // A transport exception is isolated to this device. Persist it as a
+        // retryable outcome rather than rejecting the whole Promise.all batch.
+        networkError = error;
+        console.error("[push] FCM request transport failed", error instanceof Error ? error.message : "unknown");
+      }
+      const result = response ? await response.json().catch(() => ({})) : {};
+      const errorCode = response
+        ? result?.error?.details?.find?.(
+          (detail: { errorCode?: string }) => detail?.errorCode,
+        )?.errorCode ?? result?.error?.status
+        : "FCM_NETWORK_ERROR";
+      if (response && !response.ok && ["UNREGISTERED", "NOT_FOUND"].includes(String(errorCode))) {
         await supabase.from("fcm_tokens")
           .update({ is_active: false, updated_at: new Date().toISOString() })
           .eq("id", tokenRow.id);
       }
-      const ok = response.ok;
+      const ok = response?.ok === true;
       const attemptAt = new Date();
       let trackingFailed = false;
       if (notificationId) {
@@ -333,7 +344,7 @@ Deno.serve(async (req: Request) => {
           }
         }
       }
-      if (!ok) console.error("[push] FCM delivery failed", { status: response.status, code: errorCode ?? "UNKNOWN" });
+      if (!ok) console.error("[push] FCM delivery failed", { status: response?.status ?? 0, code: errorCode ?? (networkError ? "FCM_NETWORK_ERROR" : "UNKNOWN") });
       return { ok, trackingFailed };
     }));
 
