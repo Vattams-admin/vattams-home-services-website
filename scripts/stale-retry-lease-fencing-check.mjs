@@ -8,6 +8,8 @@ assert.ok(worker.includes("  lease_until: string;"), "claim result must carry it
 assert.ok(worker.includes("p_expected_lease_until: leaseUntil"), "defer call must pass the claim lease fence");
 assert.ok(worker.includes("p_expected_lease_until: claim.lease_until"), "terminalize call must pass the claim lease fence");
 assert.ok(worker.includes("deferClaim(claim.delivery_id, claim.lease_until)"), "every defer path must be fenced");
+assert.ok(worker.includes("return deferred === true;"), "defer must report stale-claim rejection rather than treating an error-free no-op as success");
+assert.ok(worker.includes("!terminalizeError && terminalizeResult === true"), "terminalization must report stale-claim rejection rather than treating an error-free no-op as success");
 
 assert.ok(migration.includes("lease_until timestamptz"), "claim RPC must return the lease timestamp");
 assert.ok(migration.includes("AND lease_until = p_expected_lease_until"), "mutations must match the original claim lease");
