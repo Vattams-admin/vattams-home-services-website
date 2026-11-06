@@ -191,39 +191,38 @@ Deno.serve(async (req: Request) => {
         });
         if (claimError) {
           console.error("[push] atomic dispatch claim failed", claimError.code);
-          return { tokenRow, error: true, claimed: false };
+          return { tokenRow, error: true, claimed: false, dispatchLeaseToken: null };
         }
-        return { tokenRow, error: false, claimed: claimed === true };
+        return { tokenRow, error: false, claimed: typeof claimed === "string" && claimed.length > 0, dispatchLeaseToken: typeof claimed === "string" ? claimed : null };
       }));
       const claimErrors = claimResults.filter((result) => result.error).length;
       if (claimErrors > 0) {
         // Some parallel claims may already have succeeded. Release those exact
         // reservations before returning, otherwise a partial RPC outage blocks
         // those devices until the dispatch lease expires.
-        const claimedIds = claimResults
-          .filter((result) => result.claimed)
-          .map((result) => result.tokenRow.id);
+        const claimedRows = claimResults.filter((result) => result.claimed && result.dispatchLeaseToken);
         let releaseFailed = false;
-        if (claimedIds.length > 0) {
+        for (const claimedRow of claimedRows) {
           const { error: releaseError } = await supabase
             .from("notification_push_token_deliveries")
-            .update({ dispatch_lease_until: null, updated_at: new Date().toISOString() })
+            .update({ dispatch_lease_token: null, dispatch_lease_until: null, updated_at: new Date().toISOString() })
             .eq("notification_id", notificationId)
-            .in("fcm_token_id", claimedIds)
+            .eq("fcm_token_id", claimedRow.tokenRow.id)
+            .eq("dispatch_lease_token", claimedRow.dispatchLeaseToken)
             .in("status", ["pending", "retryable"]);
           if (releaseError) {
             releaseFailed = true;
-            console.error("[push] unable to release partial atomic dispatch claims", releaseError.code);
+            console.error("[push] unable to release partial atomic dispatch claim", releaseError.code);
           }
         }
         return json({
           success: false, sent: 0, failed: 0,
-          trackingFailures: claimErrors + (releaseFailed ? claimedIds.length : 0),
+          trackingFailures: claimErrors + (releaseFailed ? claimedRows.length : 0),
           total: eligibleTokens.length,
           error: "Unable to acquire atomic push dispatch claims",
         }, 503);
       }
-      eligibleTokens = claimResults.filter((result) => result.claimed).map((result) => result.tokenRow);
+      eligibleTokens = claimResults.filter((result) => result.claimed).map((result) => ({ ...result.tokenRow, dispatchLeaseToken: result.dispatchLeaseToken }));
     }
     if (eligibleTokens.length === 0) {
       // A failed atomic claim can mean another sender still owns the device's
@@ -279,15 +278,18 @@ Deno.serve(async (req: Request) => {
       // The retry worker owns attempt counting/backoff when it handles this 503.
       let releaseFailed = false;
       if (notificationId) {
-        const { error: releaseError } = await supabase
-          .from("notification_push_token_deliveries")
-          .update({ dispatch_lease_until: null, updated_at: new Date().toISOString() })
-          .eq("notification_id", notificationId)
-          .in("fcm_token_id", eligibleTokens.map((tokenRow: { id: string }) => tokenRow.id))
-          .in("status", ["pending", "retryable"]);
-        if (releaseError) {
-          releaseFailed = true;
-          console.error("[push] unable to release dispatch claims after FCM auth failure", releaseError.code);
+        for (const tokenRow of eligibleTokens as Array<{ id: string; dispatchLeaseToken: string }>) {
+          const { error: releaseError } = await supabase
+            .from("notification_push_token_deliveries")
+            .update({ dispatch_lease_token: null, dispatch_lease_until: null, updated_at: new Date().toISOString() })
+            .eq("notification_id", notificationId)
+            .eq("fcm_token_id", tokenRow.id)
+            .eq("dispatch_lease_token", tokenRow.dispatchLeaseToken)
+            .in("status", ["pending", "retryable"]);
+          if (releaseError) {
+            releaseFailed = true;
+            console.error("[push] unable to release dispatch claim after FCM auth failure", releaseError.code);
+          }
         }
       }
       console.error("[push] FCM access token acquisition failed", error instanceof Error ? error.message : "unknown");
@@ -357,31 +359,34 @@ Deno.serve(async (req: Request) => {
       let trackingFailed = false;
       if (notificationId) {
         const { data: prior, error: priorError } = await supabase.from("notification_push_token_deliveries")
-          .select("attempt_count,status").eq("notification_id", notificationId)
+          .select("attempt_count,status,dispatch_lease_token").eq("notification_id", notificationId)
           .eq("fcm_token_id", tokenRow.id).maybeSingle();
         if (priorError || !prior) {
           trackingFailed = true;
           console.error("[push] per-device prior outcome lookup failed", priorError?.code || "ROW_NOT_FOUND");
-        } else if (prior.status !== "succeeded") {
+        } else if (prior.status !== "succeeded" && prior.dispatch_lease_token === tokenRow.dispatchLeaseToken) {
           const attempts = Number(prior.attempt_count ?? 0) + 1;
           const terminal = !ok && ["UNREGISTERED", "NOT_FOUND", "INVALID_ARGUMENT", "SENDER_ID_MISMATCH"].includes(String(errorCode));
           const delaySeconds = Math.min(3600, 30 * (2 ** Math.min(attempts - 1, 7)));
-          const { error: outcomeError } = await supabase.from("notification_push_token_deliveries")
+          const { data: persistedOutcome, error: outcomeError } = await supabase.from("notification_push_token_deliveries")
             .update({
               status: ok ? "succeeded" : terminal || attempts >= 5 ? "terminal" : "retryable",
               attempt_count: attempts,
               next_attempt_at: new Date(attemptAt.getTime() + delaySeconds * 1000).toISOString(),
               lease_until: null,
               dispatch_lease_until: null,
+              dispatch_lease_token: null,
               last_error_code: ok ? null : String(errorCode ?? "FCM_REQUEST_FAILED").slice(0, 120),
               provider_accepted_at: ok ? attemptAt.toISOString() : null,
               last_attempt_at: attemptAt.toISOString(), updated_at: attemptAt.toISOString(),
             })
             .eq("notification_id", notificationId).eq("fcm_token_id", tokenRow.id)
-            .neq("status", "succeeded");
-          if (outcomeError) {
+            .eq("dispatch_lease_token", tokenRow.dispatchLeaseToken)
+            .neq("status", "succeeded")
+            .select("id");
+          if (outcomeError || !persistedOutcome?.length) {
             trackingFailed = true;
-            console.error("[push] per-device outcome persistence failed", outcomeError.code);
+            console.error("[push] per-device outcome persistence failed or dispatch lease was superseded", outcomeError?.code || "STALE_DISPATCH_LEASE");
           }
         }
       }
