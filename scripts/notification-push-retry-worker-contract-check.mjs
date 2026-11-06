@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const worker = readFileSync(new URL("../supabase/functions/notification-push-retry/index.ts", import.meta.url), "utf8");
+const sender = readFileSync(new URL("../supabase/functions/send-push-notification/index.ts", import.meta.url), "utf8");
 
 assert.ok(worker.includes("Number.isInteger(payload?.failed) && payload.failed >= 0"),
   "retry worker must validate the sender's per-device failed count");
@@ -24,3 +25,8 @@ assert.ok(worker.includes('terminalizationFailures > 0 || inFlight > 0 ? 500'),
   "in-flight retries must not be reported as successful scheduler batches");
 assert.ok(worker.includes('// clearing that lease could permit a duplicate FCM send.'),
   "in-flight retry handling must preserve the other sender's dispatch lease");
+
+assert.ok(sender.includes('skippedInFlight > 0 ? 409 : 200'),
+  "sender must return a conflict when another active dispatch lease blocks delivery");
+assert.ok(sender.includes('skippedAlreadySucceeded,\n        skippedInFlight,\n        inFlight: skippedInFlight > 0'),
+  "sender must distinguish confirmed successes from active in-flight claims");
