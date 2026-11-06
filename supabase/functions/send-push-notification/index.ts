@@ -235,7 +235,7 @@ Deno.serve(async (req: Request) => {
         failed: 0,
         trackingFailures: releaseFailed ? eligibleTokens.length : 0,
         total: eligibleTokens.length,
-        perDeviceTracking: Boolean(notificationId),
+        perDeviceTracking: false,
         error: "Unable to initialize FCM delivery",
       }, 503);
     }
