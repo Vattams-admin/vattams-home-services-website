@@ -15,7 +15,7 @@ assert.ok(migration.includes("GET DIAGNOSTICS v_claimed = ROW_COUNT") &&
 assert.ok(migration.includes("p_lease_seconds < 30 OR p_lease_seconds > 900"),
   "claim RPC must bound its lease duration");
 const claimStart = sender.indexOf('supabase.rpc("claim_notification_push_dispatch"');
-const accessToken = sender.indexOf("const accessToken = await getFcmAccessToken(account);");
+const accessToken = sender.indexOf("let accessToken: string;");
 assert.ok(claimStart >= 0 && accessToken > claimStart,
   "sender must acquire atomic dispatch claims before obtaining FCM access token");
 assert.ok(sender.includes("eligibleTokens = claimResults.filter((result) => result.claimed)") &&
