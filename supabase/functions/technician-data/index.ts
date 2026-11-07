@@ -2,9 +2,42 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 const corsHeaders={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"POST,OPTIONS","Access-Control-Allow-Headers":"Content-Type,Authorization,X-Client-Info,Apikey"};
 const supabase=createClient(Deno.env.get("SUPABASE_URL")!,Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+const MAX_REQUEST_BYTES = 16 * 1024;
+class RequestBodyTooLargeError extends Error {}
+class InvalidRequestBodyError extends Error {}
+
+async function readBoundedJson(req: Request): Promise<Record<string, unknown>> {
+  const rawLength = req.headers.get("content-length");
+  if (rawLength !== null) {
+    if (!/^\\d+$/.test(rawLength)) throw new InvalidRequestBodyError("Invalid Content-Length");
+    if (Number(rawLength) > MAX_REQUEST_BYTES) throw new RequestBodyTooLargeError();
+  }
+  if (!req.body) throw new InvalidRequestBodyError("Request body is required");
+  const reader = req.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      totalBytes += value.byteLength;
+      if (totalBytes > MAX_REQUEST_BYTES) { await reader.cancel(); throw new RequestBodyTooLargeError(); }
+      chunks.push(value);
+    }
+  } finally { reader.releaseLock(); }
+  const bytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  let parsed: unknown;
+  try { parsed = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)); }
+  catch { throw new InvalidRequestBodyError("Request body must be valid JSON"); }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new InvalidRequestBodyError("Request body must be a JSON object");
+  return parsed as Record<string, unknown>;
+}
+
 async function auth(token:string){if(typeof token!=="string"||!token)return {technicianId:null,error:false};const {data,error}=await supabase.from("technician_auth_sessions").select("technician_id,expires_at").eq("token",token).maybeSingle();if(error)return {technicianId:null,error:true};const expiresAt=data?.expires_at==null?Number.NaN:new Date(data.expires_at).getTime();if(!data?.technician_id||!Number.isFinite(expiresAt)||expiresAt<=Date.now())return {technicianId:null,error:false};return {technicianId:data.technician_id,error:false};}
 function out(data:unknown,status=200){return new Response(JSON.stringify(data),{status,headers:{...corsHeaders,"Content-Type":"application/json"}})}
-Deno.serve(async req=>{if(req.method==="OPTIONS")return new Response(null,{status:200,headers:corsHeaders});if(req.method!=="POST")return new Response(JSON.stringify({error:"Method not allowed"}),{status:405,headers:{...corsHeaders,"Content-Type":"application/json","Allow":"POST, OPTIONS"}});try{const body=await req.json();const authResult=await auth(body.session_token);if(authResult.error)return out({error:"Unable to verify technician session. Please try again."},503);const technicianId=authResult.technicianId;if(!technicianId)return out({error:"Unauthorized"},401);
+Deno.serve(async req=>{if(req.method==="OPTIONS")return new Response(null,{status:200,headers:corsHeaders});if(req.method!=="POST")return new Response(JSON.stringify({error:"Method not allowed"}),{status:405,headers:{...corsHeaders,"Content-Type":"application/json","Allow":"POST, OPTIONS"}});try{const body=await readBoundedJson(req);const authResult=await auth(body.session_token);if(authResult.error)return out({error:"Unable to verify technician session. Please try again."},503);const technicianId=authResult.technicianId;if(!technicianId)return out({error:"Unauthorized"},401);
 const {data:sessionTechnician,error:sessionTechnicianError}=await supabase.from("technicians").select("id,full_name,mobile,email,city,status,created_at").eq("id",technicianId).maybeSingle();
 if(sessionTechnicianError)return out({error:"Unable to verify technician account status"},503);
 if(!sessionTechnician)return out({error:"Technician account not found"},401);
@@ -35,4 +68,4 @@ return out({unread_count:walletCount.count+jobCount.count});
 }case "notification_read":{if(typeof body.notification_id!=="string"||!body.notification_id.trim())return out({error:"Notification ID is required"},400);const source=body.source??"wallet";if(source!=="wallet"&&source!=="job")return out({error:"Invalid notification source"},400);const table=source==="job"?"notifications":"technician_notifications";let q=supabase.from(table).update({is_read:true,read_at:new Date().toISOString(),status:"read"}).eq("id",body.notification_id.trim());q=source==="job"?q.eq("recipient_type","technician").eq("recipient_id",technicianId):q.eq("technician_id",technicianId);const {data,error}=await q.select("id").maybeSingle();if(error)return out({error:"Unable to update notification. Please try again."},503);if(!data)return out({error:"Notification not found"},404);return out({success:true});}
 case "notifications_read_all":{const {data,error}=await supabase.rpc("mark_technician_notifications_read_all",{p_technician_id:technicianId});if(error)return out({error:"Unable to update all technician notifications. Please try again."},503);const result=data&&typeof data==="object"&&!Array.isArray(data)?data as Record<string,unknown>:{};const walletUpdated=Number(result.technician_notifications_updated);const jobsUpdated=Number(result.job_notifications_updated);if(!Number.isSafeInteger(walletUpdated)||walletUpdated<0||!Number.isSafeInteger(jobsUpdated)||jobsUpdated<0)return out({error:"Unable to confirm notification updates. Please try again."},503);return out({success:true,updated:walletUpdated+jobsUpdated});}
 case "recharge":{const amount=Number(body.amount);if(!Number.isFinite(amount)||amount<=0||amount>100000)return out({error:"Invalid amount"},400);if(body.payment_ref!==undefined&&body.payment_ref!==null&&typeof body.payment_ref!=="string")return out({error:"Invalid payment reference"},400);const paymentRef=typeof body.payment_ref==="string"?body.payment_ref.trim():null;if(paymentRef&&paymentRef.length>255)return out({error:"Payment reference must be 255 characters or fewer"},400);const {data,error}=await supabase.from("wallet_recharges").insert({technician_id:technicianId,amount,status:"pending",payment_ref:paymentRef||null}).select("*").single();if(error)return out({error:"Unable to submit recharge. Please try again."},503);return out({recharge:data});}
-default:return out({error:"Invalid action"},400)}}catch{return out({error:"Unexpected server error"},500)}});
+default:return out({error:"Invalid action"},400)}}catch(error){if(error instanceof RequestBodyTooLargeError)return out({error:"Request body exceeds the 16 KB limit"},413);if(error instanceof InvalidRequestBodyError)return out({error:error.message},400);return out({error:"Unexpected server error"},500)}});
