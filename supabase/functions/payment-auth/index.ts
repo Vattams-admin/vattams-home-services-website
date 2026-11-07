@@ -214,12 +214,13 @@ async function verifyPayment(body: Record<string, unknown>) {
   // reconcile it before choosing success.
   if (status === "success") verificationQuery = verificationQuery.not("utr", "is", null);
 
-  const { data, error } = await verificationQuery.select("id,payment_id,payee_type,payee_id,payee_name,upi_id,amount,purpose,reference_id,utr,status,notes,verified_by,created_at,verified_at").single();
+  const { data, error } = await verificationQuery.select("id,payment_id,payee_type,payee_id,payee_name,upi_id,amount,purpose,reference_id,utr,status,notes,verified_by,created_at,verified_at").maybeSingle();
 
   if (error) {
     console.error("[payment-auth verify] payment update failed", { code: error.code ?? null });
     return json({ error: "Payment service is temporarily unavailable. Please try again." }, 503);
   }
+  // No matching pending payment is a business-state conflict, not a service outage.
   if (!data) return json({ error: "Payment is no longer pending or could not be updated" }, 409);
   return json({ payment: data });
 }
