@@ -15,5 +15,5 @@ assert.match(customer, /from\("notifications"\)\.select\("id",\{count:"exact",he
 assert.match(technician, /from\("technician_notifications"\)\.select\("id",\{count:"exact",head:true\}\)/);
 assert.match(technician, /from\("notifications"\)\.select\("id",\{count:"exact",head:true\}\)/);
 assert.match(technician, /unread_count:walletCount\.count\+jobCount\.count/);
-assert.match(admin, /case "notification_unread_count"[\s\S]*?count:"exact",head:true/);
+assert.match(technician, /case "notifications_read_all"[\\s\\S]*?from\\("technician_notifications"\\)\\.update/);\nassert.match(technician, /case "notifications_read_all"[\\s\\S]*?from\\("notifications"\\)\\.update/);\nassert.match(admin, /case "notification_unread_count"[\s\S]*?count:"exact",head:true/);
 console.log("PASS exact unread count uses server-side head/count queries for customer, both technician sources, and admin");
