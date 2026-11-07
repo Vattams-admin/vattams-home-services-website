@@ -32,7 +32,8 @@
     "test:exact-notification-unread-count": "node scripts/exact-notification-unread-count-check.mjs",
     "test:atomic-technician-notification-read-all": "node scripts/atomic-technician-notification-read-all-check.mjs",
     "test:payment-verification-conflict": "node scripts/payment-verification-conflict-check.mjs",
-    "test:technician-data-request-size": "node scripts/technician-data-request-size-check.mjs"
+    "test:technician-data-request-size": "node scripts/technician-data-request-size-check.mjs",
+    "test:admin-auth-request-size": "node scripts/admin-auth-request-size-check.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
@@ -59,4 +60,4 @@
     "typescript-eslint": "^8.72.1",
     "vite": "^8.3.5"
   }
-}
+}\n
