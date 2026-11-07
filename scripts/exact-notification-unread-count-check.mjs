@@ -6,7 +6,6 @@ const customer = await readFile(new URL("../supabase/functions/customer-data/ind
 const technician = await readFile(new URL("../supabase/functions/technician-data/index.ts", import.meta.url), "utf8");
 const admin = await readFile(new URL("../supabase/functions/admin-data/index.ts", import.meta.url), "utf8");
 
-// Badge counts must use the dedicated server count action, not the capped account payload.
 const countFn = client.match(/export async function fetchUnreadCount[\s\S]*?\n}\n/);
 assert.ok(countFn, "fetchUnreadCount exists");
 assert.match(countFn[0], /notification_unread_count/);
@@ -15,5 +14,7 @@ assert.match(customer, /from\("notifications"\)\.select\("id",\{count:"exact",he
 assert.match(technician, /from\("technician_notifications"\)\.select\("id",\{count:"exact",head:true\}\)/);
 assert.match(technician, /from\("notifications"\)\.select\("id",\{count:"exact",head:true\}\)/);
 assert.match(technician, /unread_count:walletCount\.count\+jobCount\.count/);
-assert.match(technician, /case "notifications_read_all"[\\s\\S]*?from\\("technician_notifications"\\)\\.update/);\nassert.match(technician, /case "notifications_read_all"[\\s\\S]*?from\\("notifications"\\)\\.update/);\nassert.match(admin, /case "notification_unread_count"[\s\S]*?count:"exact",head:true/);
+assert.match(technician, /case "notifications_read_all"[\s\S]*?from\("technician_notifications"\)\.update/);
+assert.match(technician, /case "notifications_read_all"[\s\S]*?from\("notifications"\)\.update/);
+assert.match(admin, /case "notification_unread_count"[\s\S]*?count:"exact",head:true/);
 console.log("PASS exact unread count uses server-side head/count queries for customer, both technician sources, and admin");
