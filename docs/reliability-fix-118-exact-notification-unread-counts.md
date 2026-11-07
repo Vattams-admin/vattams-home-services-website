@@ -10,7 +10,7 @@
 - Added `notification_unread_count` action to customer-data. It uses an exact, head-only count scoped to the authenticated customer's mobile number and unread state.
 - Added the same action to technician-data. It independently counts unread rows in both technician notification tables, scoped to the authenticated technician, and returns their sum.
 - Added the same action to admin-data, scoped to the admin notification recipient.
-- Updated `fetchUnreadCount()` to call the authenticated count action rather than loading capped notification arrays.
+- Updated `fetchUnreadCount()` to prefer the authenticated exact-count action. If the production Edge Function has not yet been updated (or the request fails), the client falls back to the previous capped notification payload so badges remain operational during the staged backend rollout. The fallback is transitional and can still undercount older unread rows.
 - Updated technician `notifications_read_all` to mark both technician notification sources read and return the combined updated-row count.
 - Added `scripts/exact-notification-unread-count-check.mjs`, npm command `test:exact-notification-unread-count`, and source-contract assertions.
 
