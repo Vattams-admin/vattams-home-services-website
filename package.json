@@ -26,7 +26,8 @@
     "test:terminalized-retry-summary": "node scripts/terminalized-retry-summary-check.mjs",
     "test:stale-retry-lease-fencing": "node scripts/stale-retry-lease-fencing-check.mjs",
     "test:push-sender-dispatch-lease-fencing": "node scripts/push-sender-dispatch-lease-fencing-check.mjs",
-    "test:no-vite-config-artifacts": "node scripts/no-vite-config-artifacts-check.mjs"
+    "test:no-vite-config-artifacts": "node scripts/no-vite-config-artifacts-check.mjs",
+    "test:social-settings-cache-invalidation": "node scripts/social-settings-cache-invalidation-check.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
