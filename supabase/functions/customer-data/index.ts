@@ -154,6 +154,14 @@ Deno.serve(async req=>{
         if(error) return out({error:"Unable to load completed bookings"},500);
         return out({bookings:data||[]});
       }
+      case "notification_unread_count":{
+        const {data:customer,error:customerError}=await supabase.from("customers").select("mobile").eq("id",customerId).single();
+        if(customerError && customerError.code!=="PGRST116") return out({error:"Unable to load customer account"},500);
+        if(!customer?.mobile) return out({error:"Customer not found"},404);
+        const {count,error}=await supabase.from("notifications").select("id",{count:"exact",head:true}).eq("recipient_type","customer").eq("recipient_id",customer.mobile).eq("is_read",false);
+        if(error||count===null) return out({error:"Unable to count unread notifications"},500);
+        return out({unread_count:count});
+      }
       case "notification_read":{
         const notificationId = typeof body.notification_id === "string" ? body.notification_id.trim() : "";
         if (!notificationId || notificationId.length > 128) return out({error:"A valid notification ID is required"},400);
