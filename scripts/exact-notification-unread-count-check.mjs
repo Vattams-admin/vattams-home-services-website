@@ -9,7 +9,7 @@ const admin = await readFile(new URL("../supabase/functions/admin-data/index.ts"
 const countFn = client.match(/export async function fetchUnreadCount[\s\S]*?\n}\n/);
 assert.ok(countFn, "fetchUnreadCount exists");
 assert.match(countFn[0], /notification_unread_count/);
-assert.doesNotMatch(countFn[0], /fetchNotifications\(/);
+assert.match(countFn[0], /legacyFallback/);\nassert.match(countFn[0], /return legacyFallback\(\)/);
 assert.match(customer, /from\("notifications"\)\.select\("id",\{count:"exact",head:true\}\)[\s\S]*?eq\("is_read",false\)/);
 assert.match(technician, /from\("technician_notifications"\)\.select\("id",\{count:"exact",head:true\}\)/);
 assert.match(technician, /from\("notifications"\)\.select\("id",\{count:"exact",head:true\}\)/);
@@ -17,4 +17,4 @@ assert.match(technician, /unread_count:walletCount\.count\+jobCount\.count/);
 assert.match(technician, /case "notifications_read_all"[\s\S]*?from\("technician_notifications"\)\.update/);
 assert.match(technician, /case "notifications_read_all"[\s\S]*?from\("notifications"\)\.update/);
 assert.match(admin, /case "notification_unread_count"[\s\S]*?count:"exact",head:true/);
-console.log("PASS exact unread count uses server-side head/count queries for customer, both technician sources, and admin");
+console.log("PASS exact unread counts are preferred, with legacy fallback while Edge Functions roll out");
