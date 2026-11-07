@@ -191,7 +191,10 @@ export async function markAsRead(notificationId: string): Promise<boolean> {
           action: 'notification_read',
           session_token: techToken,
           notification_id: notificationId,
-          source: 'job',
+          // fetchNotifications() returns technician_notifications as jobNotifications.
+          // The gateway's wallet source maps to technician_notifications;
+          // job maps to the separate notifications table.
+          source: 'wallet',
         }),
       });
       return res.ok;
