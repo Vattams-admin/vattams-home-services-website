@@ -7,6 +7,57 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
+const MAX_REQUEST_BYTES = 8 * 1024;
+const MAX_EMAIL_LENGTH = 254;
+const MAX_PASSWORD_LENGTH = 128;
+
+class RequestBodyTooLargeError extends Error {}
+class InvalidRequestBodyError extends Error {}
+
+async function readBoundedJson(req: Request): Promise<Record<string, unknown>> {
+  const rawLength = req.headers.get("content-length");
+  if (rawLength !== null) {
+    if (!/^\\d+$/.test(rawLength)) throw new InvalidRequestBodyError("Invalid Content-Length");
+    if (Number(rawLength) > MAX_REQUEST_BYTES) throw new RequestBodyTooLargeError();
+  }
+  if (!req.body) throw new InvalidRequestBodyError("Request body is required");
+
+  const reader = req.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      totalBytes += value.byteLength;
+      if (totalBytes > MAX_REQUEST_BYTES) {
+        await reader.cancel();
+        throw new RequestBodyTooLargeError();
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const bytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+  } catch {
+    throw new InvalidRequestBodyError("Request body must be valid JSON");
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new InvalidRequestBodyError("Request body must be a JSON object");
+  }
+  return parsed as Record<string, unknown>;
+}
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -25,10 +76,19 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { email, password } = await req.json();
+    const body = await readBoundedJson(req);
+    const email = body.email;
+    const password = body.password;
 
-    if (!email?.trim() || !password?.trim()) {
-      return errorResponse("Email and password are required");
+    if (typeof email !== "string" || typeof password !== "string" ||
+        !email.trim() || !password.trim()) {
+      return errorResponse("Email and password are required", 400);
+    }
+    if (email.trim().length > MAX_EMAIL_LENGTH) {
+      return errorResponse("Email must be 254 characters or fewer", 400);
+    }
+    if (password.length > MAX_PASSWORD_LENGTH) {
+      return errorResponse("Password must be 128 characters or fewer", 400);
     }
 
     const { data: admin, error } = await supabase
@@ -71,7 +131,13 @@ Deno.serve(async (req: Request) => {
       admin: { id: admin.id, email: admin.email, role: admin.role, full_name: admin.full_name },
     });
   } catch (err) {
-    return errorResponse(err instanceof Error ? err.message : "An unexpected error occurred");
+    if (err instanceof RequestBodyTooLargeError) {
+      return errorResponse("Request body exceeds the 8 KB limit", 413);
+    }
+    if (err instanceof InvalidRequestBodyError) {
+      return errorResponse(err.message, 400);
+    }
+    return errorResponse("An unexpected server error occurred", 500);
   }
 });
 
