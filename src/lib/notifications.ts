@@ -168,8 +168,32 @@ export async function fetchNotifications(recipientType: NotificationRecipientTyp
 }
 
 export async function fetchUnreadCount(recipientType: NotificationRecipientType, recipientId: string): Promise<number> {
-  const rows = await fetchNotifications(recipientType, recipientId, 1000);
-  return rows.reduce((count, row) => count + (row.is_read === false ? 1 : 0), 0);
+  if (!['customer', 'technician', 'admin'].includes(recipientType)
+    || typeof recipientId !== 'string' || !recipientId.trim() || recipientId.length > 200) {
+    return 0;
+  }
+  try {
+    if (recipientType === 'admin') {
+      const result = await adminData<{ unread_count: number }>('notification_unread_count');
+      return Number.isSafeInteger(result.unread_count) && result.unread_count >= 0 ? result.unread_count : 0;
+    }
+    const endpoint = recipientType === 'technician' ? 'technician-data' : 'customer-data';
+    const sessionKey = recipientType === 'technician' ? 'vattams_technician_session' : 'vattams_customer_session';
+    const token = sessionStorage.getItem(sessionKey);
+    if (!token) return 0;
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+      body: JSON.stringify({ action: 'notification_unread_count', session_token: token }),
+    });
+    if (!response.ok) return 0;
+    const parsed: unknown = await response.json().catch(() => null);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return 0;
+    const count = (parsed as Record<string, unknown>).unread_count;
+    return Number.isSafeInteger(count) && typeof count === 'number' && count >= 0 ? count : 0;
+  } catch {
+    return 0;
+  }
 }
 
 export async function markAsRead(notificationId: string): Promise<boolean> {
