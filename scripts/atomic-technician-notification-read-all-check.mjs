@@ -9,4 +9,7 @@ assert.match(migration, /UPDATE public\.notifications[\s\S]*?recipient_type = 't
 assert.match(migration, /REVOKE ALL ON FUNCTION[\s\S]*?FROM PUBLIC[\s\S]*?FROM anon, authenticated[\s\S]*?GRANT EXECUTE ON FUNCTION[\s\S]*?TO service_role/, "RPC must be service-role only");
 assert.match(edge, /case "notifications_read_all":\{const \{data,error\}=await supabase\.rpc\("mark_technician_notifications_read_all"/, "Edge Function must call the atomic RPC rather than two separate updates");
 assert.doesNotMatch(edge, /case "notifications_read_all":[\s\S]*?\.from\("technician_notifications"\)\.update\(\{is_read:true\}\)[\s\S]*?\.from\("notifications"\)\.update/, "bulk action must not retain separate non-atomic updates");
-console.log("PASS atomic technician notification read-all contract");
+assert.match(edge, /technician_notifications_updated/, "response must include exact wallet row count from RPC");
+assert.match(edge, /job_notifications_updated/, "response must include exact job row count from RPC");
+assert.match(edge, /updated:walletUpdated\+jobsUpdated/, "response must return the sum of exact RPC counts");
+console.log("PASS atomic technician notification read-all contract and exact updated count");
