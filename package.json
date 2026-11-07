@@ -28,7 +28,8 @@
     "test:push-sender-dispatch-lease-fencing": "node scripts/push-sender-dispatch-lease-fencing-check.mjs",
     "test:no-vite-config-artifacts": "node scripts/no-vite-config-artifacts-check.mjs",
     "test:social-settings-cache-invalidation": "node scripts/social-settings-cache-invalidation-check.mjs",
-    "test:technician-notification-read-source": "node scripts/technician-notification-read-source-check.mjs"
+    "test:technician-notification-read-source": "node scripts/technician-notification-read-source-check.mjs",
+    "test:exact-notification-unread-count": "node scripts/exact-notification-unread-count-check.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
