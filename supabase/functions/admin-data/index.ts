@@ -49,7 +49,7 @@ function sanitizeSensitiveFields(value: unknown): unknown {
   const safe: Record<string, unknown> = {};
   for (const [key, item] of Object.entries(source)) {
     // Never return authentication material or one-time payment capabilities.
-    if (["payment_action_token", "password_hash", "password_salt", "admin_session_token", "token"].includes(key)) continue;
+    // Booking OTPs and action capabilities must never reach browser clients, including admin dashboards.\n    if (/(^|_)(otp|otp_code|verification_code|booking_action_token)(_|$)/i.test(key)) continue;\n    if (["payment_action_token", "password_hash", "password_salt", "admin_session_token", "token"].includes(key)) continue;
     if (key === "bank_account_number") {
       const digits = String(item ?? "").replace(/\D/g, "");
       safe[key] = digits.length >= 4 ? `••••${digits.slice(-4)}` : null;
