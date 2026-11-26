@@ -17,6 +17,7 @@ import { useRouter } from '@/lib/routerContext';
 import { Booking, Customer } from '@/lib/supabase';
 import { customerData } from '@/lib/customerData';
 import { formatCurrency } from '@/lib/pricing';
+import BookingUpiPayment from '@/components/BookingUpiPayment';
 
 const statusLabels: Record<string, string> = {
   pending: 'Awaiting technician assignment',
@@ -317,6 +318,9 @@ export default function CustomerBookings() {
                     </div>
                   </div>
 
+                  {status !== 'cancelled' && amount !== null && amount > 0 && (
+                    <BookingUpiPayment bookingId={booking.id} bookingNumber={booking.booking_number} />
+                  )}
                   {status === 'completed' && (
                     <div className="mt-5 flex items-center gap-2 rounded-xl bg-green-50 p-3 text-sm font-semibold text-green-800">
                       <CheckCircle2 size={17} /> This service is marked completed.

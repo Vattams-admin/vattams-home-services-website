@@ -28,9 +28,10 @@ const claimErrorEnd = sender.indexOf("eligibleTokens = claimResults.filter", cla
 assert.ok(claimErrorStart >= 0 && claimErrorEnd > claimErrorStart,
   "sender must handle partial atomic claim failures before continuing");
 const claimErrorBlock = sender.slice(claimErrorStart, claimErrorEnd);
-assert.ok(claimErrorBlock.includes(".filter((result) => result.claimed)") &&
-  claimErrorBlock.includes(".in(\"fcm_token_id\", claimedIds)") &&
+assert.ok(claimErrorBlock.includes(".filter((result) => result.claimed && result.dispatchLeaseToken)") &&
+  claimErrorBlock.includes(".eq(\"fcm_token_id\", claimedRow.tokenRow.id)") &&
   claimErrorBlock.includes(".in(\"status\", [\"pending\", \"retryable\"])") &&
+  claimErrorBlock.includes('.eq("dispatch_lease_token", claimedRow.dispatchLeaseToken)') &&
   claimErrorBlock.includes("dispatch_lease_until: null"),
   "sender must release only successfully claimed pending/retryable devices when any parallel claim fails");
 

@@ -23,7 +23,7 @@ assert.ok(worker.includes('const inFlight = results.filter((item) => item.inFlig
   "retry worker must aggregate in-flight dispatch conflicts");
 assert.ok(worker.includes('terminalizationFailures > 0 || inFlight > 0 ? 500'),
   "in-flight retries must not be reported as successful scheduler batches");
-assert.ok(worker.includes('// clearing that lease could permit a duplicate FCM send.'),
+assert.ok(worker.includes('// defer this retry: clearing that lease could permit a duplicate FCM send.'),
   "in-flight retry handling must preserve the other sender's dispatch lease");
 
 assert.ok(sender.includes('skippedInFlight > 0 ? 409 : 200'),
