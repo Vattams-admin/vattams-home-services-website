@@ -582,7 +582,7 @@ async function postTechnicianAuth(action: string, payload: Record<string, unknow
   return result;
 }
 
-function technicianRegistrationPayload(form: TechnicianFormData, registrationPaymentId?: string) {
+function technicianRegistrationPayload(form: TechnicianFormData) {
   const { score } = calculateProfileScore(form);
   return {
     full_name: form.full_name, mobile: form.mobile, email: form.email.trim().toLowerCase(), city: form.city,
@@ -592,11 +592,11 @@ function technicianRegistrationPayload(form: TechnicianFormData, registrationPay
     pan_url: form.pan_url, dl_url: form.dl_url || undefined, profile_photo_url: form.profile_photo_url, bank_name: form.bank_name,
     bank_holder_name: form.bank_holder_name, bank_account_number: form.bank_account_number, bank_ifsc: form.bank_ifsc,
     upi_id: form.upi_id.trim() && form.upi_id.trim().toLowerCase() !== 'skip' ? form.upi_id.trim() : undefined,
-    profile_score: score, registration_payment_id: registrationPaymentId,
+    profile_score: score,
   };
 }
 
-export async function submitTechnicianApplication(form: TechnicianFormData, registrationPaymentId?: string): Promise<Record<string, unknown>> {
+export async function submitTechnicianApplication(form: TechnicianFormData): Promise<Record<string, unknown>> {
   const email = typeof form?.email === 'string' ? form.email.trim() : '';
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     throw new Error('A valid email address is required to register as a technician.');
@@ -604,7 +604,7 @@ export async function submitTechnicianApplication(form: TechnicianFormData, regi
   const session = readKycUploadSession(form.mobile.trim(), email.toLowerCase());
   if (!session) throw new Error('Your secure KYC upload session has expired. Please re-upload your Aadhaar and PAN documents.');
   return postTechnicianAuth('send-registration-otp', {
-    ...technicianRegistrationPayload(form, registrationPaymentId),
+    ...technicianRegistrationPayload(form),
     kyc_upload_token: session.upload_token,
   });
 }
