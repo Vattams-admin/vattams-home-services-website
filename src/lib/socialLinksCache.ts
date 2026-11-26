@@ -8,8 +8,7 @@ export async function getSocialLinksSettings(): Promise<SiteSettings> {
   if (cachedSettings) return cachedSettings;
   if (!fetchPromise) {
     const generation = cacheGeneration;
-    let pending: Promise<SiteSettings>;
-    pending = fetchSiteSettings().then((settings) => {
+    const pending = fetchSiteSettings().then((settings) => {
       // A refresh may have happened while this request was in flight. An older
       // response must never repopulate the cache after that invalidation.
       if (generation === cacheGeneration) {
