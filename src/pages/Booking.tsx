@@ -1,3 +1,4 @@
+import BookingUpiPayment from '@/components/BookingUpiPayment';
 import { useState, useEffect, useRef } from 'react';
 import { Loader, CheckCircle, XCircle, Calendar, User, Phone, MapPin, Wrench, FileText, Clock, ArrowRight, LogIn, Receipt, LucideIcon, Tag, Briefcase, Sparkles } from 'lucide-react';
 import { supabase, ServiceCategory, Customer, ServicePrice } from '@/lib/supabase';
@@ -467,6 +468,11 @@ export default function Booking() {
             <div className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Your Booking Number</div>
             <div className="text-xl font-extrabold text-gold-700">{success.number}</div>
           </div>
+          {customer && (pricing?.finalAmount ?? 0) > 0 && (
+            <div className="mb-6 text-left">
+              <BookingUpiPayment bookingId={success.id} bookingNumber={success.number} />
+            </div>
+          )}
           <div className="flex flex-col gap-3">
             {customer && (
               <button onClick={() => navigate('customer-bookings')}

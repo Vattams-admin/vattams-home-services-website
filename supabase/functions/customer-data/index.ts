@@ -69,6 +69,22 @@ Deno.serve(async req=>{
           reviews:reviewsResult.data||[]
         });
       }
+      case "booking_upi_checkout": {
+        const bookingId = typeof body.booking_id === "string" ? body.booking_id : "";
+        const utr = typeof body.utr === "string" ? body.utr.trim().toUpperCase() : null;
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(bookingId)
+          || (body.utr != null && (utr === null || !/^[A-Z0-9]{6,32}$/.test(utr)))) {
+          return out({ error: "Invalid booking ID or UPI reference" }, 400);
+        }
+        const { data, error } = await supabase.rpc("customer_booking_upi_checkout", {
+          p_customer_id: customerId,
+          p_booking_id: bookingId,
+          p_upi_id: Deno.env.get("BOOKING_UPI_ID")?.trim() || null,
+          p_utr: utr,
+        });
+        if (error) return out({ error: "UPI checkout is currently unavailable" }, 503);
+        return out(data);
+      }
       case "payments":{
         const {data:customer,error:customerError}=await supabase.from("customers").select("mobile").eq("id",customerId).single();
         if(customerError && customerError.code!=="PGRST116") return out({error:"Unable to load customer account"},500);

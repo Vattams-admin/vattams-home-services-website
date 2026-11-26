@@ -1695,6 +1695,12 @@ export default function AdminDashboard() {
                       <td className="px-4 py-3 text-sm">
                         <div className="font-semibold text-gray-800">{p.payee_name ?? '—'}</div>
                         <div className="text-xs text-gray-400 capitalize">{p.payee_type}</div>
+                        {p.purpose === 'booking' && p.reference_id && (
+                          <div className="break-all text-xs text-gray-600">Booking {p.reference_id}</div>
+                        )}
+                        {p.purpose === 'booking' && p.utr && (
+                          <div className="break-all text-xs text-gray-600 lg:hidden">UTR {p.utr}</div>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600 capitalize hidden md:table-cell">
                         {p.purpose.replace(/_/g, ' ')}
@@ -1712,7 +1718,9 @@ export default function AdminDashboard() {
                               : 'bg-amber-100 text-amber-700 border-amber-200')
                           }
                         >
-                          {p.status}
+                          {p.purpose === 'booking' && p.status === 'pending'
+                            ? (p.utr ? 'Verification pending' : 'Awaiting UPI reference')
+                            : p.purpose === 'booking' && p.status === 'success' ? 'Paid' : p.status}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
@@ -1721,11 +1729,16 @@ export default function AdminDashboard() {
                             <button
                               onClick={async () => {
                                 setPaymentUpdating(true);
-                                await updatePaymentStatus(p.payment_id, 'success', p.utr ?? undefined, 'admin');
+                                if (p.purpose === 'booking' && !window.confirm('Confirm that the bank statement shows this UPI reference and the full amount received.')) {
+                                  setPaymentUpdating(false);
+                                  return;
+                                }
+                                const updated = await updatePaymentStatus(p.payment_id, 'success');
+                                if (!updated) window.alert('Payment verification could not be confirmed. Refresh and try again.');
                                 setPayments((await adminData<{ payments: PaymentRecord[] }>('payments')).payments ?? []);
                                 setPaymentUpdating(false);
                               }}
-                              disabled={paymentUpdating}
+                              disabled={paymentUpdating || !p.utr}
                               className="px-3 py-1.5 rounded-lg bg-green-50 hover:bg-green-100 disabled:opacity-50 text-green-600 text-xs font-semibold transition-colors"
                             >
                               Mark Paid

@@ -212,7 +212,9 @@ export default function CustomerPayments() {
                     <div className="flex shrink-0 flex-row items-center justify-between gap-3 sm:flex-col sm:items-end sm:gap-1">
                       <div className="text-lg font-extrabold text-gray-900">₹{p.amount.toLocaleString('en-IN')}</div>
                       <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold ${cfg.color}`}>
-                        <cfg.icon size={12} /> {cfg.label}
+                        <cfg.icon size={12} /> {p.purpose === 'booking' && p.status === 'pending'
+                          ? (p.utr ? 'Verification pending' : 'Awaiting UPI reference')
+                          : p.purpose === 'booking' && p.status === 'success' ? 'Paid' : cfg.label}
                       </span>
                     </div>
                   </div>
