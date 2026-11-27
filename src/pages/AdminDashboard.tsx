@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   Loader, Calendar, User, Phone, MapPin, Wrench, DollarSign, TrendingUp,
   CheckCircle, Clock, X, LogOut, LayoutDashboard, Users, Briefcase,
@@ -119,6 +119,8 @@ export default function AdminDashboard() {
 
   const [tab, setTab] = useState<Tab>('overview');
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const previousBookings = useRef<Map<string, Booking> | null>(null);
+  const [jobUpdates, setJobUpdates] = useState<string[]>([]);
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -372,7 +374,27 @@ export default function AdminDashboard() {
           adminData<{ notifications: NotificationRow[] }>('notifications', { limit: 100 }),
         ]);
 
-      setBookings(bookingData.bookings ?? []);
+      const nextBookings = bookingData.bookings ?? [];
+      if (previousBookings.current) {
+        const previous = previousBookings.current;
+        const updates = nextBookings.flatMap(booking => {
+          const old = previous.get(booking.id);
+          if (!old || old.status === booking.status) return [];
+          const label = {
+            accepted: 'Accepted',
+            on_the_way: 'On the way',
+            job_completed: 'Work done · awaiting confirmation',
+            completed: 'Completed',
+          }[booking.status as string];
+          const returned = old.status === 'assigned' && !!old.assigned_technician_id
+            && !booking.assigned_technician_id
+            && (booking.status === 'pending' || booking.status === 'confirmed');
+          return label || returned ? [booking.booking_number + ' · ' + (label ?? 'Returned to assignment queue')] : [];
+        });
+        if (updates.length) setJobUpdates(current => [...updates, ...current].slice(0, 5));
+      }
+      previousBookings.current = new Map(nextBookings.map(booking => [booking.id, booking]));
+      setBookings(nextBookings);
       setTechnicians(techData.technicians ?? []);
       setCustomers(customerData.customers ?? []);
       setWalletTxns(walletData.transactions ?? []);
@@ -1147,6 +1169,19 @@ export default function AdminDashboard() {
 
   return (
     <div className="vattams-admin-shell min-h-screen flex flex-col lg:flex-row">
+      {jobUpdates.length > 0 && (
+        <aside aria-label="Booking status updates"
+          className="fixed bottom-4 right-4 z-40 w-[calc(100%-2rem)] max-w-sm rounded-2xl border border-orange-400 bg-neutral-950 p-4 text-white shadow-xl">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="font-bold text-orange-300">Job status updates</h2>
+            <button type="button" className="rounded-lg px-3 py-2 text-sm"
+              onClick={() => setJobUpdates([])}>Dismiss</button>
+          </div>
+          <ul aria-live="polite" className="space-y-1 text-sm">
+            {jobUpdates.map((update, index) => <li key={update + index}>{update}</li>)}
+          </ul>
+        </aside>
+      )}
       {/* Sidebar */}
       <aside className="vattams-admin-sidebar lg:w-64 shrink-0 border-b lg:border-b-0 lg:border-r">
         <div className="vattams-admin-brand px-5 py-5 flex items-center gap-3">
