@@ -2614,24 +2614,39 @@ function EmptyState({
 }
 function CommissionCheckout({ jobId }: { jobId: string }) {
   interface Payment { status: string; amount: number; upi_id: string; utr: string | null }
-  const [payment, setPayment] = useState<Payment | null>(null);
-  const [qr, setQr] = useState('');
+  const [checkoutDetails, setCheckoutDetails] = useState<{
+    payment: Payment;
+    instructions?: { upiLink: string; qr: string };
+  } | null>(null);
   const [utr, setUtr] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const note = 'Commission ' + jobId.slice(0, 8);
+  const payment = checkoutDetails?.payment;
+  const instructions = checkoutDetails?.instructions;
 
   async function checkout(reference?: string) {
     setBusy(true);
     setError('');
+    setCheckoutDetails(null);
     try {
       const result = await technicianData<{ payment: Payment }>('commission_checkout', {
         job_id: jobId, ...(reference ? { utr: reference } : {}),
       });
-      if (!result?.payment) throw new Error("Commission payment details are unavailable.");
-      setPayment(result.payment);
-      if (result.payment.status === 'pending' && !result.payment.utr) {
-        setQr(await generateUpiQrCode(result.payment.amount, note, result.payment.upi_id));
+      const payment = result?.payment;
+      if (!payment || !['pending', 'success'].includes(payment.status)) {
+        throw new Error('Commission payment details are unavailable.');
+      }
+      if (payment.status === 'pending' && !payment.utr) {
+        if (typeof payment.upi_id !== 'string' || !payment.upi_id.trim()) {
+          throw new Error('The commission UPI recipient is unavailable.');
+        }
+        const upiLink = buildUpiLink(payment.amount, note, payment.upi_id);
+        const qr = await generateUpiQrCode(payment.amount, note, payment.upi_id);
+        setCheckoutDetails({ payment, instructions: { upiLink, qr } });
+      } else {
+        setCheckoutDetails({ payment });
+        setUtr('');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to open commission checkout.');
@@ -2644,15 +2659,15 @@ function CommissionCheckout({ jobId }: { jobId: string }) {
     <section className="my-2 rounded-xl border border-orange-200 p-3">
       <button type="button" disabled={busy} onClick={() => void checkout()}
         className="font-semibold text-orange-800 disabled:opacity-50">
-        {payment ? 'Refresh commission status' : 'Pay Commission'}
+        {busy ? 'Checking commission status…' : payment ? 'Refresh commission status' : 'Pay Commission'}
       </button>
       {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
       {payment?.status === 'success' && <p>Commission paid</p>}
       {payment?.status === 'pending' && payment.utr && <p>Awaiting Admin verification</p>}
-      {payment?.status === 'pending' && !payment.utr && (
+      {instructions && !busy && (
         <form onSubmit={event => { event.preventDefault(); void checkout(utr.trim().toUpperCase()); }}>
-          {qr && <img width={180} height={180} src={qr} alt="VATTAMS commission payment QR" />}
-          <a className="block font-semibold text-blue-800" href={buildUpiLink(payment.amount, note, payment.upi_id)}>Open UPI App</a>
+          <img width={180} height={180} src={instructions.qr} alt="VATTAMS commission payment QR" />
+          <a className="block font-semibold text-blue-800" href={instructions.upiLink}>Open UPI App</a>
           <label className="mt-2 block text-sm">
             UPI transaction reference
             <input className="block w-full rounded-lg border p-2" value={utr} required minLength={6}
