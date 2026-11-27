@@ -119,6 +119,28 @@ function formatDateTime(value?: string | null) {
   }
 }
 
+const PENDING_JOB_UPDATE_KEY = 'vattams_pending_technician_job_update';
+
+interface PendingJobUpdate {
+  technicianId: string;
+  jobId: string;
+  status: 'on_the_way' | 'job_completed';
+}
+
+function readPendingJobUpdate(): PendingJobUpdate | null {
+  try {
+    const raw = sessionStorage.getItem(PENDING_JOB_UPDATE_KEY);
+    if (!raw) return null;
+    const value: Partial<PendingJobUpdate> | null = JSON.parse(raw);
+    if (typeof value?.technicianId !== 'string' || !value.technicianId
+      || typeof value.jobId !== 'string' || !value.jobId
+      || (value.status !== 'on_the_way' && value.status !== 'job_completed')) return null;
+    return { technicianId: value.technicianId, jobId: value.jobId, status: value.status };
+  } catch {
+    return null;
+  }
+}
+
 function formatMoney(value?: number | null) {
   const amount = Number(value ?? 0);
   return `₹${(Number.isFinite(amount) ? amount : 0).toLocaleString('en-IN')}`;
@@ -160,11 +182,16 @@ export default function TechnicianDashboard() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const [processingJob, setProcessingJob] = useState<string | null>(null);
-  const [queuedUpdate, setQueuedUpdate] = useState<{
-    technicianId: string;
-    jobId: string;
-    status: 'on_the_way' | 'job_completed';
-  } | null>(null);
+  const [queuedUpdate, setQueuedUpdate] = useState<PendingJobUpdate | null>(readPendingJobUpdate);
+
+  useEffect(() => {
+    try {
+      if (queuedUpdate) sessionStorage.setItem(PENDING_JOB_UPDATE_KEY, JSON.stringify(queuedUpdate));
+      else sessionStorage.removeItem(PENDING_JOB_UPDATE_KEY);
+    } catch {
+      // The pending update remains available in memory if storage is blocked.
+    }
+  }, [queuedUpdate]);
 
   const [rechargeAmount, setRechargeAmount] = useState('');
   const [paymentRef, setPaymentRef] = useState('');
@@ -422,6 +449,8 @@ export default function TechnicianDashboard() {
   };
 
   const logout = async () => {
+    setQueuedUpdate(null);
+    try { sessionStorage.removeItem(PENDING_JOB_UPDATE_KEY); } catch { /* Storage may be blocked. */ }
     sessionStorage.removeItem('vattams_technician_session');
     sessionStorage.removeItem('vattams_technician_expires');
     sessionStorage.removeItem('vattams_technician_id');
@@ -509,7 +538,7 @@ export default function TechnicianDashboard() {
     <div className="min-h-screen bg-[#f7f4ed] pt-20 md:pt-24">
       {queuedUpdate?.technicianId === technician.id && (
         <section aria-label="Pending job update" className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 bg-amber-100 p-3 text-sm text-amber-950">
-          <p role="status">Sync pending · Job {queuedUpdate.jobId.slice(0, 8)} · {queuedUpdate.status === 'on_the_way' ? 'On the Way' : 'Done'}. Keep this tab open.</p>
+          <p role="status">Sync pending · Job {queuedUpdate.jobId.slice(0, 8)} · {queuedUpdate.status === 'on_the_way' ? 'On the Way' : 'Done'}. After a reload, select Retry sync.</p>
           <button type="button" disabled={!!processingJob} onClick={() => void retryQueuedUpdate()}
             className="rounded-lg bg-amber-200 px-3 py-2 font-bold disabled:opacity-50">Retry sync</button>
           <button type="button" disabled={!!processingJob} onClick={() => { setQueuedUpdate(null); setError(''); }}
