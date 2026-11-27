@@ -160,6 +160,11 @@ export default function TechnicianDashboard() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const [processingJob, setProcessingJob] = useState<string | null>(null);
+  const [queuedUpdate, setQueuedUpdate] = useState<{
+    technicianId: string;
+    jobId: string;
+    status: 'on_the_way' | 'job_completed';
+  } | null>(null);
 
   const [rechargeAmount, setRechargeAmount] = useState('');
   const [paymentRef, setPaymentRef] = useState('');
@@ -296,10 +301,45 @@ export default function TechnicianDashboard() {
     }
   };
 
+  const retryQueuedUpdate = useCallback(async () => {
+    if (!queuedUpdate || queuedUpdate.technicianId !== technician?.id || processingJob || !navigator.onLine) return;
+    setProcessingJob(queuedUpdate.jobId);
+    setError('');
+    try {
+      await technicianData('job_status', { job_id: queuedUpdate.jobId, status: queuedUpdate.status });
+      setQueuedUpdate(null);
+      await loadDashboard(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to sync job update.');
+      await loadDashboard(false);
+    } finally {
+      setProcessingJob(null);
+    }
+  }, [queuedUpdate, technician?.id, processingJob, loadDashboard]);
+
+  useEffect(() => {
+    const onReconnect = () => { void retryQueuedUpdate(); };
+    window.addEventListener('online', onReconnect);
+    return () => window.removeEventListener('online', onReconnect);
+  }, [retryQueuedUpdate]);
+
   const updateJobStatus = async (job: TechnicianJob, status: 'accepted'|'rejected'|'on_the_way'|'in_progress'|'job_started'|'job_completed') => {
     if (!technician || processingJob) return;
     if (!navigator.onLine) {
-      setError('Reconnect to the internet to update this job.');
+      if (status === 'on_the_way' || status === 'job_completed') {
+        if (queuedUpdate?.technicianId === technician.id) {
+          setError('Sync or discard the pending update before saving another one.');
+          return;
+        }
+        setQueuedUpdate({ technicianId: technician.id, jobId: job.id, status });
+        setError('');
+      } else {
+        setError('Reconnect to the internet to update this job.');
+      }
+      return;
+    }
+    if (queuedUpdate?.jobId === job.id && queuedUpdate.technicianId === technician.id) {
+      setError('Sync or discard the pending update before changing this job.');
       return;
     }
     setProcessingJob(job.id); setError('');
@@ -467,6 +507,15 @@ export default function TechnicianDashboard() {
 
   return (
     <div className="min-h-screen bg-[#f7f4ed] pt-20 md:pt-24">
+      {queuedUpdate?.technicianId === technician.id && (
+        <section aria-label="Pending job update" className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 bg-amber-100 p-3 text-sm text-amber-950">
+          <p role="status">Sync pending · Job {queuedUpdate.jobId.slice(0, 8)} · {queuedUpdate.status === 'on_the_way' ? 'On the Way' : 'Done'}. Keep this tab open.</p>
+          <button type="button" disabled={!!processingJob} onClick={() => void retryQueuedUpdate()}
+            className="rounded-lg bg-amber-200 px-3 py-2 font-bold disabled:opacity-50">Retry sync</button>
+          <button type="button" disabled={!!processingJob} onClick={() => { setQueuedUpdate(null); setError(''); }}
+            className="rounded-lg px-3 py-2 underline disabled:opacity-50">Discard update</button>
+        </section>
+      )}
       {pendingOffer && (
         <aside aria-label="New job offer"
           className="fixed bottom-4 right-4 z-40 w-[calc(100%-2rem)] max-w-sm rounded-2xl border border-orange-400 bg-neutral-950 p-4 text-white shadow-xl">
