@@ -141,6 +141,8 @@ export default function TechnicianDashboard() {
 
   const [technician, setTechnician] = useState<Technician | null>(null);
   const [jobs, setJobs] = useState<TechnicianJob[]>([]);
+  const [dismissedOffers, setDismissedOffers] = useState<string[]>([]);
+  const pendingOffer = jobs.find(job => job.status === 'assigned' && !dismissedOffers.includes(job.id));
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
   const [recharges, setRecharges] = useState<WalletRecharge[]>([]);
   const [notifications, setNotifications] = useState<
@@ -295,7 +297,11 @@ export default function TechnicianDashboard() {
   };
 
   const updateJobStatus = async (job: TechnicianJob, status: 'accepted'|'rejected'|'on_the_way'|'in_progress'|'job_started'|'job_completed') => {
-    if (!technician) return;
+    if (!technician || processingJob) return;
+    if (!navigator.onLine) {
+      setError('Reconnect to the internet to update this job.');
+      return;
+    }
     setProcessingJob(job.id); setError('');
     try { await technicianData('job_status', { job_id: job.id, status }); await loadDashboard(false); }
     catch (err) { setError(err instanceof Error ? err.message : 'Unable to update job status.'); }
@@ -461,6 +467,31 @@ export default function TechnicianDashboard() {
 
   return (
     <div className="min-h-screen bg-[#f7f4ed] pt-20 md:pt-24">
+      {pendingOffer && (
+        <aside aria-label="New job offer"
+          className="fixed bottom-4 right-4 z-40 w-[calc(100%-2rem)] max-w-sm rounded-2xl border border-orange-400 bg-neutral-950 p-4 text-white shadow-xl">
+          <div role="status">
+            <p className="text-sm font-semibold text-orange-300">New job offer</p>
+            <h2 className="my-1 text-lg font-bold">{pendingOffer.service_type || 'Service request'}</h2>
+            <p className="text-sm text-neutral-300">Job {pendingOffer.id.slice(0, 8)}</p>
+            {pendingOffer.offered_commission != null && (
+              <p className="mt-2 font-semibold">VATTAMS commission {formatMoney(pendingOffer.offered_commission)} after completion</p>
+            )}
+          </div>
+          {error && <p role="alert" className="mt-2 text-sm text-orange-200">{error}</p>}
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button type="button" disabled={!!processingJob}
+              onClick={() => void updateJobStatus(pendingOffer, 'accepted')}
+              className="rounded-lg bg-orange-400 px-4 py-2 font-bold text-black disabled:opacity-50">Accept</button>
+            <button type="button" disabled={!!processingJob}
+              onClick={() => void updateJobStatus(pendingOffer, 'rejected')}
+              className="rounded-lg border border-neutral-500 px-4 py-2 disabled:opacity-50">Reject</button>
+            <button type="button" disabled={!!processingJob}
+              onClick={() => setDismissedOffers(current => [...current, pendingOffer.id])}
+              className="rounded-lg px-3 py-2 text-neutral-300">Later</button>
+          </div>
+        </aside>
+      )}
       {/* HEADER */}
       <header className="bg-white border-b border-[#e8e1d2] sticky top-20 md:top-24 z-30">
         <div className="max-w-7xl mx-auto px-4">
