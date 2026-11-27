@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 const corsHeaders={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"POST,OPTIONS","Access-Control-Allow-Headers":"Content-Type,Authorization,X-Client-Info,Apikey"};
 const supabase=createClient(Deno.env.get("SUPABASE_URL")!,Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+const DEFAULT_COMMISSION_UPI_ID = "venkatesan04051985-5@oksbi";
 const MAX_REQUEST_BYTES = 16 * 1024;
 class RequestBodyTooLargeError extends Error {}
 class InvalidRequestBodyError extends Error {}
@@ -52,7 +53,7 @@ case "commission_checkout":{
   if(typeof id!=="string"||!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id)
     ||(body.utr!==undefined&&(utr===null||!(/^[A-Z0-9]{6,32}$/).test(utr))))return out({error:"Invalid job ID or UPI reference"},400);
   const {data,error}=await supabase.rpc("technician_commission_checkout",{
-    p_technician_id:technicianId,p_job_id:id,p_upi_id:Deno.env.get("COMMISSION_UPI_ID")?.trim()||null,p_utr:utr,
+    p_technician_id:technicianId,p_job_id:id,p_upi_id:Deno.env.get("COMMISSION_UPI_ID")?.trim()||DEFAULT_COMMISSION_UPI_ID,p_utr:utr,
   });
   if(error)return out({error:"Commission checkout is currently unavailable."},503);
   return out(data,data?.error?409:200);
