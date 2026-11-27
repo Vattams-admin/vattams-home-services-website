@@ -204,7 +204,7 @@ async function verifyPayment(body: Record<string, unknown>) {
     .update({
       status,
       verified_by: adminId,
-      verified_at: status === "success" ? new Date().toISOString() : null,
+      verified_at: new Date().toISOString(),
     })
     .eq("payment_id", paymentId)
     .eq("status", "pending");

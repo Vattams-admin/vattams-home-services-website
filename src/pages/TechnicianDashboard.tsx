@@ -1,3 +1,4 @@
+import { buildUpiLink, generateUpiQrCode } from '@/lib/payments';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
@@ -1523,6 +1524,9 @@ function JobCard({
                 <p className="text-sm text-gray-600">Payable after job completion.</p>
               </div>
             )}
+            {job.status === 'completed' && Number(job.offered_commission) > 0 && (
+              <CommissionCheckout key={job.id} jobId={job.id} />
+            )}
             {job.offered_commission == null && Number(job.call_rate_fee || 0) > 0 && (
               <div className="mt-3 rounded-xl border border-[#c9a227]/35 bg-[#fffaf0] p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
@@ -2575,5 +2579,57 @@ function EmptyState({
         {description}
       </p>
     </div>
+  );
+}
+function CommissionCheckout({ jobId }: { jobId: string }) {
+  interface Payment { status: string; amount: number; upi_id: string; utr: string | null }
+  const [payment, setPayment] = useState<Payment | null>(null);
+  const [qr, setQr] = useState('');
+  const [utr, setUtr] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const note = 'Commission ' + jobId.slice(0, 8);
+
+  async function checkout(reference?: string) {
+    setBusy(true);
+    setError('');
+    try {
+      const result = await technicianData<{ payment: Payment }>('commission_checkout', {
+        job_id: jobId, ...(reference ? { utr: reference } : {}),
+      });
+      if (!result?.payment) throw new Error("Commission payment details are unavailable.");
+      setPayment(result.payment);
+      if (result.payment.status === 'pending' && !result.payment.utr) {
+        setQr(await generateUpiQrCode(result.payment.amount, note, result.payment.upi_id));
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to open commission checkout.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="my-2 rounded-xl border border-orange-200 p-3">
+      <button type="button" disabled={busy} onClick={() => void checkout()}
+        className="font-semibold text-orange-800 disabled:opacity-50">
+        {payment ? 'Refresh commission status' : 'Pay Commission'}
+      </button>
+      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
+      {payment?.status === 'success' && <p>Commission paid</p>}
+      {payment?.status === 'pending' && payment.utr && <p>Awaiting Admin verification</p>}
+      {payment?.status === 'pending' && !payment.utr && (
+        <form onSubmit={event => { event.preventDefault(); void checkout(utr.trim().toUpperCase()); }}>
+          {qr && <img width={180} height={180} src={qr} alt="VATTAMS commission payment QR" />}
+          <a className="block font-semibold text-blue-800" href={buildUpiLink(payment.amount, note, payment.upi_id)}>Open UPI App</a>
+          <label className="mt-2 block text-sm">
+            UPI transaction reference
+            <input className="block w-full rounded-lg border p-2" value={utr} required minLength={6}
+              maxLength={32} pattern="[A-Za-z0-9]{6,32}" onChange={event => setUtr(event.target.value)} />
+          </label>
+          <button className="mt-2 rounded-lg bg-orange-100 p-2 font-semibold" disabled={busy}>Submit for verification</button>
+        </form>
+      )}
+    </section>
   );
 }

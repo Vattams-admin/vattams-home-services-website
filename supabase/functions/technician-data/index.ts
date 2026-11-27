@@ -46,6 +46,17 @@ if(sessionTechnician.status!=="active"){
   return out({error:"Your technician account is not active. Protected actions are unavailable until approval."},403);
 }
 switch(body.action){
+case "commission_checkout":{
+  const id=body.job_id;
+  const utr=typeof body.utr==="string"?body.utr.trim().toUpperCase():null;
+  if(typeof id!=="string"||!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id)
+    ||(body.utr!==undefined&&(utr===null||!(/^[A-Z0-9]{6,32}$/).test(utr))))return out({error:"Invalid job ID or UPI reference"},400);
+  const {data,error}=await supabase.rpc("technician_commission_checkout",{
+    p_technician_id:technicianId,p_job_id:id,p_upi_id:Deno.env.get("COMMISSION_UPI_ID")?.trim()||null,p_utr:utr,
+  });
+  if(error)return out({error:"Commission checkout is currently unavailable."},503);
+  return out(data,data?.error?409:200);
+}
 case "account":{
 const [technicianResult,jobsResult,transactionsResult,rechargesResult,notificationsResult,jobNotificationsResult]=await Promise.all([
 supabase.from("technicians").select("id,full_name,mobile,email,city,service_categories,experience_years,status,whatsapp_number,area,pincode,available_days,working_time,has_vehicle,has_tools,profile_photo_url,rating,total_jobs,completed_jobs,is_online,last_active_at,wallet_balance,locked_deposit,available_balance,commission_due,wallet_locked,created_at,updated_at").eq("id",technicianId).single(),

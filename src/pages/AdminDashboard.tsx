@@ -1701,10 +1701,16 @@ export default function AdminDashboard() {
                       <td className="px-4 py-3 text-sm">
                         <div className="font-semibold text-gray-800">{p.payee_name ?? '—'}</div>
                         <div className="text-xs text-gray-400 capitalize">{p.payee_type}</div>
-                        {p.purpose === 'booking' && p.reference_id && (
-                          <div className="break-all text-xs text-gray-600">Booking {p.reference_id}</div>
+                        {p.purpose === 'commission' && p.verified_by && (
+                          <div className="break-all text-xs text-gray-600">
+                            Reviewed by {p.verified_by}
+                            {p.verified_at && ' · ' + new Date(p.verified_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST'}
+                          </div>
                         )}
-                        {p.purpose === 'booking' && p.utr && (
+                        {(p.purpose === 'booking' || p.purpose === 'commission') && p.reference_id && (
+                          <div className="break-all text-xs text-gray-600">{p.purpose === 'commission' ? 'Job' : 'Booking'} {p.reference_id}</div>
+                        )}
+                        {(p.purpose === 'booking' || p.purpose === 'commission') && p.utr && (
                           <div className="break-all text-xs text-gray-600 lg:hidden">UTR {p.utr}</div>
                         )}
                       </td>
@@ -1724,9 +1730,9 @@ export default function AdminDashboard() {
                               : 'bg-amber-100 text-amber-700 border-amber-200')
                           }
                         >
-                          {p.purpose === 'booking' && p.status === 'pending'
+                          {(p.purpose === 'booking' || p.purpose === 'commission') && p.status === 'pending'
                             ? (p.utr ? 'Verification pending' : 'Awaiting UPI reference')
-                            : p.purpose === 'booking' && p.status === 'success' ? 'Paid' : p.status}
+                            : (p.purpose === 'booking' || p.purpose === 'commission') && p.status === 'success' ? 'Paid' : p.status}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
@@ -1735,7 +1741,7 @@ export default function AdminDashboard() {
                             <button
                               onClick={async () => {
                                 setPaymentUpdating(true);
-                                if (p.purpose === 'booking' && !window.confirm('Confirm that the bank statement shows this UPI reference and the full amount received.')) {
+                                if ((p.purpose === 'booking' || p.purpose === 'commission') && !window.confirm('Confirm that the bank statement shows this UPI reference and the full amount received.')) {
                                   setPaymentUpdating(false);
                                   return;
                                 }
