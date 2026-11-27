@@ -1,5 +1,5 @@
 import { buildUpiLink, generateUpiQrCode } from '@/lib/payments';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   Briefcase,
@@ -328,8 +328,12 @@ export default function TechnicianDashboard() {
     }
   };
 
+  const syncingUpdate = useRef(false);
+  const attemptedAutomaticSync = useRef<PendingJobUpdate | null>(null);
+
   const retryQueuedUpdate = useCallback(async () => {
-    if (!queuedUpdate || queuedUpdate.technicianId !== technician?.id || processingJob || !navigator.onLine) return;
+    if (!queuedUpdate || queuedUpdate.technicianId !== technician?.id || processingJob || syncingUpdate.current || !navigator.onLine) return;
+    syncingUpdate.current = true;
     setProcessingJob(queuedUpdate.jobId);
     setError('');
     try {
@@ -340,15 +344,27 @@ export default function TechnicianDashboard() {
       setError(err instanceof Error ? err.message : 'Unable to sync job update.');
       await loadDashboard(false);
     } finally {
+      syncingUpdate.current = false;
       setProcessingJob(null);
     }
   }, [queuedUpdate, technician?.id, processingJob, loadDashboard]);
 
   useEffect(() => {
-    const onReconnect = () => { void retryQueuedUpdate(); };
+    const onReconnect = () => {
+      if (!queuedUpdate || queuedUpdate.technicianId !== technician?.id || processingJob) return;
+      attemptedAutomaticSync.current = queuedUpdate;
+      void retryQueuedUpdate();
+    };
     window.addEventListener('online', onReconnect);
     return () => window.removeEventListener('online', onReconnect);
-  }, [retryQueuedUpdate]);
+  }, [queuedUpdate, technician?.id, processingJob, retryQueuedUpdate]);
+
+  useEffect(() => {
+    if (!queuedUpdate || queuedUpdate.technicianId !== technician?.id || processingJob
+      || !navigator.onLine || attemptedAutomaticSync.current === queuedUpdate) return;
+    attemptedAutomaticSync.current = queuedUpdate;
+    void retryQueuedUpdate();
+  }, [queuedUpdate, technician?.id, processingJob, retryQueuedUpdate]);
 
   const updateJobStatus = async (job: TechnicianJob, status: 'accepted'|'rejected'|'on_the_way'|'in_progress'|'job_started'|'job_completed') => {
     if (!technician || processingJob) return;
@@ -538,7 +554,7 @@ export default function TechnicianDashboard() {
     <div className="min-h-screen bg-[#f7f4ed] pt-20 md:pt-24">
       {queuedUpdate?.technicianId === technician.id && (
         <section aria-label="Pending job update" className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 bg-amber-100 p-3 text-sm text-amber-950">
-          <p role="status">Sync pending · Job {queuedUpdate.jobId.slice(0, 8)} · {queuedUpdate.status === 'on_the_way' ? 'On the Way' : 'Done'}. After a reload, select Retry sync.</p>
+          <p role="status">Sync pending · Job {queuedUpdate.jobId.slice(0, 8)} · {queuedUpdate.status === 'on_the_way' ? 'On the Way' : 'Done'}. Sync resumes when you reconnect. If it fails, select Retry sync.</p>
           <button type="button" disabled={!!processingJob} onClick={() => void retryQueuedUpdate()}
             className="rounded-lg bg-amber-200 px-3 py-2 font-bold disabled:opacity-50">Retry sync</button>
           <button type="button" disabled={!!processingJob} onClick={() => { setQueuedUpdate(null); setError(''); }}
