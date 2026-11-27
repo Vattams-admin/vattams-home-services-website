@@ -140,6 +140,7 @@ export interface Technician {
 }
 
 export interface TechnicianJob {
+  offered_commission?: number | null;
   id: string;
   booking_id: string;
   technician_id: string;
