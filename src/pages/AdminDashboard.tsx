@@ -153,6 +153,9 @@ export default function AdminDashboard() {
     Record<string, string>
   >({});
 
+  const [commissionAmount, setCommissionAmount] = useState('');
+  const validCommission = /^\d+(?:\.\d{1,2})?$/.test(commissionAmount)
+    && commissionAmount.length <= 9 && Number(commissionAmount) <= 100000;
   const [assignTechId, setAssignTechId] =
     useState('');
 
@@ -862,12 +865,13 @@ export default function AdminDashboard() {
   };
 
   const assignTechnician = async () => {
-    if (!selectedBooking || !assignTechId) return;
+    if (!selectedBooking || !assignTechId || !validCommission) return;
     setUpdating(true);
     try {
       const { booking, job } = await adminData<{ booking: Booking; job: { id: string } }>('assign', {
         booking_id: selectedBooking.id,
         technician_id: assignTechId,
+        offered_commission: commissionAmount,
       });
       const assignedTech = technicians.find((t) => t.id === assignTechId);
       // Assignment is already persisted by adminData. Notification failures must
@@ -884,6 +888,7 @@ export default function AdminDashboard() {
       setBookings((prev) => prev.map((b) => b.id === selectedBooking.id ? { ...b, ...booking } : b));
       setSelectedBooking(null);
       setAssignTechId('');
+      setCommissionAmount('');
       const failedNotifications = notificationResults.filter((result) => result.status === 'rejected').length;
       if (failedNotifications > 0) {
         console.error('[AdminDashboard] assignment saved but notification delivery failed', { failedNotifications });
@@ -1315,6 +1320,7 @@ export default function AdminDashboard() {
                       <button
                         onClick={() => {
                           setSelectedBooking(b);
+                          setCommissionAmount('');
                           setAssignTechId(b.assigned_technician_id ?? '');
                         }}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-semibold transition-colors"
@@ -1822,6 +1828,18 @@ export default function AdminDashboard() {
             <div className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1.5">
               Assign Technician
             </div>
+            <label className="mb-2 block text-sm font-medium">
+              VATTAMS commission (₹)
+              <input
+                type="text"
+                inputMode="decimal"
+                maxLength={9}
+                value={commissionAmount}
+                onChange={(event) => setCommissionAmount(event.target.value)}
+                className="mt-1 block w-full rounded-xl border border-gray-200 px-3 py-2.5"
+                placeholder="Amount payable after completion"
+              />
+            </label>
             <div className="flex gap-2">
               <select
                 value={assignTechId}
@@ -1839,7 +1857,7 @@ export default function AdminDashboard() {
               </select>
               <button
                 onClick={assignTechnician}
-                disabled={updating || !assignTechId}
+                disabled={updating || !assignTechId || !validCommission}
                 className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
               >
                 Assign
@@ -1907,6 +1925,7 @@ export default function AdminDashboard() {
             </button>
           </div>
 
+          <TechnicianAccountAudit key={selectedTech.id} technicianId={selectedTech.id} />
           <div className="mb-4 flex items-center gap-2 flex-wrap">
             {selectedTech.employee_id && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-extrabold">
@@ -3537,5 +3556,64 @@ function SocialInput({
 
       {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
     </div>
+  );
+}
+
+interface TechnicianAuditEvent {
+  id: string;
+  adminId: string;
+  action: string;
+  from: string | null;
+  to: string;
+  at: string;
+}
+
+function TechnicianAccountAudit({ technicianId }: { technicianId: string }) {
+  const [events, setEvents] = useState<TechnicianAuditEvent[] | null>(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function loadAudit() {
+    setLoading(true);
+    setError('');
+    try {
+      const result = await adminData<{ events: TechnicianAuditEvent[] }>(
+        'technician_account_audit', { technician_id: technicianId },
+      );
+      setEvents(result.events);
+    } catch {
+      setError('Unable to load the account audit. Please retry.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="my-4 rounded-xl border border-gray-200 p-3">
+      <div className="flex items-center justify-between gap-2">
+        <h4 className="font-semibold text-gray-900">Account audit</h4>
+        <button type="button" onClick={loadAudit} disabled={loading}
+          className="rounded-lg px-3 py-2 text-sm font-semibold text-blue-700 disabled:opacity-50">
+          {loading ? 'Loading…' : events ? 'Refresh history' : 'Load history'}
+        </button>
+      </div>
+      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
+      <div aria-live="polite">
+        {events?.length === 0 && <p className="text-sm text-gray-600">No audit events recorded.</p>}
+        {events && events.length > 0 && (
+          <ul className="mt-2 max-h-60 divide-y overflow-auto">
+            {events.map(event => (
+              <li key={event.id} className="py-2 text-sm text-gray-700">
+                <p className="font-medium">{event.action} · {event.from ? event.from + ' → ' : ''}{event.to}</p>
+                <p className="break-all">Admin {event.adminId}</p>
+                <time dateTime={event.at}>
+                  {new Date(event.at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST
+                </time>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </section>
   );
 }

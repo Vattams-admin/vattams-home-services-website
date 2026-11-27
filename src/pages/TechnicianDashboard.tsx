@@ -253,7 +253,7 @@ export default function TechnicianDashboard() {
     () =>
       completedJobs.reduce(
         (total, job) =>
-          total + Math.max(0, Number(job.job_amount || 0) - Number(job.call_rate_fee || 0)),
+          total + Math.max(0, Number(job.job_amount || 0) - Number(job.offered_commission ?? job.call_rate_fee ?? 0)),
         0
       ),
     [completedJobs]
@@ -1515,7 +1515,15 @@ function JobCard({
               </div>
             )}
 
-            {Number(job.call_rate_fee || 0) > 0 && (
+            {job.offered_commission != null && (
+              <div className="rounded-xl border border-orange-200 bg-orange-50 p-3">
+                <p className="font-semibold text-gray-900">
+                  VATTAMS Commission · {formatMoney(Number(job.offered_commission))}
+                </p>
+                <p className="text-sm text-gray-600">Payable after job completion.</p>
+              </div>
+            )}
+            {job.offered_commission == null && Number(job.call_rate_fee || 0) > 0 && (
               <div className="mt-3 rounded-xl border border-[#c9a227]/35 bg-[#fffaf0] p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-xs font-extrabold uppercase tracking-wide text-[#795d0c]">Fixed call-rate fee</span>
