@@ -19,7 +19,6 @@ import {
   EyeOff,
 } from 'lucide-react';
 import { useRouter } from '@/lib/routerContext';
-import PaymentModal from '@/components/PaymentModal';
 
 import {
   STEPS,
@@ -76,9 +75,6 @@ export default function TechnicianRegister() {
 
   const [hydrated, setHydrated] = useState(false);
   const [resumedDraft, setResumedDraft] = useState(false);
-  const [showJoinFeePayment, setShowJoinFeePayment] = useState(false);
-  const [joinFeePaid, setJoinFeePaid] = useState(false);
-  const [joinFeePaymentId, setJoinFeePaymentId] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -476,10 +472,6 @@ export default function TechnicianRegister() {
   };
 
   const handleSubmit = async () => {
-    if (!joinFeePaid) {
-      setShowJoinFeePayment(true);
-      return;
-    }
     if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
       setError('A valid email address is required. Registration cannot finish without email verification.');
       return;
@@ -491,7 +483,7 @@ export default function TechnicianRegister() {
     setError('');
 
     try {
-      await submitTechnicianApplication(form, joinFeePaymentId || undefined);
+      await submitTechnicianApplication(form);
       submittingRef.current = false;
       setEmailOtpPending(true);
       setEmailOtp('');
@@ -644,7 +636,7 @@ export default function TechnicianRegister() {
           </h1>
 
           <p className="text-white/90 text-sm">
-            Register for AC, washing machine and refrigerator job opportunities. One-time joining fee: ₹49. Our AI guides you step by step
+            Register for AC, washing machine and refrigerator job opportunities. Registration is free. Our AI guides you step by step
           </p>
 
         </div>
@@ -1228,11 +1220,6 @@ export default function TechnicianRegister() {
                   </div>
                 )}
 
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800">
-                  <div className="font-bold">Technician Joining Fee: ₹49</div>
-                  <div className="mt-1">One-time joining fee. Pay by UPI QR and submit your UTR for verification.</div>
-                </div>
-
                 <button
                   onClick={handleSubmit}
                   disabled={submitting}
@@ -1246,7 +1233,7 @@ export default function TechnicianRegister() {
                   ) : (
                     <>
                       <CheckCircle size={18} />
-                      {joinFeePaid ? 'Submit Application' : 'Pay ₹49 & Continue'}
+                      Submit Application
                     </>
                   )}
                 </button>
@@ -1255,23 +1242,6 @@ export default function TechnicianRegister() {
             )}
 
             </>}
-
-            <PaymentModal
-              open={showJoinFeePayment}
-              onClose={() => setShowJoinFeePayment(false)}
-              amount={49}
-              purpose="registration_fee"
-              payeeType="technician"
-              payeeId={form.mobile || 'technician-registration'}
-              payeeName={form.full_name}
-              referenceId={form.mobile || undefined}
-              note={`VATTAMS Technician Joining Fee - ${form.full_name || form.mobile}`}
-              onSuccess={(paymentId) => {
-                setJoinFeePaid(true);
-                setJoinFeePaymentId(paymentId);
-                setShowJoinFeePayment(false);
-              }}
-            />
 
             {/* Back */}
             {stepIndex > 0 &&

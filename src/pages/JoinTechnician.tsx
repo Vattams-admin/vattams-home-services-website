@@ -49,7 +49,7 @@ const FAQS = [
   },
   {
     q: 'What is the technician joining fee?',
-    a: 'Technician registration requires a one-time ₹49 joining fee, payable by UPI QR. Submit the UTR/reference number after payment; the application is then sent for Admin review.',
+    a: 'Technician registration is free. Complete email verification and submit the required documents for admin review.',
   },
   {
     q: 'How long does approval take?',
@@ -111,7 +111,7 @@ export default function JoinTechnician() {
 
   useSEO({
     title: 'Appliance Technician Network Registration | VATTAMS',
-    description: 'Join the VATTAMS technician network for AC, washing machine and refrigerator job requests. One-time ₹49 registration fee; job availability depends on location, eligibility and demand.',
+    description: 'Join the VATTAMS technician network for AC, washing machine and refrigerator job requests. Free registration; job availability depends on location, eligibility and demand.',
     path: '/join-technician',
   });
 
@@ -169,7 +169,7 @@ export default function JoinTechnician() {
               }
               className="group flex items-center gap-2 px-8 py-4 bg-gold-500 hover:bg-gold-400 text-[#071426] font-extrabold rounded-xl shadow-2xl transition-all duration-300 hover:scale-105"
             >
-              Join for ₹49
+              Join for free
               <ArrowRight
                 size={18}
                 className="group-hover:translate-x-1 transition-transform"
@@ -198,7 +198,7 @@ export default function JoinTechnician() {
 
             <div className="flex items-center gap-2">
               <CheckCircle size={18} />
-              ₹49 One-Time Joining Fee
+              Free Technician Registration
             </div>
           </div>
         </div>
@@ -391,7 +391,7 @@ export default function JoinTechnician() {
             }
             className="group inline-flex items-center gap-2 px-8 py-4 bg-gold-500 hover:bg-gold-400 text-[#071426] font-extrabold rounded-xl shadow-2xl transition-all duration-300 hover:scale-105"
           >
-            Register Now — ₹49 Joining Fee
+            Register for free
 
             <ArrowRight
               size={18}

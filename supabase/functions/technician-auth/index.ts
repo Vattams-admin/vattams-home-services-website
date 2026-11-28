@@ -37,7 +37,6 @@ interface RegisterBody {
   upi_id?: string;
   profile_score?: number;
   mobile_verified?: boolean;
-  registration_payment_id?: string;
   kyc_upload_token?: string;
 }
 
@@ -540,8 +539,7 @@ async function verifyTechnicianRegistrationOtp(supabase: ReturnType<typeof creat
     return otpJson({ error: "Registration details expired. Please restart registration." }, 400);
   }
   const registrationResponse = await handleRegister(supabase, { ...pending, password: "", password_hash: pending.password_hash });
-  // Keep the OTP available if registration fails (for example, if the joining-fee
-  // payment confirmation is not ready yet). Consume it permanently only on success.
+  // Keep the OTP available if registration fails. Consume it permanently only on success.
   if (!registrationResponse.ok) {
     const { error: restoreError } = await supabase.from("otp_codes")
       .update({ verified: false, verified_at: null })
@@ -648,7 +646,7 @@ Deno.serve(async (req: Request) => {
 async function handleRegister(supabase: ReturnType<typeof createClient>, body: RegisterBody) {
   const { full_name, mobile, email, city, service_categories, experience_years, id_proof_type, id_proof_number, password,
     whatsapp_number, area, pincode, available_days, working_time, has_vehicle, has_tools,
-    aadhaar_url, pan_url, dl_url, profile_photo_url, bank_name, bank_holder_name, bank_account_number, bank_ifsc, upi_id, registration_payment_id } = body;
+    aadhaar_url, pan_url, dl_url, profile_photo_url, bank_name, bank_holder_name, bank_account_number, bank_ifsc, upi_id } = body;
 
   const normalizedMobile = String(mobile || "").replace(/\D/g, "");
   if (!full_name?.trim() || !normalizedMobile || !city?.trim() || (!password && !body.password_hash)) {
@@ -665,42 +663,6 @@ async function handleRegister(supabase: ReturnType<typeof createClient>, body: R
     );
   }
 
-  // Technician applications require the one-time ₹49 joining fee.
-  // The payment must be linked to this mobile number and independently
-  // verified by an active administrator before the application can be created.
-  // A submitted UTR or pending payment is not settlement confirmation.
-  if (!registration_payment_id) {
-    return new Response(
-      JSON.stringify({ error: "₹49 technician joining fee payment is required before submitting your application." }),
-      { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
-  }
-
-  const { data: registrationPayment, error: paymentError } = await supabase
-    .from("payments")
-    .select("payment_id, payee_type, payee_id, amount, purpose, utr, status, verified_by, verified_at")
-    .eq("payment_id", registration_payment_id)
-    .maybeSingle();
-
-  if (
-    paymentError ||
-    !registrationPayment ||
-    registrationPayment.payee_type !== "technician" ||
-    registrationPayment.payee_id !== normalizedMobile ||
-    Number(registrationPayment.amount) !== 49 ||
-    registrationPayment.purpose !== "registration_fee" ||
-    !String(registrationPayment.utr || "").trim() ||
-    registrationPayment.status !== "success" ||
-    !String(registrationPayment.verified_by || "").trim() ||
-    !registrationPayment.verified_at ||
-    !Number.isFinite(Date.parse(String(registrationPayment.verified_at)))
-  ) {
-    return new Response(
-      JSON.stringify({ error: "Valid ₹49 technician joining fee payment confirmation is required." }),
-      { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
-  }
-
   const passwordHash = body.password_hash || await bcrypt.hash(password, await bcrypt.genSalt(10));
 
   const { data, error } = await supabase
@@ -708,7 +670,6 @@ async function handleRegister(supabase: ReturnType<typeof createClient>, body: R
     .insert({
       full_name,
       mobile: normalizedMobile,
-      registration_payment_id,
       email: email || null,
       city,
       service_categories: service_categories || [],
